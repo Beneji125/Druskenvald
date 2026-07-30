@@ -1,0 +1,13 @@
+# Python (extract_xcf.py)
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local scratch installs used only for one-off verification
+node_modules/
+
+# Claude Code local settings (machine-specific, not project content)
+.claude/

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Druskenvald — The Land Between Life and Death</title>
+
+<meta name="description" content="An interactive lore map of Druskenvald, a gothic realm between life and death. Explore its thirteen provinces, native species, and hidden corners like Wickermoor Hollow.">
+<meta name="theme-color" content="#0d0a07">
+
+<!-- og:image/og:url use a relative path — update to an absolute URL once
+     this is hosted (e.g. https://<user>.github.io/<repo>/CrookedMoon_Cover.jpg)
+     for reliable link-preview unfurling on Discord/Twitter/etc. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Druskenvald — The Land Between Life and Death">
+<meta property="og:description" content="An interactive lore map of Druskenvald, a gothic realm between life and death. Explore its thirteen provinces, native species, and hidden corners like Wickermoor Hollow.">
+<meta property="og:image" content="CrookedMoon_Cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' font-size='90'><text y='.9em'>🌙</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+/*__STYLES__*/
+</style>
+</head>
+<body>
+
+<!-- ═══ TITLE SCREEN ═══════════════════════════════════════════ -->
+<div id="title-screen">
+  <div class="title-ornament">— The Crooked Moon —</div>
+  <div class="title-divider"></div>
+  <h1 class="title-main">Druskenvald</h1>
+  <p class="title-subtitle">The Land Between Life and Death</p>
+  <div class="title-divider"></div>
+  <button class="enter-btn" onclick="enterSite()">Enter the Realm</button>
+</div>
+
+<!-- ═══ MAIN APP ════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div id="topbar-title">Druskenvald</div>
+    <div id="breadcrumb">
+      <span id="breadcrumb-text">The Thirteen Provinces</span>
+      <div class="music-player">
+        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music">🔊</button>
+        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume">
+        <span id="music-now-playing" class="music-now-playing"></span>
+        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
+        <!-- Stylized waveform seek bar — bars are generated once by
+             buildWaveformBars() (app.js) into #music-waveform-bars, then
+             re-colored (not re-laid-out) on each timeupdate to show
+             progress, and clicking/dragging seeks. preserveAspectRatio
+             "none" lets the viewBox stretch to whatever width the CSS
+             gives the element, no JS resize handling needed. -->
+        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" title="Seek">
+          <g id="music-waveform-bars"></g>
+        </svg>
+        <span id="music-time" class="music-time">0:00 / 0:00</span>
+      </div>
+      <!-- Re-enter a character's name at any time — not just the first-ever
+           unlock, which otherwise only happens contextually through a
+           locked panel's own password box. See toggleReenterNamePrompt()/
+           submitReenterName() in app.js. -->
+      <div id="reenter-name-widget">
+        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
+        <div id="reenter-name-prompt">
+          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" onkeydown="if(event.key==='Enter') submitReenterName()">
+          <button class="password-btn" onclick="submitReenterName()">Confirm</button>
+          <div class="password-error" id="reenter-name-error"></div>
+        </div>
+      </div>
+      <button id="back-btn" onclick="returnToMain()">↩ Return to Druskenvald</button>
+    </div>
+  </div>
+
+  <!-- The single site-wide audio channel: the looping background track by
+       default, or (see toggleLocationTrack() in app.js) a Wickermoor
+       location's ambience track while one is playing — there is no
+       separate/second player, starting a location track just takes over
+       this element and the topbar controls above, then hands back to the
+       default track when paused or finished.
+       preload="none": don't fetch the 7MB default track until initMusic()
+       actually plays it (on entering the site, and only if not already
+       muted). -->
+  <audio id="bg-music" src="audio/Creaking_Bones.mp3" loop preload="none"></audio>
+
+  <!-- Map Wrapper -->
+  <div id="map-wrapper">
+
+    <!-- ── DRUSKENVALD MAP LAYER ── -->
+    <div id="layer-main" class="map-layer">
+      <div class="zoom-layer" id="zoom-layer-main">
+        <img src="MAP_Druskenvald.jpeg" alt="Map of Druskenvald" class="map-img" id="main-map-img">
+        <canvas id="lighting-canvas" class="hotspot-svg" style="pointer-events:none;"></canvas>
+        <!-- mix-blend-mode:color — replaces the hue/saturation of everything
+             beneath it (map art + the darkness canvas above) with this
+             canvas's own color, at each pixel's own alpha, while preserving
+             what's below's luminosity. A canvas's internal
+             globalCompositeOperation can only blend against content already
+             drawn on that same canvas, not the separate <img> beneath it —
+             this is what actually makes a light's color read as the area
+             genuinely being lit by that color, rather than a translucent
+             wash sitting on top of the map's own painted colors. -->
+        <canvas id="tint-canvas" class="hotspot-svg" style="pointer-events:none; mix-blend-mode:color;"></canvas>
+        <canvas id="hover-canvas"    class="hotspot-svg" style="pointer-events:none; opacity:0; transition:opacity 0.25s ease;"></canvas>
+        <svg id="hotspots-main-svg" class="hotspot-svg" viewBox="0 0 3000 1953" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+    <!-- ── WICKERMOOR HOLLOW MAP LAYER ── -->
+    <!-- data-src, not src: this 3MB image is only fetched the first time
+         openWickermoor() is called, not on initial page load. Mirrors the
+         main map layer's canvas/svg structure — viewBox height is 1951, not
+         1953, matching this image's actual pixel dimensions (see
+         MAP_LAYERS.wickermoor in app.js). -->
+    <div id="layer-wickermoor" class="map-layer hidden">
+      <div class="zoom-layer" id="zoom-layer-wickermoor">
+        <img data-src="MAP_Wickermoor_Hollow.jpeg" alt="Map of Wickermoor Hollow" class="map-img" id="wickermoor-map-img">
+        <canvas id="wickermoor-lighting-canvas" class="hotspot-svg" style="pointer-events:none;"></canvas>
+        <canvas id="wickermoor-tint-canvas" class="hotspot-svg" style="pointer-events:none; mix-blend-mode:color;"></canvas>
+        <canvas id="wickermoor-hover-canvas"    class="hotspot-svg" style="pointer-events:none; opacity:0; transition:opacity 0.25s ease;"></canvas>
+        <svg id="hotspots-wickermoor-svg" class="hotspot-svg" viewBox="0 0 3000 1951" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+    </div>
+
+    <!-- Zoom & Light Mode Controls -->
+    <div id="zoom-controls">
+      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode">💡</button>
+      <div class="zoom-controls-divider"></div>
+      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom">⟲</button>
+    </div>
+
+  </div>
+
+  <!-- Overlay -->
+  <div id="overlay" onclick="closePanel()"></div>
+
+  <!-- SVG hotspot tooltip -->
+  <div id="svg-tooltip"></div>
+
+  <!-- Lore Panel -->
+  <div id="lore-panel">
+    <div class="panel-border-top"></div>
+    <button id="panel-close" onclick="closePanel()" title="Close">✕</button>
+    <div id="panel-content"></div>
+  </div>
+
+  <!-- Species Overlay -->
+  <div id="species-overlay" onclick="closeSpeciesPanel()"></div>
+
+  <!-- Species Panel -->
+  <div id="species-panel">
+    <div class="panel-border-top"></div>
+    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close">✕</button>
+    <div id="species-panel-content"></div>
+  </div>
+
+  <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
+       panel above (see openNpcPanel/closeNpcPanel in app.js), for
+       clicking a named NPC mentioned inside a Wickermoor location/being's
+       own lore text. A separate panel rather than reusing the species one
+       outright, since the two can in principle be triggered from
+       different underlying panels and shouldn't fight over the same DOM. -->
+  <div id="npc-overlay" onclick="closeNpcPanel()"></div>
+  <div id="npc-panel">
+    <div class="panel-border-top"></div>
+    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close">✕</button>
+    <div id="npc-panel-content"></div>
+  </div>
+
+</div>
+
+<script>
+/*__APP_SCRIPT__*/
+</script>
+</body>
+</html>
