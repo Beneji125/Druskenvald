@@ -801,22 +801,64 @@ function initZoomPan() {
     zoomAtPoint(getActiveMapKey(), factor, px, py);
   }, { passive: false });
 
-  let drag = null; // { startX, startY, lastX, lastY, moved }
+  // Pointer Events keep desktop dragging and touch dragging on one code
+  // path. A second active pointer turns the gesture into a midpoint-anchored
+  // pinch, so phones do not have to rely exclusively on the +/- buttons.
+  const pointers = new Map();
+  let drag = null;
+  let pinch = null;
+  let gestureMoved = false;
 
-  wrapper.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    drag = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
+  function pinchMetrics() {
+    const [a, b] = Array.from(pointers.values()).slice(0, 2);
+    if (!a || !b) return null;
+    return {
+      distance: Math.hypot(b.x - a.x, b.y - a.y),
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+    };
+  }
+
+  wrapper.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      drag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY };
+      gestureMoved = false;
+    } else if (pointers.size === 2) {
+      pinch = pinchMetrics();
+      drag = null;
+    }
   });
 
-  window.addEventListener('mousemove', (e) => {
-    if (!drag) return;
+  wrapper.addEventListener('pointermove', (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size >= 2) {
+      const next = pinchMetrics();
+      if (!next || !pinch) { pinch = next; return; }
+      const rect = wrapper.getBoundingClientRect();
+      const key = getActiveMapKey();
+      const state = zoomState[key];
+      state.tx += next.midX - pinch.midX;
+      state.ty += next.midY - pinch.midY;
+      const factor = pinch.distance > 0 && next.distance > 0 ? next.distance / pinch.distance : 1;
+      zoomAtPoint(key, factor, next.midX - rect.left, next.midY - rect.top);
+      pinch = next;
+      gestureMoved = true;
+      pointers.forEach((_, pointerId) => wrapper.setPointerCapture?.(pointerId));
+      wrapper.classList.add('panning');
+      return;
+    }
+    if (!drag || drag.pointerId !== e.pointerId) return;
     const dx = e.clientX - drag.lastX;
     const dy = e.clientY - drag.lastY;
-    if (!drag.moved && (Math.abs(e.clientX - drag.startX) > 4 || Math.abs(e.clientY - drag.startY) > 4)) {
-      drag.moved = true;
+    if (!gestureMoved && (Math.abs(e.clientX - drag.startX) > 6 || Math.abs(e.clientY - drag.startY) > 6)) {
+      gestureMoved = true;
+      wrapper.setPointerCapture?.(e.pointerId);
       wrapper.classList.add('panning');
     }
-    if (drag.moved) {
+    if (gestureMoved) {
       const key = getActiveMapKey();
       const state = zoomState[key];
       state.tx += dx;
@@ -828,14 +870,28 @@ function initZoomPan() {
     drag.lastY = e.clientY;
   });
 
-  window.addEventListener('mouseup', () => {
-    if (drag && drag.moved) {
-      justPanned = true;
-      setTimeout(() => { justPanned = false; }, 0);
+  function endPointer(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (wrapper.hasPointerCapture?.(e.pointerId)) wrapper.releasePointerCapture(e.pointerId);
+    if (pointers.size === 1) {
+      const [pointerId, point] = pointers.entries().next().value;
+      drag = { pointerId, startX: point.x, startY: point.y, lastX: point.x, lastY: point.y };
+      pinch = null;
+    } else if (pointers.size === 0) {
+      if (gestureMoved) {
+        justPanned = true;
+        setTimeout(() => { justPanned = false; }, 0);
+      }
+      drag = null;
+      pinch = null;
+      gestureMoved = false;
+      wrapper.classList.remove('panning');
     }
-    drag = null;
-    wrapper.classList.remove('panning');
-  });
+  }
+
+  wrapper.addEventListener('pointerup', endPointer);
+  wrapper.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
     clampPan('main');

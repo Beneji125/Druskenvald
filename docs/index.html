@@ -49,6 +49,8 @@
     overflow: hidden;
   }
 
+  button, input { font: inherit; }
+
   /* ─── TITLE SCREEN ─────────────────────────────────────────── */
   #title-screen {
     position: fixed; inset: 0; z-index: 100;
@@ -59,6 +61,8 @@
     align-items: center; justify-content: center;
     gap: 2rem;
     transition: opacity 0.8s ease;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   #title-screen.fade-out { opacity: 0; pointer-events: none; }
 
@@ -116,6 +120,7 @@
     position: fixed; inset: 0;
     opacity: 0; transition: opacity 0.8s ease;
     display: flex; flex-direction: column;
+    height: 100dvh;
   }
   #app.visible { opacity: 1; }
 
@@ -281,6 +286,9 @@
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
     cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
   #map-wrapper.panning { cursor: grabbing; }
 
@@ -408,6 +416,7 @@
     top: 0; right: 0;
     width: min(480px, 100vw);
     height: 100vh;
+    height: 100dvh;
     background: linear-gradient(160deg, #1a1208 0%, #0f0c08 60%, #0d0a07 100%);
     border-left: 1px solid var(--oak);
     transform: translateX(100%);
@@ -465,6 +474,7 @@
     top: 0; left: 0;
     width: min(420px, 100vw);
     height: 100vh;
+    height: 100dvh;
     background: linear-gradient(200deg, #1a1208 0%, #0f0c08 60%, #0d0a07 100%);
     border-right: 1px solid var(--oak);
     transform: translateX(-100%);
@@ -872,9 +882,127 @@
   #overlay.show { opacity: 1; pointer-events: all; }
 
   /* ─── RESPONSIVE ───────────────────────────────────────────── */
-  @media (max-width: 600px) {
-    #lore-panel { width: 100vw; }
-    #species-panel { width: 100vw; }
+  @media (max-width: 760px) {
+    #title-screen {
+      gap: clamp(1rem, 5vh, 2rem);
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+      text-align: center;
+    }
+    .title-ornament {
+      font-size: clamp(0.75rem, 3.5vw, 1rem);
+      letter-spacing: 0.25em;
+    }
+    .title-divider { width: min(300px, 80vw); }
+    .title-subtitle { padding: 0 0.75rem; }
+    .enter-btn {
+      min-height: 44px;
+      max-width: calc(100vw - 2rem);
+      padding: 0.75rem 1.5rem;
+      letter-spacing: 0.2em;
+    }
+
+    #topbar {
+      padding: max(0.35rem, env(safe-area-inset-top)) max(0.6rem, env(safe-area-inset-right)) 0.4rem max(0.6rem, env(safe-area-inset-left));
+    }
+    #topbar-title { display: none; }
+    #breadcrumb {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      letter-spacing: 0.12em;
+    }
+    #breadcrumb-text {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0.3rem 0.2rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #back-btn {
+      min-height: 36px;
+      padding: 0.3rem 0.5rem;
+      letter-spacing: 0.1em;
+    }
+    .music-player {
+      order: 3;
+      flex: 1 1 calc(100% - 48px);
+      min-width: 0;
+      gap: 0.35rem;
+      padding: 0.2rem 0.35rem;
+    }
+    #reenter-name-widget { order: 4; flex: 0 0 44px; }
+    .icon-btn, #reenter-name-btn {
+      min-width: 40px;
+      min-height: 40px;
+      padding: 0.4rem;
+    }
+    #music-volume-slider { display: none; }
+    .music-waveform { flex: 1 1 70px; min-width: 50px; width: auto; }
+    .music-now-playing { max-width: 82px; }
+    .music-time { font-size: 0.55rem; width: 6.1em; }
+    #reenter-name-prompt {
+      position: fixed;
+      top: auto;
+      right: max(0.6rem, env(safe-area-inset-right));
+      bottom: max(0.6rem, env(safe-area-inset-bottom));
+      left: max(0.6rem, env(safe-area-inset-left));
+      width: auto;
+      z-index: 70;
+    }
+
+    #zoom-controls {
+      right: max(0.7rem, env(safe-area-inset-right));
+      bottom: max(0.7rem, env(safe-area-inset-bottom));
+      flex-direction: row;
+    }
+    .zoom-btn { width: 44px; height: 44px; }
+    .zoom-controls-divider {
+      width: 1px;
+      height: 44px;
+      margin: 0 0.1rem;
+      background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
+    }
+
+    #lore-panel, #species-panel, #npc-panel { width: 100vw; }
+    #panel-content, #species-panel-content, #npc-panel-content {
+      padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    #panel-close, #species-panel-close, #npc-panel-close {
+      top: max(0.5rem, env(safe-area-inset-top));
+      right: max(0.5rem, env(safe-area-inset-right));
+      width: 44px;
+      height: 44px;
+    }
+    .password-input { font-size: 16px; min-width: 0; }
+    .password-btn, .wm-track-btn { min-height: 44px; }
+    .species-link, .npc-link { text-underline-offset: 4px; }
+  }
+
+  @media (max-width: 430px) {
+    .music-now-playing { display: none; }
+    .music-player { gap: 0.25rem; }
+    .music-time { width: 5.8em; }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape) {
+    #title-screen { gap: 0.65rem; }
+    .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
+    #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
+    #breadcrumb-text { display: none; }
+    .music-player { flex-basis: calc(100% - 92px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */
@@ -4097,22 +4225,64 @@ function initZoomPan() {
     zoomAtPoint(getActiveMapKey(), factor, px, py);
   }, { passive: false });
 
-  let drag = null; // { startX, startY, lastX, lastY, moved }
+  // Pointer Events keep desktop dragging and touch dragging on one code
+  // path. A second active pointer turns the gesture into a midpoint-anchored
+  // pinch, so phones do not have to rely exclusively on the +/- buttons.
+  const pointers = new Map();
+  let drag = null;
+  let pinch = null;
+  let gestureMoved = false;
 
-  wrapper.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    drag = { startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY, moved: false };
+  function pinchMetrics() {
+    const [a, b] = Array.from(pointers.values()).slice(0, 2);
+    if (!a || !b) return null;
+    return {
+      distance: Math.hypot(b.x - a.x, b.y - a.y),
+      midX: (a.x + b.x) / 2,
+      midY: (a.y + b.y) / 2,
+    };
+  }
+
+  wrapper.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      drag = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, lastX: e.clientX, lastY: e.clientY };
+      gestureMoved = false;
+    } else if (pointers.size === 2) {
+      pinch = pinchMetrics();
+      drag = null;
+    }
   });
 
-  window.addEventListener('mousemove', (e) => {
-    if (!drag) return;
+  wrapper.addEventListener('pointermove', (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size >= 2) {
+      const next = pinchMetrics();
+      if (!next || !pinch) { pinch = next; return; }
+      const rect = wrapper.getBoundingClientRect();
+      const key = getActiveMapKey();
+      const state = zoomState[key];
+      state.tx += next.midX - pinch.midX;
+      state.ty += next.midY - pinch.midY;
+      const factor = pinch.distance > 0 && next.distance > 0 ? next.distance / pinch.distance : 1;
+      zoomAtPoint(key, factor, next.midX - rect.left, next.midY - rect.top);
+      pinch = next;
+      gestureMoved = true;
+      pointers.forEach((_, pointerId) => wrapper.setPointerCapture?.(pointerId));
+      wrapper.classList.add('panning');
+      return;
+    }
+    if (!drag || drag.pointerId !== e.pointerId) return;
     const dx = e.clientX - drag.lastX;
     const dy = e.clientY - drag.lastY;
-    if (!drag.moved && (Math.abs(e.clientX - drag.startX) > 4 || Math.abs(e.clientY - drag.startY) > 4)) {
-      drag.moved = true;
+    if (!gestureMoved && (Math.abs(e.clientX - drag.startX) > 6 || Math.abs(e.clientY - drag.startY) > 6)) {
+      gestureMoved = true;
+      wrapper.setPointerCapture?.(e.pointerId);
       wrapper.classList.add('panning');
     }
-    if (drag.moved) {
+    if (gestureMoved) {
       const key = getActiveMapKey();
       const state = zoomState[key];
       state.tx += dx;
@@ -4124,14 +4294,28 @@ function initZoomPan() {
     drag.lastY = e.clientY;
   });
 
-  window.addEventListener('mouseup', () => {
-    if (drag && drag.moved) {
-      justPanned = true;
-      setTimeout(() => { justPanned = false; }, 0);
+  function endPointer(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (wrapper.hasPointerCapture?.(e.pointerId)) wrapper.releasePointerCapture(e.pointerId);
+    if (pointers.size === 1) {
+      const [pointerId, point] = pointers.entries().next().value;
+      drag = { pointerId, startX: point.x, startY: point.y, lastX: point.x, lastY: point.y };
+      pinch = null;
+    } else if (pointers.size === 0) {
+      if (gestureMoved) {
+        justPanned = true;
+        setTimeout(() => { justPanned = false; }, 0);
+      }
+      drag = null;
+      pinch = null;
+      gestureMoved = false;
+      wrapper.classList.remove('panning');
     }
-    drag = null;
-    wrapper.classList.remove('panning');
-  });
+  }
+
+  wrapper.addEventListener('pointerup', endPointer);
+  wrapper.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
     clampPan('main');
