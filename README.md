@@ -38,6 +38,8 @@ source-assets/    Large working files, not part of the published site
   MAP_Druskenvald_Sources.xcf        GIMP source — the main map's paths/vectors
   MAP_Wickermoor_Hollow_Sources.xcf  GIMP source — Wickermoor Hollow's
   crooked_moon_reference.md     full lore/rules reference document
+  originals/       full-quality masters of everything optimize_assets.py
+                   has compressed (same folder layout as docs/)
 
 build.js          Combines src/* into docs/index.html — run after any edit
                    under src/: `node build.js`
@@ -45,6 +47,24 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
                    whenever the map's lights/outlines are edited in GIMP:
                    `python extract_xcf.py` (dry run) or `--apply` to write
 ```
+
+## Adding art or music
+
+Drop new files into the right `docs/` folder, reference them in
+`src/data/descriptions.json`, then run:
+
+```
+python optimize_assets.py           # dry run: shows what it would compress
+python optimize_assets.py --apply   # compress, keep originals, fix references
+node build.js
+```
+
+It needs [ffmpeg](https://ffmpeg.org/download.html). Images become WebP
+(quality 90; no visible difference at the size the site shows them) and
+music is re-encoded at LAME V0 with embedded cover art stripped. Originals
+are moved to `source-assets/originals/`, never deleted, and references in
+`src/` are updated automatically. The two maps and the cover image are
+left untouched.
 
 ## Building
 

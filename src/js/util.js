@@ -49,7 +49,7 @@ function escAttr(str) {
 
 // Strips the folder and extension off an image path so a token can name
 // an image by something short and readable instead of by position —
-// "scenes/SCENE_Chapter11_Wickermoor_Village.jpeg" is referenced as
+// "scenes/SCENE_Chapter11_Wickermoor_Village.webp" is referenced as
 // "[[SCENE_Chapter11_Wickermoor_Village]]", "chapter-art/Drowned
 // Crossroads.jpg" as "[[Drowned Crossroads]]".
 function imageBasename(path) {
