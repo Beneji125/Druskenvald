@@ -30,8 +30,9 @@ src/              Source files that get combined into docs/index.html
     unlocks.js       character-name recognition and group unlocks
     main.js          entry point and page-wide listeners
   data/
-    descriptions.json   lore text, species, NPCs, groups/unlocks,
-                         image and track references
+    descriptions.json   lore text, species, NPCs, groups/unlocks, image
+                         and track references, chapters, locked teasers
+    bestiary.json        the Codex's creatures (text, images, who's met them)
     hotspots.json        map hotspot shapes + settlement light positions
 
 source-assets/    Large working files, not part of the published site
@@ -60,9 +61,27 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   lets them switch, or "Forget me".
 - **New lore:** Wickermoor locations with lore the visitor hasn't read yet
   (or that has changed since) get a pulsing outline until opened.
+- **The Codex (📜):** Bestiary, Rogues' Gallery and Chronicle (see below).
+- **Lighting:** the 🌙 button cycles night, dusk and day (no darkness).
 - **Touch:** first tap on a place shows its name, second tap opens it.
 - **Keyboard:** Tab moves between places on the map, Enter opens, Escape
   closes the top-most panel.
+
+## Keeping the Codex up to date
+
+- **A party meets a creature:** add its group id to that creature's
+  `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
+  Unmet creatures show as "???" silhouettes. Link to one from lore with
+  `{{creature:id}}`.
+- **Rogues' Gallery:** fills itself — an NPC appears once they're
+  mentioned (`{{npc:id}}`) in lore the visitor can read. Bios are each
+  entry's `body` in `NPCS`.
+- **Chronicle:** lists a group's unlocked Wickermoor locations, ordered
+  by `WM_CHAPTERS` (chapter number, title, art) — renumber freely if your
+  parties went another way. It quotes the group's own `byGroup` tale when
+  there is one.
+- **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
+  shown on each locked location.
 
 ## Adding art or music
 
