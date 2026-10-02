@@ -220,7 +220,7 @@
 
   /* Waveform seek bar — a static, decorative bar pattern (not derived from
      the actual audio) that fills in left-to-right as the track plays; see
-     buildWaveformBars()/updateWaveformProgress() in app.js. Click or drag
+     buildWaveformBars()/updateWaveformProgress() in js/music.js. Click or drag
      anywhere on it to seek. */
   .music-waveform {
     width: 110px;
@@ -269,7 +269,7 @@
 
   /* Reset-to-default-track button — same show/hide pattern as #back-btn:
      hidden until a location track is actually playing (see
-     toggleLocationTrack/resetToDefaultTrack in app.js), since there's
+     toggleLocationTrack/resetToDefaultTrack in js/music.js), since there's
      nothing to "return" to otherwise. */
   #music-reset-btn {
     display: none;
@@ -529,7 +529,7 @@
   #npc-overlay.show { opacity: 1; pointer-events: all; }
 
   /* Clickable NPC name mentioned inline in a Wickermoor location/being's
-     own lore text (see openNpcPanel in app.js) — same visual treatment as
+     own lore text (see openNpcPanel in js/panels.js) — same visual treatment as
      .species-link in province lore, so both read as "this is a clickable
      term" consistently across the whole site. */
   .npc-link {
@@ -1058,7 +1058,7 @@
         <span id="music-now-playing" class="music-now-playing"></span>
         <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
         <!-- Stylized waveform seek bar — bars are generated once by
-             buildWaveformBars() (app.js) into #music-waveform-bars, then
+             buildWaveformBars() (js/music.js) into #music-waveform-bars, then
              re-colored (not re-laid-out) on each timeupdate to show
              progress, and clicking/dragging seeks. preserveAspectRatio
              "none" lets the viewBox stretch to whatever width the CSS
@@ -1071,7 +1071,7 @@
       <!-- Re-enter a character's name at any time — not just the first-ever
            unlock, which otherwise only happens contextually through a
            locked panel's own password box. See toggleReenterNamePrompt()/
-           submitReenterName() in app.js. -->
+           submitReenterName() in js/unlocks.js. -->
       <div id="reenter-name-widget">
         <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
         <div id="reenter-name-prompt">
@@ -1085,7 +1085,7 @@
   </div>
 
   <!-- The single site-wide audio channel: the looping background track by
-       default, or (see toggleLocationTrack() in app.js) a Wickermoor
+       default, or (see toggleLocationTrack() in js/music.js) a Wickermoor
        location's ambience track while one is playing — there is no
        separate/second player, starting a location track just takes over
        this element and the topbar controls above, then hands back to the
@@ -1123,7 +1123,7 @@
          openWickermoor() is called, not on initial page load. Mirrors the
          main map layer's canvas/svg structure — viewBox height is 1951, not
          1953, matching this image's actual pixel dimensions (see
-         MAP_LAYERS.wickermoor in app.js). -->
+         MAP_LAYERS.wickermoor in js/lighting.js). -->
     <div id="layer-wickermoor" class="map-layer hidden">
       <div class="zoom-layer" id="zoom-layer-wickermoor">
         <img data-src="MAP_Wickermoor_Hollow.jpeg" alt="Map of Wickermoor Hollow" class="map-img" id="wickermoor-map-img">
@@ -1169,7 +1169,7 @@
   </div>
 
   <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
-       panel above (see openNpcPanel/closeNpcPanel in app.js), for
+       panel above (see openNpcPanel/closeNpcPanel in js/panels.js), for
        clicking a named NPC mentioned inside a Wickermoor location/being's
        own lore text. A separate panel rather than reusing the species one
        outright, since the two can in principle be triggered from
@@ -1188,7 +1188,9 @@
 
 // DATA — generated from src/data/descriptions.json and src/data/hotspots.json
 
-// Edit those files, not this block.
+// Edit those files, not this block. Each top-level key becomes a global
+
+// const (LORE, NPCS, WM_LORE, SETTLEMENT_LIGHTS, ...) read by src/js/*.js.
 
 // ═══════════════════════════════════════════════════════════════
 
@@ -3429,13 +3431,12 @@ const WICKERMOOR_LIGHTS = [
   }
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// APP LOGIC — reads the data injected by build.js (from data/*.json)
-// via the global consts: SCENE_IMAGES, LORE, WM_LOCATIONS, WM_BEINGS,
-// WM_SCENES, WM_PORTRAITS, WM_TRACKS, WM_LORE, GROUPS, UNLOCKS, SPECIES,
-// SETTLEMENT_LIGHTS, MAIN_HOTSPOTS_SVG, WICKERMOOR_LIGHTS,
-// WICKERMOOR_HOTSPOTS.
-// ═══════════════════════════════════════════════════════════════
+// ─── src/js/util.js ─────────────────────────────────────────────────
+// Small shared helpers used across the other files: the storage
+// wrapper, number clamps, and string escaping.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
 
 // localStorage can throw outright (Safari private mode, browsers set to
 // block site data, sandboxed iframes) rather than just returning null.
@@ -3461,38 +3462,52 @@ const store = (() => {
   };
 })();
 
-function panelImageHtml(id, label) {
-  const src = SCENE_IMAGES[id];
-  if (src) {
-    return `<div class="panel-image-frame">
-      <img src="${src}" alt="${label}" class="panel-image">
-    </div>`;
-  }
-  return `<div class="panel-image-placeholder">
-    <div class="placeholder-icon">⬡</div>
-    <div class="placeholder-text">Illustration — Coming Soon</div>
-  </div>`;
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return {
+    r: parseInt(h.substring(0, 2), 16),
+    g: parseInt(h.substring(2, 4), 16),
+    b: parseInt(h.substring(4, 6), 16),
+  };
 }
 
-function enterSite() {
-  const ts = document.getElementById('title-screen');
-  const app = document.getElementById('app');
-  initMusic(); // called directly from this click handler so the browser
-               // still counts it as tied to a user gesture, satisfying
-               // autoplay-blocking policies
-  ts.classList.add('fade-out');
-  setTimeout(() => {
-    ts.style.display = 'none';
-    app.classList.add('visible');
-    buildHotspots();
-  }, 800);
+function clampNum(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+// HTML-attribute-escapes a string (order matters: & must go first, or it
+// would double-encode the entities produced by the other replacements).
+function escAttr(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
+
+// Strips the folder and extension off an image path so a token can name
+// an image by something short and readable instead of by position —
+// "scenes/SCENE_Chapter11_Wickermoor_Village.jpeg" is referenced as
+// "[[SCENE_Chapter11_Wickermoor_Village]]", "chapter-art/Drowned
+// Crossroads.jpg" as "[[Drowned Crossroads]]".
+function imageBasename(path) {
+  return path.split('/').pop().replace(/\.[^./]+$/, '');
+}
+
+// ─── src/js/music.js ────────────────────────────────────────────────
+// The single site-wide audio channel (#bg-music): the looping default
+// track, mute/volume, the waveform seek bar, and per-location ambience
+// tracks that temporarily take it over.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
 
 const MUSIC_VOLUME_DEFAULT = 0.1;
+
 const MUSIC_MUTED_STORAGE_KEY = 'druskenvald_music_muted';
+
 const MUSIC_VOLUME_STORAGE_KEY = 'druskenvald_music_volume';
+
 const DEFAULT_TRACK_SRC = 'audio/Creaking_Bones.mp3';
+
 const DEFAULT_TRACK_TITLE = 'Creaking Bones';
+
 let musicMuted = false;
 
 function initMusic() {
@@ -3664,24 +3679,115 @@ function updateNowPlayingLabel(title) {
   label.textContent = title || '';
 }
 
-function buildHotspots() {
-  setupCanvasSizes();
-  buildSvgHotspots('main', 'hotspots-main-svg', MAIN_HOTSPOTS_SVG);
-  buildSvgHotspots('wickermoor', 'hotspots-wickermoor-svg', WICKERMOOR_HOTSPOTS);
-  startLightingAnimation();
-  initZoomPan();
+// ── Per-location ambience tracks ──────────────────────────────────
+// WM_TRACKS (data/descriptions.json) maps a Wickermoor id to
+// { src, title? }; ids with no entry simply get no player. Starting one
+// takes over the single shared #bg-music element/topbar player (see
+// setupMusicProgressBar/updateNowPlayingLabel above) rather than playing
+// in a second, independent player — so it shows up with the same
+// play/pause, volume, and progress controls the background loop normally
+// uses. Only one track plays at a time; pausing it (or letting it finish)
+// hands #bg-music back to the default looping track.
+let currentTrackId = null;
+
+function trackButtonHtml(id) {
+  const track = WM_TRACKS[id];
+  if (!track) return '';
+  const playing = currentTrackId === id && !musicMuted;
+  const label = track.title ? `Play "${track.title}"` : 'Play Ambience';
+  // Several track filenames/titles contain an apostrophe (e.g. "When It's
+  // Time"). The onclick attribute here is single-quoted with double-quoted
+  // JS string arguments inside it, so a literal apostrophe in `id`/`src`
+  // would otherwise prematurely close the *HTML attribute* itself (not
+  // just the JS string) — escAttr() HTML-escapes it to &#39; so the
+  // browser's attribute parser treats it as a literal character; the
+  // decoded value the JS engine then sees is back to a plain apostrophe,
+  // which is harmless inside a double-quoted JS string.
+  return `
+    <div class="wm-track-player">
+      <button class="wm-track-btn${playing ? ' playing' : ''}" id="wm-track-btn-${id}" onclick='toggleLocationTrack("${escAttr(id)}", "${escAttr(track.src)}")'>
+        ${playing ? '⏸ Pause' : '▶ ' + label}
+      </button>
+    </div>
+  `;
 }
 
-function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-
-function hexToRgb(hex) {
-  const h = hex.replace('#', '');
-  return {
-    r: parseInt(h.substring(0, 2), 16),
-    g: parseInt(h.substring(2, 4), 16),
-    b: parseInt(h.substring(4, 6), 16),
-  };
+function setTrackButtonState(id, playing) {
+  const btn = document.getElementById('wm-track-btn-' + id);
+  if (!btn) return;
+  const track = WM_TRACKS[id];
+  const label = track && track.title ? `Play "${track.title}"` : 'Play Ambience';
+  btn.textContent = playing ? '⏸ Pause' : '▶ ' + label;
+  btn.classList.toggle('playing', playing);
 }
+
+function toggleLocationTrack(id, src) {
+  const audio = document.getElementById('bg-music');
+  if (!audio) return;
+
+  // Clicking the currently-playing track's own button stops it and hands
+  // the topbar player back to the default looping track.
+  // If it's this track but paused (muted from the topbar), resume it where
+  // it left off instead of restarting from the beginning.
+  if (currentTrackId === id) {
+    if (audio.paused) setMusicMuted(false);
+    else revertToDefaultTrack(audio);
+    return;
+  }
+
+  // Switching away from whatever else was playing (if anything).
+  if (currentTrackId) setTrackButtonState(currentTrackId, false);
+
+  currentTrackId = id;
+  audio.loop = false;
+  audio.src = src;
+  audio.currentTime = 0;
+  // Pressing play is an explicit request to hear it — clear any mute so the
+  // topbar icon matches (setMusicMuted also starts playback).
+  if (musicMuted) setMusicMuted(false);
+  else audio.play().catch(() => {});
+  setTrackButtonState(id, true);
+  updateNowPlayingLabel((WM_TRACKS[id] && WM_TRACKS[id].title) || 'Ambience');
+  setResetButtonVisible(true);
+
+  audio.onended = () => revertToDefaultTrack(audio);
+}
+
+// Public entry point for the topbar's "return to default track" button —
+// resetToDefaultTrack() (no args, reads #bg-music itself) vs.
+// revertToDefaultTrack(audio) (internal, called with the element already
+// in hand by toggleLocationTrack/the 'ended' handler).
+function resetToDefaultTrack() {
+  const audio = document.getElementById('bg-music');
+  if (!audio || currentTrackId === null) return; // nothing to return from
+  revertToDefaultTrack(audio);
+}
+
+function setResetButtonVisible(visible) {
+  const btn = document.getElementById('music-reset-btn');
+  if (btn) btn.classList.toggle('visible', visible);
+}
+
+function revertToDefaultTrack(audio) {
+  const finishedId = currentTrackId;
+  currentTrackId = null;
+  audio.onended = null;
+  if (finishedId) setTrackButtonState(finishedId, false);
+  updateNowPlayingLabel(DEFAULT_TRACK_TITLE);
+  setResetButtonVisible(false);
+  audio.loop = true;
+  audio.src = DEFAULT_TRACK_SRC;
+  audio.currentTime = 0;
+  if (!musicMuted) audio.play().catch(() => {});
+}
+
+// ─── src/js/lighting.js ─────────────────────────────────────────────
+// Map layers and the night lighting: darkness overlay, flickering
+// settlement lights, the Crooked Moon's glow, colour tints, light mode, and
+// the hover reveal of a province/location's shape.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
 
 // One entry per map layer — lets the lighting/hover-reveal system below
 // (originally built for just the main map) drive either layer generically
@@ -4013,8 +4119,11 @@ function renderLightingForLayer(layerKey, t) {
 // or "light mode" is on, since the darkness/moon/light animation is
 // invisible in both cases.
 const LIGHTING_FRAME_INTERVAL = 1000 / 24; // ~24fps is plenty for slow ambient motion
+
 let lightingAnimationRunning = false;
+
 let lightingAnimationStart = null;
+
 let lastLightingRenderTime = 0;
 
 // "Light mode" — fully removes the night/darkness overlay so the map is
@@ -4113,6 +4222,13 @@ function hideProvinceReveal(layerKey) {
   }, 280);
 }
 
+// ─── src/js/map.js ──────────────────────────────────────────────────
+// Map interaction: clickable SVG hotspots, zoom & pan (mouse wheel,
+// drag, pinch), and switching between the main map and Wickermoor Hollow.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
 function buildSvgHotspots(layerKey, svgId, hotspots) {
   const svg = document.getElementById(svgId);
   const tooltip = document.getElementById('svg-tooltip');
@@ -4159,17 +4275,17 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
   });
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ZOOM & PAN
+
+// ── Zoom & pan ─────────────────────────────────────────────────
 // A single CSS transform (translate + scale) on each map layer's
 // .zoom-layer wrapper handles zoom/pan for everything inside it (image,
 // canvases, SVG hotspots) together, so their existing alignment and the
 // browser's native hit-testing on the SVG paths keep working with no
 // coordinate-math changes anywhere else.
-// ═══════════════════════════════════════════════════════════════
-
 const ZOOM_MIN = 1;
+
 const ZOOM_MAX = 4;
+
 const ZOOM_WHEEL_FACTOR = 1.15;
 
 const zoomState = {
@@ -4181,8 +4297,6 @@ const zoomState = {
 // a pan rather than a click; checked (and reset) by hotspot click handlers
 // so finishing a drag over a hotspot doesn't also open its panel.
 let justPanned = false;
-
-function clampNum(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
 function getActiveMapKey() {
   const wm = document.getElementById('layer-wickermoor');
@@ -4233,6 +4347,7 @@ function zoomAtPoint(key, factor, px, py) {
 }
 
 function zoomIn()  { zoomButtonStep(ZOOM_WHEEL_FACTOR); }
+
 function zoomOut() { zoomButtonStep(1 / ZOOM_WHEEL_FACTOR); }
 
 function zoomButtonStep(factor) {
@@ -4384,11 +4499,33 @@ function returnToMain() {
   closePanel();
 }
 
+// ─── src/js/panels.js ───────────────────────────────────────────────
+// Lore panels: the main slide-in panel (provinces and Wickermoor
+// locations/beings), the secondary species/NPC panels, and placement of
+// scene images within Wickermoor lore.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
+function panelImageHtml(id, label) {
+  const src = SCENE_IMAGES[id];
+  if (src) {
+    return `<div class="panel-image-frame">
+      <img src="${src}" alt="${label}" class="panel-image">
+    </div>`;
+  }
+  return `<div class="panel-image-placeholder">
+    <div class="placeholder-icon">⬡</div>
+    <div class="placeholder-text">Illustration — Coming Soon</div>
+  </div>`;
+}
+
 // Tracked so submitReenterName() (see the group-unlocking section below)
 // can rebuild whatever panel is currently open after recognizing a new
 // character, rather than leaving it showing stale locked/unlocked state
 // until the visitor closes and reopens it themselves.
 let currentOpenPanelId = null;
+
 let currentOpenPanelLabel = null;
 
 function openPanel(id, label) {
@@ -4439,6 +4576,7 @@ function closeSecondaryPanel(kind) {
 }
 
 function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
+
 function closeSpeciesPanel()  { closeSecondaryPanel('species'); }
 
 function buildSpeciesPanelContent(id) {
@@ -4464,6 +4602,7 @@ function buildSpeciesPanelContent(id) {
 // plus an optional `body` — buildNpcPanelContent only adds a bio section
 // when one is present, rather than showing an empty one.
 function openNpcPanel(id) { openSecondaryPanel('npc', buildNpcPanelContent(id)); }
+
 function closeNpcPanel()  { closeSecondaryPanel('npc'); }
 
 function buildNpcPanelContent(id) {
@@ -4549,114 +4688,6 @@ function buildPanelContent(id, label) {
   return html;
 }
 
-// ── Per-location ambience tracks ──────────────────────────────────
-// WM_TRACKS (data/descriptions.json) maps a Wickermoor id to
-// { src, title? }; ids with no entry simply get no player. Starting one
-// takes over the single shared #bg-music element/topbar player (see
-// setupMusicProgressBar/updateNowPlayingLabel above) rather than playing
-// in a second, independent player — so it shows up with the same
-// play/pause, volume, and progress controls the background loop normally
-// uses. Only one track plays at a time; pausing it (or letting it finish)
-// hands #bg-music back to the default looping track.
-let currentTrackId = null;
-
-// HTML-attribute-escapes a string (order matters: & must go first, or it
-// would double-encode the entities produced by the other replacements).
-function escAttr(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-}
-
-function trackButtonHtml(id) {
-  const track = WM_TRACKS[id];
-  if (!track) return '';
-  const playing = currentTrackId === id && !musicMuted;
-  const label = track.title ? `Play "${track.title}"` : 'Play Ambience';
-  // Several track filenames/titles contain an apostrophe (e.g. "When It's
-  // Time"). The onclick attribute here is single-quoted with double-quoted
-  // JS string arguments inside it, so a literal apostrophe in `id`/`src`
-  // would otherwise prematurely close the *HTML attribute* itself (not
-  // just the JS string) — escAttr() HTML-escapes it to &#39; so the
-  // browser's attribute parser treats it as a literal character; the
-  // decoded value the JS engine then sees is back to a plain apostrophe,
-  // which is harmless inside a double-quoted JS string.
-  return `
-    <div class="wm-track-player">
-      <button class="wm-track-btn${playing ? ' playing' : ''}" id="wm-track-btn-${id}" onclick='toggleLocationTrack("${escAttr(id)}", "${escAttr(track.src)}")'>
-        ${playing ? '⏸ Pause' : '▶ ' + label}
-      </button>
-    </div>
-  `;
-}
-
-function setTrackButtonState(id, playing) {
-  const btn = document.getElementById('wm-track-btn-' + id);
-  if (!btn) return;
-  const track = WM_TRACKS[id];
-  const label = track && track.title ? `Play "${track.title}"` : 'Play Ambience';
-  btn.textContent = playing ? '⏸ Pause' : '▶ ' + label;
-  btn.classList.toggle('playing', playing);
-}
-
-function toggleLocationTrack(id, src) {
-  const audio = document.getElementById('bg-music');
-  if (!audio) return;
-
-  // Clicking the currently-playing track's own button stops it and hands
-  // the topbar player back to the default looping track.
-  // If it's this track but paused (muted from the topbar), resume it where
-  // it left off instead of restarting from the beginning.
-  if (currentTrackId === id) {
-    if (audio.paused) setMusicMuted(false);
-    else revertToDefaultTrack(audio);
-    return;
-  }
-
-  // Switching away from whatever else was playing (if anything).
-  if (currentTrackId) setTrackButtonState(currentTrackId, false);
-
-  currentTrackId = id;
-  audio.loop = false;
-  audio.src = src;
-  audio.currentTime = 0;
-  // Pressing play is an explicit request to hear it — clear any mute so the
-  // topbar icon matches (setMusicMuted also starts playback).
-  if (musicMuted) setMusicMuted(false);
-  else audio.play().catch(() => {});
-  setTrackButtonState(id, true);
-  updateNowPlayingLabel((WM_TRACKS[id] && WM_TRACKS[id].title) || 'Ambience');
-  setResetButtonVisible(true);
-
-  audio.onended = () => revertToDefaultTrack(audio);
-}
-
-// Public entry point for the topbar's "return to default track" button —
-// resetToDefaultTrack() (no args, reads #bg-music itself) vs.
-// revertToDefaultTrack(audio) (internal, called with the element already
-// in hand by toggleLocationTrack/the 'ended' handler).
-function resetToDefaultTrack() {
-  const audio = document.getElementById('bg-music');
-  if (!audio || currentTrackId === null) return; // nothing to return from
-  revertToDefaultTrack(audio);
-}
-
-function setResetButtonVisible(visible) {
-  const btn = document.getElementById('music-reset-btn');
-  if (btn) btn.classList.toggle('visible', visible);
-}
-
-function revertToDefaultTrack(audio) {
-  const finishedId = currentTrackId;
-  currentTrackId = null;
-  audio.onended = null;
-  if (finishedId) setTrackButtonState(finishedId, false);
-  updateNowPlayingLabel(DEFAULT_TRACK_TITLE);
-  setResetButtonVisible(false);
-  audio.loop = true;
-  audio.src = DEFAULT_TRACK_SRC;
-  audio.currentTime = 0;
-  if (!musicMuted) audio.play().catch(() => {});
-}
-
 // ── Per-location scene images ──────────────────────────────────────
 // WM_SCENES (data/descriptions.json) maps a Wickermoor id to an array of
 // image paths — some ids have several (e.g. wm_grinning_sinner has three).
@@ -4672,15 +4703,6 @@ function revertToDefaultTrack(audio) {
 // every one of the 25 locations/beings.
 function imageFrameHtml(src, alt) {
   return `<div class="panel-image-frame"><img src="${src}" alt="${alt}" class="panel-image"></div>`;
-}
-
-// Strips the folder and extension off an image path so a token can name
-// an image by something short and readable instead of by position —
-// "scenes/SCENE_Chapter11_Wickermoor_Village.jpeg" is referenced as
-// "[[SCENE_Chapter11_Wickermoor_Village]]", "chapter-art/Drowned
-// Crossroads.jpg" as "[[Drowned Crossroads]]".
-function imageBasename(path) {
-  return path.split('/').pop().replace(/\.[^./]+$/, '');
 }
 
 // Lets an entry's own prose (WM_LORE in data/descriptions.json) decide
@@ -4835,6 +4857,14 @@ function buildWMContent(id, label) {
   `;
 }
 
+// ─── src/js/unlocks.js ──────────────────────────────────────────────
+// Group-based unlocking: recognizing a character name (or the admin
+// password), remembering it, and deciding which Wickermoor lore a visitor's
+// group may see.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
 // ── Group-based unlocking ─────────────────────────────────────────
 // Instead of one unique password per region, each region already explored
 // in play is tagged (in UNLOCKS, from data/descriptions.json) with which of
@@ -4845,10 +4875,12 @@ function buildWMContent(id, label) {
 // immediately unlocks everything tagged to that group across the whole
 // site, not just the one lock they typed into.
 const RECOGNIZED_GROUP_STORAGE_KEY = 'druskenvald_recognized_group';
+
 const RECOGNIZED_NAME_STORAGE_KEY = 'druskenvald_recognized_name';
 
 // name (lowercased) -> group id, built once from GROUPS.
 const NAME_TO_GROUP = {};
+
 Object.entries(GROUPS).forEach(([groupId, names]) => {
   names.forEach(name => { NAME_TO_GROUP[name.toLowerCase()] = groupId; });
 });
@@ -4873,6 +4905,7 @@ function getRecognizedName() {
 // in isUnlockedForGroup below — main-map provinces don't have anything to
 // bypass (their UNLOCKS rule is already "all").
 const ADMIN_PASSWORD = 'vermintoll';
+
 const ADMIN_UNLOCKED_STORAGE_KEY = 'druskenvald_admin_unlocked';
 
 function isAdminUnlocked() {
@@ -5064,6 +5097,35 @@ function submitReenterName() {
   if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
 }
 
+// ─── src/js/main.js ─────────────────────────────────────────────────
+// Entry point and page-wide listeners: entering from the title screen,
+// clicks/keys on lore links, and Escape handling.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
+function enterSite() {
+  const ts = document.getElementById('title-screen');
+  const app = document.getElementById('app');
+  initMusic(); // called directly from this click handler so the browser
+               // still counts it as tied to a user gesture, satisfying
+               // autoplay-blocking policies
+  ts.classList.add('fade-out');
+  setTimeout(() => {
+    ts.style.display = 'none';
+    app.classList.add('visible');
+    buildHotspots();
+  }, 800);
+}
+
+function buildHotspots() {
+  setupCanvasSizes();
+  buildSvgHotspots('main', 'hotspots-main-svg', MAIN_HOTSPOTS_SVG);
+  buildSvgHotspots('wickermoor', 'hotspots-wickermoor-svg', WICKERMOOR_HOTSPOTS);
+  startLightingAnimation();
+  initZoomPan();
+}
+
 // Species/NPC mentions inside lore text are plain markup carrying
 // data-species / data-npc (written by hand, or expanded by build.js from
 // the {{species:id}} / {{npc:id}} shorthand) rather than inline onclick
@@ -5103,7 +5165,6 @@ document.addEventListener('keydown', e => {
     closePanel();
   }
 });
-
 </script>
 </body>
 </html>

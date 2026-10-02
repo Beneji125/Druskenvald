@@ -1,4 +1,4 @@
-// Combines src/template.html + src/styles.css + src/app.js +
+// Combines src/template.html + src/styles.css + src/js/*.js +
 // src/data/descriptions.json + src/data/hotspots.json into the final,
 // self-contained docs/index.html — the file GitHub Pages serves (repo
 // setting: Pages source = main branch, /docs folder).
@@ -32,6 +32,21 @@ const OUTPUT_FILE = path.join(DOCS_DIR, 'index.html');
 const args = new Set(process.argv.slice(2));
 const REPORT = args.has('--report');
 const FORCE = args.has('--force');
+
+// Script files under src/js/, joined in this order. They all share one
+// <script> scope, so order matters only for code that runs immediately at
+// load (e.g. util.js's `store` must exist before unlocks.js reads it);
+// functions can call each other freely across files. A .js file in src/js/
+// that isn't listed here stops the build rather than being silently left out.
+const SCRIPT_FILES = [
+  'util.js',
+  'music.js',
+  'lighting.js',
+  'map.js',
+  'panels.js',
+  'unlocks.js',
+  'main.js',
+];
 
 function readFile(relPath) {
   return fs.readFileSync(path.join(SRC_DIR, relPath), 'utf8');
@@ -124,7 +139,7 @@ function validate(data, hotspots) {
   });
 
   // [[image]] tokens in Wickermoor lore must name an image listed for that
-  // same id in WM_SCENES or WM_PORTRAITS (see interleaveImages in app.js).
+  // same id in WM_SCENES or WM_PORTRAITS (see interleaveImages in src/js/panels.js).
   for (const [id, entry] of Object.entries(data.WM_LORE || {})) {
     const available = new Set([...(data.WM_SCENES?.[id] || []), ...(data.WM_PORTRAITS?.[id] || [])].map(imageBasename));
     forEachString(entry, (s, where) => {
@@ -186,8 +201,8 @@ function printReport(data, hotspots, { referencedMedia, hotspotIds }) {
   const noTrack = wmIds.filter(id => !(data.WM_TRACKS || {})[id]);
   console.log(`\nWickermoor locations without an ambience track (${noTrack.length}): ${noTrack.join(', ')}`);
 
-  // The default background track is set in app.js, not the data.
-  const appJs = readFile('app.js');
+  // The default background track is set in the script, not the data.
+  const appJs = SCRIPT_FILES.map(f => readFile('js/' + f)).join('\n');
   for (const dir of ['scenes', 'chapter-art', 'npc', 'monsters', 'species', 'audio']) {
     const unused = listFiles(dir).filter(f => !referencedMedia.has(f) && !appJs.includes(f));
     console.log(`\nNot yet used from docs/${dir}/ (${unused.length}):`);
@@ -199,7 +214,15 @@ function printReport(data, hotspots, { referencedMedia, hotspotIds }) {
 function build() {
   const template = readFile('template.html');
   const css = readFile('styles.css');
-  const appJs = readFile('app.js');
+  const unlisted = fs.readdirSync(path.join(SRC_DIR, 'js'))
+    .filter(f => f.endsWith('.js') && !SCRIPT_FILES.includes(f));
+  if (unlisted.length) {
+    console.error(`error: src/js/ has files not listed in SCRIPT_FILES (build.js): ${unlisted.join(', ')}`);
+    process.exit(1);
+  }
+  const appJs = SCRIPT_FILES
+    .map(f => `// ─── src/js/${f} ${'─'.repeat(Math.max(3, 56 - f.length))}\n${readFile('js/' + f).trim()}`)
+    .join('\n\n');
   const hotspots = readJson('data/hotspots.json');
 
   const expandErrors = [];
@@ -219,7 +242,8 @@ function build() {
   const combinedScript = [
     '// ═══════════════════════════════════════════════════════════════',
     '// DATA — generated from src/data/descriptions.json and src/data/hotspots.json',
-    '// Edit those files, not this block.',
+    '// Edit those files, not this block. Each top-level key becomes a global',
+    '// const (LORE, NPCS, WM_LORE, SETTLEMENT_LIGHTS, ...) read by src/js/*.js.',
     '// ═══════════════════════════════════════════════════════════════',
     toConstDeclarations(descriptions),
     toConstDeclarations(hotspots),

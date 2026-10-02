@@ -21,7 +21,14 @@ docs/            The published site — this is what GitHub Pages serves
 src/              Source files that get combined into docs/index.html
   template.html    HTML skeleton
   styles.css       all CSS
-  app.js           all JS logic
+  js/              all JS logic, joined in the order listed in build.js
+    util.js          storage wrapper and small helpers
+    music.js         background music and location ambience tracks
+    lighting.js      map layers, night lighting, light mode, hover reveal
+    map.js           hotspots, zoom & pan, switching maps
+    panels.js        lore / species / NPC panels and lore images
+    unlocks.js       character-name recognition and group unlocks
+    main.js          entry point and page-wide listeners
   data/
     descriptions.json   lore text, species, NPCs, groups/unlocks,
                          image and track references
@@ -46,7 +53,7 @@ node build.js
 ```
 
 Regenerates `docs/index.html` from everything under `src/`. Run this after
-editing `template.html`, `styles.css`, `app.js`, or either file in
+editing `template.html`, `styles.css`, anything in `js/`, or either file in
 `src/data/`.
 
 ## GitHub Pages

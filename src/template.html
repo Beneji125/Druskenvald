@@ -54,7 +54,7 @@
         <span id="music-now-playing" class="music-now-playing"></span>
         <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
         <!-- Stylized waveform seek bar — bars are generated once by
-             buildWaveformBars() (app.js) into #music-waveform-bars, then
+             buildWaveformBars() (js/music.js) into #music-waveform-bars, then
              re-colored (not re-laid-out) on each timeupdate to show
              progress, and clicking/dragging seeks. preserveAspectRatio
              "none" lets the viewBox stretch to whatever width the CSS
@@ -67,7 +67,7 @@
       <!-- Re-enter a character's name at any time — not just the first-ever
            unlock, which otherwise only happens contextually through a
            locked panel's own password box. See toggleReenterNamePrompt()/
-           submitReenterName() in app.js. -->
+           submitReenterName() in js/unlocks.js. -->
       <div id="reenter-name-widget">
         <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
         <div id="reenter-name-prompt">
@@ -81,7 +81,7 @@
   </div>
 
   <!-- The single site-wide audio channel: the looping background track by
-       default, or (see toggleLocationTrack() in app.js) a Wickermoor
+       default, or (see toggleLocationTrack() in js/music.js) a Wickermoor
        location's ambience track while one is playing — there is no
        separate/second player, starting a location track just takes over
        this element and the topbar controls above, then hands back to the
@@ -119,7 +119,7 @@
          openWickermoor() is called, not on initial page load. Mirrors the
          main map layer's canvas/svg structure — viewBox height is 1951, not
          1953, matching this image's actual pixel dimensions (see
-         MAP_LAYERS.wickermoor in app.js). -->
+         MAP_LAYERS.wickermoor in js/lighting.js). -->
     <div id="layer-wickermoor" class="map-layer hidden">
       <div class="zoom-layer" id="zoom-layer-wickermoor">
         <img data-src="MAP_Wickermoor_Hollow.jpeg" alt="Map of Wickermoor Hollow" class="map-img" id="wickermoor-map-img">
@@ -165,7 +165,7 @@
   </div>
 
   <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
-       panel above (see openNpcPanel/closeNpcPanel in app.js), for
+       panel above (see openNpcPanel/closeNpcPanel in js/panels.js), for
        clicking a named NPC mentioned inside a Wickermoor location/being's
        own lore text. A separate panel rather than reusing the species one
        outright, since the two can in principle be triggered from

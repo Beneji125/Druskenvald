@@ -193,7 +193,7 @@
 
   /* Waveform seek bar — a static, decorative bar pattern (not derived from
      the actual audio) that fills in left-to-right as the track plays; see
-     buildWaveformBars()/updateWaveformProgress() in app.js. Click or drag
+     buildWaveformBars()/updateWaveformProgress() in js/music.js. Click or drag
      anywhere on it to seek. */
   .music-waveform {
     width: 110px;
@@ -242,7 +242,7 @@
 
   /* Reset-to-default-track button — same show/hide pattern as #back-btn:
      hidden until a location track is actually playing (see
-     toggleLocationTrack/resetToDefaultTrack in app.js), since there's
+     toggleLocationTrack/resetToDefaultTrack in js/music.js), since there's
      nothing to "return" to otherwise. */
   #music-reset-btn {
     display: none;
@@ -502,7 +502,7 @@
   #npc-overlay.show { opacity: 1; pointer-events: all; }
 
   /* Clickable NPC name mentioned inline in a Wickermoor location/being's
-     own lore text (see openNpcPanel in app.js) — same visual treatment as
+     own lore text (see openNpcPanel in js/panels.js) — same visual treatment as
      .species-link in province lore, so both read as "this is a clickable
      term" consistently across the whole site. */
   .npc-link {
