@@ -48,6 +48,22 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
                    `python extract_xcf.py` (dry run) or `--apply` to write
 ```
 
+## Using the site
+
+- **Links:** the address follows what's on screen, e.g. `#ardengloom` or
+  `#wickermoor/wm_crimson`, so any page can be shared (🔗 in a panel copies
+  it). Back/Forward step through panels and maps. A link to a location the
+  visitor's group hasn't unlocked just shows its locked "???" panel.
+- **Search:** 🔍 (or press `/`) lists provinces, discovered Wickermoor
+  locations, species, and people met in readable lore.
+- **Who am I:** 👤 shows which character the visitor is recognised as,
+  lets them switch, or "Forget me".
+- **New lore:** Wickermoor locations with lore the visitor hasn't read yet
+  (or that has changed since) get a pulsing outline until opened.
+- **Touch:** first tap on a place shows its name, second tap opens it.
+- **Keyboard:** Tab moves between places on the map, Enter opens, Escape
+  closes the top-most panel.
+
 ## Adding art or music
 
 Drop new files into the right `docs/` folder, reference them in

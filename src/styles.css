@@ -359,9 +359,28 @@
     transition: fill 0.2s ease, stroke 0.2s ease;
     vector-effect: non-scaling-stroke;
   }
-  .hotspot-poly:hover {
+  .hotspot-poly:hover,
+  .hotspot-poly:focus-visible {
     fill: rgba(201,169,110,0.16);
     stroke: rgba(201,169,110,0.5);
+  }
+  .hotspot-poly:focus { outline: none; }
+  .hotspot-poly:focus-visible { stroke-width: 2; }
+
+  /* Lore the visitor hasn't read yet (or that's changed since) — a slow,
+     candle-like pulse of the outline, drawing the eye without shouting.
+     Reduced-motion visitors get a steady outline instead (see the
+     prefers-reduced-motion block). */
+  .hotspot-poly.is-new {
+    stroke: rgb(232,213,163);
+    stroke-width: 2;
+    fill: rgba(232,213,163,0.03);
+    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+    animation: new-lore-pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes new-lore-pulse {
+    0%, 100% { stroke-opacity: 0.25; }
+    50%      { stroke-opacity: 0.8; }
   }
 
   /* Tooltip for SVG hotspots */
@@ -420,6 +439,26 @@
     font-family: 'Cinzel', serif;
   }
   #panel-close:hover { color: var(--cream); }
+
+  /* Copy-link button, just left of the close button. */
+  #panel-link {
+    position: absolute;
+    top: 1rem; right: 3.25rem;
+    background: none; border: none;
+    color: var(--gold-dim); font-size: 0.95rem;
+    cursor: pointer; z-index: 2;
+    width: 2rem; height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+    /* Tint the (blue) emoji toward the panel's gold palette. */
+    filter: grayscale(1) sepia(0.8) brightness(1.1);
+    transition: opacity 0.2s;
+  }
+  #panel-link:hover { opacity: 1; }
+
+  /* Panel contents take focus when a panel opens (for screen readers and
+     keyboard scrolling) — no visible ring needed on the whole panel. */
+  #panel-content:focus, #species-panel-content:focus, #npc-panel-content:focus { outline: none; }
 
   #panel-content {
     flex: 1;
@@ -807,6 +846,98 @@
   #reenter-name-prompt .password-input { flex: 1 1 auto; min-width: 0; }
   #reenter-name-prompt .password-error { flex-basis: 100%; margin-top: 0; }
 
+  #identity-status {
+    flex-basis: 100%;
+    font-family: 'IM Fell English', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    line-height: 1.4;
+  }
+  #forget-me-btn { background: transparent; border: 1px solid var(--oak); color: var(--cream-dim); }
+  #forget-me-btn:hover { background: rgba(122,59,46,0.35); }
+
+  /* A small lit "candle" on the 👤 button once a character is recognized. */
+  #reenter-name-btn { position: relative; }
+  #reenter-name-btn.recognized::after {
+    content: '';
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  /* ─── SEARCH INDEX (🔍 popover) ───────────────────────────────── */
+  #index-widget { position: relative; }
+  #index-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 20;
+    width: 300px;
+    max-height: min(70vh, 560px);
+    flex-direction: column;
+    background: var(--panel-bg);
+    border: 1px solid var(--gold-dim);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  }
+  #index-popover.open { display: flex; }
+  #index-filter { flex: 0 0 auto; margin: 0.7rem; }
+  #index-results {
+    overflow-y: auto;
+    padding: 0 0.7rem 0.7rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--oak) transparent;
+  }
+  .index-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 0.8rem 0 0.3rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .index-section-title:first-child { margin-top: 0; }
+  .index-item {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    background: none; border: none;
+    color: var(--cream);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    padding: 0.3rem 0.4rem;
+    cursor: pointer;
+  }
+  .index-item:hover, .index-item:focus-visible { background: rgba(201,169,110,0.08); color: var(--gold); outline: none; }
+  .index-new {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--gold);
+    padding: 0.05rem 0.35rem;
+  }
+  .index-note {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    padding: 0.3rem 0.4rem;
+  }
+
   /* ─── WICKERMOOR AMBIENCE TRACK PLAYER ────────────────────────── */
   .wm-track-player { margin: 0.8rem 0; }
   .wm-track-btn {
@@ -907,12 +1038,13 @@
     }
     .music-player {
       order: 3;
-      flex: 1 1 calc(100% - 48px);
+      flex: 1 1 calc(100% - 92px);
       min-width: 0;
       gap: 0.35rem;
       padding: 0.2rem 0.35rem;
     }
-    #reenter-name-widget { order: 4; flex: 0 0 44px; }
+    #index-widget { order: 4; flex: 0 0 40px; }
+    #reenter-name-widget { order: 5; flex: 0 0 40px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;
       min-height: 40px;
@@ -922,6 +1054,22 @@
     .music-waveform { flex: 1 1 70px; min-width: 50px; width: auto; }
     .music-now-playing { max-width: 82px; }
     .music-time { font-size: 0.55rem; width: 6.1em; }
+    #index-popover {
+      position: fixed;
+      top: auto;
+      right: max(0.6rem, env(safe-area-inset-right));
+      bottom: max(0.6rem, env(safe-area-inset-bottom));
+      left: max(0.6rem, env(safe-area-inset-left));
+      width: auto;
+      max-height: 70dvh;
+      z-index: 70;
+    }
+    #panel-link {
+      top: max(0.5rem, env(safe-area-inset-top));
+      right: calc(max(0.5rem, env(safe-area-inset-right)) + 48px);
+      width: 44px;
+      height: 44px;
+    }
     #reenter-name-prompt {
       position: fixed;
       top: auto;
@@ -973,7 +1121,7 @@
     .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
-    .music-player { flex-basis: calc(100% - 92px); }
+    .music-player { flex-basis: calc(100% - 136px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -982,6 +1130,9 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
+    /* An infinite animation shortened to 0.01ms would flicker — show the
+       "new lore" outline steadily instead. */
+    .hotspot-poly.is-new { animation: none; stroke-opacity: 0.8; }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */

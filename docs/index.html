@@ -386,9 +386,28 @@
     transition: fill 0.2s ease, stroke 0.2s ease;
     vector-effect: non-scaling-stroke;
   }
-  .hotspot-poly:hover {
+  .hotspot-poly:hover,
+  .hotspot-poly:focus-visible {
     fill: rgba(201,169,110,0.16);
     stroke: rgba(201,169,110,0.5);
+  }
+  .hotspot-poly:focus { outline: none; }
+  .hotspot-poly:focus-visible { stroke-width: 2; }
+
+  /* Lore the visitor hasn't read yet (or that's changed since) — a slow,
+     candle-like pulse of the outline, drawing the eye without shouting.
+     Reduced-motion visitors get a steady outline instead (see the
+     prefers-reduced-motion block). */
+  .hotspot-poly.is-new {
+    stroke: rgb(232,213,163);
+    stroke-width: 2;
+    fill: rgba(232,213,163,0.03);
+    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+    animation: new-lore-pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes new-lore-pulse {
+    0%, 100% { stroke-opacity: 0.25; }
+    50%      { stroke-opacity: 0.8; }
   }
 
   /* Tooltip for SVG hotspots */
@@ -447,6 +466,26 @@
     font-family: 'Cinzel', serif;
   }
   #panel-close:hover { color: var(--cream); }
+
+  /* Copy-link button, just left of the close button. */
+  #panel-link {
+    position: absolute;
+    top: 1rem; right: 3.25rem;
+    background: none; border: none;
+    color: var(--gold-dim); font-size: 0.95rem;
+    cursor: pointer; z-index: 2;
+    width: 2rem; height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+    /* Tint the (blue) emoji toward the panel's gold palette. */
+    filter: grayscale(1) sepia(0.8) brightness(1.1);
+    transition: opacity 0.2s;
+  }
+  #panel-link:hover { opacity: 1; }
+
+  /* Panel contents take focus when a panel opens (for screen readers and
+     keyboard scrolling) — no visible ring needed on the whole panel. */
+  #panel-content:focus, #species-panel-content:focus, #npc-panel-content:focus { outline: none; }
 
   #panel-content {
     flex: 1;
@@ -834,6 +873,98 @@
   #reenter-name-prompt .password-input { flex: 1 1 auto; min-width: 0; }
   #reenter-name-prompt .password-error { flex-basis: 100%; margin-top: 0; }
 
+  #identity-status {
+    flex-basis: 100%;
+    font-family: 'IM Fell English', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    line-height: 1.4;
+  }
+  #forget-me-btn { background: transparent; border: 1px solid var(--oak); color: var(--cream-dim); }
+  #forget-me-btn:hover { background: rgba(122,59,46,0.35); }
+
+  /* A small lit "candle" on the 👤 button once a character is recognized. */
+  #reenter-name-btn { position: relative; }
+  #reenter-name-btn.recognized::after {
+    content: '';
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  /* ─── SEARCH INDEX (🔍 popover) ───────────────────────────────── */
+  #index-widget { position: relative; }
+  #index-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 20;
+    width: 300px;
+    max-height: min(70vh, 560px);
+    flex-direction: column;
+    background: var(--panel-bg);
+    border: 1px solid var(--gold-dim);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  }
+  #index-popover.open { display: flex; }
+  #index-filter { flex: 0 0 auto; margin: 0.7rem; }
+  #index-results {
+    overflow-y: auto;
+    padding: 0 0.7rem 0.7rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--oak) transparent;
+  }
+  .index-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 0.8rem 0 0.3rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .index-section-title:first-child { margin-top: 0; }
+  .index-item {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    background: none; border: none;
+    color: var(--cream);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    padding: 0.3rem 0.4rem;
+    cursor: pointer;
+  }
+  .index-item:hover, .index-item:focus-visible { background: rgba(201,169,110,0.08); color: var(--gold); outline: none; }
+  .index-new {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--gold);
+    padding: 0.05rem 0.35rem;
+  }
+  .index-note {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    padding: 0.3rem 0.4rem;
+  }
+
   /* ─── WICKERMOOR AMBIENCE TRACK PLAYER ────────────────────────── */
   .wm-track-player { margin: 0.8rem 0; }
   .wm-track-btn {
@@ -934,12 +1065,13 @@
     }
     .music-player {
       order: 3;
-      flex: 1 1 calc(100% - 48px);
+      flex: 1 1 calc(100% - 92px);
       min-width: 0;
       gap: 0.35rem;
       padding: 0.2rem 0.35rem;
     }
-    #reenter-name-widget { order: 4; flex: 0 0 44px; }
+    #index-widget { order: 4; flex: 0 0 40px; }
+    #reenter-name-widget { order: 5; flex: 0 0 40px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;
       min-height: 40px;
@@ -949,6 +1081,22 @@
     .music-waveform { flex: 1 1 70px; min-width: 50px; width: auto; }
     .music-now-playing { max-width: 82px; }
     .music-time { font-size: 0.55rem; width: 6.1em; }
+    #index-popover {
+      position: fixed;
+      top: auto;
+      right: max(0.6rem, env(safe-area-inset-right));
+      bottom: max(0.6rem, env(safe-area-inset-bottom));
+      left: max(0.6rem, env(safe-area-inset-left));
+      width: auto;
+      max-height: 70dvh;
+      z-index: 70;
+    }
+    #panel-link {
+      top: max(0.5rem, env(safe-area-inset-top));
+      right: calc(max(0.5rem, env(safe-area-inset-right)) + 48px);
+      width: 44px;
+      height: 44px;
+    }
     #reenter-name-prompt {
       position: fixed;
       top: auto;
@@ -1000,7 +1148,7 @@
     .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
-    .music-player { flex-basis: calc(100% - 92px); }
+    .music-player { flex-basis: calc(100% - 136px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1009,6 +1157,9 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
+    /* An infinite animation shortened to 0.01ms would flicker — show the
+       "new lore" outline steadily instead. */
+    .hotspot-poly.is-new { animation: none; stroke-opacity: 0.8; }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */
@@ -1052,29 +1203,43 @@
     <div id="breadcrumb">
       <span id="breadcrumb-text">The Thirteen Provinces</span>
       <div class="music-player">
-        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music">🔊</button>
-        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume">
+        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music" aria-label="Mute music">🔊</button>
+        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume" aria-label="Music volume">
         <span id="music-now-playing" class="music-now-playing"></span>
-        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
+        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones" aria-label="Return to Creaking Bones">⟲</button>
         <!-- Stylized waveform seek bar — bars are generated once by
              buildWaveformBars() (js/music.js) into #music-waveform-bars, then
              re-colored (not re-laid-out) on each timeupdate to show
              progress, and clicking/dragging seeks. preserveAspectRatio
              "none" lets the viewBox stretch to whatever width the CSS
              gives the element, no JS resize handling needed. -->
-        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" title="Seek">
+        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" aria-hidden="true">
           <g id="music-waveform-bars"></g>
         </svg>
         <span id="music-time" class="music-time">0:00 / 0:00</span>
+      </div>
+      <!-- Quick-jump index of everything the visitor can see — provinces,
+           discovered Wickermoor locations, species, and NPCs met in
+           unlocked lore. See js/index.js. -->
+      <div id="index-widget">
+        <button id="index-btn" class="icon-btn" onclick="toggleIndex()" title="Search the realm ( / )" aria-label="Search the realm" aria-expanded="false" aria-controls="index-popover">🔍</button>
+        <div id="index-popover" role="dialog" aria-label="Search the realm">
+          <input type="search" id="index-filter" class="password-input" placeholder="Search places, species, people…" aria-label="Filter" oninput="renderIndex()">
+          <div id="index-results"></div>
+        </div>
       </div>
       <!-- Re-enter a character's name at any time — not just the first-ever
            unlock, which otherwise only happens contextually through a
            locked panel's own password box. See toggleReenterNamePrompt()/
            submitReenterName() in js/unlocks.js. -->
       <div id="reenter-name-widget">
-        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
-        <div id="reenter-name-prompt">
-          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" onkeydown="if(event.key==='Enter') submitReenterName()">
+        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name" aria-label="Enter a character's name" aria-expanded="false" aria-controls="reenter-name-prompt">👤</button>
+        <div id="reenter-name-prompt" role="dialog" aria-label="Who are you?">
+          <!-- Who this visitor is currently recognized as, if anyone, with a
+               way to forget it — see updateIdentityUi() in js/unlocks.js. -->
+          <div id="identity-status"></div>
+          <button id="forget-me-btn" class="password-btn" onclick="forgetIdentity()">Forget me</button>
+          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" aria-label="Character name" onkeydown="if(event.key==='Enter') submitReenterName()">
           <button class="password-btn" onclick="submitReenterName()">Confirm</button>
           <div class="password-error" id="reenter-name-error"></div>
         </div>
@@ -1135,11 +1300,11 @@
 
     <!-- Zoom & Light Mode Controls -->
     <div id="zoom-controls">
-      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode">💡</button>
+      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode" aria-label="Toggle light mode" aria-pressed="false">💡</button>
       <div class="zoom-controls-divider"></div>
-      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in">+</button>
-      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out">−</button>
-      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom">⟲</button>
+      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom" aria-label="Reset zoom">⟲</button>
     </div>
 
   </div>
@@ -1148,23 +1313,26 @@
   <div id="overlay" onclick="closePanel()"></div>
 
   <!-- SVG hotspot tooltip -->
-  <div id="svg-tooltip"></div>
+  <div id="svg-tooltip" aria-hidden="true"></div>
 
   <!-- Lore Panel -->
-  <div id="lore-panel">
+  <!-- Panels are role="dialog" and start `inert` (unfocusable while
+       closed); see updatePanelInertness() in js/panels.js. -->
+  <div id="lore-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="panel-close" onclick="closePanel()" title="Close">✕</button>
-    <div id="panel-content"></div>
+    <button id="panel-link" onclick="copyPanelLink()" title="Copy a link to this page" aria-label="Copy a link to this page">🔗</button>
+    <button id="panel-close" onclick="closePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="panel-content" tabindex="-1"></div>
   </div>
 
   <!-- Species Overlay -->
   <div id="species-overlay" onclick="closeSpeciesPanel()"></div>
 
   <!-- Species Panel -->
-  <div id="species-panel">
+  <div id="species-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close">✕</button>
-    <div id="species-panel-content"></div>
+    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="species-panel-content" tabindex="-1"></div>
   </div>
 
   <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
@@ -1174,10 +1342,10 @@
        outright, since the two can in principle be triggered from
        different underlying panels and shouldn't fight over the same DOM. -->
   <div id="npc-overlay" onclick="closeNpcPanel()"></div>
-  <div id="npc-panel">
+  <div id="npc-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close">✕</button>
-    <div id="npc-panel-content"></div>
+    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="npc-panel-content" tabindex="-1"></div>
   </div>
 
 </div>
@@ -4147,12 +4315,22 @@ let lastLightingRenderTime = 0;
 // visible exactly as drawn, with no lights or shadows. Persists across
 // switching between the main map and Wickermoor Hollow (it's a display
 // preference, not part of the zoom/pan camera state).
+// Remembered between visits (see restoreLightMode, called on entering).
 let lightModeOn = false;
+const LIGHT_MODE_STORAGE_KEY = 'druskenvald_light_mode';
+
+function restoreLightMode() {
+  if (store.get(LIGHT_MODE_STORAGE_KEY) === 'true' && !lightModeOn) toggleLightMode();
+}
 
 function toggleLightMode() {
   lightModeOn = !lightModeOn;
+  store.set(LIGHT_MODE_STORAGE_KEY, String(lightModeOn));
   const btn = document.getElementById('light-mode-btn');
-  if (btn) btn.classList.toggle('active', lightModeOn);
+  if (btn) {
+    btn.classList.toggle('active', lightModeOn);
+    btn.setAttribute('aria-pressed', String(lightModeOn));
+  }
   if (lightModeOn) {
     Object.values(MAP_LAYERS).forEach(layer => {
       const canvas = document.getElementById(layer.lightingCanvasId);
@@ -4246,48 +4424,134 @@ function hideProvinceReveal(layerKey) {
 // Part of the site script: build.js concatenates src/js/*.js (in the
 // order listed in build.js) after the data constants, into one <script>.
 
+// Every hotspot path built, so their labels/markers can be refreshed when
+// the visitor's recognized group changes (see refreshHotspots).
+const hotspotEls = [];
+
+// Touch screens have no hover, so the first tap on a hotspot "arms" it —
+// showing its name and revealing its shape, like hovering does — and a
+// second tap on the same hotspot opens it. Tapping elsewhere disarms.
+let armedHotspot = null;
+
+// Wickermoor hotspots are individually gated per group (see
+// isUnlockedForGroup); a visitor whose group hasn't explored a
+// location/being yet shouldn't get its identity for free by hovering,
+// focusing or tapping it. Province hotspots (UNLOCKS rule "all") always
+// show their name.
+function hotspotLabel(layerKey, hs) {
+  const locked = layerKey === 'wickermoor' && !isUnlockedForGroup(hs.id, getRecognizedGroup());
+  return locked ? '???' : hs.label;
+}
+
+function showTooltip(text, x, y) {
+  const tooltip = document.getElementById('svg-tooltip');
+  tooltip.textContent = text;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+  tooltip.classList.add('show');
+}
+
+function hideTooltip() {
+  document.getElementById('svg-tooltip').classList.remove('show');
+}
+
+// Tooltip anchored at a hotspot's on-screen centre — used for keyboard
+// focus and touch, where there's no cursor position to follow.
+function showTooltipForPath(path, text) {
+  const r = path.getBoundingClientRect();
+  showTooltip(text, r.left + r.width / 2, r.top + r.height / 2);
+}
+
+function activateHotspot(layerKey, hs) {
+  armedHotspot = null;
+  hideTooltip();
+  if (hs.isWickermoor) {
+    openWickermoor();
+  } else {
+    openPanel(hs.id, hs.label);
+  }
+}
+
 function buildSvgHotspots(layerKey, svgId, hotspots) {
   const svg = document.getElementById(svgId);
-  const tooltip = document.getElementById('svg-tooltip');
   const ns = 'http://www.w3.org/2000/svg';
 
   hotspots.forEach(hs => {
     const path = document.createElementNS(ns, 'path');
     path.setAttribute('d', hs.d);
     path.setAttribute('class', 'hotspot-poly');
+    // Focusable and announced as a button, so the map can be explored with
+    // Tab + Enter (aria-label is filled in by refreshHotspots).
+    path.setAttribute('tabindex', '0');
+    path.setAttribute('role', 'button');
+    let lastPointerType = 'mouse';
 
+    path.addEventListener('pointerdown', (e) => { lastPointerType = e.pointerType; });
     path.addEventListener('mousemove', (e) => {
-      // Wickermoor hotspots are individually gated per group (see
-      // isUnlockedForGroup/UNLOCKS below); a visitor whose group hasn't
-      // explored this location/being yet — including one who hasn't
-      // entered a recognized character name at all, so getRecognizedGroup()
-      // is null — shouldn't get its identity for free just by hovering.
-      // Province hotspots on the main map have no such gating (their
-      // UNLOCKS rule is always "all") and keep showing their name as before.
-      const locked = layerKey === 'wickermoor' && !isUnlockedForGroup(hs.id, getRecognizedGroup());
-      tooltip.textContent = locked ? '???' : hs.label;
-      tooltip.style.left = e.clientX + 'px';
-      tooltip.style.top = e.clientY + 'px';
-      tooltip.classList.add('show');
+      showTooltip(hotspotLabel(layerKey, hs), e.clientX, e.clientY);
     });
     path.addEventListener('mouseenter', () => {
       showProvinceReveal(layerKey, hs.d);
     });
     path.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
+      if (armedHotspot === path) return; // a touch-armed hotspot stays lit until disarmed
+      hideTooltip();
       hideProvinceReveal(layerKey);
+    });
+    path.addEventListener('focus', () => {
+      // Only for keyboard focus — a mouse click also focuses the path, but
+      // then the tooltip should keep following the cursor instead.
+      if (!path.matches(':focus-visible')) return;
+      showProvinceReveal(layerKey, hs.d);
+      showTooltipForPath(path, hotspotLabel(layerKey, hs));
+    });
+    path.addEventListener('blur', () => {
+      if (armedHotspot === path) return;
+      hideTooltip();
+      hideProvinceReveal(layerKey);
+    });
+    path.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      activateHotspot(layerKey, hs);
     });
     path.addEventListener('click', () => {
       if (justPanned) return;
-      tooltip.classList.remove('show');
-      if (hs.isWickermoor) {
-        openWickermoor();
-      } else {
-        openPanel(hs.id, hs.label);
+      if (lastPointerType === 'touch' && armedHotspot !== path) {
+        armedHotspot = path;
+        showProvinceReveal(layerKey, hs.d);
+        showTooltipForPath(path, hotspotLabel(layerKey, hs));
+        return;
       }
+      activateHotspot(layerKey, hs);
     });
 
     svg.appendChild(path);
+    hotspotEls.push({ layerKey, hs, path });
+  });
+}
+
+// Disarms a touch-armed hotspot when a tap lands anywhere else on the map.
+function setupHotspotDisarm() {
+  const wrapper = document.getElementById('map-wrapper');
+  if (!wrapper) return;
+  wrapper.addEventListener('pointerdown', (e) => {
+    if (!armedHotspot || e.target === armedHotspot) return;
+    armedHotspot = null;
+    hideTooltip();
+    hideProvinceReveal(getActiveMapKey());
+  });
+}
+
+// Re-labels every hotspot for the current recognition state (a locked
+// Wickermoor location is announced as "Unknown location", not its name)
+// and flags any with lore the visitor hasn't read yet (see isNewLore).
+function refreshHotspots() {
+  hotspotEls.forEach(({ layerKey, hs, path }) => {
+    const label = hotspotLabel(layerKey, hs);
+    path.setAttribute('aria-label', label === '???' ? 'Unknown location' : label);
+    const isNew = hs.isWickermoor ? anyNewWickermoorLore() : isNewLore(hs.id);
+    path.classList.toggle('is-new', isNew);
   });
 }
 
@@ -4498,7 +4762,14 @@ function openWickermoor() {
   document.getElementById('breadcrumb-text').textContent = 'Wickermoor Hollow';
   resetZoomState('main');
   resetZoomState('wickermoor');
+  armedHotspot = null;
+  hideTooltip();
+  // Keyboard focus was on the main map's (now hidden) Wickermoor hotspot —
+  // move it to the "Return" button, from which Tab continues into the
+  // hollow's own hotspots.
+  const focusWasOnMap = !!document.activeElement?.closest?.('#layer-main');
   closePanel();
+  if (focusWasOnMap) document.getElementById('back-btn')?.focus({ preventScroll: true });
 }
 
 function returnToMain() {
@@ -4508,7 +4779,13 @@ function returnToMain() {
   document.getElementById('breadcrumb-text').textContent = 'The Thirteen Provinces';
   resetZoomState('main');
   resetZoomState('wickermoor');
+  armedHotspot = null;
+  hideTooltip();
   closePanel();
+  // Coming back from the hollow, land keyboard focus on its hotspot again.
+  if (document.activeElement === document.getElementById('back-btn') || document.activeElement === document.body) {
+    hotspotEls.find(h => h.layerKey === 'main' && h.hs.isWickermoor)?.path.focus({ preventScroll: true });
+  }
 }
 
 // ─── src/js/panels.js ───────────────────────────────────────────────
@@ -4539,10 +4816,61 @@ function panelImageHtml(id, label) {
 let currentOpenPanelId = null;
 let currentOpenPanelLabel = null;
 
+// ── Focus & dialog plumbing shared by all three panels ─────────────
+// Where focus was before each panel opened, to hand it back on close (so a
+// keyboard user returns to the hotspot/link they came from).
+const panelReturnFocus = {};
+
+function isPanelOpen(panelId) {
+  return !!document.getElementById(panelId)?.classList.contains('open');
+}
+
+// Closed panels sit just off-screen rather than being removed, so they're
+// made `inert` (unfocusable, hidden from screen readers) until opened; and
+// whatever an open panel covers (map, topbar, a lore panel under a
+// species/NPC panel) is made inert too, which is what keeps Tab inside the
+// panel on top — the "modal" part of aria-modal.
+function updatePanelInertness() {
+  const lore = isPanelOpen('lore-panel');
+  const secondary = isPanelOpen('species-panel') || isPanelOpen('npc-panel');
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.inert = value; };
+  set('lore-panel', !lore || secondary);
+  set('species-panel', !isPanelOpen('species-panel'));
+  set('npc-panel', !isPanelOpen('npc-panel'));
+  set('map-wrapper', lore || secondary);
+  set('topbar', lore || secondary);
+}
+
+// Shared open/close bookkeeping: accessible name from the rendered title,
+// focus moved into the panel (only on a fresh open — a re-render of an
+// already-open panel, e.g. after unlocking, leaves focus alone), and
+// focus restored to where it came from on close.
+function afterPanelOpened(panelId, contentEl, wasOpen) {
+  const panel = document.getElementById(panelId);
+  const title = contentEl.querySelector('.panel-title')?.textContent.trim() || '';
+  panel.setAttribute('aria-label', title === '???' ? 'Unknown location' : title);
+  if (!wasOpen) {
+    panelReturnFocus[panelId] = document.activeElement;
+    updatePanelInertness();
+    contentEl.focus({ preventScroll: true });
+  }
+}
+
+function afterPanelClosed(panelId, wasOpen) {
+  updatePanelInertness();
+  if (!wasOpen) return;
+  const back = panelReturnFocus[panelId];
+  panelReturnFocus[panelId] = null;
+  if (back && back.isConnected && typeof back.focus === 'function' && !back.closest('.hidden')) {
+    back.focus({ preventScroll: true });
+  }
+}
+
 function openPanel(id, label) {
   const panel = document.getElementById('lore-panel');
   const content = document.getElementById('panel-content');
   const overlay = document.getElementById('overlay');
+  const wasOpen = isPanelOpen('lore-panel');
 
   currentOpenPanelId = id;
   currentOpenPanelLabel = label;
@@ -4550,9 +4878,14 @@ function openPanel(id, label) {
   panel.classList.add('open');
   overlay.classList.add('show');
   content.scrollTop = 0;
+  afterPanelOpened('lore-panel', content, wasOpen);
+  // Reading it counts as having seen this lore (see isNewLore).
+  markLoreSeen(id);
+  syncUrl();
 }
 
 function closePanel() {
+  const wasOpen = isPanelOpen('lore-panel');
   currentOpenPanelId = null;
   currentOpenPanelLabel = null;
   document.getElementById('lore-panel').classList.remove('open');
@@ -4560,6 +4893,8 @@ function closePanel() {
   hideProvinceReveal(getActiveMapKey());
   closeSpeciesPanel();
   closeNpcPanel();
+  afterPanelClosed('lore-panel', wasOpen);
+  syncUrl();
 }
 
 // Species panel — a secondary panel (slides in from the left) shown when a
@@ -4574,16 +4909,20 @@ function openSecondaryPanel(kind, html) {
   const content = document.getElementById(`${kind}-panel-content`);
   const overlay = document.getElementById(`${kind}-overlay`);
   if (!panel || !content || !overlay) return;
+  const wasOpen = isPanelOpen(`${kind}-panel`);
 
   content.innerHTML = html;
   panel.classList.add('open');
   overlay.classList.add('show');
   content.scrollTop = 0;
+  afterPanelOpened(`${kind}-panel`, content, wasOpen);
 }
 
 function closeSecondaryPanel(kind) {
+  const wasOpen = isPanelOpen(`${kind}-panel`);
   document.getElementById(`${kind}-panel`)?.classList.remove('open');
   document.getElementById(`${kind}-overlay`)?.classList.remove('show');
+  afterPanelClosed(`${kind}-panel`, wasOpen);
 }
 
 function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
@@ -4884,6 +5223,8 @@ function buildWMContent(id, label) {
 // site, not just the one lock they typed into.
 const RECOGNIZED_GROUP_STORAGE_KEY = 'druskenvald_recognized_group';
 const RECOGNIZED_NAME_STORAGE_KEY = 'druskenvald_recognized_name';
+// The name exactly as typed (trimmed), only for showing "Recognised as …".
+const RECOGNIZED_DISPLAY_STORAGE_KEY = 'druskenvald_recognized_display';
 
 // nameHash(name) -> group id, built once from GROUPS. build.js ships
 // GROUPS to the page already hashed (see src/js/hash.js), so the character
@@ -4929,15 +5270,83 @@ function isAdminUnlocked() {
 // (to check what a lower-access group actually sees) set the new group
 // but never cleared the old admin flag — admin access silently persisted
 // underneath it, making every group look like it could see everything.
-function setRecognizedIdentity({ admin = false, groupId = null, name = null } = {}) {
+function setRecognizedIdentity({ admin = false, groupId = null, name = null, displayName = null } = {}) {
   store.set(ADMIN_UNLOCKED_STORAGE_KEY, String(admin));
   if (groupId) {
     store.set(RECOGNIZED_GROUP_STORAGE_KEY, groupId);
     store.set(RECOGNIZED_NAME_STORAGE_KEY, name);
+    store.set(RECOGNIZED_DISPLAY_STORAGE_KEY, displayName || name);
   } else {
     store.remove(RECOGNIZED_GROUP_STORAGE_KEY);
     store.remove(RECOGNIZED_NAME_STORAGE_KEY);
+    store.remove(RECOGNIZED_DISPLAY_STORAGE_KEY);
   }
+  // Hotspot labels, "new lore" markers and the 👤 status all depend on who
+  // the visitor is recognized as.
+  refreshHotspots();
+  updateIdentityUi();
+}
+
+// ── "Recognised as …" status in the topbar's 👤 popover ──────────
+function updateIdentityUi() {
+  const status = document.getElementById('identity-status');
+  const forget = document.getElementById('forget-me-btn');
+  const btn = document.getElementById('reenter-name-btn');
+  if (!status || !forget || !btn) return;
+
+  const admin = isAdminUnlocked();
+  const display = store.get(RECOGNIZED_DISPLAY_STORAGE_KEY);
+  const known = admin || !!getRecognizedGroup();
+  const who = admin ? 'the Game Master' : display;
+
+  status.textContent = known
+    ? `Recognised as ${who}.`
+    : "Not recognised yet. Enter one of your characters' names to unlock what your party has discovered.";
+  forget.style.display = known ? '' : 'none';
+  btn.classList.toggle('recognized', known);
+  const title = known ? `Recognised as ${who}: change or forget` : "Enter a character's name";
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+}
+
+function forgetIdentity() {
+  setRecognizedIdentity({});
+  if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
+  document.getElementById('reenter-name-input')?.focus();
+}
+
+// ── "New lore" markers ────────────────────────────────────────────
+// Remembers, per Wickermoor id, a hash of the lore text the visitor last
+// read there. Anything unlocked whose current text differs — never opened,
+// or updated by the GM since — counts as new, and its hotspot gets a
+// gently pulsing outline (.is-new) until it's opened again.
+const SEEN_STORAGE_KEY = 'druskenvald_seen_lore';
+
+function loadSeenLore() {
+  try { return JSON.parse(store.get(SEEN_STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function loreSignature(id) {
+  return nameHash(revealedLoreHtml(id, getRecognizedGroup(), getRecognizedName()));
+}
+
+function isNewLore(id, seen = loadSeenLore()) {
+  if (!id.startsWith('wm_') || !isUnlockedForGroup(id, getRecognizedGroup())) return false;
+  return seen[id] !== loreSignature(id);
+}
+
+function anyNewWickermoorLore() {
+  const seen = loadSeenLore();
+  return WICKERMOOR_HOTSPOTS.some(h => isNewLore(h.id, seen));
+}
+
+function markLoreSeen(id) {
+  if (!isNewLore(id)) return;
+  const seen = loadSeenLore();
+  seen[id] = loreSignature(id);
+  store.set(SEEN_STORAGE_KEY, JSON.stringify(seen));
+  refreshHotspots();
 }
 
 function isUnlockedForGroup(id, groupId) {
@@ -5032,14 +5441,17 @@ function buildPasswordSection(id) {
 // they typed it into isn't unlocked for that group yet. Returns false (and
 // shows the error, re-focusing the emptied input) if nothing matched.
 function recognizeEnteredName(input, err) {
-  const entered = input.value.trim().toLowerCase();
+  const typed = input.value.trim();
+  const entered = typed.toLowerCase();
   const hash = nameHash(entered);
   if (hash === ADMIN_PASSWORD_HASH) {
     setRecognizedIdentity({ admin: true });
     return true;
   }
   if (NAME_HASH_TO_GROUP[hash]) {
-    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered });
+    // Typed all in lowercase ("tharn")? Show it capitalized ("Tharn").
+    const displayName = typed === entered ? typed.replace(/(^|[\s-])(\S)/g, (m, sep, ch) => sep + ch.toUpperCase()) : typed;
+    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered, displayName });
     return true;
   }
   err.textContent = "That name isn't recognized here.";
@@ -5082,8 +5494,18 @@ function toggleReenterNamePrompt() {
   const prompt = document.getElementById('reenter-name-prompt');
   if (!prompt) return;
   const opening = !prompt.classList.contains('open');
+  if (opening) closeIndex();
   prompt.classList.toggle('open', opening);
-  if (opening) document.getElementById('reenter-name-input').focus();
+  document.getElementById('reenter-name-btn')?.setAttribute('aria-expanded', String(opening));
+  if (opening) {
+    updateIdentityUi();
+    document.getElementById('reenter-name-input').focus();
+  }
+}
+
+function closeReenterNamePrompt() {
+  document.getElementById('reenter-name-prompt')?.classList.remove('open');
+  document.getElementById('reenter-name-btn')?.setAttribute('aria-expanded', 'false');
 }
 
 function submitReenterName() {
@@ -5094,7 +5516,7 @@ function submitReenterName() {
 
   err.classList.remove('show');
   input.value = '';
-  document.getElementById('reenter-name-prompt').classList.remove('open');
+  closeReenterNamePrompt();
 
   // Whatever panel is currently open (if any) was rendered under the old
   // recognition, so its title/lore/track player/images may all be stale
@@ -5103,9 +5525,264 @@ function submitReenterName() {
   if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
 }
 
+// ─── src/js/router.js ───────────────────────────────────────────────
+// Shareable links: the address bar mirrors what's on screen, so any page
+// can be bookmarked or sent to another player, and the browser's Back
+// button steps back out of panels and maps.
+//
+//   (no hash)                 the main map
+//   #ardengloom               the main map with a province's panel open
+//   #wickermoor               the Wickermoor Hollow map
+//   #wickermoor/wm_crimson    Wickermoor with a location's panel open
+//
+// A link to a Wickermoor location the visitor's group hasn't unlocked
+// simply opens its locked "???" panel — the link itself gives nothing away.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
+// Off until the visitor has entered from the title screen (see enterSite),
+// and suppressed while applyRoute is itself driving the UI, so that
+// responding to a URL change doesn't push yet another history entry.
+let routerReady = false;
+let applyingRoute = false;
+
+function routeHash(mapKey, panelId) {
+  if (mapKey === 'wickermoor') return panelId ? `#wickermoor/${panelId}` : '#wickermoor';
+  return panelId ? `#${panelId}` : '';
+}
+
+// Called after anything that changes the map or open panel.
+function syncUrl() {
+  if (!routerReady || applyingRoute) return;
+  const target = routeHash(getActiveMapKey(), currentOpenPanelId);
+  if (target === location.hash) return;
+
+  // Closing a panel that was opened on top of this exact page: step back
+  // through history instead of piling up a new entry, so Back afterwards
+  // leaves the page rather than re-opening the panel just closed.
+  const state = history.state;
+  if (state && state.openedFrom !== undefined && state.openedFrom === target) {
+    history.back();
+    return;
+  }
+  const newState = currentOpenPanelId ? { openedFrom: location.hash } : {};
+  history.pushState(newState, '', target || location.pathname + location.search);
+}
+
+function parseRoute(hash) {
+  const raw = decodeURIComponent(hash.replace(/^#/, ''));
+  if (raw === 'wickermoor') return { mapKey: 'wickermoor', panelId: null };
+  if (raw.startsWith('wickermoor/')) return { mapKey: 'wickermoor', panelId: raw.slice('wickermoor/'.length) };
+  return { mapKey: 'main', panelId: raw || null };
+}
+
+// Brings the UI in line with the current address (on entering the site,
+// and on Back/Forward). Unknown ids are ignored and the address tidied up.
+function applyRoute() {
+  const { mapKey, panelId } = parseRoute(location.hash);
+  const hotspots = mapKey === 'wickermoor' ? WICKERMOOR_HOTSPOTS : MAIN_HOTSPOTS_SVG;
+  const hs = panelId ? hotspots.find(h => h.id === panelId && !h.isWickermoor) : null;
+
+  applyingRoute = true;
+  try {
+    if (getActiveMapKey() !== mapKey) {
+      if (mapKey === 'wickermoor') openWickermoor();
+      else returnToMain();
+    }
+    if (hs && currentOpenPanelId !== hs.id) openPanel(hs.id, hs.label);
+    else if (!hs && currentOpenPanelId) closePanel();
+  } finally {
+    applyingRoute = false;
+  }
+
+  const actual = routeHash(getActiveMapKey(), currentOpenPanelId);
+  if (actual !== location.hash) history.replaceState({}, '', actual || location.pathname + location.search);
+}
+
+window.addEventListener('popstate', () => {
+  if (routerReady) applyRoute();
+});
+
+// The 🔗 button in the lore panel.
+async function copyPanelLink() {
+  const btn = document.getElementById('panel-link');
+  try {
+    await navigator.clipboard.writeText(location.href);
+  } catch {
+    // Clipboard access can be refused (older browsers, some privacy
+    // settings) — fall back to showing the link to copy by hand.
+    window.prompt('Copy this link:', location.href);
+    return;
+  }
+  if (!btn) return;
+  btn.textContent = '✓';
+  btn.title = 'Link copied';
+  setTimeout(() => {
+    btn.textContent = '🔗';
+    btn.title = 'Copy a link to this page';
+  }, 1500);
+}
+
+// ─── src/js/index.js ────────────────────────────────────────────────
+// The 🔍 quick-jump index: a filterable list of everything this visitor
+// can see — the main map's places, Wickermoor locations their group has
+// discovered (undiscovered ones are only counted, never named), species,
+// and the people mentioned in lore they can read. Opened from the topbar,
+// or with the "/" key.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
+function npcIdsIn(html) {
+  return [...String(html || '').matchAll(/data-npc="([^"]+)"/g)].map(m => m[1]);
+}
+
+// Built fresh each time the index opens or the filter changes, since what's
+// visible depends on who the visitor is recognized as.
+function indexSections() {
+  const group = getRecognizedGroup();
+  const name = getRecognizedName();
+
+  const places = MAIN_HOTSPOTS_SVG.map(hs => hs.isWickermoor
+    ? { label: 'Wickermoor Hollow', go: () => openWickermoor() }
+    : { label: hs.label, go: () => { if (getActiveMapKey() !== 'main') returnToMain(); openPanel(hs.id, hs.label); } });
+
+  const unlocked = WICKERMOOR_HOTSPOTS.filter(hs => isUnlockedForGroup(hs.id, group));
+  const seen = loadSeenLore();
+  const hollow = unlocked.map(hs => ({
+    label: hs.label,
+    isNew: isNewLore(hs.id, seen),
+    go: () => { if (getActiveMapKey() !== 'wickermoor') openWickermoor(); openPanel(hs.id, hs.label); },
+  }));
+  const undiscovered = WICKERMOOR_HOTSPOTS.length - unlocked.length;
+
+  const species = Object.entries(SPECIES).map(([id, sp]) => ({ label: sp.name, go: () => openSpeciesPanel(id) }));
+
+  // Only people the visitor has actually read about — listing every NPC
+  // would spoil who turns up in places their party hasn't been.
+  const npcIds = new Set();
+  Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => npcIds.add(id)));
+  unlocked.forEach(hs => npcIdsIn(revealedLoreHtml(hs.id, group, name)).forEach(id => npcIds.add(id)));
+  const people = [...npcIds].filter(id => NPCS[id]).map(id => ({ label: NPCS[id].name, go: () => openNpcPanel(id) }));
+
+  const byLabel = (a, b) => a.label.localeCompare(b.label);
+  return [
+    { title: 'Druskenvald', items: places.sort(byLabel) },
+    {
+      title: 'Wickermoor Hollow',
+      items: hollow.sort(byLabel),
+      note: undiscovered ? `${undiscovered} ${undiscovered === 1 ? 'place remains' : 'places remain'} undiscovered.` : '',
+    },
+    { title: 'Species', items: species.sort(byLabel) },
+    { title: 'People', items: people.sort(byLabel) },
+  ];
+}
+
+// Items rendered by the last renderIndex(), in on-screen order, so Enter in
+// the filter box can open the first match.
+let indexVisibleItems = [];
+
+function renderIndex() {
+  const results = document.getElementById('index-results');
+  const filter = (document.getElementById('index-filter')?.value || '').trim().toLowerCase();
+  if (!results) return;
+
+  results.innerHTML = '';
+  indexVisibleItems = [];
+  indexSections().forEach(section => {
+    const items = section.items.filter(item => !filter || item.label.toLowerCase().includes(filter));
+    if (!items.length && (filter || !section.note)) return;
+
+    const heading = document.createElement('div');
+    heading.className = 'index-section-title';
+    heading.textContent = section.title;
+    results.appendChild(heading);
+
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'index-item';
+      btn.textContent = item.label;
+      if (item.isNew) {
+        const badge = document.createElement('span');
+        badge.className = 'index-new';
+        badge.textContent = 'new';
+        btn.appendChild(badge);
+      }
+      btn.addEventListener('click', () => openIndexItem(item));
+      results.appendChild(btn);
+      indexVisibleItems.push(item);
+    });
+
+    if (section.note && !filter) {
+      const note = document.createElement('div');
+      note.className = 'index-note';
+      note.textContent = section.note;
+      results.appendChild(note);
+    }
+  });
+
+  if (!indexVisibleItems.length) {
+    const empty = document.createElement('div');
+    empty.className = 'index-note';
+    empty.textContent = 'Nothing by that name… yet.';
+    results.appendChild(empty);
+  }
+}
+
+// Focus goes back to the 🔍 button first, so that's where it returns when
+// the panel this opens is closed (the list item itself is about to vanish).
+function openIndexItem(item) {
+  closeIndex();
+  document.getElementById('index-btn')?.focus({ preventScroll: true });
+  item.go();
+}
+
+function isIndexOpen() {
+  return !!document.getElementById('index-popover')?.classList.contains('open');
+}
+
+function toggleIndex() {
+  if (isIndexOpen()) { closeIndex(); return; }
+  closeReenterNamePrompt();
+  const filter = document.getElementById('index-filter');
+  if (filter) filter.value = '';
+  renderIndex();
+  document.getElementById('index-popover').classList.add('open');
+  document.getElementById('index-btn')?.setAttribute('aria-expanded', 'true');
+  filter?.focus();
+}
+
+function closeIndex() {
+  document.getElementById('index-popover')?.classList.remove('open');
+  document.getElementById('index-btn')?.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('index-filter')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && indexVisibleItems.length) {
+      e.preventDefault();
+      openIndexItem(indexVisibleItems[0]);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      document.querySelector('#index-results .index-item')?.focus();
+    }
+  });
+  // Up/Down arrows move between results once one has focus.
+  document.getElementById('index-results')?.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const items = [...document.querySelectorAll('#index-results .index-item')];
+    const i = items.indexOf(document.activeElement);
+    if (i === -1) return;
+    e.preventDefault();
+    if (e.key === 'ArrowUp' && i === 0) document.getElementById('index-filter')?.focus();
+    else items[Math.max(0, Math.min(items.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))].focus();
+  });
+});
+
 // ─── src/js/main.js ─────────────────────────────────────────────────
 // Entry point and page-wide listeners: entering from the title screen,
-// clicks/keys on lore links, and Escape handling.
+// clicks/keys on lore links, keyboard shortcuts, and Escape handling.
 //
 // Part of the site script: build.js concatenates src/js/*.js (in the
 // order listed in build.js) after the data constants, into one <script>.
@@ -5121,6 +5798,12 @@ function enterSite() {
     ts.style.display = 'none';
     app.classList.add('visible');
     buildHotspots();
+    restoreLightMode();
+    updateIdentityUi();
+    // Arriving through a shared link (e.g. #wickermoor/wm_crimson) goes
+    // straight there; from here on the address follows what's on screen.
+    applyRoute();
+    routerReady = true;
   }, 800);
 }
 
@@ -5130,6 +5813,8 @@ function buildHotspots() {
   buildSvgHotspots('wickermoor', 'hotspots-wickermoor-svg', WICKERMOOR_HOTSPOTS);
   startLightingAnimation();
   initZoomPan();
+  setupHotspotDisarm();
+  refreshHotspots();
 }
 
 // Species/NPC mentions inside lore text are plain markup carrying
@@ -5156,8 +5841,9 @@ document.addEventListener('keydown', e => {
 });
 
 // Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
-// on top of the main lore panel, so it closes first; then the topbar's name
-// prompt if it's open; then the lore panel itself.
+// on top of the main lore panel, so it closes first; then the topbar's
+// popovers (search, name prompt) if open, returning focus to their button;
+// then the lore panel itself.
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const isOpen = id => document.getElementById(id)?.classList.contains('open');
@@ -5165,10 +5851,33 @@ document.addEventListener('keydown', e => {
     closeNpcPanel();
   } else if (isOpen('species-panel')) {
     closeSpeciesPanel();
+  } else if (isOpen('index-popover')) {
+    closeIndex();
+    document.getElementById('index-btn')?.focus();
   } else if (isOpen('reenter-name-prompt')) {
-    document.getElementById('reenter-name-prompt').classList.remove('open');
+    closeReenterNamePrompt();
+    document.getElementById('reenter-name-btn')?.focus();
   } else {
     closePanel();
+  }
+});
+
+// "/" opens the search index from anywhere on the map (not while typing,
+// and not while a panel is covering the topbar).
+document.addEventListener('keydown', e => {
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest?.('input, textarea, [contenteditable="true"]')) return;
+  if (!document.getElementById('app')?.classList.contains('visible')) return;
+  if (document.getElementById('topbar')?.inert) return;
+  e.preventDefault();
+  if (!isIndexOpen()) toggleIndex();
+});
+
+// Clicking/tapping outside a topbar popover closes it.
+document.addEventListener('pointerdown', e => {
+  if (isIndexOpen() && !e.target.closest('#index-widget')) closeIndex();
+  if (document.getElementById('reenter-name-prompt')?.classList.contains('open') && !e.target.closest('#reenter-name-widget')) {
+    closeReenterNamePrompt();
   }
 });
 </script>

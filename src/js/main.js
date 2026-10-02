@@ -1,5 +1,5 @@
 // Entry point and page-wide listeners: entering from the title screen,
-// clicks/keys on lore links, and Escape handling.
+// clicks/keys on lore links, keyboard shortcuts, and Escape handling.
 //
 // Part of the site script: build.js concatenates src/js/*.js (in the
 // order listed in build.js) after the data constants, into one <script>.
@@ -15,6 +15,12 @@ function enterSite() {
     ts.style.display = 'none';
     app.classList.add('visible');
     buildHotspots();
+    restoreLightMode();
+    updateIdentityUi();
+    // Arriving through a shared link (e.g. #wickermoor/wm_crimson) goes
+    // straight there; from here on the address follows what's on screen.
+    applyRoute();
+    routerReady = true;
   }, 800);
 }
 
@@ -24,6 +30,8 @@ function buildHotspots() {
   buildSvgHotspots('wickermoor', 'hotspots-wickermoor-svg', WICKERMOOR_HOTSPOTS);
   startLightingAnimation();
   initZoomPan();
+  setupHotspotDisarm();
+  refreshHotspots();
 }
 
 // Species/NPC mentions inside lore text are plain markup carrying
@@ -50,8 +58,9 @@ document.addEventListener('keydown', e => {
 });
 
 // Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
-// on top of the main lore panel, so it closes first; then the topbar's name
-// prompt if it's open; then the lore panel itself.
+// on top of the main lore panel, so it closes first; then the topbar's
+// popovers (search, name prompt) if open, returning focus to their button;
+// then the lore panel itself.
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const isOpen = id => document.getElementById(id)?.classList.contains('open');
@@ -59,9 +68,32 @@ document.addEventListener('keydown', e => {
     closeNpcPanel();
   } else if (isOpen('species-panel')) {
     closeSpeciesPanel();
+  } else if (isOpen('index-popover')) {
+    closeIndex();
+    document.getElementById('index-btn')?.focus();
   } else if (isOpen('reenter-name-prompt')) {
-    document.getElementById('reenter-name-prompt').classList.remove('open');
+    closeReenterNamePrompt();
+    document.getElementById('reenter-name-btn')?.focus();
   } else {
     closePanel();
+  }
+});
+
+// "/" opens the search index from anywhere on the map (not while typing,
+// and not while a panel is covering the topbar).
+document.addEventListener('keydown', e => {
+  if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest?.('input, textarea, [contenteditable="true"]')) return;
+  if (!document.getElementById('app')?.classList.contains('visible')) return;
+  if (document.getElementById('topbar')?.inert) return;
+  e.preventDefault();
+  if (!isIndexOpen()) toggleIndex();
+});
+
+// Clicking/tapping outside a topbar popover closes it.
+document.addEventListener('pointerdown', e => {
+  if (isIndexOpen() && !e.target.closest('#index-widget')) closeIndex();
+  if (document.getElementById('reenter-name-prompt')?.classList.contains('open') && !e.target.closest('#reenter-name-widget')) {
+    closeReenterNamePrompt();
   }
 });

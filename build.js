@@ -49,6 +49,8 @@ const SCRIPT_FILES = [
   'map.js',
   'panels.js',
   'unlocks.js',
+  'router.js',
+  'index.js',
   'main.js',
 ];
 

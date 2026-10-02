@@ -4,48 +4,134 @@
 // Part of the site script: build.js concatenates src/js/*.js (in the
 // order listed in build.js) after the data constants, into one <script>.
 
+// Every hotspot path built, so their labels/markers can be refreshed when
+// the visitor's recognized group changes (see refreshHotspots).
+const hotspotEls = [];
+
+// Touch screens have no hover, so the first tap on a hotspot "arms" it —
+// showing its name and revealing its shape, like hovering does — and a
+// second tap on the same hotspot opens it. Tapping elsewhere disarms.
+let armedHotspot = null;
+
+// Wickermoor hotspots are individually gated per group (see
+// isUnlockedForGroup); a visitor whose group hasn't explored a
+// location/being yet shouldn't get its identity for free by hovering,
+// focusing or tapping it. Province hotspots (UNLOCKS rule "all") always
+// show their name.
+function hotspotLabel(layerKey, hs) {
+  const locked = layerKey === 'wickermoor' && !isUnlockedForGroup(hs.id, getRecognizedGroup());
+  return locked ? '???' : hs.label;
+}
+
+function showTooltip(text, x, y) {
+  const tooltip = document.getElementById('svg-tooltip');
+  tooltip.textContent = text;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+  tooltip.classList.add('show');
+}
+
+function hideTooltip() {
+  document.getElementById('svg-tooltip').classList.remove('show');
+}
+
+// Tooltip anchored at a hotspot's on-screen centre — used for keyboard
+// focus and touch, where there's no cursor position to follow.
+function showTooltipForPath(path, text) {
+  const r = path.getBoundingClientRect();
+  showTooltip(text, r.left + r.width / 2, r.top + r.height / 2);
+}
+
+function activateHotspot(layerKey, hs) {
+  armedHotspot = null;
+  hideTooltip();
+  if (hs.isWickermoor) {
+    openWickermoor();
+  } else {
+    openPanel(hs.id, hs.label);
+  }
+}
+
 function buildSvgHotspots(layerKey, svgId, hotspots) {
   const svg = document.getElementById(svgId);
-  const tooltip = document.getElementById('svg-tooltip');
   const ns = 'http://www.w3.org/2000/svg';
 
   hotspots.forEach(hs => {
     const path = document.createElementNS(ns, 'path');
     path.setAttribute('d', hs.d);
     path.setAttribute('class', 'hotspot-poly');
+    // Focusable and announced as a button, so the map can be explored with
+    // Tab + Enter (aria-label is filled in by refreshHotspots).
+    path.setAttribute('tabindex', '0');
+    path.setAttribute('role', 'button');
+    let lastPointerType = 'mouse';
 
+    path.addEventListener('pointerdown', (e) => { lastPointerType = e.pointerType; });
     path.addEventListener('mousemove', (e) => {
-      // Wickermoor hotspots are individually gated per group (see
-      // isUnlockedForGroup/UNLOCKS below); a visitor whose group hasn't
-      // explored this location/being yet — including one who hasn't
-      // entered a recognized character name at all, so getRecognizedGroup()
-      // is null — shouldn't get its identity for free just by hovering.
-      // Province hotspots on the main map have no such gating (their
-      // UNLOCKS rule is always "all") and keep showing their name as before.
-      const locked = layerKey === 'wickermoor' && !isUnlockedForGroup(hs.id, getRecognizedGroup());
-      tooltip.textContent = locked ? '???' : hs.label;
-      tooltip.style.left = e.clientX + 'px';
-      tooltip.style.top = e.clientY + 'px';
-      tooltip.classList.add('show');
+      showTooltip(hotspotLabel(layerKey, hs), e.clientX, e.clientY);
     });
     path.addEventListener('mouseenter', () => {
       showProvinceReveal(layerKey, hs.d);
     });
     path.addEventListener('mouseleave', () => {
-      tooltip.classList.remove('show');
+      if (armedHotspot === path) return; // a touch-armed hotspot stays lit until disarmed
+      hideTooltip();
       hideProvinceReveal(layerKey);
+    });
+    path.addEventListener('focus', () => {
+      // Only for keyboard focus — a mouse click also focuses the path, but
+      // then the tooltip should keep following the cursor instead.
+      if (!path.matches(':focus-visible')) return;
+      showProvinceReveal(layerKey, hs.d);
+      showTooltipForPath(path, hotspotLabel(layerKey, hs));
+    });
+    path.addEventListener('blur', () => {
+      if (armedHotspot === path) return;
+      hideTooltip();
+      hideProvinceReveal(layerKey);
+    });
+    path.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      activateHotspot(layerKey, hs);
     });
     path.addEventListener('click', () => {
       if (justPanned) return;
-      tooltip.classList.remove('show');
-      if (hs.isWickermoor) {
-        openWickermoor();
-      } else {
-        openPanel(hs.id, hs.label);
+      if (lastPointerType === 'touch' && armedHotspot !== path) {
+        armedHotspot = path;
+        showProvinceReveal(layerKey, hs.d);
+        showTooltipForPath(path, hotspotLabel(layerKey, hs));
+        return;
       }
+      activateHotspot(layerKey, hs);
     });
 
     svg.appendChild(path);
+    hotspotEls.push({ layerKey, hs, path });
+  });
+}
+
+// Disarms a touch-armed hotspot when a tap lands anywhere else on the map.
+function setupHotspotDisarm() {
+  const wrapper = document.getElementById('map-wrapper');
+  if (!wrapper) return;
+  wrapper.addEventListener('pointerdown', (e) => {
+    if (!armedHotspot || e.target === armedHotspot) return;
+    armedHotspot = null;
+    hideTooltip();
+    hideProvinceReveal(getActiveMapKey());
+  });
+}
+
+// Re-labels every hotspot for the current recognition state (a locked
+// Wickermoor location is announced as "Unknown location", not its name)
+// and flags any with lore the visitor hasn't read yet (see isNewLore).
+function refreshHotspots() {
+  hotspotEls.forEach(({ layerKey, hs, path }) => {
+    const label = hotspotLabel(layerKey, hs);
+    path.setAttribute('aria-label', label === '???' ? 'Unknown location' : label);
+    const isNew = hs.isWickermoor ? anyNewWickermoorLore() : isNewLore(hs.id);
+    path.classList.toggle('is-new', isNew);
   });
 }
 
@@ -256,7 +342,14 @@ function openWickermoor() {
   document.getElementById('breadcrumb-text').textContent = 'Wickermoor Hollow';
   resetZoomState('main');
   resetZoomState('wickermoor');
+  armedHotspot = null;
+  hideTooltip();
+  // Keyboard focus was on the main map's (now hidden) Wickermoor hotspot —
+  // move it to the "Return" button, from which Tab continues into the
+  // hollow's own hotspots.
+  const focusWasOnMap = !!document.activeElement?.closest?.('#layer-main');
   closePanel();
+  if (focusWasOnMap) document.getElementById('back-btn')?.focus({ preventScroll: true });
 }
 
 function returnToMain() {
@@ -266,5 +359,11 @@ function returnToMain() {
   document.getElementById('breadcrumb-text').textContent = 'The Thirteen Provinces';
   resetZoomState('main');
   resetZoomState('wickermoor');
+  armedHotspot = null;
+  hideTooltip();
   closePanel();
+  // Coming back from the hollow, land keyboard focus on its hotspot again.
+  if (document.activeElement === document.getElementById('back-btn') || document.activeElement === document.body) {
+    hotspotEls.find(h => h.layerKey === 'main' && h.hs.isWickermoor)?.path.focus({ preventScroll: true });
+  }
 }

@@ -343,12 +343,22 @@ let lastLightingRenderTime = 0;
 // visible exactly as drawn, with no lights or shadows. Persists across
 // switching between the main map and Wickermoor Hollow (it's a display
 // preference, not part of the zoom/pan camera state).
+// Remembered between visits (see restoreLightMode, called on entering).
 let lightModeOn = false;
+const LIGHT_MODE_STORAGE_KEY = 'druskenvald_light_mode';
+
+function restoreLightMode() {
+  if (store.get(LIGHT_MODE_STORAGE_KEY) === 'true' && !lightModeOn) toggleLightMode();
+}
 
 function toggleLightMode() {
   lightModeOn = !lightModeOn;
+  store.set(LIGHT_MODE_STORAGE_KEY, String(lightModeOn));
   const btn = document.getElementById('light-mode-btn');
-  if (btn) btn.classList.toggle('active', lightModeOn);
+  if (btn) {
+    btn.classList.toggle('active', lightModeOn);
+    btn.setAttribute('aria-pressed', String(lightModeOn));
+  }
   if (lightModeOn) {
     Object.values(MAP_LAYERS).forEach(layer => {
       const canvas = document.getElementById(layer.lightingCanvasId);

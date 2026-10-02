@@ -16,6 +16,8 @@
 // site, not just the one lock they typed into.
 const RECOGNIZED_GROUP_STORAGE_KEY = 'druskenvald_recognized_group';
 const RECOGNIZED_NAME_STORAGE_KEY = 'druskenvald_recognized_name';
+// The name exactly as typed (trimmed), only for showing "Recognised as …".
+const RECOGNIZED_DISPLAY_STORAGE_KEY = 'druskenvald_recognized_display';
 
 // nameHash(name) -> group id, built once from GROUPS. build.js ships
 // GROUPS to the page already hashed (see src/js/hash.js), so the character
@@ -61,15 +63,83 @@ function isAdminUnlocked() {
 // (to check what a lower-access group actually sees) set the new group
 // but never cleared the old admin flag — admin access silently persisted
 // underneath it, making every group look like it could see everything.
-function setRecognizedIdentity({ admin = false, groupId = null, name = null } = {}) {
+function setRecognizedIdentity({ admin = false, groupId = null, name = null, displayName = null } = {}) {
   store.set(ADMIN_UNLOCKED_STORAGE_KEY, String(admin));
   if (groupId) {
     store.set(RECOGNIZED_GROUP_STORAGE_KEY, groupId);
     store.set(RECOGNIZED_NAME_STORAGE_KEY, name);
+    store.set(RECOGNIZED_DISPLAY_STORAGE_KEY, displayName || name);
   } else {
     store.remove(RECOGNIZED_GROUP_STORAGE_KEY);
     store.remove(RECOGNIZED_NAME_STORAGE_KEY);
+    store.remove(RECOGNIZED_DISPLAY_STORAGE_KEY);
   }
+  // Hotspot labels, "new lore" markers and the 👤 status all depend on who
+  // the visitor is recognized as.
+  refreshHotspots();
+  updateIdentityUi();
+}
+
+// ── "Recognised as …" status in the topbar's 👤 popover ──────────
+function updateIdentityUi() {
+  const status = document.getElementById('identity-status');
+  const forget = document.getElementById('forget-me-btn');
+  const btn = document.getElementById('reenter-name-btn');
+  if (!status || !forget || !btn) return;
+
+  const admin = isAdminUnlocked();
+  const display = store.get(RECOGNIZED_DISPLAY_STORAGE_KEY);
+  const known = admin || !!getRecognizedGroup();
+  const who = admin ? 'the Game Master' : display;
+
+  status.textContent = known
+    ? `Recognised as ${who}.`
+    : "Not recognised yet. Enter one of your characters' names to unlock what your party has discovered.";
+  forget.style.display = known ? '' : 'none';
+  btn.classList.toggle('recognized', known);
+  const title = known ? `Recognised as ${who}: change or forget` : "Enter a character's name";
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+}
+
+function forgetIdentity() {
+  setRecognizedIdentity({});
+  if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
+  document.getElementById('reenter-name-input')?.focus();
+}
+
+// ── "New lore" markers ────────────────────────────────────────────
+// Remembers, per Wickermoor id, a hash of the lore text the visitor last
+// read there. Anything unlocked whose current text differs — never opened,
+// or updated by the GM since — counts as new, and its hotspot gets a
+// gently pulsing outline (.is-new) until it's opened again.
+const SEEN_STORAGE_KEY = 'druskenvald_seen_lore';
+
+function loadSeenLore() {
+  try { return JSON.parse(store.get(SEEN_STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function loreSignature(id) {
+  return nameHash(revealedLoreHtml(id, getRecognizedGroup(), getRecognizedName()));
+}
+
+function isNewLore(id, seen = loadSeenLore()) {
+  if (!id.startsWith('wm_') || !isUnlockedForGroup(id, getRecognizedGroup())) return false;
+  return seen[id] !== loreSignature(id);
+}
+
+function anyNewWickermoorLore() {
+  const seen = loadSeenLore();
+  return WICKERMOOR_HOTSPOTS.some(h => isNewLore(h.id, seen));
+}
+
+function markLoreSeen(id) {
+  if (!isNewLore(id)) return;
+  const seen = loadSeenLore();
+  seen[id] = loreSignature(id);
+  store.set(SEEN_STORAGE_KEY, JSON.stringify(seen));
+  refreshHotspots();
 }
 
 function isUnlockedForGroup(id, groupId) {
@@ -164,14 +234,17 @@ function buildPasswordSection(id) {
 // they typed it into isn't unlocked for that group yet. Returns false (and
 // shows the error, re-focusing the emptied input) if nothing matched.
 function recognizeEnteredName(input, err) {
-  const entered = input.value.trim().toLowerCase();
+  const typed = input.value.trim();
+  const entered = typed.toLowerCase();
   const hash = nameHash(entered);
   if (hash === ADMIN_PASSWORD_HASH) {
     setRecognizedIdentity({ admin: true });
     return true;
   }
   if (NAME_HASH_TO_GROUP[hash]) {
-    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered });
+    // Typed all in lowercase ("tharn")? Show it capitalized ("Tharn").
+    const displayName = typed === entered ? typed.replace(/(^|[\s-])(\S)/g, (m, sep, ch) => sep + ch.toUpperCase()) : typed;
+    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered, displayName });
     return true;
   }
   err.textContent = "That name isn't recognized here.";
@@ -214,8 +287,18 @@ function toggleReenterNamePrompt() {
   const prompt = document.getElementById('reenter-name-prompt');
   if (!prompt) return;
   const opening = !prompt.classList.contains('open');
+  if (opening) closeIndex();
   prompt.classList.toggle('open', opening);
-  if (opening) document.getElementById('reenter-name-input').focus();
+  document.getElementById('reenter-name-btn')?.setAttribute('aria-expanded', String(opening));
+  if (opening) {
+    updateIdentityUi();
+    document.getElementById('reenter-name-input').focus();
+  }
+}
+
+function closeReenterNamePrompt() {
+  document.getElementById('reenter-name-prompt')?.classList.remove('open');
+  document.getElementById('reenter-name-btn')?.setAttribute('aria-expanded', 'false');
 }
 
 function submitReenterName() {
@@ -226,7 +309,7 @@ function submitReenterName() {
 
   err.classList.remove('show');
   input.value = '';
-  document.getElementById('reenter-name-prompt').classList.remove('open');
+  closeReenterNamePrompt();
 
   // Whatever panel is currently open (if any) was rendered under the old
   // recognition, so its title/lore/track player/images may all be stale

@@ -49,29 +49,43 @@
     <div id="breadcrumb">
       <span id="breadcrumb-text">The Thirteen Provinces</span>
       <div class="music-player">
-        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music">🔊</button>
-        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume">
+        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music" aria-label="Mute music">🔊</button>
+        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume" aria-label="Music volume">
         <span id="music-now-playing" class="music-now-playing"></span>
-        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
+        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones" aria-label="Return to Creaking Bones">⟲</button>
         <!-- Stylized waveform seek bar — bars are generated once by
              buildWaveformBars() (js/music.js) into #music-waveform-bars, then
              re-colored (not re-laid-out) on each timeupdate to show
              progress, and clicking/dragging seeks. preserveAspectRatio
              "none" lets the viewBox stretch to whatever width the CSS
              gives the element, no JS resize handling needed. -->
-        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" title="Seek">
+        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" aria-hidden="true">
           <g id="music-waveform-bars"></g>
         </svg>
         <span id="music-time" class="music-time">0:00 / 0:00</span>
+      </div>
+      <!-- Quick-jump index of everything the visitor can see — provinces,
+           discovered Wickermoor locations, species, and NPCs met in
+           unlocked lore. See js/index.js. -->
+      <div id="index-widget">
+        <button id="index-btn" class="icon-btn" onclick="toggleIndex()" title="Search the realm ( / )" aria-label="Search the realm" aria-expanded="false" aria-controls="index-popover">🔍</button>
+        <div id="index-popover" role="dialog" aria-label="Search the realm">
+          <input type="search" id="index-filter" class="password-input" placeholder="Search places, species, people…" aria-label="Filter" oninput="renderIndex()">
+          <div id="index-results"></div>
+        </div>
       </div>
       <!-- Re-enter a character's name at any time — not just the first-ever
            unlock, which otherwise only happens contextually through a
            locked panel's own password box. See toggleReenterNamePrompt()/
            submitReenterName() in js/unlocks.js. -->
       <div id="reenter-name-widget">
-        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
-        <div id="reenter-name-prompt">
-          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" onkeydown="if(event.key==='Enter') submitReenterName()">
+        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name" aria-label="Enter a character's name" aria-expanded="false" aria-controls="reenter-name-prompt">👤</button>
+        <div id="reenter-name-prompt" role="dialog" aria-label="Who are you?">
+          <!-- Who this visitor is currently recognized as, if anyone, with a
+               way to forget it — see updateIdentityUi() in js/unlocks.js. -->
+          <div id="identity-status"></div>
+          <button id="forget-me-btn" class="password-btn" onclick="forgetIdentity()">Forget me</button>
+          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" aria-label="Character name" onkeydown="if(event.key==='Enter') submitReenterName()">
           <button class="password-btn" onclick="submitReenterName()">Confirm</button>
           <div class="password-error" id="reenter-name-error"></div>
         </div>
@@ -132,11 +146,11 @@
 
     <!-- Zoom & Light Mode Controls -->
     <div id="zoom-controls">
-      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode">💡</button>
+      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode" aria-label="Toggle light mode" aria-pressed="false">💡</button>
       <div class="zoom-controls-divider"></div>
-      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in">+</button>
-      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out">−</button>
-      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom">⟲</button>
+      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom" aria-label="Reset zoom">⟲</button>
     </div>
 
   </div>
@@ -145,23 +159,26 @@
   <div id="overlay" onclick="closePanel()"></div>
 
   <!-- SVG hotspot tooltip -->
-  <div id="svg-tooltip"></div>
+  <div id="svg-tooltip" aria-hidden="true"></div>
 
   <!-- Lore Panel -->
-  <div id="lore-panel">
+  <!-- Panels are role="dialog" and start `inert` (unfocusable while
+       closed); see updatePanelInertness() in js/panels.js. -->
+  <div id="lore-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="panel-close" onclick="closePanel()" title="Close">✕</button>
-    <div id="panel-content"></div>
+    <button id="panel-link" onclick="copyPanelLink()" title="Copy a link to this page" aria-label="Copy a link to this page">🔗</button>
+    <button id="panel-close" onclick="closePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="panel-content" tabindex="-1"></div>
   </div>
 
   <!-- Species Overlay -->
   <div id="species-overlay" onclick="closeSpeciesPanel()"></div>
 
   <!-- Species Panel -->
-  <div id="species-panel">
+  <div id="species-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close">✕</button>
-    <div id="species-panel-content"></div>
+    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="species-panel-content" tabindex="-1"></div>
   </div>
 
   <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
@@ -171,10 +188,10 @@
        outright, since the two can in principle be triggered from
        different underlying panels and shouldn't fight over the same DOM. -->
   <div id="npc-overlay" onclick="closeNpcPanel()"></div>
-  <div id="npc-panel">
+  <div id="npc-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close">✕</button>
-    <div id="npc-panel-content"></div>
+    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="npc-panel-content" tabindex="-1"></div>
   </div>
 
 </div>

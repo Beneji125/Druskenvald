@@ -25,10 +25,61 @@ function panelImageHtml(id, label) {
 let currentOpenPanelId = null;
 let currentOpenPanelLabel = null;
 
+// ── Focus & dialog plumbing shared by all three panels ─────────────
+// Where focus was before each panel opened, to hand it back on close (so a
+// keyboard user returns to the hotspot/link they came from).
+const panelReturnFocus = {};
+
+function isPanelOpen(panelId) {
+  return !!document.getElementById(panelId)?.classList.contains('open');
+}
+
+// Closed panels sit just off-screen rather than being removed, so they're
+// made `inert` (unfocusable, hidden from screen readers) until opened; and
+// whatever an open panel covers (map, topbar, a lore panel under a
+// species/NPC panel) is made inert too, which is what keeps Tab inside the
+// panel on top — the "modal" part of aria-modal.
+function updatePanelInertness() {
+  const lore = isPanelOpen('lore-panel');
+  const secondary = isPanelOpen('species-panel') || isPanelOpen('npc-panel');
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.inert = value; };
+  set('lore-panel', !lore || secondary);
+  set('species-panel', !isPanelOpen('species-panel'));
+  set('npc-panel', !isPanelOpen('npc-panel'));
+  set('map-wrapper', lore || secondary);
+  set('topbar', lore || secondary);
+}
+
+// Shared open/close bookkeeping: accessible name from the rendered title,
+// focus moved into the panel (only on a fresh open — a re-render of an
+// already-open panel, e.g. after unlocking, leaves focus alone), and
+// focus restored to where it came from on close.
+function afterPanelOpened(panelId, contentEl, wasOpen) {
+  const panel = document.getElementById(panelId);
+  const title = contentEl.querySelector('.panel-title')?.textContent.trim() || '';
+  panel.setAttribute('aria-label', title === '???' ? 'Unknown location' : title);
+  if (!wasOpen) {
+    panelReturnFocus[panelId] = document.activeElement;
+    updatePanelInertness();
+    contentEl.focus({ preventScroll: true });
+  }
+}
+
+function afterPanelClosed(panelId, wasOpen) {
+  updatePanelInertness();
+  if (!wasOpen) return;
+  const back = panelReturnFocus[panelId];
+  panelReturnFocus[panelId] = null;
+  if (back && back.isConnected && typeof back.focus === 'function' && !back.closest('.hidden')) {
+    back.focus({ preventScroll: true });
+  }
+}
+
 function openPanel(id, label) {
   const panel = document.getElementById('lore-panel');
   const content = document.getElementById('panel-content');
   const overlay = document.getElementById('overlay');
+  const wasOpen = isPanelOpen('lore-panel');
 
   currentOpenPanelId = id;
   currentOpenPanelLabel = label;
@@ -36,9 +87,14 @@ function openPanel(id, label) {
   panel.classList.add('open');
   overlay.classList.add('show');
   content.scrollTop = 0;
+  afterPanelOpened('lore-panel', content, wasOpen);
+  // Reading it counts as having seen this lore (see isNewLore).
+  markLoreSeen(id);
+  syncUrl();
 }
 
 function closePanel() {
+  const wasOpen = isPanelOpen('lore-panel');
   currentOpenPanelId = null;
   currentOpenPanelLabel = null;
   document.getElementById('lore-panel').classList.remove('open');
@@ -46,6 +102,8 @@ function closePanel() {
   hideProvinceReveal(getActiveMapKey());
   closeSpeciesPanel();
   closeNpcPanel();
+  afterPanelClosed('lore-panel', wasOpen);
+  syncUrl();
 }
 
 // Species panel — a secondary panel (slides in from the left) shown when a
@@ -60,16 +118,20 @@ function openSecondaryPanel(kind, html) {
   const content = document.getElementById(`${kind}-panel-content`);
   const overlay = document.getElementById(`${kind}-overlay`);
   if (!panel || !content || !overlay) return;
+  const wasOpen = isPanelOpen(`${kind}-panel`);
 
   content.innerHTML = html;
   panel.classList.add('open');
   overlay.classList.add('show');
   content.scrollTop = 0;
+  afterPanelOpened(`${kind}-panel`, content, wasOpen);
 }
 
 function closeSecondaryPanel(kind) {
+  const wasOpen = isPanelOpen(`${kind}-panel`);
   document.getElementById(`${kind}-panel`)?.classList.remove('open');
   document.getElementById(`${kind}-overlay`)?.classList.remove('show');
+  afterPanelClosed(`${kind}-panel`, wasOpen);
 }
 
 function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
