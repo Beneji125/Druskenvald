@@ -1090,12 +1090,12 @@
       "art": "scenes/SCENE_Chapter24_Mural.webp"
     },
     "wm_webwoods": {
-      "chapter": 26,
-      "title": "Moonfall"
+      "chapter": 14.5,
+      "heading": "Interlude · The Webwoods"
     },
     "wm_howlers": {
-      "chapter": 26,
-      "title": "Moonfall"
+      "chapter": 14.6,
+      "heading": "Interlude · The Howlers"
     }
   },
   "WM_TEASERS": {

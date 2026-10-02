@@ -243,6 +243,7 @@ function chronicleEntries() {
         hs,
         chapter: ch.chapter ?? 99,
         title: ch.title || '',
+        heading: ch.heading || '',
         art: ch.art,
         own,
         isNew: isNewLore(hs.id, seen),
@@ -250,6 +251,16 @@ function chronicleEntries() {
       };
     })
     .sort((a, b) => a.chapter - b.chapter || chapterListOrder(a.hs.id) - chapterListOrder(b.hs.id));
+}
+
+// The heading an entry is filed under. WM_CHAPTERS can give a `heading`
+// of its own — e.g. "Interlude · The Webwoods" for a homebrew session that
+// isn't one of the book's chapters — while `chapter` still decides where it
+// sorts (decimals like 14.5 slot between chapters).
+function chronicleHeading(e) {
+  if (e.heading) return e.heading;
+  if (e.chapter === 99) return 'Elsewhere in the Hollow';
+  return `Chapter ${e.chapter}${e.title ? ' · ' + e.title : ''}`;
 }
 
 function chronicleHtml() {
@@ -261,10 +272,10 @@ function chronicleHtml() {
   let lastChapter = null;
   html += `<ol class="chronicle">`;
   entries.forEach(e => {
-    if (e.chapter !== lastChapter) {
-      lastChapter = e.chapter;
-      const label = e.chapter === 99 ? 'Elsewhere in the Hollow' : `Chapter ${e.chapter}${e.title ? ' · ' + escHtml(e.title) : ''}`;
-      html += `<li class="chronicle-chapter" aria-hidden="true">${label}</li>`;
+    const label = chronicleHeading(e);
+    if (label !== lastChapter) {
+      lastChapter = label;
+      html += `<li class="chronicle-chapter" aria-hidden="true">${escHtml(label)}</li>`;
     }
     html += `<li class="chronicle-entry">
       ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : '<div class="chronicle-art blank"></div>'}

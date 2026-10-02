@@ -81,7 +81,9 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   `body`.
 - **Chronicle:** lists a group's unlocked Wickermoor locations, ordered
   by `WM_CHAPTERS` (chapter number, title, art) — renumber freely if your
-  parties went another way; places in the same chapter keep the order
+  parties went another way. A homebrew session that isn't one of the
+  book's chapters can have its own `heading` (e.g. "Interlude · The
+  Webwoods") with a decimal `chapter` like 14.5 to slot it in between; places in the same chapter keep the order
   they're listed in. It quotes the group's own `byGroup` tale when there
   is one, and offers the place's ambience track if it has one in
   `WM_TRACKS` (not every place needs one).
