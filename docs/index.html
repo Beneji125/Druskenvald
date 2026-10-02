@@ -1515,7 +1515,7 @@
 
     <!-- Zoom & Light Mode Controls -->
     <div id="zoom-controls">
-      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode" aria-label="Toggle light mode" aria-pressed="false">💡</button>
+      <button class="zoom-btn" id="light-mode-btn" onclick="cycleLightingMode()" title="Lighting: Night. Click for dusk." aria-label="Lighting: Night. Click for dusk.">🌙</button>
       <div class="zoom-controls-divider"></div>
       <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
       <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
@@ -5420,8 +5420,17 @@ function renderLightingForLayer(layerKey, t) {
 
   ctx.clearRect(0, 0, CW, CH);
 
-  // Step 1 — night darkness base
-  ctx.fillStyle = 'rgba(4, 4, 7, 0.92)';
+  // Step 1 — darkness base: near-black at night; at dusk a thinner veil
+  // shading from violet sky (top) to a last amber glow (bottom).
+  if (lightingMode === 'dusk') {
+    const sky = ctx.createLinearGradient(0, 0, 0, CH);
+    sky.addColorStop(0, 'rgba(18, 8, 30, 0.84)');
+    sky.addColorStop(0.55, 'rgba(26, 10, 22, 0.78)');
+    sky.addColorStop(1, 'rgba(52, 22, 8, 0.70)');
+    ctx.fillStyle = sky;
+  } else {
+    ctx.fillStyle = 'rgba(4, 4, 7, 0.92)';
+  }
   ctx.fillRect(0, 0, CW, CH);
 
   // Step 2 — cut holes with destination-out
@@ -5558,25 +5567,53 @@ let lightingAnimationRunning = false;
 let lightingAnimationStart = null;
 let lastLightingRenderTime = 0;
 
-// "Light mode" — fully removes the night/darkness overlay so the map is
-// visible exactly as drawn, with no lights or shadows. Persists across
-// switching between the main map and Wickermoor Hollow (it's a display
-// preference, not part of the zoom/pan camera state).
-// Remembered between visits (see restoreLightMode, called on entering).
-let lightModeOn = false;
-const LIGHT_MODE_STORAGE_KEY = 'druskenvald_light_mode';
+// Lighting mode, cycled by the 💡 button: "night" (full darkness), "dusk"
+// (a softer twilight veil, lights still flickering) and "day" — light
+// mode, which removes the overlay entirely so the map shows exactly as
+// drawn. A display preference: kept across switching maps and remembered
+// between visits (see restoreLightMode, called on entering).
+const LIGHTING_MODES = ['night', 'dusk', 'day'];
+const LIGHTING_MODE_INFO = {
+  night: { icon: '🌙', label: 'Night' },
+  dusk:  { icon: '🌆', label: 'Dusk' },
+  day:   { icon: '☀️', label: 'Day (no darkness)' },
+};
+const LIGHTING_MODE_STORAGE_KEY = 'druskenvald_lighting_mode';
+const LEGACY_LIGHT_MODE_STORAGE_KEY = 'druskenvald_light_mode';
+let lightingMode = 'night';
+let lightModeOn = false; // true in "day" mode, when the render loop pauses
 
 function restoreLightMode() {
-  if (store.get(LIGHT_MODE_STORAGE_KEY) === 'true' && !lightModeOn) toggleLightMode();
+  let saved = store.get(LIGHTING_MODE_STORAGE_KEY);
+  // Earlier versions only had an on/off light mode.
+  if (!saved && store.get(LEGACY_LIGHT_MODE_STORAGE_KEY) === 'true') saved = 'day';
+  setLightingMode(LIGHTING_MODES.includes(saved) ? saved : 'night');
 }
 
+function cycleLightingMode() {
+  const next = LIGHTING_MODES[(LIGHTING_MODES.indexOf(lightingMode) + 1) % LIGHTING_MODES.length];
+  setLightingMode(next);
+  store.set(LIGHTING_MODE_STORAGE_KEY, next);
+}
+
+// Kept for anything still calling the old on/off toggle.
 function toggleLightMode() {
-  lightModeOn = !lightModeOn;
-  store.set(LIGHT_MODE_STORAGE_KEY, String(lightModeOn));
+  setLightingMode(lightingMode === 'day' ? 'night' : 'day');
+  store.set(LIGHTING_MODE_STORAGE_KEY, lightingMode);
+}
+
+function setLightingMode(mode) {
+  lightingMode = mode;
+  lightModeOn = mode === 'day';
   const btn = document.getElementById('light-mode-btn');
   if (btn) {
-    btn.classList.toggle('active', lightModeOn);
-    btn.setAttribute('aria-pressed', String(lightModeOn));
+    const info = LIGHTING_MODE_INFO[mode];
+    const nextInfo = LIGHTING_MODE_INFO[LIGHTING_MODES[(LIGHTING_MODES.indexOf(mode) + 1) % LIGHTING_MODES.length]];
+    btn.textContent = info.icon;
+    btn.classList.toggle('active', mode !== 'night');
+    const title = `Lighting: ${info.label}. Click for ${nextInfo.label.toLowerCase()}.`;
+    btn.title = title;
+    btn.setAttribute('aria-label', title);
   }
   if (lightModeOn) {
     Object.values(MAP_LAYERS).forEach(layer => {
@@ -5589,8 +5626,8 @@ function toggleLightMode() {
       if (tintCanvas) tintCanvas.getContext('2d').clearRect(0, 0, tintCanvas.width, tintCanvas.height);
     });
   }
-  // Turning night mode back on needs no explicit redraw here — the
-  // animation loop (paused while lightModeOn) resumes drawing on its next tick.
+  // Night/dusk need no explicit redraw here — the animation loop picks up
+  // the new mode (and resumes, if it was paused for day) on its next tick.
 }
 
 function lightingAnimationTick(timestamp) {
