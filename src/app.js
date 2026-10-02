@@ -986,24 +986,29 @@ function closePanel() {
 // Species panel — a secondary panel (slides in from the left) shown when a
 // clickable species mention is clicked inside a province's lore. Left open
 // independently of the main lore panel so the reader keeps their place.
-function openSpeciesPanel(id) {
-  const panel = document.getElementById('species-panel');
-  const content = document.getElementById('species-panel-content');
-  const overlay = document.getElementById('species-overlay');
+//
+// Both secondary panels share the same markup shape in template.html —
+// #<kind>-panel, #<kind>-panel-content, #<kind>-overlay — so one pair of
+// helpers drives either.
+function openSecondaryPanel(kind, html) {
+  const panel = document.getElementById(`${kind}-panel`);
+  const content = document.getElementById(`${kind}-panel-content`);
+  const overlay = document.getElementById(`${kind}-overlay`);
   if (!panel || !content || !overlay) return;
 
-  content.innerHTML = buildSpeciesPanelContent(id);
+  content.innerHTML = html;
   panel.classList.add('open');
   overlay.classList.add('show');
   content.scrollTop = 0;
 }
 
-function closeSpeciesPanel() {
-  const panel = document.getElementById('species-panel');
-  const overlay = document.getElementById('species-overlay');
-  if (panel) panel.classList.remove('open');
-  if (overlay) overlay.classList.remove('show');
+function closeSecondaryPanel(kind) {
+  document.getElementById(`${kind}-panel`)?.classList.remove('open');
+  document.getElementById(`${kind}-overlay`)?.classList.remove('show');
 }
+
+function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
+function closeSpeciesPanel()  { closeSecondaryPanel('species'); }
 
 function buildSpeciesPanelContent(id) {
   const sp = SPECIES[id];
@@ -1027,24 +1032,8 @@ function buildSpeciesPanelContent(id) {
 // WM_LORE in data/descriptions.json). NPCS entries hold a name + portrait,
 // plus an optional `body` — buildNpcPanelContent only adds a bio section
 // when one is present, rather than showing an empty one.
-function openNpcPanel(id) {
-  const panel = document.getElementById('npc-panel');
-  const content = document.getElementById('npc-panel-content');
-  const overlay = document.getElementById('npc-overlay');
-  if (!panel || !content || !overlay) return;
-
-  content.innerHTML = buildNpcPanelContent(id);
-  panel.classList.add('open');
-  overlay.classList.add('show');
-  content.scrollTop = 0;
-}
-
-function closeNpcPanel() {
-  const panel = document.getElementById('npc-panel');
-  const overlay = document.getElementById('npc-overlay');
-  if (panel) panel.classList.remove('open');
-  if (overlay) overlay.classList.remove('show');
-}
+function openNpcPanel(id) { openSecondaryPanel('npc', buildNpcPanelContent(id)); }
+function closeNpcPanel()  { closeSecondaryPanel('npc'); }
 
 function buildNpcPanelContent(id) {
   const npc = NPCS[id];
@@ -1567,26 +1556,34 @@ function buildPasswordSection(id) {
   };
 }
 
+// Shared by the per-location lock (checkPassword) and the topbar widget
+// (submitReenterName): recognizes whatever's typed into `input` as the
+// admin password or a character name, remembering the result. A real
+// character name records which group this visitor is even if the region
+// they typed it into isn't unlocked for that group yet. Returns false (and
+// shows the error, re-focusing the emptied input) if nothing matched.
+function recognizeEnteredName(input, err) {
+  const entered = input.value.trim().toLowerCase();
+  if (entered === ADMIN_PASSWORD) {
+    setRecognizedIdentity({ admin: true });
+    return true;
+  }
+  if (NAME_TO_GROUP[entered]) {
+    setRecognizedIdentity({ groupId: NAME_TO_GROUP[entered], name: entered });
+    return true;
+  }
+  err.textContent = "That name isn't recognized here.";
+  err.classList.add('show');
+  input.value = '';
+  input.focus();
+  return false;
+}
+
 function checkPassword(id) {
   const input = document.getElementById('pw-' + id);
   const err = document.getElementById('pw-err-' + id);
 
-  const entered = input.value.trim().toLowerCase();
-
-  if (entered === ADMIN_PASSWORD) {
-    setRecognizedIdentity({ admin: true });
-  } else if (NAME_TO_GROUP[entered]) {
-    // The name is a real character, so we now know (and remember) which
-    // group this visitor is — even if this particular region isn't
-    // unlocked for that group yet.
-    setRecognizedIdentity({ groupId: NAME_TO_GROUP[entered], name: entered });
-  } else {
-    err.textContent = "That name isn't recognized here.";
-    err.classList.add('show');
-    input.value = '';
-    input.focus(); // re-prompt: return the cursor to the now-empty input so it's clear they should try again
-    return;
-  }
+  if (!recognizeEnteredName(input, err)) return;
 
   if (isUnlockedForGroup(id, getRecognizedGroup())) {
     // Rebuild the whole panel from scratch rather than just patching the
@@ -1623,19 +1620,7 @@ function submitReenterName() {
   const input = document.getElementById('reenter-name-input');
   const err = document.getElementById('reenter-name-error');
 
-  const entered = input.value.trim().toLowerCase();
-
-  if (entered === ADMIN_PASSWORD) {
-    setRecognizedIdentity({ admin: true });
-  } else if (NAME_TO_GROUP[entered]) {
-    setRecognizedIdentity({ groupId: NAME_TO_GROUP[entered], name: entered });
-  } else {
-    err.textContent = "That name isn't recognized here.";
-    err.classList.add('show');
-    input.value = '';
-    input.focus();
-    return;
-  }
+  if (!recognizeEnteredName(input, err)) return;
 
   err.classList.remove('show');
   input.value = '';
@@ -1647,6 +1632,29 @@ function submitReenterName() {
   // it showing the previous visitor's view until manually reopened.
   if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
 }
+
+// Species/NPC mentions inside lore text are plain markup carrying
+// data-species / data-npc (written by hand, or expanded by build.js from
+// the {{species:id}} / {{npc:id}} shorthand) rather than inline onclick
+// handlers — one delegated listener here opens the matching panel, by
+// click or, since the links are focusable, by Enter/Space.
+function openLoreLink(el) {
+  if (el.dataset.npc) openNpcPanel(el.dataset.npc);
+  else if (el.dataset.species) openSpeciesPanel(el.dataset.species);
+}
+
+document.addEventListener('click', e => {
+  const link = e.target.closest('[data-npc], [data-species]');
+  if (link) openLoreLink(link);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const link = e.target.closest?.('[data-npc], [data-species]');
+  if (!link) return;
+  e.preventDefault(); // Space would otherwise scroll the panel
+  openLoreLink(link);
+});
 
 // Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
 // on top of the main lore panel, so it closes first; then the topbar's name

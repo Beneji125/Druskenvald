@@ -512,6 +512,12 @@
     transition: color 0.2s;
   }
   .npc-link:hover { color: var(--crimson-lt); }
+  .species-link:focus-visible,
+  .npc-link:focus-visible {
+    outline: 1px dashed var(--gold-dim);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 
   /* ─── PANEL TYPOGRAPHY ─────────────────────────────────────── */
   .panel-eyebrow {
