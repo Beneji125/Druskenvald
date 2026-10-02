@@ -8,13 +8,14 @@
 <meta name="description" content="An interactive lore map of Druskenvald, a gothic realm between life and death. Explore its thirteen provinces, native species, and hidden corners like Wickermoor Hollow.">
 <meta name="theme-color" content="#0d0a07">
 
-<!-- og:image/og:url use a relative path — update to an absolute URL once
-     this is hosted (e.g. https://<user>.github.io/<repo>/CrookedMoon_Cover.jpg)
-     for reliable link-preview unfurling on Discord/Twitter/etc. -->
+<!-- Absolute URLs (the GitHub Pages address) — link previews on Discord,
+     Twitter, etc. don't resolve relative og:image paths. Update these if
+     the site moves to a custom domain. -->
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://beneji125.github.io/Druskenvald/">
 <meta property="og:title" content="Druskenvald — The Land Between Life and Death">
 <meta property="og:description" content="An interactive lore map of Druskenvald, a gothic realm between life and death. Explore its thirteen provinces, native species, and hidden corners like Wickermoor Hollow.">
-<meta property="og:image" content="CrookedMoon_Cover.jpg">
+<meta property="og:image" content="https://beneji125.github.io/Druskenvald/CrookedMoon_Cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' font-size='90'><text y='.9em'>🌙</text></svg>">
@@ -48,29 +49,45 @@
     <div id="breadcrumb">
       <span id="breadcrumb-text">The Thirteen Provinces</span>
       <div class="music-player">
-        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music">🔊</button>
-        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume">
+        <button id="music-toggle-btn" class="icon-btn" onclick="toggleMusic()" title="Mute music" aria-label="Mute music">🔊</button>
+        <input type="range" id="music-volume-slider" min="0" max="1" step="0.01" oninput="setMusicVolume(this.value)" title="Music volume" aria-label="Music volume">
         <span id="music-now-playing" class="music-now-playing"></span>
-        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones">⟲</button>
+        <button id="music-reset-btn" class="icon-btn" onclick="resetToDefaultTrack()" title="Return to Creaking Bones" aria-label="Return to Creaking Bones">⟲</button>
         <!-- Stylized waveform seek bar — bars are generated once by
-             buildWaveformBars() (app.js) into #music-waveform-bars, then
+             buildWaveformBars() (js/music.js) into #music-waveform-bars, then
              re-colored (not re-laid-out) on each timeupdate to show
              progress, and clicking/dragging seeks. preserveAspectRatio
              "none" lets the viewBox stretch to whatever width the CSS
              gives the element, no JS resize handling needed. -->
-        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" title="Seek">
+        <svg id="music-waveform" class="music-waveform" viewBox="0 0 200 28" preserveAspectRatio="none" aria-hidden="true">
           <g id="music-waveform-bars"></g>
         </svg>
         <span id="music-time" class="music-time">0:00 / 0:00</span>
       </div>
+      <!-- The Codex: Bestiary, Rogues' Gallery and Chronicle. See js/codex.js. -->
+      <button id="codex-btn" class="icon-btn" onclick="openCodex()" title="The Codex" aria-label="Open the Codex: bestiary, rogues' gallery and chronicle">📜</button>
+      <!-- Quick-jump index of everything the visitor can see — provinces,
+           discovered Wickermoor locations, species, and NPCs met in
+           unlocked lore. See js/index.js. -->
+      <div id="index-widget">
+        <button id="index-btn" class="icon-btn" onclick="toggleIndex()" title="Search the realm ( / )" aria-label="Search the realm" aria-expanded="false" aria-controls="index-popover">🔍</button>
+        <div id="index-popover" role="dialog" aria-label="Search the realm">
+          <input type="search" id="index-filter" class="password-input" placeholder="Search places, species, people…" aria-label="Filter" oninput="renderIndex()">
+          <div id="index-results"></div>
+        </div>
+      </div>
       <!-- Re-enter a character's name at any time — not just the first-ever
            unlock, which otherwise only happens contextually through a
            locked panel's own password box. See toggleReenterNamePrompt()/
-           submitReenterName() in app.js. -->
+           submitReenterName() in js/unlocks.js. -->
       <div id="reenter-name-widget">
-        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name">👤</button>
-        <div id="reenter-name-prompt">
-          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" onkeydown="if(event.key==='Enter') submitReenterName()">
+        <button id="reenter-name-btn" class="icon-btn" onclick="toggleReenterNamePrompt()" title="Enter a character's name" aria-label="Enter a character's name" aria-expanded="false" aria-controls="reenter-name-prompt">👤</button>
+        <div id="reenter-name-prompt" role="dialog" aria-label="Who are you?">
+          <!-- Who this visitor is currently recognized as, if anyone, with a
+               way to forget it — see updateIdentityUi() in js/unlocks.js. -->
+          <div id="identity-status"></div>
+          <button id="forget-me-btn" class="password-btn" onclick="forgetIdentity()">Forget me</button>
+          <input type="text" id="reenter-name-input" class="password-input" placeholder="Enter a character's name…" aria-label="Character name" onkeydown="if(event.key==='Enter') submitReenterName()">
           <button class="password-btn" onclick="submitReenterName()">Confirm</button>
           <div class="password-error" id="reenter-name-error"></div>
         </div>
@@ -80,7 +97,7 @@
   </div>
 
   <!-- The single site-wide audio channel: the looping background track by
-       default, or (see toggleLocationTrack() in app.js) a Wickermoor
+       default, or (see toggleLocationTrack() in js/music.js) a Wickermoor
        location's ambience track while one is playing — there is no
        separate/second player, starting a location track just takes over
        this element and the topbar controls above, then hands back to the
@@ -118,7 +135,7 @@
          openWickermoor() is called, not on initial page load. Mirrors the
          main map layer's canvas/svg structure — viewBox height is 1951, not
          1953, matching this image's actual pixel dimensions (see
-         MAP_LAYERS.wickermoor in app.js). -->
+         MAP_LAYERS.wickermoor in js/lighting.js). -->
     <div id="layer-wickermoor" class="map-layer hidden">
       <div class="zoom-layer" id="zoom-layer-wickermoor">
         <img data-src="MAP_Wickermoor_Hollow.jpeg" alt="Map of Wickermoor Hollow" class="map-img" id="wickermoor-map-img">
@@ -131,11 +148,11 @@
 
     <!-- Zoom & Light Mode Controls -->
     <div id="zoom-controls">
-      <button class="zoom-btn" id="light-mode-btn" onclick="toggleLightMode()" title="Toggle light mode">💡</button>
+      <button class="zoom-btn" id="light-mode-btn" onclick="cycleLightingMode()" title="Lighting: Night. Click for dusk." aria-label="Lighting: Night. Click for dusk.">🌙</button>
       <div class="zoom-controls-divider"></div>
-      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in">+</button>
-      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out">−</button>
-      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom">⟲</button>
+      <button class="zoom-btn" id="zoom-in-btn" onclick="zoomIn()" title="Zoom in" aria-label="Zoom in">+</button>
+      <button class="zoom-btn" id="zoom-out-btn" onclick="zoomOut()" title="Zoom out" aria-label="Zoom out">−</button>
+      <button class="zoom-btn" id="zoom-reset-btn" onclick="resetZoomView()" title="Reset zoom" aria-label="Reset zoom">⟲</button>
     </div>
 
   </div>
@@ -144,36 +161,65 @@
   <div id="overlay" onclick="closePanel()"></div>
 
   <!-- SVG hotspot tooltip -->
-  <div id="svg-tooltip"></div>
+  <div id="svg-tooltip" aria-hidden="true"></div>
 
   <!-- Lore Panel -->
-  <div id="lore-panel">
+  <!-- Panels are role="dialog" and start `inert` (unfocusable while
+       closed); see updatePanelInertness() in js/panels.js. -->
+  <div id="lore-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="panel-close" onclick="closePanel()" title="Close">✕</button>
-    <div id="panel-content"></div>
+    <button id="panel-link" onclick="copyPanelLink()" title="Copy a link to this page" aria-label="Copy a link to this page">🔗</button>
+    <button id="panel-close" onclick="closePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="panel-content" tabindex="-1"></div>
   </div>
 
   <!-- Species Overlay -->
   <div id="species-overlay" onclick="closeSpeciesPanel()"></div>
 
   <!-- Species Panel -->
-  <div id="species-panel">
+  <div id="species-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
-    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close">✕</button>
-    <div id="species-panel-content"></div>
+    <button id="species-panel-close" onclick="closeSpeciesPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="species-panel-content" tabindex="-1"></div>
   </div>
 
   <!-- NPC Overlay/Panel — same secondary-panel pattern as the species
-       panel above (see openNpcPanel/closeNpcPanel in app.js), for
+       panel above (see openNpcPanel/closeNpcPanel in js/panels.js), for
        clicking a named NPC mentioned inside a Wickermoor location/being's
        own lore text. A separate panel rather than reusing the species one
        outright, since the two can in principle be triggered from
        different underlying panels and shouldn't fight over the same DOM. -->
-  <div id="npc-overlay" onclick="closeNpcPanel()"></div>
-  <div id="npc-panel">
+  <!-- The Codex — a full-screen book over the map, with three tabs. Lore
+       panels (Chronicle "Read") and the species/NPC/creature panels open
+       on top of it. -->
+  <div id="codex" role="dialog" aria-modal="true" aria-labelledby="codex-title" inert>
     <div class="panel-border-top"></div>
-    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close">✕</button>
-    <div id="npc-panel-content"></div>
+    <button id="codex-close" onclick="closeCodex()" title="Close" aria-label="Close the Codex">✕</button>
+    <div class="codex-header">
+      <div class="panel-eyebrow" id="codex-title">The Codex</div>
+      <div class="codex-tabs" role="tablist" aria-label="Codex sections">
+        <button role="tab" class="codex-tab" id="codex-tab-bestiary" data-tab="bestiary" aria-controls="codex-content" onclick="showCodexTab('bestiary')">Bestiary</button>
+        <button role="tab" class="codex-tab" id="codex-tab-gallery" data-tab="gallery" aria-controls="codex-content" onclick="showCodexTab('gallery')">Rogues' Gallery</button>
+        <button role="tab" class="codex-tab" id="codex-tab-chronicle" data-tab="chronicle" aria-controls="codex-content" onclick="showCodexTab('chronicle')">Chronicle</button>
+      </div>
+    </div>
+    <div id="codex-content" role="tabpanel" tabindex="-1"></div>
+  </div>
+
+  <!-- Creature panel — a Bestiary entry, opened from the Codex or from a
+       {{creature:id}} link in lore. Same pattern as the NPC panel. -->
+  <div id="creature-overlay" onclick="closeCreaturePanel()"></div>
+  <div id="creature-panel" role="dialog" aria-modal="true" inert>
+    <div class="panel-border-top"></div>
+    <button id="creature-panel-close" onclick="closeCreaturePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="creature-panel-content" tabindex="-1"></div>
+  </div>
+
+  <div id="npc-overlay" onclick="closeNpcPanel()"></div>
+  <div id="npc-panel" role="dialog" aria-modal="true" inert>
+    <div class="panel-border-top"></div>
+    <button id="npc-panel-close" onclick="closeNpcPanel()" title="Close" aria-label="Close">✕</button>
+    <div id="npc-panel-content" tabindex="-1"></div>
   </div>
 
 </div>

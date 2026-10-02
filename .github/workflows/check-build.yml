@@ -1,0 +1,26 @@
+# Catches the two easy-to-miss mistakes: lore data with broken references
+# (unknown NPC/species ids, missing images, bad [[image]] tokens — see the
+# validation in build.js), and editing src/ without re-running
+# `node build.js`, which would leave the live site on stale content.
+name: Check build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate data and build
+        run: node build.js
+      - name: docs/index.html is up to date
+        run: |
+          if ! git diff --quiet -- docs/index.html; then
+            echo "::error file=docs/index.html::docs/index.html is out of date — run 'node build.js' and commit the result."
+            exit 1
+          fi
