@@ -336,6 +336,17 @@ const FALLEN_IDS = [
   'wm_grinning_sinner', 'wm_harvest_terror', 'wm_crimson_abbot',
 ];
 
+// An in-world rumour (WM_TEASERS) shown on a locked location or being in
+// place of its lore — a hint of what's there, never who or what exactly.
+function rumourHtml(id) {
+  const t = (typeof WM_TEASERS !== 'undefined') && WM_TEASERS[id];
+  if (!t) return '';
+  return `<figure class="rumour">
+    <blockquote>“${t.text}”</blockquote>
+    ${t.source ? `<figcaption>— ${t.source}</figcaption>` : ''}
+  </figure>`;
+}
+
 function buildWMContent(id, label) {
   // Every being uses the same generic "not yet told" teaser (see the
   // locked branches below) rather than individual bespoke flavor text —
@@ -388,7 +399,7 @@ function buildWMContent(id, label) {
     // below already tells their story, so a "not yet told" teaser sitting
     // right above it would contradict itself.
     const flavorHtml = locked
-      ? `<p class="panel-body" style="font-style:italic; opacity:0.7;">Its story is not yet told. In time you will learn the truth.</p>`
+      ? (rumourHtml(id) || `<p class="panel-body" style="font-style:italic; opacity:0.7;">Its story is not yet told. In time you will learn the truth.</p>`)
       : '';
     return `
       <div class="panel-eyebrow">Wickermoor Hollow</div>
@@ -405,7 +416,7 @@ function buildWMContent(id, label) {
   // locked, since it would otherwise contradict the revealed lore beneath it.
   const displayLabel = locked ? '???' : label;
   const teaserHtml = locked
-    ? `<p class="panel-body" style="font-style:italic; opacity:0.65;">The roads of Wickermoor Hollow do not give up their secrets easily. Explore the land to uncover its lore.</p>`
+    ? (rumourHtml(id) || `<p class="panel-body" style="font-style:italic; opacity:0.65;">The roads of Wickermoor Hollow do not give up their secrets easily. Explore the land to uncover its lore.</p>`)
     : '';
   return `
     <div class="panel-eyebrow">Wickermoor Hollow</div>

@@ -1019,5 +1019,107 @@
       "chapter": 26,
       "title": "Moonfall"
     }
+  },
+  "WM_TEASERS": {
+    "wm_horned_king": {
+      "text": "Don't sign anything a stranger offers you after dark. Not even if he already knows your name. Especially then.",
+      "source": "an old woman at the Founder's Round"
+    },
+    "wm_crooked_queen": {
+      "text": "The old stories say this valley had a queen before it ever had a name. The old stories also say to stop asking about her.",
+      "source": "a village elder"
+    },
+    "wm_beast_of_blight": {
+      "text": "Something in the old Greenwood is still grieving. You can hear it when the wind turns rotten.",
+      "source": "a woodcutter at the forest's edge"
+    },
+    "wm_weeping_widow": {
+      "text": "Some nights a woman's weeping drifts across the lake. The boatmen row faster, and they never look back.",
+      "source": "a boatman on Moonsong Lake"
+    },
+    "wm_chained_reaper": {
+      "text": "Out past the cemetery something drags a great stone behind it. Some nights you can hear the chain. Some nights it just sounds tired.",
+      "source": "a gravedigger's apprentice"
+    },
+    "wm_grinning_sinner": {
+      "text": "Luck's for sale down in the bayou, if you know which shack to knock on. Nobody's ever been happy with the price.",
+      "source": "a card sharp in Murkwater Bend"
+    },
+    "wm_harvest_terror": {
+      "text": "The fields used to sing at harvest time. Now nobody walks the rows after sundown, and even the crows won't land.",
+      "source": "a farmhand from Foxwillow"
+    },
+    "wm_crimson_abbot": {
+      "text": "The monastery's master is the kindest man you'll ever meet. Everyone says so. Everyone who came back, anyway.",
+      "source": "a miner in Dawn's Gate"
+    },
+    "wm_rowans_rise": {
+      "text": "A girl once climbed the stone hill to sit beside the moon. On clear nights, the children still leave her a candle up there.",
+      "source": "a mother in Wickermoor Village"
+    },
+    "wm_skitterdeep": {
+      "text": "They called it Glitterdeep, once. Put your ear to the old shaft and you'll hear why nobody does anymore.",
+      "source": "a retired miner"
+    },
+    "wm_maidenmist": {
+      "text": "Count the fence posts at Maidenmist on your way in, and again on your way out. You'll never get the same number twice.",
+      "source": "a lamplighter"
+    },
+    "wm_webwoods": {
+      "text": "If the road south feels sticky underfoot, turn back. If it feels like it's moving, run.",
+      "source": "a travelling peddler"
+    },
+    "wm_dawns_gate": {
+      "text": "In Dawn's Gate they bar their doors at dusk and pray toward the mountain. Ask them what they fear more, the dark or the bells, and they won't answer.",
+      "source": "a tinker passing through"
+    },
+    "wm_crimson": {
+      "text": "High in the Howlers there's a cathedral where the candles never go out. The light through its windows is the wrong shade of red.",
+      "source": "a shepherd in the foothills"
+    },
+    "wm_moonsong": {
+      "text": "It rains on Moonsong Lake more than anywhere in the hollow. The fishermen say it's the lake weeping, and you shouldn't fish where it weeps.",
+      "source": "a fisherman's widow"
+    },
+    "wm_howlers": {
+      "text": "The wind in the Howlers never stops. Listen long enough and you'll swear it's calling a name. Don't answer it.",
+      "source": "a trapper"
+    },
+    "wm_hartsblight": {
+      "text": "The Greenwood went the colour of a bruise in a single season. Whatever's in the air there, don't breathe it, and don't bring any home.",
+      "source": "a herbalist"
+    },
+    "wm_wytchwood": {
+      "text": "There's no road into the Wytchwood. There used to be one out of it.",
+      "source": "the old granny who sweeps the square"
+    },
+    "wm_drowned": {
+      "text": "Down where the black waters meet, luck used to come cheap. Now it just comes strange, and it follows you home.",
+      "source": "a gambler down on his luck"
+    },
+    "wm_murkwater": {
+      "text": "Murkwater Bend's got no laws, only a king and his taxes. Pay both and you'll sleep fine. Mostly.",
+      "source": "a smuggler"
+    },
+    "wm_village": {
+      "text": "Every face carved into the old oak belonged to somebody once. Nobody can tell you who carves the new ones.",
+      "source": "a stranger at the inn"
+    },
+    "wm_foxwillow": {
+      "text": "The best bread in the hollow comes out of Foxwillow. Lately it tastes of smoke.",
+      "source": "a baker in the village"
+    },
+    "wm_silverbell": {
+      "text": "Every road in the hollow reaches the Silverbell sooner or later. So does everything that falls into it.",
+      "source": "a bridge-keeper"
+    },
+    "wm_memorys_rest": {
+      "text": "They'll help you forget whatever hurts, at Memory's Rest. They're very good at it. Too good, some say.",
+      "source": "a widower who never went"
+    },
+    "wm_ghostlight_express": {
+      "text": "If you hear a train whistle where there are no tracks, stand very still. It isn't your stop. Not yet.",
+      "source": "a mourner at the crossroads"
+    }
   }
 }
