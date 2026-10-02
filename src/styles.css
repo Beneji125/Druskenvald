@@ -1262,7 +1262,8 @@
     }
     .music-player {
       order: 3;
-      flex: 1 1 calc(100% - 136px);
+      /* room for three 40px buttons plus the gaps between them */
+      flex: 1 1 calc(100% - 160px);
       min-width: 0;
       gap: 0.35rem;
       padding: 0.2rem 0.35rem;
@@ -1353,7 +1354,7 @@
     .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
-    .music-player { flex-basis: calc(100% - 180px); }
+    .music-player { flex-basis: calc(100% - 210px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
