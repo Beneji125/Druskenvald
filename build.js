@@ -224,8 +224,8 @@ function printReport(data, hotspots, { referencedMedia, hotspotIds }) {
   const noBio = Object.entries(data.NPCS || {}).filter(([, n]) => !n.body).map(([id]) => id);
   console.log(`\nNPCs without a bio (${noBio.length}): ${noBio.join(', ')}`);
 
-  const noTrack = wmIds.filter(id => !(data.WM_TRACKS || {})[id]);
-  console.log(`\nWickermoor locations without an ambience track (${noTrack.length}): ${noTrack.join(', ')}`);
+  // (No line for locations without an ambience track: not every place
+  // needs one — that's a choice, not a gap.)
 
   // The default background track is set in the script, not the data.
   const appJs = SCRIPT_FILES.map(f => readFile('js/' + f)).join('\n');

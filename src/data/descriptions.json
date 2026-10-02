@@ -638,66 +638,6 @@
     "wm_crooked_queen": {
       "src": "audio/15 Nightwind.mp3",
       "title": "Nightwind"
-    },
-    "wm_village": {
-      "src": "audio/13 Light of My Life.mp3",
-      "title": "Light of My Life"
-    },
-    "wm_foxwillow": {
-      "src": "audio/05 Coal Eyed Birds.mp3",
-      "title": "Coal Eyed Birds"
-    },
-    "wm_dawns_gate": {
-      "src": "audio/06 Under Your Shadow.mp3",
-      "title": "Under Your Shadow"
-    },
-    "wm_crimson": {
-      "src": "audio/06 Under Your Shadow.mp3",
-      "title": "Under Your Shadow"
-    },
-    "wm_silverbell": {
-      "src": "audio/08 Lullaby of the Sea.mp3",
-      "title": "Lullaby of the Sea"
-    },
-    "wm_drowned": {
-      "src": "audio/03 Impossible.mp3",
-      "title": "Impossible"
-    },
-    "wm_murkwater": {
-      "src": "audio/07 By the Lagoon.mp3",
-      "title": "By the Lagoon"
-    },
-    "wm_skitterdeep": {
-      "src": "audio/12 Sing Ye Vermin.mp3",
-      "title": "Sing Ye Vermin"
-    },
-    "wm_memorys_rest": {
-      "src": "audio/04 The Echoes.mp3",
-      "title": "The Echoes"
-    },
-    "wm_moonsong": {
-      "src": "audio/08 Lullaby of the Sea.mp3",
-      "title": "Lullaby of the Sea"
-    },
-    "wm_hartsblight": {
-      "src": "audio/09 Dead Trees.mp3",
-      "title": "Dead Trees"
-    },
-    "wm_maidenmist": {
-      "src": "audio/11 No Fun to Die.mp3",
-      "title": "No Fun to Die"
-    },
-    "wm_wytchwood": {
-      "src": "audio/14 Born King.mp3",
-      "title": "Born King"
-    },
-    "wm_howlers": {
-      "src": "audio/15 Nightwind.mp3",
-      "title": "Nightwind"
-    },
-    "wm_webwoods": {
-      "src": "audio/12 Sing Ye Vermin.mp3",
-      "title": "Sing Ye Vermin"
     }
   },
   "WM_LORE": {
