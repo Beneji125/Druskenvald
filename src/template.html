@@ -64,6 +64,8 @@
         </svg>
         <span id="music-time" class="music-time">0:00 / 0:00</span>
       </div>
+      <!-- The Codex: Bestiary, Rogues' Gallery and Chronicle. See js/codex.js. -->
+      <button id="codex-btn" class="icon-btn" onclick="openCodex()" title="The Codex" aria-label="Open the Codex: bestiary, rogues' gallery and chronicle">📜</button>
       <!-- Quick-jump index of everything the visitor can see — provinces,
            discovered Wickermoor locations, species, and NPCs met in
            unlocked lore. See js/index.js. -->
@@ -187,6 +189,32 @@
        own lore text. A separate panel rather than reusing the species one
        outright, since the two can in principle be triggered from
        different underlying panels and shouldn't fight over the same DOM. -->
+  <!-- The Codex — a full-screen book over the map, with three tabs. Lore
+       panels (Chronicle "Read") and the species/NPC/creature panels open
+       on top of it. -->
+  <div id="codex" role="dialog" aria-modal="true" aria-labelledby="codex-title" inert>
+    <div class="panel-border-top"></div>
+    <button id="codex-close" onclick="closeCodex()" title="Close" aria-label="Close the Codex">✕</button>
+    <div class="codex-header">
+      <div class="panel-eyebrow" id="codex-title">The Codex</div>
+      <div class="codex-tabs" role="tablist" aria-label="Codex sections">
+        <button role="tab" class="codex-tab" id="codex-tab-bestiary" data-tab="bestiary" aria-controls="codex-content" onclick="showCodexTab('bestiary')">Bestiary</button>
+        <button role="tab" class="codex-tab" id="codex-tab-gallery" data-tab="gallery" aria-controls="codex-content" onclick="showCodexTab('gallery')">Rogues' Gallery</button>
+        <button role="tab" class="codex-tab" id="codex-tab-chronicle" data-tab="chronicle" aria-controls="codex-content" onclick="showCodexTab('chronicle')">Chronicle</button>
+      </div>
+    </div>
+    <div id="codex-content" role="tabpanel" tabindex="-1"></div>
+  </div>
+
+  <!-- Creature panel — a Bestiary entry, opened from the Codex or from a
+       {{creature:id}} link in lore. Same pattern as the NPC panel. -->
+  <div id="creature-overlay" onclick="closeCreaturePanel()"></div>
+  <div id="creature-panel" role="dialog" aria-modal="true" inert>
+    <div class="panel-border-top"></div>
+    <button id="creature-panel-close" onclick="closeCreaturePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="creature-panel-content" tabindex="-1"></div>
+  </div>
+
   <div id="npc-overlay" onclick="closeNpcPanel()"></div>
   <div id="npc-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>

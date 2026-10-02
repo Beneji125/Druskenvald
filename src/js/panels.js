@@ -39,15 +39,18 @@ function isPanelOpen(panelId) {
 // whatever an open panel covers (map, topbar, a lore panel under a
 // species/NPC panel) is made inert too, which is what keeps Tab inside the
 // panel on top — the "modal" part of aria-modal.
+const SECONDARY_PANELS = ['species', 'npc', 'creature'];
+
 function updatePanelInertness() {
   const lore = isPanelOpen('lore-panel');
-  const secondary = isPanelOpen('species-panel') || isPanelOpen('npc-panel');
+  const codex = isPanelOpen('codex');
+  const secondary = SECONDARY_PANELS.some(kind => isPanelOpen(`${kind}-panel`));
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.inert = value; };
   set('lore-panel', !lore || secondary);
-  set('species-panel', !isPanelOpen('species-panel'));
-  set('npc-panel', !isPanelOpen('npc-panel'));
-  set('map-wrapper', lore || secondary);
-  set('topbar', lore || secondary);
+  set('codex', !codex || lore || secondary);
+  SECONDARY_PANELS.forEach(kind => set(`${kind}-panel`, !isPanelOpen(`${kind}-panel`)));
+  set('map-wrapper', lore || codex || secondary);
+  set('topbar', lore || codex || secondary);
 }
 
 // Shared open/close bookkeeping: accessible name from the rendered title,
@@ -56,8 +59,9 @@ function updatePanelInertness() {
 // focus restored to where it came from on close.
 function afterPanelOpened(panelId, contentEl, wasOpen) {
   const panel = document.getElementById(panelId);
-  const title = contentEl.querySelector('.panel-title')?.textContent.trim() || '';
-  panel.setAttribute('aria-label', title === '???' ? 'Unknown location' : title);
+  // (The Codex has no .panel-title — it's named by its own heading.)
+  const title = contentEl.querySelector('.panel-title')?.textContent.trim();
+  if (title) panel.setAttribute('aria-label', title === '???' ? 'Unknown' : title);
   if (!wasOpen) {
     panelReturnFocus[panelId] = document.activeElement;
     updatePanelInertness();
@@ -102,6 +106,7 @@ function closePanel() {
   hideProvinceReveal(getActiveMapKey());
   closeSpeciesPanel();
   closeNpcPanel();
+  closeCreaturePanel();
   afterPanelClosed('lore-panel', wasOpen);
   syncUrl();
 }

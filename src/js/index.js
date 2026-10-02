@@ -11,11 +11,25 @@ function npcIdsIn(html) {
   return [...String(html || '').matchAll(/data-npc="([^"]+)"/g)].map(m => m[1]);
 }
 
+// The people a visitor has read about — named in the provinces' lore
+// (open to all) or in Wickermoor lore their group has unlocked. Listing
+// every NPC would spoil who turns up in places their party hasn't been.
+// Shared with the Codex's Rogues' Gallery.
+function knownNpcIds() {
+  const group = getRecognizedGroup();
+  const name = getRecognizedName();
+  const ids = new Set();
+  Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => ids.add(id)));
+  WICKERMOOR_HOTSPOTS
+    .filter(hs => isUnlockedForGroup(hs.id, group))
+    .forEach(hs => npcIdsIn(revealedLoreHtml(hs.id, group, name)).forEach(id => ids.add(id)));
+  return ids;
+}
+
 // Built fresh each time the index opens or the filter changes, since what's
 // visible depends on who the visitor is recognized as.
 function indexSections() {
   const group = getRecognizedGroup();
-  const name = getRecognizedName();
 
   const places = MAIN_HOTSPOTS_SVG.map(hs => hs.isWickermoor
     ? { label: 'Wickermoor Hollow', go: () => openWickermoor() }
@@ -32,12 +46,10 @@ function indexSections() {
 
   const species = Object.entries(SPECIES).map(([id, sp]) => ({ label: sp.name, go: () => openSpeciesPanel(id) }));
 
-  // Only people the visitor has actually read about — listing every NPC
-  // would spoil who turns up in places their party hasn't been.
-  const npcIds = new Set();
-  Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => npcIds.add(id)));
-  unlocked.forEach(hs => npcIdsIn(revealedLoreHtml(hs.id, group, name)).forEach(id => npcIds.add(id)));
-  const people = [...npcIds].filter(id => NPCS[id]).map(id => ({ label: NPCS[id].name, go: () => openNpcPanel(id) }));
+  const people = [...knownNpcIds()].filter(id => NPCS[id]).map(id => ({ label: NPCS[id].name, go: () => openNpcPanel(id) }));
+
+  const creatures = Object.keys(BESTIARY).filter(hasMetCreature)
+    .map(id => ({ label: BESTIARY[id].name, go: () => openCreaturePanel(id) }));
 
   const byLabel = (a, b) => a.label.localeCompare(b.label);
   return [
@@ -49,6 +61,7 @@ function indexSections() {
     },
     { title: 'Species', items: species.sort(byLabel) },
     { title: 'People', items: people.sort(byLabel) },
+    { title: 'Bestiary', items: creatures.sort(byLabel) },
   ];
 }
 

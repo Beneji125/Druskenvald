@@ -6,6 +6,8 @@
 //   #ardengloom               the main map with a province's panel open
 //   #wickermoor               the Wickermoor Hollow map
 //   #wickermoor/wm_crimson    Wickermoor with a location's panel open
+//   #codex/bestiary           the Codex, on a tab (bestiary, gallery,
+//                             chronicle) — over whichever map was showing
 //
 // A link to a Wickermoor location the visitor's group hasn't unlocked
 // simply opens its locked "???" panel — the link itself gives nothing away.
@@ -24,11 +26,23 @@ function routeHash(mapKey, panelId) {
   return panelId ? `#${panelId}` : '';
 }
 
-// Called after anything that changes the map or open panel.
-function syncUrl() {
+// What the address should be right now: an open lore panel wins, then
+// the Codex, then just the map.
+function currentRouteHash() {
+  if (!currentOpenPanelId && isCodexOpen()) return `#codex/${codexTab}`;
+  return routeHash(getActiveMapKey(), currentOpenPanelId);
+}
+
+// Called after anything that changes the map, open panel or Codex.
+// `replace` updates the current history entry instead of adding one.
+function syncUrl({ replace = false } = {}) {
   if (!routerReady || applyingRoute) return;
-  const target = routeHash(getActiveMapKey(), currentOpenPanelId);
+  const target = currentRouteHash();
   if (target === location.hash) return;
+  if (replace) {
+    history.replaceState(history.state, '', target || location.pathname + location.search);
+    return;
+  }
 
   // Closing a panel that was opened on top of this exact page: step back
   // through history instead of piling up a new entry, so Back afterwards
@@ -38,12 +52,13 @@ function syncUrl() {
     history.back();
     return;
   }
-  const newState = currentOpenPanelId ? { openedFrom: location.hash } : {};
+  const newState = (currentOpenPanelId || isCodexOpen()) ? { openedFrom: location.hash } : {};
   history.pushState(newState, '', target || location.pathname + location.search);
 }
 
 function parseRoute(hash) {
   const raw = decodeURIComponent(hash.replace(/^#/, ''));
+  if (raw === 'codex' || raw.startsWith('codex/')) return { codexTab: raw.split('/')[1] || 'bestiary' };
   if (raw === 'wickermoor') return { mapKey: 'wickermoor', panelId: null };
   if (raw.startsWith('wickermoor/')) return { mapKey: 'wickermoor', panelId: raw.slice('wickermoor/'.length) };
   return { mapKey: 'main', panelId: raw || null };
@@ -52,7 +67,21 @@ function parseRoute(hash) {
 // Brings the UI in line with the current address (on entering the site,
 // and on Back/Forward). Unknown ids are ignored and the address tidied up.
 function applyRoute() {
-  const { mapKey, panelId } = parseRoute(location.hash);
+  const route = parseRoute(location.hash);
+  if (route.codexTab) {
+    applyingRoute = true;
+    try {
+      if (currentOpenPanelId) closePanel();
+      if (!isCodexOpen()) openCodex(route.codexTab);
+      else if (codexTab !== route.codexTab) showCodexTab(route.codexTab);
+    } finally {
+      applyingRoute = false;
+    }
+    if (currentRouteHash() !== location.hash) history.replaceState(history.state, '', currentRouteHash());
+    return;
+  }
+
+  const { mapKey, panelId } = route;
   const hotspots = mapKey === 'wickermoor' ? WICKERMOOR_HOTSPOTS : MAIN_HOTSPOTS_SVG;
   const hs = panelId ? hotspots.find(h => h.id === panelId && !h.isWickermoor) : null;
 
@@ -64,11 +93,14 @@ function applyRoute() {
     }
     if (hs && currentOpenPanelId !== hs.id) openPanel(hs.id, hs.label);
     else if (!hs && currentOpenPanelId) closePanel();
+    // A plain map address means the Codex was left (a panel address may
+    // sit on top of it — e.g. a Chronicle entry being read).
+    if (!hs && isCodexOpen()) closeCodex();
   } finally {
     applyingRoute = false;
   }
 
-  const actual = routeHash(getActiveMapKey(), currentOpenPanelId);
+  const actual = currentRouteHash();
   if (actual !== location.hash) history.replaceState({}, '', actual || location.pathname + location.search);
 }
 

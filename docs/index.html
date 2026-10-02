@@ -485,7 +485,7 @@
 
   /* Panel contents take focus when a panel opens (for screen readers and
      keyboard scrolling) — no visible ring needed on the whole panel. */
-  #panel-content:focus, #species-panel-content:focus, #npc-panel-content:focus { outline: none; }
+  #panel-content:focus, #species-panel-content:focus, #npc-panel-content:focus, #creature-panel-content:focus { outline: none; }
 
   #panel-content {
     flex: 1;
@@ -509,7 +509,8 @@
 
   /* ─── SPECIES PANEL (secondary panel, slides in from the left) ──── */
   #species-panel,
-  #npc-panel {
+  #npc-panel,
+  #creature-panel {
     position: fixed;
     top: 0; left: 0;
     width: min(420px, 100vw);
@@ -524,10 +525,12 @@
     overflow: hidden;
   }
   #species-panel.open,
-  #npc-panel.open { transform: translateX(0); }
+  #npc-panel.open,
+  #creature-panel.open { transform: translateX(0); }
 
   #species-panel-close,
-  #npc-panel-close {
+  #npc-panel-close,
+  #creature-panel-close {
     position: absolute;
     top: 1rem; right: 1rem;
     background: none; border: none;
@@ -539,10 +542,12 @@
     font-family: 'Cinzel', serif;
   }
   #species-panel-close:hover,
-  #npc-panel-close:hover { color: var(--cream); }
+  #npc-panel-close:hover,
+  #creature-panel-close:hover { color: var(--cream); }
 
   #species-panel-content,
-  #npc-panel-content {
+  #npc-panel-content,
+  #creature-panel-content {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem 1.8rem 2rem;
@@ -550,14 +555,18 @@
     scrollbar-color: var(--oak) transparent;
   }
   #species-panel-content::-webkit-scrollbar,
-  #npc-panel-content::-webkit-scrollbar { width: 4px; }
+  #npc-panel-content::-webkit-scrollbar,
+  #creature-panel-content::-webkit-scrollbar { width: 4px; }
   #species-panel-content::-webkit-scrollbar-track,
-  #npc-panel-content::-webkit-scrollbar-track { background: transparent; }
+  #npc-panel-content::-webkit-scrollbar-track,
+  #creature-panel-content::-webkit-scrollbar-track { background: transparent; }
   #species-panel-content::-webkit-scrollbar-thumb,
-  #npc-panel-content::-webkit-scrollbar-thumb { background: var(--oak); border-radius: 2px; }
+  #npc-panel-content::-webkit-scrollbar-thumb,
+  #creature-panel-content::-webkit-scrollbar-thumb { background: var(--oak); border-radius: 2px; }
 
   #species-overlay,
-  #npc-overlay {
+  #npc-overlay,
+  #creature-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.5);
     z-index: 51;
@@ -565,7 +574,8 @@
     transition: opacity 0.3s;
   }
   #species-overlay.show,
-  #npc-overlay.show { opacity: 1; pointer-events: all; }
+  #npc-overlay.show,
+  #creature-overlay.show { opacity: 1; pointer-events: all; }
 
   /* Clickable NPC name mentioned inline in a Wickermoor location/being's
      own lore text (see openNpcPanel in js/panels.js) — same visual treatment as
@@ -578,8 +588,16 @@
     transition: color 0.2s;
   }
   .npc-link:hover { color: var(--crimson-lt); }
+  .creature-link {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .creature-link:hover { color: var(--gold); }
   .species-link:focus-visible,
-  .npc-link:focus-visible {
+  .npc-link:focus-visible,
+  .creature-link:focus-visible {
     outline: 1px dashed var(--gold-dim);
     outline-offset: 2px;
     border-radius: 2px;
@@ -897,6 +915,193 @@
     box-shadow: 0 0 6px var(--gold);
   }
 
+  /* ─── THE CODEX (📜 full-screen book) ─────────────────────────── */
+  #codex {
+    position: fixed; inset: 0;
+    z-index: 45;
+    display: flex; flex-direction: column;
+    background: radial-gradient(ellipse at top, #1c1610 0%, #0f0c08 55%, #0a0806 100%);
+    opacity: 0; visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease, visibility 0s linear 0.35s;
+  }
+  #codex.open {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  #codex-close {
+    position: absolute;
+    top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
+    background: none; border: none;
+    color: var(--gold-dim); font-size: 1.2rem;
+    cursor: pointer; z-index: 2;
+    width: 44px; height: 44px;
+    font-family: 'Cinzel', serif;
+  }
+  #codex-close:hover { color: var(--cream); }
+  .codex-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: max(1.4rem, env(safe-area-inset-top)) 3.5rem 0;
+  }
+  .codex-header .panel-eyebrow { margin-bottom: 0.8rem; }
+  .codex-tabs {
+    display: inline-flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .codex-tab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .codex-tab:hover { color: var(--gold); }
+  .codex-tab.active { color: var(--cream); border-bottom-color: var(--crimson-lt); }
+  .codex-tab:focus-visible { outline: 1px dashed var(--gold-dim); outline-offset: 2px; }
+  #codex-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.4rem max(1.5rem, calc((100% - 1040px) / 2)) max(2.5rem, env(safe-area-inset-bottom));
+    scrollbar-width: thin;
+    scrollbar-color: var(--oak) transparent;
+  }
+  #codex-content:focus { outline: none; }
+  .codex-intro {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--cream-dim);
+    text-align: center;
+    font-size: 1.05rem;
+    margin: 0 auto 0.4rem;
+    max-width: 640px;
+  }
+  .codex-intro strong { color: var(--gold); font-style: normal; }
+  .codex-hint, .codex-note {
+    font-family: 'IM Fell English', serif;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    text-align: center;
+    margin: 0.4rem auto 0;
+  }
+  .codex-section-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 400;
+    font-size: 0.8rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 2rem 0 0.9rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .codex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 0.9rem;
+    margin-top: 1.2rem;
+  }
+  .codex-section-title + .codex-grid { margin-top: 0; }
+  .codex-card {
+    display: flex; flex-direction: column; align-items: stretch;
+    background: rgba(28,22,16,0.7);
+    border: 1px solid var(--oak);
+    padding: 0.5rem 0.5rem 0.6rem;
+    cursor: pointer;
+    color: var(--cream);
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  }
+  button.codex-card:hover, button.codex-card:focus-visible {
+    border-color: var(--gold-dim);
+    background: rgba(201,169,110,0.06);
+    transform: translateY(-2px);
+    outline: none;
+  }
+  .codex-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: radial-gradient(circle, rgba(201,169,110,0.07), transparent 70%);
+  }
+  .codex-grid.portraits .codex-card img { aspect-ratio: 3 / 4; object-fit: cover; object-position: top; }
+  .codex-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-align: center;
+    margin-top: 0.45rem;
+    line-height: 1.3;
+  }
+  /* Creatures not yet met: a black silhouette with a faint gold edge. */
+  .codex-card.unmet { cursor: default; opacity: 0.7; }
+  .codex-card.unmet img { filter: brightness(0) drop-shadow(0 0 5px rgba(201,169,110,0.35)); }
+  .codex-card.unmet .codex-card-name { color: var(--gold-dim); letter-spacing: 0.3em; }
+
+  .chronicle { list-style: none; margin: 1.2rem 0 0; padding: 0; }
+  .chronicle-chapter {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--crimson-lt);
+    margin: 1.8rem 0 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .chronicle-entry {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 1.1rem;
+    padding: 0.8rem 0;
+  }
+  .chronicle-entry + .chronicle-entry { border-top: 1px dashed rgba(61,42,26,0.6); }
+  .chronicle-art {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border: 1px solid var(--oak);
+  }
+  .chronicle-art.blank { background: radial-gradient(circle, #1c1610, #0d0a07); }
+  .chronicle-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    color: var(--cream);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  }
+  .chronicle-tag {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 0.05rem 0.35rem;
+  }
+  .chronicle-excerpt {
+    font-family: 'IM Fell English', serif;
+    color: var(--cream-dim);
+    line-height: 1.6;
+    margin: 0.35rem 0 0.5rem;
+  }
+  .chronicle-read {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: none;
+    border: 1px solid var(--gold-dim);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  .chronicle-read:hover, .chronicle-read:focus-visible { background: rgba(201,169,110,0.08); }
+
   /* ─── SEARCH INDEX (🔍 popover) ───────────────────────────────── */
   #index-widget { position: relative; }
   #index-popover {
@@ -1065,13 +1270,21 @@
     }
     .music-player {
       order: 3;
-      flex: 1 1 calc(100% - 92px);
+      flex: 1 1 calc(100% - 136px);
       min-width: 0;
       gap: 0.35rem;
       padding: 0.2rem 0.35rem;
     }
-    #index-widget { order: 4; flex: 0 0 40px; }
-    #reenter-name-widget { order: 5; flex: 0 0 40px; }
+    #codex-btn { order: 4; flex: 0 0 40px; }
+    #index-widget { order: 5; flex: 0 0 40px; }
+    #reenter-name-widget { order: 6; flex: 0 0 40px; }
+
+    .codex-header { padding-left: 1rem; padding-right: 3.2rem; text-align: left; }
+    .codex-tab { padding: 0.55rem 0.5rem; letter-spacing: 0.1em; font-size: 0.68rem; }
+    #codex-content { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+    .codex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
+    .chronicle-entry { grid-template-columns: 96px 1fr; gap: 0.8rem; }
+    .codex-tab, .chronicle-read { min-height: 44px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;
       min-height: 40px;
@@ -1120,13 +1333,13 @@
       background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
     }
 
-    #lore-panel, #species-panel, #npc-panel { width: 100vw; }
-    #panel-content, #species-panel-content, #npc-panel-content {
+    #lore-panel, #species-panel, #npc-panel, #creature-panel { width: 100vw; }
+    #panel-content, #species-panel-content, #npc-panel-content, #creature-panel-content {
       padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
     }
-    #panel-close, #species-panel-close, #npc-panel-close {
+    #panel-close, #species-panel-close, #npc-panel-close, #creature-panel-close {
       top: max(0.5rem, env(safe-area-inset-top));
       right: max(0.5rem, env(safe-area-inset-right));
       width: 44px;
@@ -1134,7 +1347,7 @@
     }
     .password-input { font-size: 16px; min-width: 0; }
     .password-btn, .wm-track-btn { min-height: 44px; }
-    .species-link, .npc-link { text-underline-offset: 4px; }
+    .species-link, .npc-link, .creature-link { text-underline-offset: 4px; }
   }
 
   @media (max-width: 430px) {
@@ -1148,7 +1361,7 @@
     .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
-    .music-player { flex-basis: calc(100% - 136px); }
+    .music-player { flex-basis: calc(100% - 180px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1218,6 +1431,8 @@
         </svg>
         <span id="music-time" class="music-time">0:00 / 0:00</span>
       </div>
+      <!-- The Codex: Bestiary, Rogues' Gallery and Chronicle. See js/codex.js. -->
+      <button id="codex-btn" class="icon-btn" onclick="openCodex()" title="The Codex" aria-label="Open the Codex: bestiary, rogues' gallery and chronicle">📜</button>
       <!-- Quick-jump index of everything the visitor can see — provinces,
            discovered Wickermoor locations, species, and NPCs met in
            unlocked lore. See js/index.js. -->
@@ -1341,6 +1556,32 @@
        own lore text. A separate panel rather than reusing the species one
        outright, since the two can in principle be triggered from
        different underlying panels and shouldn't fight over the same DOM. -->
+  <!-- The Codex — a full-screen book over the map, with three tabs. Lore
+       panels (Chronicle "Read") and the species/NPC/creature panels open
+       on top of it. -->
+  <div id="codex" role="dialog" aria-modal="true" aria-labelledby="codex-title" inert>
+    <div class="panel-border-top"></div>
+    <button id="codex-close" onclick="closeCodex()" title="Close" aria-label="Close the Codex">✕</button>
+    <div class="codex-header">
+      <div class="panel-eyebrow" id="codex-title">The Codex</div>
+      <div class="codex-tabs" role="tablist" aria-label="Codex sections">
+        <button role="tab" class="codex-tab" id="codex-tab-bestiary" data-tab="bestiary" aria-controls="codex-content" onclick="showCodexTab('bestiary')">Bestiary</button>
+        <button role="tab" class="codex-tab" id="codex-tab-gallery" data-tab="gallery" aria-controls="codex-content" onclick="showCodexTab('gallery')">Rogues' Gallery</button>
+        <button role="tab" class="codex-tab" id="codex-tab-chronicle" data-tab="chronicle" aria-controls="codex-content" onclick="showCodexTab('chronicle')">Chronicle</button>
+      </div>
+    </div>
+    <div id="codex-content" role="tabpanel" tabindex="-1"></div>
+  </div>
+
+  <!-- Creature panel — a Bestiary entry, opened from the Codex or from a
+       {{creature:id}} link in lore. Same pattern as the NPC panel. -->
+  <div id="creature-overlay" onclick="closeCreaturePanel()"></div>
+  <div id="creature-panel" role="dialog" aria-modal="true" inert>
+    <div class="panel-border-top"></div>
+    <button id="creature-panel-close" onclick="closeCreaturePanel()" title="Close" aria-label="Close">✕</button>
+    <div id="creature-panel-content" tabindex="-1"></div>
+  </div>
+
   <div id="npc-overlay" onclick="closeNpcPanel()"></div>
   <div id="npc-panel" role="dialog" aria-modal="true" inert>
     <div class="panel-border-top"></div>
@@ -2267,6 +2508,1012 @@ const SPECIES = {
     "province": "zulrogg",
     "image": "species/SPECIES_Bogborn.webp",
     "body": "<p class=\"panel-body\">Bogborn are a troll-like species native to Zulrogg, usually rising from the still, dark waters of the swampy province. From the moment of rebirth, they have a symbiotic relationship with the flora and fauna of the wild — and often treacherous — mire. Their ability to survive is further enhanced by the naturally regenerative biology often found in trolls.</p><p class=\"panel-body\">Towering over most, these hearty folk can face any trial of nature, and they often utilize their athleticism in pursuits of hunting and survival. Bearing prominent noses and tusks, their tough hides are generally shades of green or blue. Bogborn typically live 100 years before moving on to the spirit world.</p>"
+  }
+};
+
+const WM_CHAPTERS = {
+  "wm_ghostlight_express": {
+    "chapter": 10,
+    "title": "The Ghostlight Express",
+    "art": "chapter-art/The Ghostlight Express.jpg"
+  },
+  "wm_village": {
+    "chapter": 11,
+    "title": "Wickermoor Village",
+    "art": "chapter-art/Wickermoor Village.jpeg"
+  },
+  "wm_foxwillow": {
+    "chapter": 13,
+    "title": "Fields of the Crow",
+    "art": "chapter-art/Fields of the Crow.jpg"
+  },
+  "wm_harvest_terror": {
+    "chapter": 13,
+    "title": "Fields of the Crow",
+    "art": "scenes/SCENE_Chapter13_Harvest_Terror.webp"
+  },
+  "wm_dawns_gate": {
+    "chapter": 14,
+    "title": "The Crimson Monastery",
+    "art": "scenes/SCENE_Chapter14_Environment.webp"
+  },
+  "wm_silverbell": {
+    "chapter": 14,
+    "title": "The Crimson Monastery"
+  },
+  "wm_crimson": {
+    "chapter": 14,
+    "title": "The Crimson Monastery",
+    "art": "chapter-art/The Crimson Monastery.jpg"
+  },
+  "wm_crimson_abbot": {
+    "chapter": 14,
+    "title": "The Crimson Monastery",
+    "art": "scenes/SCENE_Chapter14_Renathyr.webp"
+  },
+  "wm_drowned": {
+    "chapter": 15,
+    "title": "The Drowned Crossroads",
+    "art": "chapter-art/Drowned Crossroads.jpg"
+  },
+  "wm_murkwater": {
+    "chapter": 15,
+    "title": "The Drowned Crossroads",
+    "art": "scenes/SCENE_Chapter15_Adelas_Deal.webp"
+  },
+  "wm_grinning_sinner": {
+    "chapter": 15,
+    "title": "The Drowned Crossroads",
+    "art": "scenes/SCENE_Chapter15_Dead_Mans_Hand.webp"
+  },
+  "wm_skitterdeep": {
+    "chapter": 16,
+    "title": "Skitterdeep Mine",
+    "art": "chapter-art/Skitterdeep Mine.jpg"
+  },
+  "wm_memorys_rest": {
+    "chapter": 17,
+    "title": "Memory's Rest",
+    "art": "chapter-art/Memorys Rest.jpg"
+  },
+  "wm_moonsong": {
+    "chapter": 17,
+    "title": "Memory's Rest",
+    "art": "monsters/MONSTER_Lake_Dredger.webp"
+  },
+  "wm_weeping_widow": {
+    "chapter": 17,
+    "title": "Memory's Rest",
+    "art": "npc/NPC_Matron_Lethica.webp"
+  },
+  "wm_hartsblight": {
+    "chapter": 18,
+    "title": "Hartsblight Forest",
+    "art": "chapter-art/Hartsblight Forest.jpg"
+  },
+  "wm_beast_of_blight": {
+    "chapter": 18,
+    "title": "Hartsblight Forest",
+    "art": "scenes/SCENE_Chapter18_Gorthos.webp"
+  },
+  "wm_maidenmist": {
+    "chapter": 19,
+    "title": "Maidenmist Cemetery",
+    "art": "chapter-art/Maidenmist Cemetery.jpg"
+  },
+  "wm_chained_reaper": {
+    "chapter": 19,
+    "title": "Maidenmist Cemetery",
+    "art": "scenes/SCENE_Chapter19_Gravedigger.webp"
+  },
+  "wm_rowans_rise": {
+    "chapter": 23,
+    "title": "Wicker's Vigil",
+    "art": "chapter-art/Wickers Vigil.jpg"
+  },
+  "wm_wytchwood": {
+    "chapter": 24,
+    "title": "The Crooked Tree",
+    "art": "chapter-art/The Crooked Tree.jpg"
+  },
+  "wm_horned_king": {
+    "chapter": 24,
+    "title": "The Crooked Tree",
+    "art": "scenes/SCENE_Chapter24_Horned King.webp"
+  },
+  "wm_crooked_queen": {
+    "chapter": 24,
+    "title": "The Crooked Tree",
+    "art": "scenes/SCENE_Chapter24_Mural.webp"
+  },
+  "wm_webwoods": {
+    "chapter": 26,
+    "title": "Moonfall"
+  },
+  "wm_howlers": {
+    "chapter": 26,
+    "title": "Moonfall"
+  }
+};
+
+const BESTIARY = {
+  "alpengrendel": {
+    "name": "Alpengrendel",
+    "kind": "monster",
+    "subtitle": "Brute Born of Mountain Ice",
+    "images": [
+      "monsters/MONSTER_Alpengrendel.webp"
+    ],
+    "body": "<p class=\"panel-body\">Alpengrendel are hulking creatures covered in bluish white fur, with great tusks and horns. They were born of the ice and darkness of their mountaintop homes, shaped by the unseen hands of a deity of cold stone and gloam. The bitter cold of the mountain peaks infuses both their touch and their breath.</p>\n<p class=\"panel-body\">Alpengrendel draw upon the timelessness of the mountains, healing from otherwise lethal wounds in the blink of an eye. They fear only the power of lightning, which can slay them, and the power of the gods, whom they bitterly resent.</p>",
+    "groups": []
+  },
+  "bat_hound": {
+    "name": "Bat Hound",
+    "kind": "monster",
+    "subtitle": "Bloodthirsty Hunter of the Night",
+    "images": [
+      "monsters/MONSTER_Bathound.webp"
+    ],
+    "body": "<p class=\"panel-body\">Bat hounds are created through blood magic rituals that manipulate the curse of vampirism to transform a hound into a relentless stalker. Unswervingly loyal companions, bat hounds aid vampiric masters in tracking prey, able to outrun horses and their riders once they smell blood. They seek out stragglers or quarry that are escaping during a hunt and drag them back for capture.</p>",
+    "groups": []
+  },
+  "bayou_beast": {
+    "name": "Bayou Beast",
+    "kind": "monster",
+    "subtitle": "Spirit Hex-Bound to the Swamp",
+    "images": [
+      "monsters/MONSTER_Bayou_Beast.webp"
+    ],
+    "body": "<p class=\"panel-body\">Bayou beasts are elemental spirits bound into great mounds of swamp plant matter through jinxcraft magic. These hulks obey their creators unfailingly, often</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "boneflayer": {
+    "name": "Boneflayer",
+    "kind": "monster",
+    "subtitle": "Voracious Carrion Eater",
+    "images": [
+      "monsters/MONSTER_Boneflayer.webp"
+    ],
+    "body": "<p class=\"panel-body\">Boneflayers are cruel, vulture-like creatures that originated from a broken fey pact. The creatures aren’t content to wait for something to die and instead make their own carrion to gorge upon—they delight in snatching prey in their talons, carrying it into the air, and dropping it to its death. Boneflayers earn their name by using their sizeable, filth-riddled beaks to cleave flesh from bone and hoard the meat until it ages enough for them to enjoy.</p>\n<p class=\"panel-body\">Cults sometimes use boneflayer killing grounds as a source of bones to burn in ritual bonfires, occasionally making pacts with the creatures to pay or trade for the creature’s castoffs. Villages that fear boneflayer attacks ward them off with thundering drums or gongs whenever they circle overhead.</p>",
+    "groups": []
+  },
+  "boogleswarm": {
+    "name": "Boogleswarm",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Boogleswarm.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "centipede_hag": {
+    "name": "Centipede Hag",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Centipede_Hag.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "corvodaemon": {
+    "name": "Corvodaemon",
+    "kind": "monster",
+    "subtitle": "Demon of Hunger and Secrets",
+    "images": [
+      "monsters/MONSTER_Corvodaemon.webp"
+    ],
+    "body": "<p class=\"panel-body\">Resembling a monstrous crow, the corvodaemon’s sleek and twisted form soars on elongated wings tipped with razor-sharp, finger-like claws, its six amber eyes constantly seeking for prey.</p>\n<p class=\"panel-body\">Insatiable hunger for both flesh and souls—along with their accumulated secrets—gnaws at these Fiends. Their mimicry lets them take on the voice of those known and trusted by their would-be meals, luring the hapless mortals to their doom.</p>",
+    "groups": []
+  },
+  "crimson_clergy": {
+    "name": "Crimson Clergy",
+    "kind": "monster",
+    "subtitle": "Vampiric Zealot",
+    "images": [
+      "monsters/MONSTER_Crimson_Clergy.webp"
+    ],
+    "body": "<p class=\"panel-body\">Crimson clergy are Undead cultists, often created, led, and taught by a more powerful vampire. Crimson clergy view the consumption of blood—and in its use during their rituals and when casting spells—not only as necessary but sacred. Their hunger reaches beyond the limits of their fangs and claws, calling to the blood of their victims and drawing it out in scarlet ribbons.</p>",
+    "groups": []
+  },
+  "crooked_effigy": {
+    "name": "Crooked Effigy",
+    "kind": "monster",
+    "subtitle": "Splinter of Crooked Power",
+    "images": [
+      "monsters/MONSTER_Crooked_Effigy.webp"
+    ],
+    "body": "<p class=\"panel-body\">Crooked effigies are servants of a twisted archfey known as the Crooked Queen. They are made of gnarled wood and show some bipedal and feminine features in their queen’s image. Crooked effigies impale their enemies with their branch-like arms and drag foes in close, where the thorns on their bodies carry the sting of a victim’s own corruption.</p>",
+    "groups": []
+  },
+  "crooked_man": {
+    "name": "Crooked Man",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Crooked_Man.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "crowstorm": {
+    "name": "Crowstorm",
+    "kind": "monster",
+    "subtitle": "Fiendish Murder",
+    "images": [
+      "monsters/MONSTER_Crowstorm.webp"
+    ],
+    "body": "<p class=\"panel-body\">A crowstorm is a great, swirling mass of dark feathers accompanied constant, harshly malevolent crow calls. Hundreds of fiendish birds fly in unison, their beady eyes dripping blood as they swoop down to tear at the flesh of their victims. A crowstorm’s horrific caws mingle into an eerie cacophony of pleading whispers, and it robs the gift of flight from anything that draws too close.</p>",
+    "groups": []
+  },
+  "deepdreck": {
+    "name": "Deepdreck",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Deepdreck.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "drakkenhob": {
+    "name": "Drakkenhob",
+    "kind": "monster",
+    "subtitle": "Dragon Disguised as a Festival Horse",
+    "images": [
+      "monsters/MONSTER_Drakkenhob.webp"
+    ],
+    "body": "<p class=\"panel-body\">The drakkenhob is a draconic monster with a sinister disguise, presenting itself as an actor wearing a horse costume, such as a mounted knight or a festively clad rider. Its draconic head resembles a decorated or armored horse’s head, and its sharp teeth fit together to appear like blunt, harmless decorations. The drakkenhob uses this benign guise to get close to its prey, which are typically within crowds near festivals or parades, before it summons its similarly garbed hunting hounds and strikes. Its breath is a blood-curdling wave of terror that makes lesser victims drop dead from fright alone.</p>",
+    "groups": []
+  },
+  "dream_eater": {
+    "name": "Dream Eater",
+    "kind": "monster",
+    "subtitle": "Devourer of Nightmares",
+    "images": [
+      "monsters/MONSTER_Dream_Eater.webp"
+    ],
+    "body": "<p class=\"panel-body\">Dream eaters are horrors that feed on the dreams, sense of identity, and—some say—the very souls of other creatures.</p>\n<p class=\"panel-body\">Dream eaters have the bodies and wings of great owls, while their beaks are filled with blunt, humanlike teeth and hide long snaking tongues. Their feathers are drab colors on the exterior, but their wings display a dazzling cascade of rainbow hues on the undersides when unfurled.</p>\n<p class=\"panel-body\">These colors flow and shift, mesmerizing the dream eater’s prey and leaving them helpless. A creature whose dreams are devoured is left in a listless, near-blank state. Without help, their victims waste away.</p>",
+    "groups": []
+  },
+  "ferryman": {
+    "name": "Ferryman",
+    "kind": "monster",
+    "subtitle": "Cursed Undead Boatman",
+    "images": [
+      "monsters/MONSTER_Ferryman.webp"
+    ],
+    "body": "<p class=\"panel-body\">Ferrymen are Undead created through the use of curses and jinxcraft and are doomed to ply the waters where they were raised. They pole through the bayous and rivers, and even across land on a wave of swamp water, in coffin boats. They can focus the malice of their curse through the light of their lantern poles, jinxing enemies or those who try to force a ride without payment.</p>",
+    "groups": []
+  },
+  "festerhulk": {
+    "name": "Festerhulk",
+    "kind": "monster",
+    "subtitle": "Fungal Undead Giant",
+    "images": [
+      "monsters/MONSTER_Festerhulk.webp"
+    ],
+    "body": "<p class=\"panel-body\">Festerhulks are dead giants whose corpses are infested with fungus engorged by the magic of decay. This fungus has consumed and replaced much of the giant’s flesh and now animates the corpse. The heads of these giants are often completely overtaken by repulsive mushrooms and other fungal growths. The spores given off by their infestation can spread to victims killed by festerhulks, giving rise to further Undead.</p>",
+    "groups": []
+  },
+  "fleshdobbin": {
+    "name": "Fleshdobbin",
+    "kind": "monster",
+    "subtitle": "Flesh-Crafted Amalgam of Knight and Horse",
+    "images": [
+      "monsters/MONSTER_Fleshdobbin.webp"
+    ],
+    "body": "<p class=\"panel-body\">Fleshdobbins are abominations created when a horse and its rider are horrifically melded through fleshcrafting magic. Their limbs stretch and deform, though afterward, their bodies resist further transformation. Fitted with saddles and bearing savage weaponry, these monsters may look like riderless horses from a distance, but each leg culminates in oddly human\u0002looking gnarled hands with fingers ending in wicked claws. Their voices are the comingled shrieks of human and horse.</p>",
+    "groups": []
+  },
+  "gloomwood": {
+    "name": "Gloomwood",
+    "kind": "monster",
+    "subtitle": "Blighted Treant",
+    "images": [
+      "monsters/MONSTER_Gloomwood.webp"
+    ],
+    "body": "<p class=\"panel-body\">Gloomwoods were once treants in service to an archfey, but they were corrupted by a supernatural fungal blight. The growth bores through their trunks and into their souls, making the gloomwoods cruel and vicious, interested only in spreading more decay. Fungal spores drift from their trunks and branches, rotting any flesh and digging into the ground around them to spread the blight.</p>",
+    "groups": []
+  },
+  "gobblegeist": {
+    "name": "Gobblegeist",
+    "kind": "monster",
+    "subtitle": "Blood-Drinking Avian Predator",
+    "images": [
+      "monsters/MONSTER_Gobblegeist.webp"
+    ],
+    "body": "<p class=\"panel-body\">Gobblegeists are massive birdlike monsters with earth\u0002toned plumage, reptilian faces and claws, and a metallic beak edged with sharp teeth. These ravenous creatures descend from forest canopies or hilltops to snatch their prey unawares and carry them off to feed on their blood in solitude. Their single, unblinking eye can unnerve and dazzle more alert prey, making would-be threats an easy meal.</p>",
+    "groups": []
+  },
+  "herald_of_fools": {
+    "name": "Herald of Fools",
+    "kind": "monster",
+    "subtitle": "Leader of Fiendish Revels",
+    "images": [
+      "monsters/MONSTER_Herald_of_Fools.webp"
+    ],
+    "body": "<p class=\"panel-body\">Heralds of fools lead troupes of fiendish revelers in service to the enigmatic Lord of Fools, a clown or jester entity who is a curious mix of levity and cruelty (though always with a sense of irony). The heralds are agile and graceful, every movement a dance, spinning their banner poles in intricate displays that can swiftly turn from entertainment to death.</p>",
+    "groups": []
+  },
+  "hospital_horror": {
+    "name": "Hospital Horror",
+    "kind": "monster",
+    "subtitle": "Mutated Experiment",
+    "images": [
+      "monsters/MONSTER_Hospital_Horror.webp"
+    ],
+    "body": "<p class=\"panel-body\">Hospital horrors were once people, but now they are repulsive mockeries created through surgical and magical alteration. They have no memory of their past lives, existing only within a chemically induced rage. Often, they are conditioned by the use of specific command phrases that allow them to be controlled.</p>",
+    "groups": []
+  },
+  "house_of_horror": {
+    "name": "House of Horror",
+    "kind": "monster",
+    "subtitle": "Cursed House Brought to Malevolent Life",
+    "images": [
+      "monsters/MONSTER_House_of_Horror.webp"
+    ],
+    "body": "<p class=\"panel-body\">Houses of horror are living houses, often angry or bitter due to the circumstances of their awakening. They were once mundane buildings or dwellings where powerful magics of life and death took place and infused the stones and timber.</p>\n<p class=\"panel-body\">Houses of horror jealously covet the true life that its former inhabitants enjoyed, or they carry echoes of the suffering that bodies and souls experienced within them. The houses vent this fury on any who enter, tormenting and terrifying trespassers. The souls of those who die inside are trapped, waiting to be unleashed upon future victims.</p>",
+    "groups": []
+  },
+  "hypnovulfen": {
+    "name": "Hypnovulfen",
+    "kind": "monster",
+    "subtitle": "Hungry Hypnotizing Wolf",
+    "images": [
+      "monsters/MONSTER_Hypnovulfen.webp"
+    ],
+    "body": "<p class=\"panel-body\">Hypnovulfen resemble massive wolves with unnaturally large orange eyes and wide, crooked maws. Despite their size, hypnovulfen are shockingly stealthy, able to stalk their prey and snare them with a hypnotic gaze from the shadows. The gaze beguiles victims into seeing a loved one beckoning them closer for a warm embrace. All the better for a hypnovulfen to feed and consume the unfortunate morsel’s memories.</p>",
+    "groups": []
+  },
+  "invader_out_of_space": {
+    "name": "Invader Out of Space",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Invader_Out_of_Space.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "kackle": {
+    "name": "Kackle",
+    "kind": "monster",
+    "subtitle": "Laughing Lantern Bearer",
+    "images": [
+      "monsters/MONSTER_Kackle.webp"
+    ],
+    "body": "<p class=\"panel-body\">Those who were particularly sadistic in life and died consumed by wicked mirth linger as Kackles—ghostly figures that drift above the ground, always flitting just out of sight. Adorned in tattered cloaks and concealing hoods or hats, their hollow laughter echoes through dark places, fading in and out to confuse and terrify their victims. Kackles always carry lanterns lit with ghostly flames, the color of which changes to reflect a kackle’s current cruelty of choice.</p>",
+    "groups": [
+      "2"
+    ]
+  },
+  "keeper_of_the_blight": {
+    "name": "Keeper of the Blight",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Keeper_of_the_Blight.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "ketgrinn": {
+    "name": "Ketgrinn",
+    "kind": "monster",
+    "subtitle": "Voice-Stealing Trickster",
+    "images": [
+      "monsters/MONSTER_Ketgrin.webp"
+    ],
+    "body": "<p class=\"panel-body\">Ketgrinn are catlike Fey spirits who delight in puzzles, riddles, and bargains. They have large, bright eyes and too-wide grins that gleam starkly even in shadows. Ketgrinn are tricksters and spies, often sent by those they serve to steal the voices of a rival’s minions to sow chaos and confusion.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "lake_dredger": {
+    "name": "Lake Dredger",
+    "kind": "monster",
+    "subtitle": "Undead Aquatic Monster",
+    "images": [
+      "monsters/MONSTER_Lake_Dredger.webp"
+    ],
+    "body": "<p class=\"panel-body\">Lake dredgers are Undead water behemoths, such as whales, giant fish, or dinosaurs. These creatures are reanimated through the deep, primal fear of the unknown horrors that lurk in the murky depths. They dwell in the beds of lakes, rivers, or oceans, dredging up the detritus to replenish their ever-rotting mass. They also add to their decaying bulk by feeding on living creatures, especially drawn to those who exhibit fear of the deep. Once prey is devoured, it is impaled on its cracked ribs until the waterlogged flesh becomes one with the beast’s.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "lurker_in_the_dark": {
+    "name": "Lurker in the Dark",
+    "kind": "monster",
+    "subtitle": "Thing That Goes Bump in the Night",
+    "images": [
+      "monsters/MONSTER_Lurker_in_the_Dark.webp"
+    ],
+    "body": "<p class=\"panel-body\">Lurkers in the dark are wicked Fey creatures who prey upon the fearful, vulnerable, and alone. They resemble nightmarishly distorted people with gray skin, lank hair, and three-fingered, clawed hands. Their limbs move in impossible ways, allowing them to slip through and hide within spaces that seem far too small. They delight in stoking their victim’s fears by whispering from spaces a person couldn’t fit. When the terror crests, the lurkers strike, drag their victims into the dark, and vanish with them.</p>",
+    "groups": []
+  },
+  "maidenwood": {
+    "name": "Maidenwood",
+    "kind": "monster",
+    "subtitle": "Witch-Warped Ambushing Tree",
+    "images": [
+      "monsters/MONSTER_Maidenwood.webp"
+    ],
+    "body": "<p class=\"panel-body\">Maidenwoods are creatures birthed from tree stumps by old magics, often arising from curses that turn the forest against a transgressor. They scuttle on roots like legs, and the broken trunk becomes a fierce, grinding maw. The maidenwood’s tendrils blossom into lifelike figures it uses to lure its prey close.</p>",
+    "groups": []
+  },
+  "mutant_nurse": {
+    "name": "Mutant Nurse",
+    "kind": "monster",
+    "subtitle": "Caregiver Twisted by Mutation",
+    "images": [
+      "monsters/MONSTER_Mutant_Nurse.webp"
+    ],
+    "body": "<p class=\"panel-body\">Mutant nurses resemble the Humanoids they once were, though an alien mutation writhes within their bodies. They serve as caretakers of healing institutions, though they are fully beholden to whoever, or whatever, altered them to their current state. The nurses all wear a white porcelain mask made in the likeness of their original features, which grounds them to their sense of self and prevents them from losing their will fully to the aberrant influence that changed them.</p>",
+    "groups": []
+  },
+  "necrolisk": {
+    "name": "Necrolisk",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Necrolisk.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "night_creature": {
+    "name": "Night Creature",
+    "kind": "monster",
+    "subtitle": "Bestial Blood Hunter",
+    "images": [
+      "monsters/MONSTER_Night_Creature.webp"
+    ],
+    "body": "<p class=\"panel-body\">Night creatures are fiendish spirits bound into vampire-blood-tainted corpses through profane rituals. The hulking brutes are fanatically loyal to their creators, a fact some vampire overlords learn too late when those they employ to create the night creatures develop ambitions of their own. Secrets. Night creatures are quickly undone by the purity of salt if wiped on a weapon and driven into a wound.</p>",
+    "groups": []
+  },
+  "old_ways_chosen": {
+    "name": "Old Ways Chosen",
+    "kind": "monster",
+    "subtitle": "Devout Follower of Old Gods",
+    "images": [
+      "monsters/MONSTER_Old_Ways_Chosen.webp"
+    ],
+    "body": "<p class=\"panel-body\">Venerating old and forgotten gods who once held sway over the remote places of the world, the Old Ways chosen keep the last embers of belief and tradition burning. Many of the chosen are insular, keeping to the communities they foster. Some are more open to contact with outsiders, whether to be a beneficent presence or to draw in potential sacrifices to the Old Ways.</p>",
+    "groups": []
+  },
+  "phantom_hearse": {
+    "name": "Phantom Hearse",
+    "kind": "monster",
+    "subtitle": "Ghostly Coach of the Dead",
+    "images": [
+      "monsters/MONSTER_Phantom_Hearse.webp"
+    ],
+    "body": "<p class=\"panel-body\">Phantom hearses are ghostly carriages complete with horses and coachmen—amalgamations of tormented souls driven to claim the living and drag them to the land of the dead.</p>\n<p class=\"panel-body\">The spirit coachmen strike with phantom whips and weapons, and even fly out to harry foes at a distance, while the ghostly horses drive the hearse in a crushing charge that gathers victims and seals them into a spectral coffin that drains the warmth and vitality from flesh and bone. The tolling bell on the carriage precedes the apparition’s appearance, and its sepulchral sound has caused more than a few witnesses to drop dead on the spot.</p>",
+    "groups": []
+  },
+  "pigeon_hag": {
+    "name": "Pigeon Hag",
+    "kind": "monster",
+    "subtitle": "",
+    "images": [
+      "monsters/MONSTER_Pigeon_Hag_.webp"
+    ],
+    "body": "",
+    "groups": []
+  },
+  "pumpkin_head": {
+    "name": "Pumpkin Head",
+    "kind": "monster",
+    "subtitle": "Fiendish Effigy of the Fields",
+    "images": [
+      "monsters/MONSTER_Pumpkin_Head.webp"
+    ],
+    "body": "<p class=\"panel-body\">Pumpkin heads are scarecrows of straw, sticks, and clothing topped with a carved pumpkin for a head and animated by a fiendish spirit. They are crafted by demons to resemble their Humanoid victims and returned to wherever the unfortunate souls had been snatched from.</p>\n<p class=\"panel-body\">These living effigies speak with the voice of whomever they replaced, often repeating phrases and behaviors that the missing person said or did in life while stalking and killing new prey.</p>",
+    "groups": []
+  },
+  "reveler_of_song": {
+    "name": "Reveler of Song",
+    "kind": "monster",
+    "subtitle": "Fiend of Music and Dance",
+    "images": [
+      "monsters/MONSTER_Reveler_of_Song_Bell.webp",
+      "monsters/MONSTER_Reveler_of_Song_Drum.webp",
+      "monsters/MONSTER_Reveler_of_Song_Hive.webp"
+    ],
+    "body": "<p class=\"panel-body\">Revelers of song are Fiends of music and abandon who turn their art against their foes in destructive reverberation. The revelers dance and play at nearly all times and are known to fly into a murderous rage if their invitations to join the celebration are spurned. A variety of revelers of song exist, depending on the type of instrument a given reveler plays. Drone revelers play the hurdy gurdy and are surrounded by an accompanying swarm of bees. Drum revelers play drums or cymbals, and the world shakes to their beat. Bell revelers play some variety of bell, chime, or gong, and the ringing overtakes all other sounds.</p>",
+    "groups": []
+  },
+  "reveler_of_stories": {
+    "name": "Reveler of Stories",
+    "kind": "monster",
+    "subtitle": "Fiend of Legend and Folklore",
+    "images": [
+      "monsters/MONSTER_Reveler_of_Stories_Bear.webp",
+      "monsters/MONSTER_Reveler_of_Stories_Hut.webp",
+      "monsters/MONSTER_Reveler_of_Stories_Tome.webp"
+    ],
+    "body": "<p class=\"panel-body\">Timeless stories have inspired countless mortals, and the echoes of those stories in the Lower Planes have spawned fiendish embodiments of those tales—the revelers of stories. These Fiends twist the themes of their tales, turning inspiration into doom. The revelers’ forms and powers change depending on the theme of stories they embody. Great beast revelers of stories rise from tales of terrible monsters. Hero revelers of stories embody the exploits of knights and other mighty heroes. Witch revelers of stories bring to life tales of wicked witches, wizards, and other magicians.</p>",
+    "groups": []
+  },
+  "rotweaver": {
+    "name": "Rotweaver",
+    "kind": "monster",
+    "subtitle": "Fey Thrall of Rot",
+    "images": [
+      "monsters/MONSTER_Rotweaver.webp"
+    ],
+    "body": "<p class=\"panel-body\">Rotweavers were Fey caretakers of the natural world or fey planes who’ve been corrupted by the power of rot. Rotweavers serve powerful beings of withering and blight as minor acolytes and hunters, working to spread the bounds of their beloved decay.</p>",
+    "groups": []
+  },
+  "serum_brute": {
+    "name": "Serum Brute",
+    "kind": "monster",
+    "subtitle": "Cursed Giant Enhanced by Alchemy",
+    "images": [
+      "monsters/MONSTER_Serum_Brute.webp"
+    ],
+    "body": "<p class=\"panel-body\">Serum brutes are descended from giants who suffered an enduring curse when they failed to take over a Fey domain. They have third eyes, usually in their foreheads, which channel the giants’ curse into the world around them. All three of their eyes are sewn or otherwise sealed shut to contain the curse.</p>\n<p class=\"panel-body\">Serum brutes are further enhanced with—and get their name from—a series of alchemical infusions, often delivered through implanted vessels and tubes, which seek to deaden their sorrow and pain, as well as the disturbing power of their third eyes. They form deep emotional bonds with any who offer them comfort and an escape from the pain of their curse, and they are often willing to die for those allies.</p>",
+    "groups": []
+  },
+  "shrouded": {
+    "name": "Shrouded",
+    "kind": "monster",
+    "subtitle": "Soul Corrupted by the Shroud",
+    "images": [
+      "monsters/MONSTER_Shrouded_Grappler.webp",
+      "monsters/MONSTER_Shrouded_Reaper.webp",
+      "monsters/MONSTER_Shrouded_Scavenger.webp"
+    ],
+    "body": "<p class=\"panel-body\">Shrouded are the spirits of the dead—devoid of any ability to reason and corrupted by the deathly mists known as the Shroud. They are raw emotional energy, unfettered and unleashed, manifested into being. The shrouded are constantly whispering about a victim’s incompetencies, weakness, foibles, and failings as they engulf their prey to drain the life from them, corrupting their soul.</p>",
+    "groups": []
+  },
+  "skitterswarm": {
+    "name": "Skitterswarm",
+    "kind": "monster",
+    "subtitle": "Fetid Fey Centipedes",
+    "images": [
+      "monsters/MONSTER_Skitterswarm.webp"
+    ],
+    "body": "<p class=\"panel-body\">Disgusting Fey who delight in warping flesh and spreading sickness can gather into squirming masses of centipedes known as skitterswarms. These swarms lurk in places where foulness accumulates and often serve centipede hags.</p>",
+    "groups": []
+  },
+  "soulfire_stoker": {
+    "name": "Soulfire Stoker",
+    "kind": "monster",
+    "subtitle": "Engine-Born Spirit of Flame and Death",
+    "images": [
+      "monsters/MONSTER_Soulfire_Stoker.webp"
+    ],
+    "body": "<p class=\"panel-body\">Soulfire stokers are Elemental spirits of fire who inhabit furnaces, engines, and boilers that burn bodies or souls. The resulting creature is composed of ghostly flames and steam, with swirling plates of phantom iron that resemble the engine or machine that gave it form. A crackling blend of fire and negative energy, soulfire stokers burn away souls as much as flesh.</p>",
+    "groups": []
+  },
+  "squabswarm": {
+    "name": "Squabswarm",
+    "kind": "monster",
+    "subtitle": "Peeping Fey Pigeons",
+    "images": [
+      "monsters/MONSTER_Squabswarm.webp"
+    ],
+    "body": "<p class=\"panel-body\">Fey messengers that take the form of pigeons can gather into flocks, or squabswarms. Hags and other influential Fey use squabswarms as spies and messengers—and sometimes as unerring trackers to locate any who flee responsibility or judgement.</p>",
+    "groups": []
+  },
+  "vermin_familiar": {
+    "name": "Vermin Familiar",
+    "kind": "monster",
+    "subtitle": "Infesting Hag Companion",
+    "images": [
+      "monsters/MONSTER_Vermin_Familiar_Centepede.webp",
+      "monsters/MONSTER_Vermin_Familiar_Pigeon.webp",
+      "monsters/MONSTER_Vermin_Familiar_Weasel.webp"
+    ],
+    "body": "<p class=\"panel-body\">Capricious Fey spirits incarnated into bodies reminiscent of normal pests, vermin familiars serve spellcasters and especially vermin hags. While they are most often drawn to serve wicked masters, they also delight in playing the part of dutiful servants to corrupt spellcasters who aren’t evil.</p>",
+    "groups": []
+  },
+  "vermin_infestation": {
+    "name": "Vermin Infestation",
+    "kind": "monster",
+    "subtitle": "Swarm of Verminous Familiars",
+    "images": [
+      "monsters/MONSTER_Vermin_Infestation.webp"
+    ],
+    "body": "<p class=\"panel-body\">A nightmarish amalgamation of centipedes, pigeons, and weasels, vermin infestations are thankfully rare. These swarms of Fey roil and scratch and rend with individual pigeons streaking out to tear at distant foes, becoming a frenzied mass that throws all subtlety and coordination to the wind. At times, the constituent vermin-like Fey seem to be at each other’s throats as much as any victims of the swarm.</p>",
+    "groups": []
+  },
+  "wayward_haint": {
+    "name": "Wayward Haint",
+    "kind": "monster",
+    "subtitle": "Lost Soul Bound to Regret",
+    "images": [
+      "monsters/MONSTER_Wayward_Haint.webp"
+    ],
+    "body": "<p class=\"panel-body\">Wayward haints are restless spirits stuck between the realms of the living and the dead. Be it a curse or an unresolved conflict from their previous life, a haint can’t rest until their unfinished business is resolved. Haints only show hints of who they were in life, taking on a more symbolic form related to the hurt or loss they can’t let go of. They tend to repeat their monotonous actions—often imitating those performed in life or reenacting their sorrow—over and over for eternity. When provoked, they can display a volatile temper and lash out with a crushing wave of the grief and indecision that binds their spirit.</p>",
+    "groups": []
+  },
+  "weasel_hag": {
+    "name": "Weasel Hag",
+    "kind": "monster",
+    "subtitle": "Hag of Soul Twisting and Terror",
+    "images": [
+      "monsters/MONSTER_Weasel_Hag.webp"
+    ],
+    "body": "<p class=\"panel-body\">Covetous and bedecked in stolen and gifted teeth, weasel hags are Fey creatures that sow nightmares and temptation to wickedness. They often surround themselves with weasels and boogleswarms, using them as spies, thieves to steal trinkets (especially lost teeth), and to spread their malign influence.</p>",
+    "groups": []
+  },
+  "wellwyrm": {
+    "name": "Wellwyrm",
+    "kind": "monster",
+    "subtitle": "Serpent Lurking Beneath the Surface",
+    "images": [
+      "monsters/MONSTER_Wellwyrm.webp"
+    ],
+    "body": "<p class=\"panel-body\">Wellwyrms are serpents originally touched by cruel Fey masters. The wyrms live in shallow waters where land\u0002dwelling creatures frequent, such as wells and watering holes, lying in wait to coil around unsuspecting victims. Wellwyrms then drag their prey into water, or into burrows they dig under seemingly safe ground, to drown or suffocate.</p>",
+    "groups": []
+  },
+  "wildpyre": {
+    "name": "Wildpyre",
+    "kind": "monster",
+    "subtitle": "Spectral Blazing Beast",
+    "images": [
+      "monsters/MONSTER_Wildpyre.webp"
+    ],
+    "body": "<p class=\"panel-body\">When animals perish in flames, their escaping spirits can cling to the fire that took their lives and arise as wildpyres. These Undead resemble the kind of animal they were in life, though made of ghostly flames. They lash out at anything in their vicinity, fanning the flames that consumed them.</p>",
+    "groups": []
+  },
+  "woodwarped": {
+    "name": "Woodwarped",
+    "kind": "monster",
+    "subtitle": "Facsimile Grown of Root and Vine",
+    "images": [
+      "monsters/MONSTER_Woodwarped.webp"
+    ],
+    "body": "<p class=\"panel-body\">Whispered among forest dwellers is the tale of a cursed vine, said to creep into the bodies of the living or the dead, twisting them into woodwarped. These wooden creations of tangled roots and bark take shape into a crude yet eerily familiar imitation of their hosts. Those that slay their hosts are sometimes clad in the stolen clothing and armor of their victims, silently wandering the woods with hollow eyes that reflect the unnatural force that binds them to the forest. Cutting pieces from their bodies is a dangerous proposition, as the fragments quickly grow into new woodwarped.</p>",
+    "groups": []
+  },
+  "wormhost_surgeon": {
+    "name": "Wormhost Surgeon",
+    "kind": "monster",
+    "subtitle": "Parasitical Physician",
+    "images": [
+      "monsters/MONSTER_Wormhost_Surgeon.webp"
+    ],
+    "body": "<p class=\"panel-body\">Alien parasitic worms that infest the brains of Humanoid bodies mutate their hosts into wormhost surgeons. These aberrant husks are obsessed with anatomical study and with finding new Humanoids to infest with larval worm slurry to propagate their kind. They can pass for ordinary people in most cases but must take care to hide their exposed brains and the wriggling worms within their flesh.</p>",
+    "groups": []
+  },
+  "barrow_king": {
+    "name": "The Barrow King",
+    "kind": "legendary",
+    "subtitle": "Undying Monarch of the Damned",
+    "images": [
+      "monsters/BOSS_Barrow_King.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Barrow King is known only by the armies of Undead he commands, which all slumber in tombs and burial mounds. Wights and their zombie conscripts arise when trespassers violate the resting place of the king’s army, and tales speak of a tide of death that will sweep across the world if the king himself should awaken. Records of the king’s living exploits and identity are near nonexistent, but rumors abound, and the storm of stories and myths may conceal grains of truth.</p>",
+    "groups": []
+  },
+  "beast_of_blight": {
+    "name": "The Beast of Blight",
+    "kind": "legendary",
+    "subtitle": "Manifestation of Rot and Decay",
+    "images": [
+      "monsters/BOSS_Beast_of_Blight.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Beast of Blight was once known as Farryn of the Greenwood, a druidic protector of the natural cycle who delved into forbidden lore to save her dead lover. Her love was virtuous, but in the end, it caused nothing but pain. Rot overtook the druid, and she is now a monstrous being that spreads and thrives on decay. The Beast of Blight moves effortlessly through decay and spews putrid spores when roused to anger.</p>",
+    "groups": []
+  },
+  "brimstone_behemoth": {
+    "name": "The Brimstone Behemoth",
+    "kind": "legendary",
+    "subtitle": "Apocalyptic Colossus of Hellfire",
+    "images": [
+      "monsters/BOSS_Brimstone_Behemoth.webp"
+    ],
+    "body": "<p class=\"panel-body\">The emergence of the Brimstone Behemoth means armageddon for whatever realm it erupts into. A Fiend as old as time itself, it is made of hellfire, brimstone, and dying worlds. It has a malevolent will that seeks only to bring about mass extinction and apocalypse. The only hope for many civilizations has been through the regular willing sacrifice of citizens to slow or delay the inevitable doom to come.</p>",
+    "groups": []
+  },
+  "chained_reaper": {
+    "name": "The Chained Reaper",
+    "kind": "legendary",
+    "subtitle": "Burdened Harbinger of Death",
+    "images": [
+      "monsters/BOSS_Chained_Reaper.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Chained Reaper is all that remains of a once-noble orc caretaker of the departed called Yorgrim. Having been corrupted by the mists of death known as the Shroud, the Chained Reaper is a being of hatred and bitterness, striving to cremate all living things in its balefire before binding them in chains of anguish.</p>",
+    "groups": []
+  },
+  "crimson_abbot": {
+    "name": "The Crimson Abbot",
+    "kind": "legendary",
+    "subtitle": "Unholy Crusader of Blood",
+    "images": [
+      "monsters/BOSS_Crimson_Abbot_Normal.webp",
+      "monsters/BOSS_Crimson_Abbot_Transformed.webp"
+    ],
+    "body": "<p class=\"panel-body\">In life, the Crimson Abbot was a virtuous crusader named Sir Marius Renathyr but was seduced by the sweet whispers of an archdevil of deceit and pride who masqueraded as a goddess of righteousness. On the brink of death, the abbot accepted the whispered offer for eternal life, and in so doing, was transformed into a creature of unbearable pride with an unquenchable thirst for blood. He continues to work in the name of his “goddess” and has gathered a fanatically loyal congregation eager for his promise of pure, everlasting life.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "dusk_mother": {
+    "name": "The Dusk Mother",
+    "kind": "legendary",
+    "subtitle": "Shade of Motherly Anguish",
+    "images": [
+      "monsters/BOSS_Dusk_Mother.webp"
+    ],
+    "body": "<p class=\"panel-body\">The keening wail of a mother is unmistakable and haunting, and the legends that tell of the Dusk Mother barely scratch the surface of her terrifying existence. She carries a pair of oversized shears and a great bell she tolls to accompany her wailing. Her eternal torment stems from her children, who met their fate due to the Dusk Mother’s negligence—or perhaps her wrath. Now she cries in shame for that loss as she searches for her children, or for souls to claim and fashion into dolls in a futile attempt to fill the void in her doomed soul.</p>",
+    "groups": []
+  },
+  "galloping_headsman": {
+    "name": "The Galloping Headsman",
+    "kind": "legendary",
+    "subtitle": "Headless Executioner of Vengeance",
+    "images": [
+      "monsters/BOSS_Galloping_Headsman.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Galloping Headsman is a formidable combination of human and horse musculature fused with nightmarish magic and dark revenge. Gouts of flame burst from where its head and tail should be and dance dangerously along the edge of its massive two-headed axe. A burning, skull-shaped pumpkin floats eerily in one hand, its fiery visage a constantly shifting train of agonized faces.</p>",
+    "groups": []
+  },
+  "ghostlight_locomotive": {
+    "name": "The Ghostlight Locomotive",
+    "kind": "legendary",
+    "subtitle": "Corrupted Ghost Train",
+    "images": [
+      "monsters/BOSS_Ghostlight_Locomotive.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Ghostlight Locomotive is the engine of a phantom train that travels unseen between the realms of life and death, ferrying souls of the dead to their afterlife. During its normal operation, the locomotive burns doomed spirits for fuel and races along spectral, misty rails that appear as it travels, and it has little awareness beyond its crucial task.</p>\n<p class=\"panel-body\">Only a drastic event, such as the corruption of its soul-made fuel source, can turn the Ghostlight Locomotive from its endless duty, whereupon it stokes a consciousness of the innumerable souls it has burned and vents the fury of the damned upon any obstacles in its path. When pressed, the residue of wicked souls left from the burning of its corrupted fuel overwhelms the engine’s amoral nature, driving it to malevolent and hateful destruction.</p>\n<p class=\"panel-body\">THE GHOSTLIGHT LOCOMOTIVE'S LAIR The Ghostlight Locomotive's lair is a 1-mile-radius Emanation of shrouding mist originating from the locomotive. This mist doesn't extend within the cars of the Ghostight Express that the locomotive pulls. The region containing the Ghostlight Locomotive's lair is changed by its presence, creating the following effects: Ghastly Shroud. When a creature that isn't Undead finishes a Short or Long Rest within 1 mile of the locomotive, the creature must succeed on a DC 15 Constitution saving throw or any time it regains Hit Points, it only regains half the amount. This effect ends when the creature next finishes a Long Rest or receives a Lesser Restoration spell or similar magic.</p>\n<p class=\"panel-body\">Spirit Calling. Within 1 mile of the locomotive, Hostile Shrouded* and Specters are abundant and drawn to any creature that attacks the Ghostlight Locomotive or that tries to keep pace with, climb, or enter the Ghostlight Express.</p>\n<p class=\"panel-body\">If the Ghostlight Locomotive dies, these effects end immediately.</p>",
+    "groups": []
+  },
+  "grinning_sinner": {
+    "name": "The Grinning Sinner",
+    "kind": "legendary",
+    "subtitle": "Dealer of Jinxes",
+    "images": [
+      "monsters/BOSS_Grinning_Sinner.webp"
+    ],
+    "body": "<p class=\"panel-body\">Once the dashing pirate captain Briggsy Kratch, the crocodile-folk now known as the Grinning Sinner made a bargain for power with a spirit known as Snake Eye Jack. The sinner grew discontent with the power he was gifted and tricked Jack into a coffin before sealing him inside. Now the Grinning Sinner siphons his trapped patron’s cursed power and makes bargains of his own to snare the souls of the desperate and foolish.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "harvest_terror": {
+    "name": "The Harvest Terror",
+    "kind": "legendary",
+    "subtitle": "Demon of Secrets and Despair",
+    "images": [
+      "monsters/BOSS_Harvest_Terror.webp"
+    ],
+    "body": "<p class=\"panel-body\">Once a jovial soul imbued into the body of a scarecrow called Ol’ Jericho Sticks, the Harvest Terror is now a nightmarish abomination. It is a mockery of demonic flesh molded in the shape of a crow-like scarecrow. Its twisted body is made of molding wicker with four tattered, black\u0002feathered wings sprouting from its back. An oversized corvid head with amber eyes sits upon its broad shoulders, its dark beak a jagged mess, and it wields a chipped, wicked scythe covered in old blood. Forever hungry, the Harvest Terror feeds on secrets and those that keep them.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "horned_king": {
+    "name": "The Horned King",
+    "kind": "legendary",
+    "subtitle": "Sin Made Manifest",
+    "images": [
+      "monsters/BOSS_Horned_King.webp"
+    ],
+    "body": "<p class=\"panel-body\">Every sinful, selfish action in the world pours a fraction of itself into the Horned King, a being composed of every mortal who has surrendered to temptation. Fortunately, under normal circumstances, the Horned King exists as an ephemeral spirit with no physical presence. During times of upheaval, when a great many mortals give in to their selfish desires or when another power—such as a deity, demon lord, or archfey—interferes, the Horned King is made manifest, and with it comes the weight of sin flooding back into the world that created it.</p>\n<p class=\"panel-body\">THE HORNED KING’S LAIR The Horned King’s lair is the forest clearing where a twisted tree focuses the malevolent will that gave rise to the king’s physical presence.</p>\n<p class=\"panel-body\">The region containing the Horned King’s lair is changed by its presence, creating the following effects: Sweet Temp tation. Within 1 mile of the lair, a creature that acts on a sinful impulse to the detriment of a Friendly or Indifferent creature increases its Hit Point maximum and current Hit Points by 10 until it finishes a Long Rest. Creatures are aware of this effect. This can’t occur again until the creature finishes a Long Rest.</p>\n<p class=\"panel-body\">Tenacious Curses. Within 1 mile of the lair, saving throws against curses have Disadvantage.</p>\n<p class=\"panel-body\">If the Horned King dies or moves its lair elsewhere, these effects end immediately.</p>",
+    "groups": []
+  },
+  "jinxed_leviathan": {
+    "name": "The Jinxed Leviathan",
+    "kind": "legendary",
+    "subtitle": "Curse-Wrought Swamp Monster",
+    "images": [
+      "monsters/BOSS_Jinxed_Leviathan.webp"
+    ],
+    "body": "<p class=\"panel-body\">Once a normal alligator that dwelled in a cursed swamp, the Jinxed Leviathan was warped by the strange hexes and twisted spells of nefarious magicians who sought to defeat the deathly spirit known as Snake Eye Jack. Growing to colossal proportions and infusing with the essence of misfortune itself, the Monstrosity could not be controlled and devoured its makers. Now, it lurks in the still, black water of hexed bayous, always seeking its next meal, upon which it unleashes its jinxcraft before feasting.</p>",
+    "groups": []
+  },
+  "lord_of_fools": {
+    "name": "The Lord of Fools",
+    "kind": "legendary",
+    "subtitle": "Fiendish Master of Revels",
+    "images": [
+      "monsters/BOSS_Lord_of_Fools.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Lord of Fools is the embodiment of revelry, cherishing amusement at any cost. He most often leads a procession of revelers of song, revelers of stories, and heralds of fools, compelling townsfolk and travelers to join their celebration to the exclusion of all other concerns. Many of these celebrants dance, drink, and make merry until they drop—sometimes dead! The Lord of Fools laughs all the louder and longer at their demise.</p>",
+    "groups": []
+  },
+  "tall_man": {
+    "name": "The Tall Man",
+    "kind": "legendary",
+    "subtitle": "Murderous Archfey of the Dark Wood",
+    "images": [
+      "monsters/BOSS_The_Tall_Man.webp"
+    ],
+    "body": "<p class=\"panel-body\">The Tall Man is a mysterious entity that haunts an accursed forest. Once, he was an archfey who ruled a now-forgotten court, renowned for its dances that lasted for nights on end. Doomed now to walk his rotting forest, the Tall Man finds pleasure where he can by tempting travelers and forest denizens alike to play hide and seek with him—with deadly results.</p>",
+    "groups": []
+  },
+  "vermintoll_abomination": {
+    "name": "The Vermintoll Abomination",
+    "kind": "legendary",
+    "subtitle": "Verminous Coven Amalgamation",
+    "images": [
+      "monsters/BOSS_Vermintoll_Abomination.webp"
+    ],
+    "body": "<p class=\"panel-body\">The magic that binds hag covens together is far more powerful than many spellcasters can fully comprehend. Vermintoll abominations come about when the magics of a centipede hag, a pigeon hag, and a weasel hag enmesh and fuse the witches into one mass, bound to their cauldron.</p>\n<p class=\"panel-body\">THE VERMINTOLL ABOMINATION’S LAIR The Vermintoll Abomination’s lair is a decrepit hideaway, often hidden in plain sight such as an attic, basement, or a seized home.</p>\n<p class=\"panel-body\">The region containing the Vermintoll Abomination’s lair is changed by its presence, creating the following effects: Endless Vermin. Within 1 mile of the lair, Giant Centipedes, Giant Weasels, and pigeons (use the Raven stat block) are common nuisances. They steal Tiny objects and befoul food.</p>\n<p class=\"panel-body\">Loyal Dwelling. The lair itself, including any greater structure or complex it resides within, rejects intruders. Ability checks to pick locks or find secret doors have Disadvantage.</p>\n<p class=\"panel-body\">If the Vermintoll Abomination dies or moves its lair elsewhere, these effects end immediately.</p>",
+    "groups": []
+  },
+  "weeping_widow": {
+    "name": "The Weeping Widow",
+    "kind": "legendary",
+    "subtitle": "Matron of Malevolent Medicine",
+    "images": [
+      "monsters/BOSS_Weeping_Widow_Normal.webp",
+      "monsters/BOSS_Weeping_Widow_Brute.webp"
+    ],
+    "body": "<p class=\"panel-body\">Once a priestess committed to healing the sick through divine rites, the Weeping Widow abandoned the gods after a personal tragedy and turned to sinister science. Believing she knows how to best treat the suffering and make them stronger, she employs a harrowing regimen of alchemical and medical experimentation to wipe minds and alter bodies, whether the patient wants the treatment or not.</p>",
+    "groups": []
+  },
+  "white_worm": {
+    "name": "The White Worm",
+    "kind": "legendary",
+    "subtitle": "Eldritch Devourer of Memories",
+    "images": [
+      "monsters/BOSS_White_Worm.webp"
+    ],
+    "body": "<p class=\"panel-body\">Born of a forgotten realm beyond the stars, the White Worm is an eldritch horror resembling a humungous, pallid grub that ravenously hungers for memory. Greedily consuming the memories of any beings capable of remembering, its mere existence sends out shockwaves of alien psychic energy. It also serves as the queen of a hivemind colony of infinite wormlike spawn that seek mortal hosts to feast upon and control.</p>",
+    "groups": []
+  },
+  "wicker_man": {
+    "name": "The Wicker Man",
+    "kind": "legendary",
+    "subtitle": "Blazing Sacrificial Colossus",
+    "images": [
+      "monsters/BOSS_Wicker_Man.webp"
+    ],
+    "body": "<p class=\"panel-body\">The ultimate expression of a cult’s dedication to its patron is the Wicker Man. This massive Construct is woven from wicker and bound with wire and iron bands in the shape of a great bipedal effigy. The chest cavity and limbs are hollow where sacrifices can be secured, with the wicker skin forming cage-like bars and gaps. Celebrated and protected with a cult’s very existence, the Wicker Man stands silent and impassive until it is ignited while filled with living sacrifices. Then it comes to life and seeks to consume any nonbelievers—and sometimes even the faithful.</p>\n<p class=\"panel-body\">THE WICKER MAN’S LAIR The Wicker Man’s lair is the hilltop where it is constructed and venerated.</p>\n<p class=\"panel-body\">The region containing the Wicker Man’s lair is changed by its presence, creating the following effects: Biting Flames. Within 1 mile of the lair, when Fire damage is dealt to a creature outside the Wicker Man’s dedicated cult that has Resistance or Immunity to Fire damage, the creature takes an extra 1d6 Necrotic damage. Endless Praise. Within 1 mile of the lair, cultists of the Wicker Man who sing their cult’s praises or hymns can be heard up to 300 feet away, even through a Silence spell. If the Wicker Man dies or moves its lair elsewhere, these effects end immediately.</p>",
+    "groups": []
+  },
+  "wild_titan": {
+    "name": "The Wild Titan",
+    "kind": "legendary",
+    "subtitle": "Ferocious Giant of the Wilderness",
+    "images": [
+      "monsters/MONSTER_Wild_Titan.webp"
+    ],
+    "body": "<p class=\"panel-body\">Wandering the most inhospitable mountain ranges, the Wild Titan is the wilderness made manifest, created long ago by a forgotten will for a purpose that none know. Favoring solitude in the most remote places of the world, when it encounters settlements and “civilized” people, it wants only to turn them to primal savagery or crush them beneath its immense bulk.</p>",
+    "groups": []
+  },
+  "corn_dolly": {
+    "name": "Corn Dolly",
+    "kind": "familiar",
+    "subtitle": "Grain Husk Companion",
+    "images": [
+      "monsters/FAMILIAR_Corn_Dolly.webp"
+    ],
+    "body": "<p class=\"panel-body\">Crafted from dried husks and bound with twine, corn dollies’ delicate forms are stitched together with rustic care. Their faces are ink-brushed with simple, childlike expressions—smiling mouths that curve a bit too wide and hollow eyes that seem to stare far beyond the physical world. The Constructs are spirits of deceased Humanoids drawn to the hollow corn husk shell, seeking refuge. These spirits retain faint traces of who they once were—a protective instinct entwined with a simmering fury. Once animated, the dolls reflect this dual nature: acting as silent guardians one moment and vengeful specters the next.</p>",
+    "groups": []
+  },
+  "crooked_hare": {
+    "name": "Crooked Hare",
+    "kind": "familiar",
+    "subtitle": "Crooked Trickster",
+    "images": [
+      "monsters/FAMILIAR_Crooked_Hare.webp"
+    ],
+    "body": "<p class=\"panel-body\">Crooked hares look like rabbits at first glance, but their true nature is given away by the antlers and wings they grow and the cunning gleam in their eyes. They are mischievous tricksters that delight in stealing things from unsuspecting travelers and hiding them in amusing, slightly dangerous, or just unlikely places. If roused to anger or cornered, crooked hares deliver a bite that carries an unsettling—if minor—curse. Despite their troublesome nature, crooked hares might serve as companions for woods-crafty folk who have a good sense of humor.</p>",
+    "groups": []
+  },
+  "devils_glove": {
+    "name": "Devil’s Glove",
+    "kind": "familiar",
+    "subtitle": "Five-Fingered Fungus",
+    "images": [
+      "monsters/FAMILIAR_Devils_Glove.webp"
+    ],
+    "body": "<p class=\"panel-body\">Comprised of five twitching, blood-red tendrils lined with black slime, the devil’s glove fungus feeds voraciously off decaying matter, unwary insects, and small creatures. Resembling a long-fingered hand, they grow from bulbous roots that look like leathery, white eggs and constantly emit an overpowering scent of death and rot. Despite their unpleasant aura, these fungus creatures can form beneficial relationships with others, providing nourishment and resilience in exchange for protection and a ready supply of decaying material to feed upon.</p>",
+    "groups": []
+  },
+  "dingpot": {
+    "name": "Dingpot",
+    "kind": "familiar",
+    "subtitle": "Jovial Cauldron Helper",
+    "images": [
+      "monsters/FAMILIAR_Dingpot.webp"
+    ],
+    "body": "<p class=\"panel-body\">Dingpots are animated objects created to assist in magical and alchemical research—or simply to help in the kitchen. Often cheerful, dingpots delight in serving up delicious meals, soothing tea, and the occasional magical draught.</p>",
+    "groups": []
+  },
+  "ghost_crawler": {
+    "name": "Ghost Crawler",
+    "kind": "familiar",
+    "subtitle": "Spirit Spider",
+    "images": [
+      "monsters/FAMILIAR_Ghost_Crawler.webp"
+    ],
+    "body": "<p class=\"panel-body\">Silent and nearly invisible, ghost crawlers skitter between the darkest corners, hiding and watching. Their diminutive, ghostly, spider-like bodies are ill-defined and as translucent as a wisp of smoke, while their legs are long, uneven, and jarringly solid. The webs they spin are ephemeral and ghastly, allowing the crawlers to sense through them regardless of the distance.</p>",
+    "groups": []
+  },
+  "goatstealer": {
+    "name": "Goatstealer",
+    "kind": "familiar",
+    "subtitle": "Hungry Livestock Snatcher",
+    "images": [
+      "monsters/FAMILIAR_Goatstealer.webp"
+    ],
+    "body": "<p class=\"panel-body\">The hairless, reeking goatstealers are vicious predators and scavengers that earn their name from their habit of preying upon livestock. They latch onto prey with wicked, needle-like teeth, delivering lethal venom and devouring creatures far larger than its wiry frame would suggest is possible. Especially dangerous in packs, the carrion-yet-peaty stench of goatstealers is the stuff of legend.</p>",
+    "groups": []
+  },
+  "hemonculus": {
+    "name": "Hemonculus",
+    "kind": "familiar",
+    "subtitle": "Sanguine Servitor",
+    "images": [
+      "monsters/FAMILIAR_Hemonculus.webp"
+    ],
+    "body": "<p class=\"panel-body\">Hemonculus are servitors created by a blood magic ritual that binds a fiendish spirit into a blood-formed body. For the cost of a small sacrifice in blood (the creator’s own or otherwise), the creatures serve as spies and assist in procuring further blood for magical use.</p>",
+    "groups": []
+  },
+  "magpie_of_omens": {
+    "name": "Magpie of Omens",
+    "kind": "familiar",
+    "subtitle": "Bird of Fate and Fortune",
+    "images": [
+      "monsters/FAMILIAR_Magpie_of_Omens.webp"
+    ],
+    "body": "<p class=\"panel-body\">To those who respect the Old Ways, this bird of black and white brings tidings both fair and foul. Although the omens the magpie delivers can bring joy and grief in equal measure, they are always trustworthy.</p>",
+    "groups": []
+  },
+  "moonshine": {
+    "name": "Moonshine",
+    "kind": "familiar",
+    "subtitle": "Lingering Soul Guide",
+    "images": [
+      "monsters/FAMILIAR_Moonshine.webp"
+    ],
+    "body": "<p class=\"panel-body\">When a person dies with unfinished business, their soul can remain shackled to the living world as an Undead spirit. Usually such spirits rest and move on when their business is concluded, but some remain as companions, guides, and helpers for the living. Moonshines are spirits who resolved their emotional tethers but have chosen to linger on. They often take a liking to a living person and choose to help them through their life’s journey.</p>",
+    "groups": [
+      "1"
+    ]
+  },
+  "nameless_thing": {
+    "name": "Nameless Thing",
+    "kind": "familiar",
+    "subtitle": "Unknowable Lifeform from Beyond",
+    "images": [
+      "monsters/FAMILIAR_Nameless_Thing.webp"
+    ],
+    "body": "<p class=\"panel-body\">Nameless things are alien minds bound into physical vessels, most often diminutive animals, objects, or pieces of monsters. These creatures can creep into the world when outer influence seeps into existence but are usually deliberately invited.</p>",
+    "groups": []
+  },
+  "ravencraft": {
+    "name": "Ravencraft",
+    "kind": "familiar",
+    "subtitle": "Undead Avian Amalgamation",
+    "images": [
+      "monsters/FAMILIAR_Ravencraft.webp"
+    ],
+    "body": "<p class=\"panel-body\">Ravencrafts are a grotesque fusion of feathers, sinew, and bone. Their tiny form is a contorted and twisted nightmare carelessly sewn together into the mockery of a bird. The mere presence of a ravencraft is an affront to natural death and can keep further death at bay, or they can chill the hearts of their foes with cries of torment from beyond the grave.</p>",
+    "groups": []
+  },
+  "salmon_of_knowledge": {
+    "name": "Salmon of Knowledge",
+    "kind": "familiar",
+    "subtitle": "Elemental Font of Wisdom",
+    "images": [
+      "monsters/FAMILIAR_Salmon_of_Knowledge.webp"
+    ],
+    "body": "<p class=\"panel-body\">Legends speak of the salmon of knowledge—shimmering fish said to embody the wisdom of the ages. Their scales gleam with an iridescent light, and they are forever enveloped in a sphere of gently flowing water that defies gravity. This magical orb is said to carry the essence of the sacred Current of Wisdom—where knowledge of all time and space flows through the rivers of the cosmos.</p>",
+    "groups": []
+  },
+  "witchwoven": {
+    "name": "Witchwoven",
+    "kind": "familiar",
+    "subtitle": "Helper Made of Twine and Twigs",
+    "images": [
+      "monsters/FAMILIAR_Witchwoven.webp"
+    ],
+    "body": "<p class=\"panel-body\">Witchwoven are little dolls or effigies made of sticks, twine, and other simple materials, then imbued with life. Some happen naturally in places suffused with old nature magic, but most are created to serve as familiars by spellcasters knowledgeable in the Old Ways.</p>",
+    "groups": [
+      "1"
+    ]
   }
 };
 
@@ -4830,15 +6077,18 @@ function isPanelOpen(panelId) {
 // whatever an open panel covers (map, topbar, a lore panel under a
 // species/NPC panel) is made inert too, which is what keeps Tab inside the
 // panel on top — the "modal" part of aria-modal.
+const SECONDARY_PANELS = ['species', 'npc', 'creature'];
+
 function updatePanelInertness() {
   const lore = isPanelOpen('lore-panel');
-  const secondary = isPanelOpen('species-panel') || isPanelOpen('npc-panel');
+  const codex = isPanelOpen('codex');
+  const secondary = SECONDARY_PANELS.some(kind => isPanelOpen(`${kind}-panel`));
   const set = (id, value) => { const el = document.getElementById(id); if (el) el.inert = value; };
   set('lore-panel', !lore || secondary);
-  set('species-panel', !isPanelOpen('species-panel'));
-  set('npc-panel', !isPanelOpen('npc-panel'));
-  set('map-wrapper', lore || secondary);
-  set('topbar', lore || secondary);
+  set('codex', !codex || lore || secondary);
+  SECONDARY_PANELS.forEach(kind => set(`${kind}-panel`, !isPanelOpen(`${kind}-panel`)));
+  set('map-wrapper', lore || codex || secondary);
+  set('topbar', lore || codex || secondary);
 }
 
 // Shared open/close bookkeeping: accessible name from the rendered title,
@@ -4847,8 +6097,9 @@ function updatePanelInertness() {
 // focus restored to where it came from on close.
 function afterPanelOpened(panelId, contentEl, wasOpen) {
   const panel = document.getElementById(panelId);
-  const title = contentEl.querySelector('.panel-title')?.textContent.trim() || '';
-  panel.setAttribute('aria-label', title === '???' ? 'Unknown location' : title);
+  // (The Codex has no .panel-title — it's named by its own heading.)
+  const title = contentEl.querySelector('.panel-title')?.textContent.trim();
+  if (title) panel.setAttribute('aria-label', title === '???' ? 'Unknown' : title);
   if (!wasOpen) {
     panelReturnFocus[panelId] = document.activeElement;
     updatePanelInertness();
@@ -4893,6 +6144,7 @@ function closePanel() {
   hideProvinceReveal(getActiveMapKey());
   closeSpeciesPanel();
   closeNpcPanel();
+  closeCreaturePanel();
   afterPanelClosed('lore-panel', wasOpen);
   syncUrl();
 }
@@ -5534,6 +6786,8 @@ function submitReenterName() {
 //   #ardengloom               the main map with a province's panel open
 //   #wickermoor               the Wickermoor Hollow map
 //   #wickermoor/wm_crimson    Wickermoor with a location's panel open
+//   #codex/bestiary           the Codex, on a tab (bestiary, gallery,
+//                             chronicle) — over whichever map was showing
 //
 // A link to a Wickermoor location the visitor's group hasn't unlocked
 // simply opens its locked "???" panel — the link itself gives nothing away.
@@ -5552,11 +6806,23 @@ function routeHash(mapKey, panelId) {
   return panelId ? `#${panelId}` : '';
 }
 
-// Called after anything that changes the map or open panel.
-function syncUrl() {
+// What the address should be right now: an open lore panel wins, then
+// the Codex, then just the map.
+function currentRouteHash() {
+  if (!currentOpenPanelId && isCodexOpen()) return `#codex/${codexTab}`;
+  return routeHash(getActiveMapKey(), currentOpenPanelId);
+}
+
+// Called after anything that changes the map, open panel or Codex.
+// `replace` updates the current history entry instead of adding one.
+function syncUrl({ replace = false } = {}) {
   if (!routerReady || applyingRoute) return;
-  const target = routeHash(getActiveMapKey(), currentOpenPanelId);
+  const target = currentRouteHash();
   if (target === location.hash) return;
+  if (replace) {
+    history.replaceState(history.state, '', target || location.pathname + location.search);
+    return;
+  }
 
   // Closing a panel that was opened on top of this exact page: step back
   // through history instead of piling up a new entry, so Back afterwards
@@ -5566,12 +6832,13 @@ function syncUrl() {
     history.back();
     return;
   }
-  const newState = currentOpenPanelId ? { openedFrom: location.hash } : {};
+  const newState = (currentOpenPanelId || isCodexOpen()) ? { openedFrom: location.hash } : {};
   history.pushState(newState, '', target || location.pathname + location.search);
 }
 
 function parseRoute(hash) {
   const raw = decodeURIComponent(hash.replace(/^#/, ''));
+  if (raw === 'codex' || raw.startsWith('codex/')) return { codexTab: raw.split('/')[1] || 'bestiary' };
   if (raw === 'wickermoor') return { mapKey: 'wickermoor', panelId: null };
   if (raw.startsWith('wickermoor/')) return { mapKey: 'wickermoor', panelId: raw.slice('wickermoor/'.length) };
   return { mapKey: 'main', panelId: raw || null };
@@ -5580,7 +6847,21 @@ function parseRoute(hash) {
 // Brings the UI in line with the current address (on entering the site,
 // and on Back/Forward). Unknown ids are ignored and the address tidied up.
 function applyRoute() {
-  const { mapKey, panelId } = parseRoute(location.hash);
+  const route = parseRoute(location.hash);
+  if (route.codexTab) {
+    applyingRoute = true;
+    try {
+      if (currentOpenPanelId) closePanel();
+      if (!isCodexOpen()) openCodex(route.codexTab);
+      else if (codexTab !== route.codexTab) showCodexTab(route.codexTab);
+    } finally {
+      applyingRoute = false;
+    }
+    if (currentRouteHash() !== location.hash) history.replaceState(history.state, '', currentRouteHash());
+    return;
+  }
+
+  const { mapKey, panelId } = route;
   const hotspots = mapKey === 'wickermoor' ? WICKERMOOR_HOTSPOTS : MAIN_HOTSPOTS_SVG;
   const hs = panelId ? hotspots.find(h => h.id === panelId && !h.isWickermoor) : null;
 
@@ -5592,11 +6873,14 @@ function applyRoute() {
     }
     if (hs && currentOpenPanelId !== hs.id) openPanel(hs.id, hs.label);
     else if (!hs && currentOpenPanelId) closePanel();
+    // A plain map address means the Codex was left (a panel address may
+    // sit on top of it — e.g. a Chronicle entry being read).
+    if (!hs && isCodexOpen()) closeCodex();
   } finally {
     applyingRoute = false;
   }
 
-  const actual = routeHash(getActiveMapKey(), currentOpenPanelId);
+  const actual = currentRouteHash();
   if (actual !== location.hash) history.replaceState({}, '', actual || location.pathname + location.search);
 }
 
@@ -5638,11 +6922,25 @@ function npcIdsIn(html) {
   return [...String(html || '').matchAll(/data-npc="([^"]+)"/g)].map(m => m[1]);
 }
 
+// The people a visitor has read about — named in the provinces' lore
+// (open to all) or in Wickermoor lore their group has unlocked. Listing
+// every NPC would spoil who turns up in places their party hasn't been.
+// Shared with the Codex's Rogues' Gallery.
+function knownNpcIds() {
+  const group = getRecognizedGroup();
+  const name = getRecognizedName();
+  const ids = new Set();
+  Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => ids.add(id)));
+  WICKERMOOR_HOTSPOTS
+    .filter(hs => isUnlockedForGroup(hs.id, group))
+    .forEach(hs => npcIdsIn(revealedLoreHtml(hs.id, group, name)).forEach(id => ids.add(id)));
+  return ids;
+}
+
 // Built fresh each time the index opens or the filter changes, since what's
 // visible depends on who the visitor is recognized as.
 function indexSections() {
   const group = getRecognizedGroup();
-  const name = getRecognizedName();
 
   const places = MAIN_HOTSPOTS_SVG.map(hs => hs.isWickermoor
     ? { label: 'Wickermoor Hollow', go: () => openWickermoor() }
@@ -5659,12 +6957,10 @@ function indexSections() {
 
   const species = Object.entries(SPECIES).map(([id, sp]) => ({ label: sp.name, go: () => openSpeciesPanel(id) }));
 
-  // Only people the visitor has actually read about — listing every NPC
-  // would spoil who turns up in places their party hasn't been.
-  const npcIds = new Set();
-  Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => npcIds.add(id)));
-  unlocked.forEach(hs => npcIdsIn(revealedLoreHtml(hs.id, group, name)).forEach(id => npcIds.add(id)));
-  const people = [...npcIds].filter(id => NPCS[id]).map(id => ({ label: NPCS[id].name, go: () => openNpcPanel(id) }));
+  const people = [...knownNpcIds()].filter(id => NPCS[id]).map(id => ({ label: NPCS[id].name, go: () => openNpcPanel(id) }));
+
+  const creatures = Object.keys(BESTIARY).filter(hasMetCreature)
+    .map(id => ({ label: BESTIARY[id].name, go: () => openCreaturePanel(id) }));
 
   const byLabel = (a, b) => a.label.localeCompare(b.label);
   return [
@@ -5676,6 +6972,7 @@ function indexSections() {
     },
     { title: 'Species', items: species.sort(byLabel) },
     { title: 'People', items: people.sort(byLabel) },
+    { title: 'Bestiary', items: creatures.sort(byLabel) },
   ];
 }
 
@@ -5780,6 +7077,269 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ─── src/js/codex.js ────────────────────────────────────────────────
+// The Codex (📜): a full-screen book over the map with three tabs —
+//   Bestiary         every creature (BESTIARY, data/bestiary.json); ones the
+//                    visitor's group has met are shown, the rest as dark
+//                    "???" silhouettes. Tag who has met what in each
+//                    entry's `groups` list.
+//   Rogues' Gallery  portraits of the people met in lore the visitor can read.
+//   Chronicle        the group's unlocked Wickermoor story, in chapter order
+//                    (WM_CHAPTERS), as a recap with links into each panel.
+// Also the creature panel, opened from a Bestiary card or a
+// {{creature:id}} link in lore.
+//
+// Part of the site script: build.js concatenates src/js/*.js (in the
+// order listed in build.js) after the data constants, into one <script>.
+
+const CODEX_TABS = ['bestiary', 'gallery', 'chronicle'];
+let codexTab = 'bestiary';
+
+const CREATURE_KIND_LABELS = {
+  legendary: { section: 'Legendary Monsters', single: 'Legendary Monster' },
+  monster:   { section: 'Crooked Moon Monsters', single: 'Crooked Moon Monster' },
+  familiar:  { section: 'Familiars', single: 'Familiar' },
+};
+
+function escHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function hasMetCreature(id) {
+  const c = BESTIARY[id];
+  if (!c) return false;
+  if (isAdminUnlocked()) return true;
+  const group = getRecognizedGroup();
+  return !!group && (c.groups || []).includes(group);
+}
+
+// ── Creature panel ────────────────────────────────────────────────
+function buildCreaturePanelContent(id) {
+  const c = BESTIARY[id];
+  if (!c) return `<div class="panel-title">This creature hasn't been recorded yet.</div>`;
+  const kind = CREATURE_KIND_LABELS[c.kind]?.single || 'Creature';
+
+  if (!hasMetCreature(id)) {
+    return `
+      <div class="panel-eyebrow">${kind}</div>
+      <div class="panel-title">???</div>
+      <div class="panel-divider"></div>
+      <p class="panel-body" style="font-style:italic; opacity:0.7;">Your party has not yet crossed paths with this creature, or lived to describe it.</p>`;
+  }
+  const images = (c.images || []).map(src => imageFrameHtml(src, c.name)).join('');
+  const body = hasMeaningfulContent(c.body)
+    ? c.body
+    : `<p class="panel-body" style="font-style:italic; opacity:0.6;">No account of this creature has yet been recorded.</p>`;
+  return `
+    <div class="panel-eyebrow">${kind}</div>
+    <div class="panel-title">${escHtml(c.name)}</div>
+    ${c.subtitle ? `<div class="panel-pronunciation">${escHtml(c.subtitle)}</div>` : ''}
+    ${images}
+    <div class="panel-divider"></div>
+    ${body}`;
+}
+
+function openCreaturePanel(id) { openSecondaryPanel('creature', buildCreaturePanelContent(id)); }
+function closeCreaturePanel()  { closeSecondaryPanel('creature'); }
+
+// ── Opening, closing, tabs ────────────────────────────────────────
+function isCodexOpen() {
+  return isPanelOpen('codex');
+}
+
+function openCodex(tab = codexTab) {
+  const codex = document.getElementById('codex');
+  const content = document.getElementById('codex-content');
+  if (!codex || !content) return;
+  const wasOpen = isCodexOpen();
+  closeIndex();
+  closeReenterNamePrompt();
+  codexTab = CODEX_TABS.includes(tab) ? tab : 'bestiary';
+  renderCodex();
+  codex.classList.add('open');
+  afterPanelOpened('codex', content, wasOpen);
+  syncUrl();
+}
+
+function closeCodex() {
+  const wasOpen = isCodexOpen();
+  document.getElementById('codex')?.classList.remove('open');
+  afterPanelClosed('codex', wasOpen);
+  syncUrl();
+}
+
+// Switching tabs replaces the current history entry rather than adding
+// one, so Back leaves the Codex instead of stepping through tabs.
+function showCodexTab(tab) {
+  codexTab = CODEX_TABS.includes(tab) ? tab : 'bestiary';
+  renderCodex();
+  document.getElementById('codex-content').scrollTop = 0;
+  syncUrl({ replace: true });
+}
+
+function renderCodex() {
+  const content = document.getElementById('codex-content');
+  if (!content) return;
+  document.querySelectorAll('.codex-tab').forEach(btn => {
+    const active = btn.dataset.tab === codexTab;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', String(active));
+    btn.tabIndex = active ? 0 : -1;
+  });
+  content.setAttribute('aria-labelledby', `codex-tab-${codexTab}`);
+  if (codexTab === 'gallery') content.innerHTML = galleryHtml();
+  else if (codexTab === 'chronicle') content.innerHTML = chronicleHtml();
+  else content.innerHTML = bestiaryHtml();
+}
+
+function notRecognizedHint() {
+  return isAdminUnlocked() || getRecognizedGroup()
+    ? ''
+    : `<p class="codex-hint">Enter one of your characters' names (👤) to see what your party has discovered.</p>`;
+}
+
+// ── Bestiary ──────────────────────────────────────────────────────
+function bestiaryHtml() {
+  const ids = Object.keys(BESTIARY);
+  const metCount = ids.filter(hasMetCreature).length;
+  let html = `<p class="codex-intro">Your party has encountered <strong>${metCount}</strong> of the ${ids.length} creatures known to stalk Druskenvald.</p>`;
+  html += notRecognizedHint();
+
+  ['legendary', 'monster', 'familiar'].forEach(kind => {
+    const inKind = ids.filter(id => BESTIARY[id].kind === kind);
+    if (!inKind.length) return;
+    html += `<h3 class="codex-section-title">${CREATURE_KIND_LABELS[kind].section}</h3><div class="codex-grid">`;
+    inKind.forEach(id => {
+      const c = BESTIARY[id];
+      const img = (c.images || [])[0];
+      if (hasMetCreature(id)) {
+        html += `<button class="codex-card" data-creature="${escHtml(id)}">
+          ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
+          <span class="codex-card-name">${escHtml(c.name)}</span>
+        </button>`;
+      } else {
+        // A silhouette only — the name and text stay out of the page.
+        html += `<div class="codex-card unmet" aria-label="Unknown creature">
+          ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
+          <span class="codex-card-name">???</span>
+        </div>`;
+      }
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+// ── Rogues' Gallery ───────────────────────────────────────────────
+function galleryHtml() {
+  const known = [...knownNpcIds()].filter(id => NPCS[id])
+    .sort((a, b) => NPCS[a].name.localeCompare(NPCS[b].name));
+  const unknown = Object.keys(NPCS).length - known.length;
+  let html = `<p class="codex-intro">Faces your party has come to know in the hollow — friend, foe, and everything between.</p>`;
+  html += notRecognizedHint();
+  html += `<div class="codex-grid portraits">`;
+  known.forEach(id => {
+    html += `<button class="codex-card" data-npc="${escHtml(id)}">
+      <img src="${NPCS[id].image}" alt="" loading="lazy" decoding="async">
+      <span class="codex-card-name">${escHtml(NPCS[id].name)}</span>
+    </button>`;
+  });
+  html += `</div>`;
+  if (unknown > 0) html += `<p class="codex-note">${unknown} ${unknown === 1 ? 'face remains' : 'faces remain'} unknown.</p>`;
+  return html;
+}
+
+// ── Chronicle ─────────────────────────────────────────────────────
+// A short plain-text excerpt of a lore entry: subheadings and [[image]]
+// tags removed, cut at a word boundary.
+function loreExcerpt(html, max = 280) {
+  const text = String(html || '')
+    .replace(/<p class="panel-subheader">[\s\S]*?<\/p>/g, ' ')
+    .replace(/\[\[[^\]]*\]\]/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (text.length <= max) return text;
+  return text.slice(0, text.lastIndexOf(' ', max)).replace(/[,;:.]$/, '') + '…';
+}
+
+function chronicleEntries() {
+  const group = getRecognizedGroup();
+  const name = getRecognizedName();
+  const seen = loadSeenLore();
+  return WICKERMOOR_HOTSPOTS
+    .filter(hs => isUnlockedForGroup(hs.id, group))
+    .map(hs => {
+      const ch = WM_CHAPTERS[hs.id] || {};
+      const entry = WM_LORE[hs.id];
+      const own = !!(group && entry && typeof entry === 'object' && entry.byGroup && hasMeaningfulContent(entry.byGroup[group]));
+      return {
+        hs,
+        chapter: ch.chapter ?? 99,
+        title: ch.title || '',
+        art: ch.art,
+        own,
+        isNew: isNewLore(hs.id, seen),
+        excerpt: loreExcerpt(revealedLoreHtml(hs.id, group, name)),
+      };
+    })
+    .sort((a, b) => a.chapter - b.chapter || Number(b.own) - Number(a.own) || a.hs.label.localeCompare(b.hs.label));
+}
+
+function chronicleHtml() {
+  const entries = chronicleEntries();
+  let html = `<p class="codex-intro">The tale of your party's wanderings through Wickermoor Hollow, as far as it has been told.</p>`;
+  html += notRecognizedHint();
+  if (!entries.length) return html;
+
+  let lastChapter = null;
+  html += `<ol class="chronicle">`;
+  entries.forEach(e => {
+    if (e.chapter !== lastChapter) {
+      lastChapter = e.chapter;
+      const label = e.chapter === 99 ? 'Elsewhere in the Hollow' : `Chapter ${e.chapter}${e.title ? ' · ' + escHtml(e.title) : ''}`;
+      html += `<li class="chronicle-chapter" aria-hidden="true">${label}</li>`;
+    }
+    html += `<li class="chronicle-entry">
+      ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : '<div class="chronicle-art blank"></div>'}
+      <div class="chronicle-text">
+        <div class="chronicle-title">${escHtml(e.hs.label)}
+          ${e.own ? `<span class="chronicle-tag">Your party's tale</span>` : ''}
+          ${e.isNew ? `<span class="index-new">new</span>` : ''}
+        </div>
+        <p class="chronicle-excerpt">${escHtml(e.excerpt)}</p>
+        <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}">Read on →</button>
+      </div>
+    </li>`;
+  });
+  html += `</ol>`;
+  return html;
+}
+
+// "Read on" opens the location's own panel over the Codex; closing it
+// (or Back) returns here.
+function openChronicleEntry(id) {
+  const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === id);
+  if (!hs) return;
+  if (getActiveMapKey() !== 'wickermoor') openWickermoor();
+  openPanel(hs.id, hs.label);
+}
+
+document.addEventListener('click', e => {
+  const read = e.target.closest?.('[data-chronicle]');
+  if (read) openChronicleEntry(read.dataset.chronicle);
+});
+
+// Arrow keys move between the tabs (standard tablist behaviour).
+document.addEventListener('keydown', e => {
+  if (!e.target.classList?.contains('codex-tab')) return;
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const i = CODEX_TABS.indexOf(codexTab);
+  const next = CODEX_TABS[(i + (e.key === 'ArrowRight' ? 1 : CODEX_TABS.length - 1)) % CODEX_TABS.length];
+  showCodexTab(next);
+  document.getElementById(`codex-tab-${next}`)?.focus();
+});
+
 // ─── src/js/main.js ─────────────────────────────────────────────────
 // Entry point and page-wide listeners: entering from the title screen,
 // clicks/keys on lore links, keyboard shortcuts, and Escape handling.
@@ -5825,29 +7385,35 @@ function buildHotspots() {
 function openLoreLink(el) {
   if (el.dataset.npc) openNpcPanel(el.dataset.npc);
   else if (el.dataset.species) openSpeciesPanel(el.dataset.species);
+  else if (el.dataset.creature) openCreaturePanel(el.dataset.creature);
 }
 
+const LORE_LINK_SELECTOR = '[data-npc], [data-species], [data-creature]';
+
 document.addEventListener('click', e => {
-  const link = e.target.closest('[data-npc], [data-species]');
+  const link = e.target.closest(LORE_LINK_SELECTOR);
   if (link) openLoreLink(link);
 });
 
+// (Real <button>s, like the Codex cards, already turn Enter/Space into a
+// click — this is for the <strong> links inside lore text.)
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter' && e.key !== ' ') return;
-  const link = e.target.closest?.('[data-npc], [data-species]');
-  if (!link) return;
+  const link = e.target.closest?.(LORE_LINK_SELECTOR);
+  if (!link || link.tagName === 'BUTTON') return;
   e.preventDefault(); // Space would otherwise scroll the panel
   openLoreLink(link);
 });
 
-// Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
-// on top of the main lore panel, so it closes first; then the topbar's
-// popovers (search, name prompt) if open, returning focus to their button;
-// then the lore panel itself.
+// Escape unwinds one layer at a time, top-most first: a secondary
+// (species/NPC/creature) panel; the topbar's popovers (search, name
+// prompt), returning focus to their button; the lore panel; the Codex.
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const isOpen = id => document.getElementById(id)?.classList.contains('open');
-  if (isOpen('npc-panel')) {
+  if (isOpen('creature-panel')) {
+    closeCreaturePanel();
+  } else if (isOpen('npc-panel')) {
     closeNpcPanel();
   } else if (isOpen('species-panel')) {
     closeSpeciesPanel();
@@ -5857,8 +7423,10 @@ document.addEventListener('keydown', e => {
   } else if (isOpen('reenter-name-prompt')) {
     closeReenterNamePrompt();
     document.getElementById('reenter-name-btn')?.focus();
-  } else {
+  } else if (isOpen('lore-panel')) {
     closePanel();
+  } else if (isOpen('codex')) {
+    closeCodex();
   }
 });
 

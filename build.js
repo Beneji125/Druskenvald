@@ -1,5 +1,5 @@
 // Combines src/template.html + src/styles.css + src/js/*.js +
-// src/data/descriptions.json + src/data/hotspots.json into the final,
+// src/data/{descriptions,bestiary,hotspots}.json into the final,
 // self-contained docs/index.html — the file GitHub Pages serves (repo
 // setting: Pages source = main branch, /docs folder).
 //
@@ -22,6 +22,8 @@
 //   {{npc:renathyr|Sir Marius}}        -> same link, custom text
 //   {{species:gnarlborn}}              -> link showing the species' name
 //   {{species:gnarlborn|gnarlborn}}    -> same link, custom text
+//   {{creature:kackle}}                -> link to a BESTIARY entry (opens it
+//                                         in the Codex), also with |text
 // An unknown id stops the build, so a typo can't ship as a dead link.
 const fs = require('fs');
 const path = require('path');
@@ -51,6 +53,7 @@ const SCRIPT_FILES = [
   'unlocks.js',
   'router.js',
   'index.js',
+  'codex.js',
   'main.js',
 ];
 
@@ -93,15 +96,16 @@ function escHtml(str) {
 }
 
 // ── Shorthand expansion ───────────────────────────────────────────
-const SHORTHAND_RE = /\{\{(npc|species):([^}|]+)(?:\|([^}]*))?\}\}/g;
+const SHORTHAND_RE = /\{\{(npc|species|creature):([^}|]+)(?:\|([^}]*))?\}\}/g;
+const SHORTHAND_TABLES = { npc: 'NPCS', species: 'SPECIES', creature: 'BESTIARY' };
 
 function expandShorthand(data, errors) {
-  const tables = { npc: data.NPCS || {}, species: data.SPECIES || {} };
+  const tables = { npc: data.NPCS || {}, species: data.SPECIES || {}, creature: data.BESTIARY || {} };
   return mapStrings(data, (str, where) => str.replace(SHORTHAND_RE, (match, kind, rawId, rawText) => {
     const id = rawId.trim();
     const entry = tables[kind][id];
     if (!entry) {
-      errors.push(`${where}: ${match} — no ${kind === 'npc' ? 'NPCS' : 'SPECIES'} entry "${id}"`);
+      errors.push(`${where}: ${match} — no ${SHORTHAND_TABLES[kind]} entry "${id}"`);
       return match;
     }
     const text = rawText !== undefined ? rawText : entry.name;
@@ -138,6 +142,9 @@ function validate(data, hotspots) {
     for (const m of s.matchAll(/data-npc="([^"]+)"/g)) {
       if (!NPCS[m[1]]) errors.push(`${where}: data-npc="${m[1]}" — no NPCS entry with that id`);
     }
+    for (const m of s.matchAll(/data-creature="([^"]+)"/g)) {
+      if (!(data.BESTIARY || {})[m[1]]) errors.push(`${where}: data-creature="${m[1]}" — no BESTIARY entry with that id`);
+    }
     for (const m of s.matchAll(/data-species="([^"]+)"/g)) {
       if (!SPECIES[m[1]]) errors.push(`${where}: data-species="${m[1]}" — no SPECIES entry with that id`);
     }
@@ -156,6 +163,19 @@ function validate(data, hotspots) {
         }
       }
     });
+  }
+
+  // Bestiary "met by" lists must name real groups.
+  for (const [id, c] of Object.entries(data.BESTIARY || {})) {
+    (c.groups || []).forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.groups: unknown group "${g}"`); });
+  }
+
+  // Chronicle entries must belong to real Wickermoor locations.
+  for (const id of Object.keys(data.WM_CHAPTERS || {})) {
+    if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === id)) errors.push(`WM_CHAPTERS.${id}: no Wickermoor hotspot has this id`);
+  }
+  for (const id of Object.keys(data.WM_TEASERS || {})) {
+    if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === id)) errors.push(`WM_TEASERS.${id}: no Wickermoor hotspot has this id`);
   }
 
   // A character name must belong to exactly one group.
@@ -232,7 +252,9 @@ function build() {
   const hotspots = readJson('data/hotspots.json');
 
   const expandErrors = [];
-  const descriptions = expandShorthand(readJson('data/descriptions.json'), expandErrors);
+  // bestiary.json is kept separate only for size; it's merged in here and
+  // treated exactly like the rest of descriptions.json from now on.
+  const descriptions = expandShorthand({ ...readJson('data/descriptions.json'), ...readJson('data/bestiary.json') }, expandErrors);
   const result = validate(descriptions, hotspots);
   // Character names are validated in plain text above, then shipped to the
   // page only as hashes (see src/js/hash.js) so they can't be read from it.

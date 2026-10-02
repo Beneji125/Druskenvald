@@ -42,29 +42,35 @@ function buildHotspots() {
 function openLoreLink(el) {
   if (el.dataset.npc) openNpcPanel(el.dataset.npc);
   else if (el.dataset.species) openSpeciesPanel(el.dataset.species);
+  else if (el.dataset.creature) openCreaturePanel(el.dataset.creature);
 }
 
+const LORE_LINK_SELECTOR = '[data-npc], [data-species], [data-creature]';
+
 document.addEventListener('click', e => {
-  const link = e.target.closest('[data-npc], [data-species]');
+  const link = e.target.closest(LORE_LINK_SELECTOR);
   if (link) openLoreLink(link);
 });
 
+// (Real <button>s, like the Codex cards, already turn Enter/Space into a
+// click — this is for the <strong> links inside lore text.)
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter' && e.key !== ' ') return;
-  const link = e.target.closest?.('[data-npc], [data-species]');
-  if (!link) return;
+  const link = e.target.closest?.(LORE_LINK_SELECTOR);
+  if (!link || link.tagName === 'BUTTON') return;
   e.preventDefault(); // Space would otherwise scroll the panel
   openLoreLink(link);
 });
 
-// Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
-// on top of the main lore panel, so it closes first; then the topbar's
-// popovers (search, name prompt) if open, returning focus to their button;
-// then the lore panel itself.
+// Escape unwinds one layer at a time, top-most first: a secondary
+// (species/NPC/creature) panel; the topbar's popovers (search, name
+// prompt), returning focus to their button; the lore panel; the Codex.
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   const isOpen = id => document.getElementById(id)?.classList.contains('open');
-  if (isOpen('npc-panel')) {
+  if (isOpen('creature-panel')) {
+    closeCreaturePanel();
+  } else if (isOpen('npc-panel')) {
     closeNpcPanel();
   } else if (isOpen('species-panel')) {
     closeSpeciesPanel();
@@ -74,8 +80,10 @@ document.addEventListener('keydown', e => {
   } else if (isOpen('reenter-name-prompt')) {
     closeReenterNamePrompt();
     document.getElementById('reenter-name-btn')?.focus();
-  } else {
+  } else if (isOpen('lore-panel')) {
     closePanel();
+  } else if (isOpen('codex')) {
+    closeCodex();
   }
 });
 

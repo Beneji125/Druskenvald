@@ -895,5 +895,129 @@
       "image": "species/SPECIES_Bogborn.webp",
       "body": "<p class=\"panel-body\">Bogborn are a troll-like species native to Zulrogg, usually rising from the still, dark waters of the swampy province. From the moment of rebirth, they have a symbiotic relationship with the flora and fauna of the wild — and often treacherous — mire. Their ability to survive is further enhanced by the naturally regenerative biology often found in trolls.</p><p class=\"panel-body\">Towering over most, these hearty folk can face any trial of nature, and they often utilize their athleticism in pursuits of hunting and survival. Bearing prominent noses and tusks, their tough hides are generally shades of green or blue. Bogborn typically live 100 years before moving on to the spirit world.</p>"
     }
+  },
+  "WM_CHAPTERS": {
+    "wm_ghostlight_express": {
+      "chapter": 10,
+      "title": "The Ghostlight Express",
+      "art": "chapter-art/The Ghostlight Express.jpg"
+    },
+    "wm_village": {
+      "chapter": 11,
+      "title": "Wickermoor Village",
+      "art": "chapter-art/Wickermoor Village.jpeg"
+    },
+    "wm_foxwillow": {
+      "chapter": 13,
+      "title": "Fields of the Crow",
+      "art": "chapter-art/Fields of the Crow.jpg"
+    },
+    "wm_harvest_terror": {
+      "chapter": 13,
+      "title": "Fields of the Crow",
+      "art": "scenes/SCENE_Chapter13_Harvest_Terror.webp"
+    },
+    "wm_dawns_gate": {
+      "chapter": 14,
+      "title": "The Crimson Monastery",
+      "art": "scenes/SCENE_Chapter14_Environment.webp"
+    },
+    "wm_silverbell": {
+      "chapter": 14,
+      "title": "The Crimson Monastery"
+    },
+    "wm_crimson": {
+      "chapter": 14,
+      "title": "The Crimson Monastery",
+      "art": "chapter-art/The Crimson Monastery.jpg"
+    },
+    "wm_crimson_abbot": {
+      "chapter": 14,
+      "title": "The Crimson Monastery",
+      "art": "scenes/SCENE_Chapter14_Renathyr.webp"
+    },
+    "wm_drowned": {
+      "chapter": 15,
+      "title": "The Drowned Crossroads",
+      "art": "chapter-art/Drowned Crossroads.jpg"
+    },
+    "wm_murkwater": {
+      "chapter": 15,
+      "title": "The Drowned Crossroads",
+      "art": "scenes/SCENE_Chapter15_Adelas_Deal.webp"
+    },
+    "wm_grinning_sinner": {
+      "chapter": 15,
+      "title": "The Drowned Crossroads",
+      "art": "scenes/SCENE_Chapter15_Dead_Mans_Hand.webp"
+    },
+    "wm_skitterdeep": {
+      "chapter": 16,
+      "title": "Skitterdeep Mine",
+      "art": "chapter-art/Skitterdeep Mine.jpg"
+    },
+    "wm_memorys_rest": {
+      "chapter": 17,
+      "title": "Memory's Rest",
+      "art": "chapter-art/Memorys Rest.jpg"
+    },
+    "wm_moonsong": {
+      "chapter": 17,
+      "title": "Memory's Rest",
+      "art": "monsters/MONSTER_Lake_Dredger.webp"
+    },
+    "wm_weeping_widow": {
+      "chapter": 17,
+      "title": "Memory's Rest",
+      "art": "npc/NPC_Matron_Lethica.webp"
+    },
+    "wm_hartsblight": {
+      "chapter": 18,
+      "title": "Hartsblight Forest",
+      "art": "chapter-art/Hartsblight Forest.jpg"
+    },
+    "wm_beast_of_blight": {
+      "chapter": 18,
+      "title": "Hartsblight Forest",
+      "art": "scenes/SCENE_Chapter18_Gorthos.webp"
+    },
+    "wm_maidenmist": {
+      "chapter": 19,
+      "title": "Maidenmist Cemetery",
+      "art": "chapter-art/Maidenmist Cemetery.jpg"
+    },
+    "wm_chained_reaper": {
+      "chapter": 19,
+      "title": "Maidenmist Cemetery",
+      "art": "scenes/SCENE_Chapter19_Gravedigger.webp"
+    },
+    "wm_rowans_rise": {
+      "chapter": 23,
+      "title": "Wicker's Vigil",
+      "art": "chapter-art/Wickers Vigil.jpg"
+    },
+    "wm_wytchwood": {
+      "chapter": 24,
+      "title": "The Crooked Tree",
+      "art": "chapter-art/The Crooked Tree.jpg"
+    },
+    "wm_horned_king": {
+      "chapter": 24,
+      "title": "The Crooked Tree",
+      "art": "scenes/SCENE_Chapter24_Horned King.webp"
+    },
+    "wm_crooked_queen": {
+      "chapter": 24,
+      "title": "The Crooked Tree",
+      "art": "scenes/SCENE_Chapter24_Mural.webp"
+    },
+    "wm_webwoods": {
+      "chapter": 26,
+      "title": "Moonfall"
+    },
+    "wm_howlers": {
+      "chapter": 26,
+      "title": "Moonfall"
+    }
   }
 }
