@@ -192,36 +192,40 @@ function updateNowPlayingLabel(title) {
 // hands #bg-music back to the default looping track.
 let currentTrackId = null;
 
+// One button per place it's shown — the location's own panel, and its
+// Chronicle entry in the Codex — all kept in step by setTrackButtonState.
+// A data attribute plus one delegated click listener (below) rather than an
+// inline onclick, so track titles with apostrophes need no escaping.
 function trackButtonHtml(id) {
   const track = WM_TRACKS[id];
   if (!track) return '';
   const playing = currentTrackId === id && !musicMuted;
-  const label = track.title ? `Play "${track.title}"` : 'Play Ambience';
-  // Several track filenames/titles contain an apostrophe (e.g. "When It's
-  // Time"). The onclick attribute here is single-quoted with double-quoted
-  // JS string arguments inside it, so a literal apostrophe in `id`/`src`
-  // would otherwise prematurely close the *HTML attribute* itself (not
-  // just the JS string) — escAttr() HTML-escapes it to &#39; so the
-  // browser's attribute parser treats it as a literal character; the
-  // decoded value the JS engine then sees is back to a plain apostrophe,
-  // which is harmless inside a double-quoted JS string.
   return `
     <div class="wm-track-player">
-      <button class="wm-track-btn${playing ? ' playing' : ''}" id="wm-track-btn-${id}" onclick='toggleLocationTrack("${escAttr(id)}", "${escAttr(track.src)}")'>
-        ${playing ? '⏸ Pause' : '▶ ' + label}
-      </button>
+      <button class="wm-track-btn${playing ? ' playing' : ''}" data-track="${escAttr(id)}">${trackButtonLabel(id, playing)}</button>
     </div>
   `;
 }
 
-function setTrackButtonState(id, playing) {
-  const btn = document.getElementById('wm-track-btn-' + id);
-  if (!btn) return;
+function trackButtonLabel(id, playing) {
   const track = WM_TRACKS[id];
-  const label = track && track.title ? `Play "${track.title}"` : 'Play Ambience';
-  btn.textContent = playing ? '⏸ Pause' : '▶ ' + label;
-  btn.classList.toggle('playing', playing);
+  if (playing) return '⏸ Pause';
+  return '▶ ' + (track && track.title ? `Play "${track.title}"` : 'Play Ambience');
 }
+
+function setTrackButtonState(id, playing) {
+  document.querySelectorAll('.wm-track-btn[data-track]').forEach(btn => {
+    if (btn.dataset.track !== id) return;
+    btn.textContent = trackButtonLabel(id, playing);
+    btn.classList.toggle('playing', playing);
+  });
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest?.('.wm-track-btn[data-track]');
+  const track = btn && WM_TRACKS[btn.dataset.track];
+  if (track) toggleLocationTrack(btn.dataset.track, track.src);
+});
 
 function toggleLocationTrack(id, src) {
   const audio = document.getElementById('bg-music');

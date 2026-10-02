@@ -3,9 +3,12 @@
 //                    visitor's group has met are shown, the rest as dark
 //                    "???" silhouettes. Tag who has met what in each
 //                    entry's `groups` list.
-//   Rogues' Gallery  portraits of the people met in lore the visitor can read.
+//   Rogues' Gallery  portraits of the people met in lore the visitor can
+//                    read, grouped by location (each NPC's `location`).
 //   Chronicle        the group's unlocked Wickermoor story, in chapter order
-//                    (WM_CHAPTERS), as a recap with links into each panel.
+//                    (WM_CHAPTERS), as a recap with links into each panel —
+//                    and that place's own ambience track (WM_TRACKS), for
+//                    the places that have one.
 // Also the creature panel, opened from a Bestiary card or a
 // {{creature:id}} link in lore.
 //
@@ -138,9 +141,15 @@ function bestiaryHtml() {
           <span class="codex-card-name">${escHtml(c.name)}</span>
         </button>`;
       } else {
-        // A silhouette only — the name and text stay out of the page.
+        // Name and text stay out of the page. Ordinary creatures show only
+        // a heavily blurred shadow — a hint of size, not of shape; legendary
+        // monsters show nothing at all (not even their image is loaded), so
+        // a party can't recognise a boss before they've faced it.
+        const shadow = img && kind !== 'legendary'
+          ? `<img src="${img}" alt="" loading="lazy" decoding="async">`
+          : `<div class="codex-card-mystery" aria-hidden="true">?</div>`;
         html += `<div class="codex-card unmet" aria-label="Unknown creature">
-          ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
+          ${shadow}
           <span class="codex-card-name">???</span>
         </div>`;
       }
@@ -151,22 +160,59 @@ function bestiaryHtml() {
 }
 
 // ── Rogues' Gallery ───────────────────────────────────────────────
+// Where an NPC is listed: their `location` in NPCS (a Wickermoor id) if
+// set; otherwise the first place, in chapter order, whose readable lore
+// mentions them — so a newly added NPC still lands somewhere sensible.
+function npcGalleryLocation(id) {
+  const group = getRecognizedGroup();
+  if (NPCS[id]?.location) return NPCS[id].location;
+  const name = getRecognizedName();
+  const mention = WICKERMOOR_HOTSPOTS
+    .filter(hs => isUnlockedForGroup(hs.id, group) && npcIdsIn(revealedLoreHtml(hs.id, group, name)).includes(id))
+    .sort((a, b) => (WM_CHAPTERS[a.id]?.chapter ?? 99) - (WM_CHAPTERS[b.id]?.chapter ?? 99))[0];
+  return mention ? mention.id : null;
+}
+
 function galleryHtml() {
-  const known = [...knownNpcIds()].filter(id => NPCS[id])
-    .sort((a, b) => NPCS[a].name.localeCompare(NPCS[b].name));
+  const group = getRecognizedGroup();
+  const known = [...knownNpcIds()].filter(id => NPCS[id]);
   const unknown = Object.keys(NPCS).length - known.length;
+
+  // Group by location. A location the visitor hasn't unlocked isn't named —
+  // its people go under "Elsewhere in the Hollow" instead.
+  const sections = new Map();
+  known.forEach(id => {
+    let loc = npcGalleryLocation(id);
+    if (loc && !isUnlockedForGroup(loc, group)) loc = null;
+    if (!sections.has(loc)) sections.set(loc, []);
+    sections.get(loc).push(id);
+  });
+  const order = loc => loc === null ? 999 : (WM_CHAPTERS[loc]?.chapter ?? 99);
+  const label = loc => loc === null ? 'Elsewhere in the Hollow' : (WICKERMOOR_HOTSPOTS.find(h => h.id === loc)?.label || loc);
+  const sorted = [...sections.keys()].sort((a, b) => order(a) - order(b) || chapterListOrder(a) - chapterListOrder(b));
+
   let html = `<p class="codex-intro">Faces your party has come to know in the hollow — friend, foe, and everything between.</p>`;
   html += notRecognizedHint();
-  html += `<div class="codex-grid portraits">`;
-  known.forEach(id => {
-    html += `<button class="codex-card" data-npc="${escHtml(id)}">
-      <img src="${NPCS[id].image}" alt="" loading="lazy" decoding="async">
-      <span class="codex-card-name">${escHtml(NPCS[id].name)}</span>
-    </button>`;
+  sorted.forEach(loc => {
+    const ids = sections.get(loc).sort((a, b) => NPCS[a].name.localeCompare(NPCS[b].name));
+    html += `<h3 class="codex-section-title">${escHtml(label(loc))}</h3><div class="codex-grid portraits">`;
+    ids.forEach(id => {
+      html += `<button class="codex-card" data-npc="${escHtml(id)}">
+        <img src="${NPCS[id].image}" alt="" loading="lazy" decoding="async">
+        <span class="codex-card-name">${escHtml(NPCS[id].name)}</span>
+      </button>`;
+    });
+    html += `</div>`;
   });
-  html += `</div>`;
   if (unknown > 0) html += `<p class="codex-note">${unknown} ${unknown === 1 ? 'face remains' : 'faces remain'} unknown.</p>`;
   return html;
+}
+
+// Places sharing a chapter keep the order they're listed in WM_CHAPTERS —
+// so the data's order is the travel order (and the place to change it).
+function chapterListOrder(id) {
+  const i = Object.keys(WM_CHAPTERS).indexOf(id);
+  return i === -1 ? Infinity : i;
 }
 
 // ── Chronicle ─────────────────────────────────────────────────────
@@ -197,13 +243,24 @@ function chronicleEntries() {
         hs,
         chapter: ch.chapter ?? 99,
         title: ch.title || '',
+        heading: ch.heading || '',
         art: ch.art,
         own,
         isNew: isNewLore(hs.id, seen),
         excerpt: loreExcerpt(revealedLoreHtml(hs.id, group, name)),
       };
     })
-    .sort((a, b) => a.chapter - b.chapter || Number(b.own) - Number(a.own) || a.hs.label.localeCompare(b.hs.label));
+    .sort((a, b) => a.chapter - b.chapter || chapterListOrder(a.hs.id) - chapterListOrder(b.hs.id));
+}
+
+// The heading an entry is filed under. WM_CHAPTERS can give a `heading`
+// of its own — e.g. "Interlude · The Webwoods" for a homebrew session that
+// isn't one of the book's chapters — while `chapter` still decides where it
+// sorts (decimals like 14.5 slot between chapters).
+function chronicleHeading(e) {
+  if (e.heading) return e.heading;
+  if (e.chapter === 99) return 'Elsewhere in the Hollow';
+  return `Chapter ${e.chapter}${e.title ? ' · ' + e.title : ''}`;
 }
 
 function chronicleHtml() {
@@ -215,10 +272,10 @@ function chronicleHtml() {
   let lastChapter = null;
   html += `<ol class="chronicle">`;
   entries.forEach(e => {
-    if (e.chapter !== lastChapter) {
-      lastChapter = e.chapter;
-      const label = e.chapter === 99 ? 'Elsewhere in the Hollow' : `Chapter ${e.chapter}${e.title ? ' · ' + escHtml(e.title) : ''}`;
-      html += `<li class="chronicle-chapter" aria-hidden="true">${label}</li>`;
+    const label = chronicleHeading(e);
+    if (label !== lastChapter) {
+      lastChapter = label;
+      html += `<li class="chronicle-chapter" aria-hidden="true">${escHtml(label)}</li>`;
     }
     html += `<li class="chronicle-entry">
       ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : '<div class="chronicle-art blank"></div>'}
@@ -228,7 +285,10 @@ function chronicleHtml() {
           ${e.isNew ? `<span class="index-new">new</span>` : ''}
         </div>
         <p class="chronicle-excerpt">${escHtml(e.excerpt)}</p>
-        <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}">Read on →</button>
+        <div class="chronicle-actions">
+          <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}">Read on →</button>
+          ${trackButtonHtml(e.hs.id)}
+        </div>
       </div>
     </li>`;
   });

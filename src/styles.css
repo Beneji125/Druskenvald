@@ -1014,7 +1014,25 @@
   }
   /* Creatures not yet met: a black silhouette with a faint gold edge. */
   .codex-card.unmet { cursor: default; opacity: 0.7; }
-  .codex-card.unmet img { filter: brightness(0) drop-shadow(0 0 5px rgba(201,169,110,0.35)); }
+  /* Unmet creatures: a shadow blurred past recognition, with a faint glow
+     — enough to sense something there, not enough to tell what. The image
+     is drawn smaller than its box so the blur stays inside the card. */
+  .codex-card.unmet img {
+    filter: brightness(0) blur(14px) drop-shadow(0 0 10px rgba(201,169,110,0.35));
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  /* Unmet legendary monsters: no shadow at all, just a smouldering sigil. */
+  .codex-card-mystery {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 2.6rem;
+    color: rgba(160,77,60,0.55);
+    text-shadow: 0 0 18px rgba(160,77,60,0.6);
+    background: radial-gradient(circle, rgba(122,59,46,0.18), transparent 65%);
+  }
   .codex-card.unmet .codex-card-name { color: var(--gold-dim); letter-spacing: 0.3em; }
 
   .chronicle { list-style: none; margin: 1.2rem 0 0; padding: 0; }
@@ -1074,6 +1092,8 @@
     cursor: pointer;
   }
   .chronicle-read:hover, .chronicle-read:focus-visible { background: rgba(201,169,110,0.08); }
+  .chronicle-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  .chronicle-actions .wm-track-player { margin: 0; }
 
   /* Rumour shown on a locked Wickermoor panel (WM_TEASERS). */
   .rumour { margin: 0.4rem 0 1.2rem; text-align: center; }

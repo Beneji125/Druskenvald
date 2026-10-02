@@ -71,15 +71,22 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
-  Unmet creatures show as "???" silhouettes. Link to one from lore with
-  `{{creature:id}}`.
+  Unmet creatures show only as a blurred shadow, and unmet legendary
+  monsters as a plain "?" (their art isn't even loaded). Link to one from
+  lore with `{{creature:id}}`.
 - **Rogues' Gallery:** fills itself — an NPC appears once they're
-  mentioned (`{{npc:id}}`) in lore the visitor can read. Bios are each
-  entry's `body` in `NPCS`.
+  mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
+  each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if
+  left out, the first place their name comes up). Bios are each entry's
+  `body`.
 - **Chronicle:** lists a group's unlocked Wickermoor locations, ordered
   by `WM_CHAPTERS` (chapter number, title, art) — renumber freely if your
-  parties went another way. It quotes the group's own `byGroup` tale when
-  there is one.
+  parties went another way. A homebrew session that isn't one of the
+  book's chapters can have its own `heading` (e.g. "Interlude · The
+  Webwoods") with a decimal `chapter` like 14.5 to slot it in between; places in the same chapter keep the order
+  they're listed in. It quotes the group's own `byGroup` tale when there
+  is one, and offers the place's ambience track if it has one in
+  `WM_TRACKS` (not every place needs one).
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
 
