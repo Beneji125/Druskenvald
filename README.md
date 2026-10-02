@@ -12,19 +12,24 @@ docs/            The published site — this is what GitHub Pages serves
   MAP_*.jpeg       map art
   CrookedMoon_Cover.jpg
   scenes/          province/story illustrations
+  chapter-art/     chapter header art
   species/         species portraits
-  audio/           background music
+  npc/             NPC portraits (NPCS / WM_PORTRAITS)
+  monsters/        monster, boss and familiar art
+  audio/           background music and location ambience tracks
 
 src/              Source files that get combined into docs/index.html
   template.html    HTML skeleton
   styles.css       all CSS
   app.js           all JS logic
   data/
-    descriptions.json   lore text, species text, image references
+    descriptions.json   lore text, species, NPCs, groups/unlocks,
+                         image and track references
     hotspots.json        map hotspot shapes + settlement light positions
 
 source-assets/    Large working files, not part of the published site
-  MAP_Druskenvald_Sources.xcf   GIMP source — the map's paths/vectors
+  MAP_Druskenvald_Sources.xcf        GIMP source — the main map's paths/vectors
+  MAP_Wickermoor_Hollow_Sources.xcf  GIMP source — Wickermoor Hollow's
   crooked_moon_reference.md     full lore/rules reference document
 
 build.js          Combines src/* into docs/index.html — run after any edit

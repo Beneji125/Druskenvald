@@ -6,6 +6,30 @@
 // WICKERMOOR_HOTSPOTS.
 // ═══════════════════════════════════════════════════════════════
 
+// localStorage can throw outright (Safari private mode, browsers set to
+// block site data, sandboxed iframes) rather than just returning null.
+// Every read/write goes through this wrapper so a blocked store degrades to
+// an in-memory one for the visit — music settings and unlocks still work,
+// they just aren't remembered next time — instead of an exception halting
+// whatever click handler touched it.
+const store = (() => {
+  const memory = {};
+  return {
+    get(key) {
+      try { return localStorage.getItem(key); }
+      catch { return key in memory ? memory[key] : null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, value); }
+      catch { memory[key] = String(value); }
+    },
+    remove(key) {
+      try { localStorage.removeItem(key); }
+      catch { delete memory[key]; }
+    },
+  };
+})();
+
 function panelImageHtml(id, label) {
   const src = SCENE_IMAGES[id];
   if (src) {
@@ -45,11 +69,11 @@ function initMusic() {
   const slider = document.getElementById('music-volume-slider');
   if (!audio) return;
 
-  const storedVolume = parseFloat(localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY));
+  const storedVolume = parseFloat(store.get(MUSIC_VOLUME_STORAGE_KEY));
   audio.volume = Number.isFinite(storedVolume) ? storedVolume : MUSIC_VOLUME_DEFAULT;
   if (slider) slider.value = audio.volume;
 
-  musicMuted = localStorage.getItem(MUSIC_MUTED_STORAGE_KEY) === 'true';
+  musicMuted = store.get(MUSIC_MUTED_STORAGE_KEY) === 'true';
   updateMusicButton();
   updateNowPlayingLabel(DEFAULT_TRACK_TITLE);
   setupMusicProgressBar();
@@ -62,31 +86,34 @@ function initMusic() {
   }
 }
 
-function toggleMusic() {
+// Single place that changes the muted state, so the topbar icon, the
+// remembered preference, and an open panel's location-track button (see
+// trackButtonHtml) can't drift out of step with what's actually playing.
+function setMusicMuted(muted) {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
-  musicMuted = !musicMuted;
-  if (musicMuted) {
+  musicMuted = muted;
+  if (muted) {
     audio.pause();
   } else {
     audio.play().catch(() => {});
   }
-  localStorage.setItem(MUSIC_MUTED_STORAGE_KEY, String(musicMuted));
+  store.set(MUSIC_MUTED_STORAGE_KEY, String(muted));
   updateMusicButton();
+  if (currentTrackId) setTrackButtonState(currentTrackId, !muted);
+}
+
+function toggleMusic() {
+  setMusicMuted(!musicMuted);
 }
 
 function setMusicVolume(value) {
   const audio = document.getElementById('bg-music');
   if (!audio) return;
   audio.volume = value;
-  localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, String(value));
+  store.set(MUSIC_VOLUME_STORAGE_KEY, String(value));
   // Dragging the slider implies wanting to hear it, so unmute if needed.
-  if (musicMuted && value > 0) {
-    musicMuted = false;
-    audio.play().catch(() => {});
-    localStorage.setItem(MUSIC_MUTED_STORAGE_KEY, 'false');
-    updateMusicButton();
-  }
+  if (musicMuted && value > 0) setMusicMuted(false);
 }
 
 function updateMusicButton() {
@@ -996,11 +1023,10 @@ function buildSpeciesPanelContent(id) {
 
 // NPC panel — same secondary-panel pattern as the species panel above,
 // triggered by clicking a named NPC mentioned inside a Wickermoor
-// location/being's own lore text (see npcLinkHtml below). NPCS
-// (data/descriptions.json) currently only holds a name + portrait;
-// `sp.body` is left out on purpose (there's no bio text yet) rather than
-// showing an empty section — buildNpcPanelContent adds one once NPCS
-// entries start including it.
+// location/being's own lore text (the `npc-link` elements written into
+// WM_LORE in data/descriptions.json). NPCS entries hold a name + portrait,
+// plus an optional `body` — buildNpcPanelContent only adds a bio section
+// when one is present, rather than showing an empty one.
 function openNpcPanel(id) {
   const panel = document.getElementById('npc-panel');
   const content = document.getElementById('npc-panel-content');
@@ -1123,7 +1149,7 @@ function escAttr(str) {
 function trackButtonHtml(id) {
   const track = WM_TRACKS[id];
   if (!track) return '';
-  const playing = currentTrackId === id;
+  const playing = currentTrackId === id && !musicMuted;
   const label = track.title ? `Play "${track.title}"` : 'Play Ambience';
   // Several track filenames/titles contain an apostrophe (e.g. "When It's
   // Time"). The onclick attribute here is single-quoted with double-quoted
@@ -1157,8 +1183,11 @@ function toggleLocationTrack(id, src) {
 
   // Clicking the currently-playing track's own button stops it and hands
   // the topbar player back to the default looping track.
-  if (currentTrackId === id && !audio.paused) {
-    revertToDefaultTrack(audio);
+  // If it's this track but paused (muted from the topbar), resume it where
+  // it left off instead of restarting from the beginning.
+  if (currentTrackId === id) {
+    if (audio.paused) setMusicMuted(false);
+    else revertToDefaultTrack(audio);
     return;
   }
 
@@ -1169,7 +1198,10 @@ function toggleLocationTrack(id, src) {
   audio.loop = false;
   audio.src = src;
   audio.currentTime = 0;
-  audio.play().catch(() => {});
+  // Pressing play is an explicit request to hear it — clear any mute so the
+  // topbar icon matches (setMusicMuted also starts playback).
+  if (musicMuted) setMusicMuted(false);
+  else audio.play().catch(() => {});
   setTrackButtonState(id, true);
   updateNowPlayingLabel((WM_TRACKS[id] && WM_TRACKS[id].title) || 'Ambience');
   setResetButtonVisible(true);
@@ -1402,7 +1434,7 @@ Object.entries(GROUPS).forEach(([groupId, names]) => {
 });
 
 function getRecognizedGroup() {
-  return localStorage.getItem(RECOGNIZED_GROUP_STORAGE_KEY);
+  return store.get(RECOGNIZED_GROUP_STORAGE_KEY);
 }
 
 // The specific character name last used to unlock something, lowercased.
@@ -1410,7 +1442,7 @@ function getRecognizedGroup() {
 // — kept only so revealedLoreHtml can pick a per-character variant once
 // WM_LORE entries start defining a `byCharacter` map.
 function getRecognizedName() {
-  return localStorage.getItem(RECOGNIZED_NAME_STORAGE_KEY);
+  return store.get(RECOGNIZED_NAME_STORAGE_KEY);
 }
 
 // GM/admin backdoor — deliberately not a character name (so it can never
@@ -1424,7 +1456,7 @@ const ADMIN_PASSWORD = 'vermintoll';
 const ADMIN_UNLOCKED_STORAGE_KEY = 'druskenvald_admin_unlocked';
 
 function isAdminUnlocked() {
-  return localStorage.getItem(ADMIN_UNLOCKED_STORAGE_KEY) === 'true';
+  return store.get(ADMIN_UNLOCKED_STORAGE_KEY) === 'true';
 }
 
 // Single place that writes recognition state, so entering a new
@@ -1436,13 +1468,13 @@ function isAdminUnlocked() {
 // but never cleared the old admin flag — admin access silently persisted
 // underneath it, making every group look like it could see everything.
 function setRecognizedIdentity({ admin = false, groupId = null, name = null } = {}) {
-  localStorage.setItem(ADMIN_UNLOCKED_STORAGE_KEY, String(admin));
+  store.set(ADMIN_UNLOCKED_STORAGE_KEY, String(admin));
   if (groupId) {
-    localStorage.setItem(RECOGNIZED_GROUP_STORAGE_KEY, groupId);
-    localStorage.setItem(RECOGNIZED_NAME_STORAGE_KEY, name);
+    store.set(RECOGNIZED_GROUP_STORAGE_KEY, groupId);
+    store.set(RECOGNIZED_NAME_STORAGE_KEY, name);
   } else {
-    localStorage.removeItem(RECOGNIZED_GROUP_STORAGE_KEY);
-    localStorage.removeItem(RECOGNIZED_NAME_STORAGE_KEY);
+    store.remove(RECOGNIZED_GROUP_STORAGE_KEY);
+    store.remove(RECOGNIZED_NAME_STORAGE_KEY);
   }
 }
 
@@ -1561,7 +1593,7 @@ function checkPassword(id) {
     // lore text in place — the panel was first rendered under the old
     // (locked) state, so its title is still "???" and its scene
     // images/portraits/track player (all gated the same way as the lore
-    // text, see wmSceneImagesHtml/wmPortraitsHtml/trackButtonHtml) are
+    // text, see buildWMContent/interleaveImages/trackButtonHtml) are
     // still hidden. A full re-render is the only way all of those pick up
     // the new unlock state together, instead of only the text updating
     // while everything else stays stuck showing "still locked".
@@ -1616,13 +1648,18 @@ function submitReenterName() {
   if (currentOpenPanelId) openPanel(currentOpenPanelId, currentOpenPanelLabel);
 }
 
-// Close panel on Escape — the species panel first, since it sits on top of
-// the main lore panel, so Escape unwinds one layer at a time.
+// Escape unwinds one layer at a time: a secondary (species/NPC) panel sits
+// on top of the main lore panel, so it closes first; then the topbar's name
+// prompt if it's open; then the lore panel itself.
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  const speciesOpen = document.getElementById('species-panel')?.classList.contains('open');
-  if (speciesOpen) {
+  const isOpen = id => document.getElementById(id)?.classList.contains('open');
+  if (isOpen('npc-panel')) {
+    closeNpcPanel();
+  } else if (isOpen('species-panel')) {
     closeSpeciesPanel();
+  } else if (isOpen('reenter-name-prompt')) {
+    document.getElementById('reenter-name-prompt').classList.remove('open');
   } else {
     closePanel();
   }
