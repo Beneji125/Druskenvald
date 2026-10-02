@@ -170,6 +170,13 @@ function validate(data, hotspots) {
     (c.groups || []).forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.groups: unknown group "${g}"`); });
   }
 
+  // An NPC's Rogues' Gallery location must be a real Wickermoor location.
+  for (const [id, n] of Object.entries(data.NPCS || {})) {
+    if (n.location && !(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === n.location)) {
+      errors.push(`NPCS.${id}.location: "${n.location}" is not a Wickermoor hotspot id`);
+    }
+  }
+
   // Chronicle entries must belong to real Wickermoor locations.
   for (const id of Object.keys(data.WM_CHAPTERS || {})) {
     if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === id)) errors.push(`WM_CHAPTERS.${id}: no Wickermoor hotspot has this id`);

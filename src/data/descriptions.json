@@ -300,196 +300,235 @@
     "renathyr": {
       "name": "Father Renathyr",
       "image": "npc/NPC_Father_Renathyr.webp",
+      "location": "wm_crimson",
       "body": "<p class=\"panel-body\">Father of the Crimson Faith and abbot of the monastery high above Dawn's Gate, a man whose sermons promise purity and salvation. Long ago he was Sir Marius, a knight-errant who swore to protect the innocent from monsters and wicked men.</p>"
     },
     "farryn": {
       "name": "Farryn & Gorthos",
       "image": "npc/NPC_Gorthos_and_Farryn.webp",
+      "location": "wm_hartsblight",
       "body": "<p class=\"panel-body\">Farryn was a satyr of the deep Greenwood, raised in the Old Ways to tend the cycle of life, death and rebirth. Gorthos is what grief made of her.</p>"
     },
     "kehlenn": {
       "name": "Kehlenn",
       "image": "npc/NPC_Kehlenn.webp",
+      "location": "wm_wytchwood",
       "body": "<p class=\"panel-body\">A name the hollow's oldest stories only whisper: the Green Queen, who ruled this valley before it was ever called Druskenvald.</p>"
     },
     "lethica": {
       "name": "Matron Lethica",
       "image": "npc/NPC_Matron_Lethica.webp",
+      "location": "wm_memorys_rest",
       "body": "<p class=\"panel-body\">The soft-spoken matron of Memory's Rest, pale-skinned, veiled, her cheeks streaked with ink-black tears. Once a white-haired priestess of the Nightmother, a goddess of evening, peace and healing.</p>"
     },
     "crossroads": {
       "name": "Mister Crossroads",
       "image": "npc/NPC_Mr_Crossroads_and_Briggsy.webp",
+      "location": "wm_drowned",
       "body": "<p class=\"panel-body\">Mister Crossroads, as the bayou calls him: a grinning crocodile-folk dealer who will play any game, for any stake, and always knows the odds better than you do.</p>"
     },
     "jericho": {
       "name": "Raum & Ol' Jericho Sticks",
       "image": "npc/NPC_Raum_and_Jericho.webp",
+      "location": "wm_foxwillow",
       "body": "<p class=\"panel-body\">Ol' Jericho Sticks, the living scarecrow who wandered Foxwillow's fields with a banjo, singing to the fieldhands. Beloved by every soul in town, until the night he vanished into the corn.</p>"
     },
     "yorgrim": {
       "name": "Yorgrim",
       "image": "npc/NPC_Yorgrim.webp",
+      "location": "wm_maidenmist",
       "body": "<p class=\"panel-body\">A towering ghost who wanders the hollow with a great stone chained to his back, carved with the names of the clan he once failed to lay to rest.</p>"
     },
     "adela": {
       "name": "Adela Druskenvald",
       "image": "npc/NPC_Adela_Druskenvald.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">Lady Adela Druskenvald, cheerful company and a keen reader of fortunes, who rode the Ghostlight Express beside her husband. Lately she has taken to wearing long gloves.</p>"
     },
     "phillip": {
       "name": "Phillip Druskenvald",
       "image": "npc/NPC_Phillip_Druskenvald.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">Lord Phillip Druskenvald, master of the domain that bears his name, met travelling aboard the Ghostlight Express with his wife, Adela. Genial, assured, and rarely asked where his power came from.</p>"
     },
     "tabitha": {
       "name": "Tabitha Druckeryn",
       "image": "npc/NPC_Tabitha_Druckeryn.webp",
+      "location": "wm_dawns_gate",
       "body": "<p class=\"panel-body\">A seamstress met at the bar of the Briar Public House in Dawn's Gate, who wants more out of life than the town seems willing to give her.</p>"
     },
     "andreas": {
       "name": "Andreas Maler",
       "image": "npc/NPC_Andreas_Maler.webp",
+      "location": "wm_crimson",
       "body": "<p class=\"panel-body\">A young brother of the Crimson Monastery and son of August Maler, quietly hoping someone will help change the faith from within before it costs him his life.</p>"
     },
     "august": {
       "name": "August Maler",
       "image": "npc/NPC_August_Maler.webp",
+      "location": "wm_dawns_gate",
       "body": "<p class=\"panel-body\">An illuminator of Dawn's Gate and father of Andreas, a widower with a sharp mind, steady hands, and a talent for drawing people in.</p>"
     },
     "olaf": {
       "name": "Friar Olaf",
       "image": "npc/NPC_Friar_Olaf.webp",
+      "location": "wm_crimson",
       "body": "<p class=\"panel-body\">Friar Olaf of the Silver Bells once led the monastery, back when it was devoted to the Patient Lady. Now he lights the pyres for the Crimson Faith, and keeps a careful eye on his own skin.</p>"
     },
     "cromwell": {
       "name": "Inquisitor Cromwell",
       "image": "npc/NPC_Leona_Cromwell.webp",
+      "location": "wm_crimson",
       "body": "<p class=\"panel-body\">The Crimson Faith's inquisitor: suspicious, relentless, and fond of her trophies. Few in the monastery would dare to cross her.</p>"
     },
     "jaeger": {
       "name": "Houndmaster Jaeger",
       "image": "npc/NPC_Sigmund_Jaeger.webp",
+      "location": "wm_crimson",
       "body": "<p class=\"panel-body\">Keeper of the Crimson Monastery's hounds, whose riders and baying packs are the terror of Dawn's Gate by night.</p>"
     },
     "boone": {
       "name": "Vander Boone, the Bayou King",
       "image": "npc/NPC_Vander_Boone.webp",
+      "location": "wm_murkwater",
       "body": "<p class=\"panel-body\">Vander Boone, the self-declared Bayou King, who rules Murkwater Bend with thugs and taxes, and once turned down a deal with the Grinning Sinner.</p>"
     },
     "lyla": {
       "name": "Lyla Webb",
       "image": "npc/NPC_Lyla_Webb.webp",
+      "location": "wm_murkwater",
       "body": "<p class=\"panel-body\">The Bayou King's chief advisor, a sharp and well-connected trader who seems to know everyone worth knowing in the swamp.</p>"
     },
     "vex": {
       "name": "Vex",
       "image": "npc/NPC_Vex.webp",
+      "location": "wm_drowned",
       "body": "<p class=\"panel-body\">Proprietor of a crossroads shop of potions, magical items, divination and hexes, signposted by a hand-lettered board at a fork in the swamp road.</p>"
     },
     "martha": {
       "name": "Martha Langtree",
       "image": "npc/NPC_Martha_Langtree.webp",
+      "location": "wm_foxwillow",
       "body": "<p class=\"panel-body\">A widowed farmer of Foxwillow and mother of the Langtree children, holding her family and her fields together as the town unravels around her.</p>"
     },
     "jonah": {
       "name": "Jonah Sawyer",
       "image": "npc/NPC_Jonah_Sawyer.webp",
+      "location": "wm_foxwillow",
       "body": "<p class=\"panel-body\">Foxwillow's butcher, a man of long memory and longer grudges.</p>"
     },
     "william": {
       "name": "William Lodge",
       "image": "npc/NPC_William_Lodge.webp",
+      "location": "wm_foxwillow",
       "body": "<p class=\"panel-body\">A salt-of-the-earth Foxwillow farmer with a folksy drawl and an earnest love for his failing village, who drove you to its gates.</p>"
     },
     "adelaide": {
       "name": "Adelaide Langtree",
       "image": "npc/NPC_Adelaide_Langtree.webp",
+      "location": "wm_foxwillow",
       "body": "<p class=\"panel-body\">The Langtree daughter of Foxwillow, a quiet girl who was once Ol' Jericho's dearest friend.</p>"
     },
     "alda": {
       "name": "Alda Farnum",
       "image": "npc/NPC_Alda_Farnum.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">Owner of the Green Queen Inn in Wickermoor Village, all warm smiles, for whom everything is a transaction, paid in coin or in favours.</p>"
     },
     "eleanor": {
       "name": "Eleanor Heyling",
       "image": "npc/NPC_Eleanor_Heyling.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">Wickermoor Village's bookseller, who will not sell a book until she has read it herself. Some say her reading has cursed her; others, that it's made her powerful.</p>"
     },
     "elias": {
       "name": "Elias Greaves",
       "image": "npc/NPC_Elias_Greaves.webp",
+      "location": "wm_drowned",
       "body": "<p class=\"panel-body\">A gambler, and an old friend of Adela Druskenvald, whose luck ran out aboard a riverboat in the Drowned Crossroads.</p>"
     },
     "finneas": {
       "name": "Finneas Trout",
       "image": "npc/NPC_Finneas_Trout.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">Wickermoor's bookish young schoolteacher, spectacles under a mop of brown hair, who teaches the village children their letters and holds book learning in near-reverence.</p>"
     },
     "howie": {
       "name": "Howie Butterman",
       "image": "npc/NPC_Howie_Butterman.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">Deputy of Wickermoor Village, short, wiry and friendly, the affable half of the hollow's law, and quicker in a fight than he looks.</p>"
     },
     "kristoff": {
       "name": "Kristoff Gruber",
       "image": "npc/NPC_Kristoff_Gruber.webp",
+      "location": "wm_dawns_gate",
       "body": "<p class=\"panel-body\">A portly, gruff regular of the Briar Public House in Dawn's Gate, whose sour manner hides a caring heart.</p>"
     },
     "siv": {
       "name": "Siv Harga",
       "image": "npc/NPC_Siv_Harga.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">Wickermoor Village's butcher, a tall, braided woman raised among the hollow's travelling herders, who took over the shop when her old master passed.</p>"
     },
     "walter": {
       "name": "Walter Jenkin",
       "image": "npc/NPC_Walter_Jenkin.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">A Wickermoor villager who lost his voice one night, and never quite got the whole of it back.</p>"
     },
     "weston": {
       "name": "Weston Murdoch",
       "image": "npc/NPC_Weston_Murdoch.webp",
+      "location": "wm_village",
       "body": "<p class=\"panel-body\">A devout believer in the Brightsinger who welcomes any new godliness to the hollow, and who sent you looking for a missing man called Gareth.</p>"
     },
     "sweetheart": {
       "name": "The Sweetheart",
       "image": "npc/NPC_The_Sweetheart.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">A weeping ghost aboard the Ghostlight Express, clutching a locket with a handsome mustachioed portrait. She knows herself only as his sweetheart.</p>"
     },
     "daydreamer": {
       "name": "The Daydreamer",
       "image": "npc/NPC_The_Daydreamer.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">The ghost of a boy in overalls in the Dining Car, endlessly conjuring feasts and eating them, trying to swallow a guilt that won't go down.</p>"
     },
     "mariner": {
       "name": "The Mariner",
       "image": "npc/NPC_The_Mariner.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">The ghost of an old sailor in a sailor's coat with a clay pipe, heaving mail sacks from one end of the train to the other as if loading a ship long since sailed.</p>"
     },
     "harlequin": {
       "name": "The Harlequin",
       "image": "npc/NPC_The_Harlequin.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">The ghost of a jester in a belled cap, tumbling through painful pratfalls on a trapeze, her face wracked with shame.</p>"
     },
     "jailbird": {
       "name": "The Jailbird",
       "image": "npc/NPC_The_Jailbird.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">A ghost of the Ghostlight Express, still serving a sentence no one remembers handing down.</p>"
     },
     "songstress": {
       "name": "The Songstress",
       "image": "npc/NPC_The_Songstress.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">The ghost of a beautiful woman in a silky gown, smoking by the window, who dreamed of being a famous singer and never was.</p>"
     },
     "vagrant": {
       "name": "The Vagrant",
       "image": "npc/NPC_The_Vagrant.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">The enigmatic Stranger who guides souls into Druskenvald aboard the Ghostlight Express, the only one known to come and go from the domain as he pleases. Listen for his fiddle in the fog.</p>"
     },
     "trainhopper": {
       "name": "The Phantom Trainhopper",
       "image": "npc/NPC_The_Phantom_Trainhopper.webp",
+      "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">A phantom that rides the outside of the Ghostlight Express, breaking in through the windows and letting the wailing Shroud pour inside.</p>"
     }
   },
