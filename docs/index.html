@@ -808,7 +808,6 @@
   }
   .password-error.show { display: block; }
 
-  .locked-content { display: none; }
   .locked-content.unlocked { display: block; }
 
   /* Topbar "re-enter a character's name" widget — a popover off the 👤
@@ -1410,26 +1409,26 @@ const WM_BEINGS = [
 
 const GROUPS = {
   "1": [
-    "Sylas",
-    "Webrin",
-    "Tharn",
-    "Korrin",
-    "Megumin"
+    "1moslq5wsij",
+    "1n7vchzke9p",
+    "ic25ywo8jk",
+    "2elx1baoh8a",
+    "90tt9la2c2"
   ],
   "2": [
-    "Mhithra",
-    "Mh'ithra",
-    "Ash",
-    "Basaltos",
-    "Grist",
-    "Tihana"
+    "doef7z61nl",
+    "127bhl0ef7y",
+    "lcq3p464n5",
+    "9imypi8639",
+    "25kczu2939e",
+    "1caij67l9gg"
   ],
   "3": [
-    "Bersha",
-    "Brzik",
-    "George",
-    "Jacqueline",
-    "Lavinia"
+    "1peowh4xvgz",
+    "2f2nonpkctk",
+    "1k54jpo13r2",
+    "27aeqt6pnsu",
+    "3u7541b5f4"
   ]
 };
 
@@ -3431,6 +3430,32 @@ const WICKERMOOR_LIGHTS = [
   }
 ];
 
+// ─── src/js/hash.js ─────────────────────────────────────────────────
+// Name hashing for the unlock system. Character names (GROUPS) and the
+// admin password are only ever shipped to the page as hashes, so they
+// can't be read straight out of the page source — light spoiler protection
+// against casual peeking, not real security (the lore text itself is still
+// in the page's data, just never put on screen until unlocked).
+//
+// cyrb53: a small, fast, non-cryptographic 53-bit string hash. Shared with
+// build.js (which hashes GROUPS at build time via the module.exports line
+// below), so both sides always agree. To get the hash for a new admin
+// password: `node build.js --hash yourpassword`.
+function nameHash(str) {
+  const s = String(str).trim().toLowerCase();
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+if (typeof module !== 'undefined') module.exports = { nameHash };
+
 // ─── src/js/util.js ─────────────────────────────────────────────────
 // Small shared helpers used across the other files: the storage
 // wrapper, number clamps, and string escaping.
@@ -3499,15 +3524,10 @@ function imageBasename(path) {
 // order listed in build.js) after the data constants, into one <script>.
 
 const MUSIC_VOLUME_DEFAULT = 0.1;
-
 const MUSIC_MUTED_STORAGE_KEY = 'druskenvald_music_muted';
-
 const MUSIC_VOLUME_STORAGE_KEY = 'druskenvald_music_volume';
-
 const DEFAULT_TRACK_SRC = 'audio/Creaking_Bones.mp3';
-
 const DEFAULT_TRACK_TITLE = 'Creaking Bones';
-
 let musicMuted = false;
 
 function initMusic() {
@@ -4119,11 +4139,8 @@ function renderLightingForLayer(layerKey, t) {
 // or "light mode" is on, since the darkness/moon/light animation is
 // invisible in both cases.
 const LIGHTING_FRAME_INTERVAL = 1000 / 24; // ~24fps is plenty for slow ambient motion
-
 let lightingAnimationRunning = false;
-
 let lightingAnimationStart = null;
-
 let lastLightingRenderTime = 0;
 
 // "Light mode" — fully removes the night/darkness overlay so the map is
@@ -4238,7 +4255,6 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
     const path = document.createElementNS(ns, 'path');
     path.setAttribute('d', hs.d);
     path.setAttribute('class', 'hotspot-poly');
-    path.setAttribute('data-label', hs.label);
 
     path.addEventListener('mousemove', (e) => {
       // Wickermoor hotspots are individually gated per group (see
@@ -4275,7 +4291,6 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
   });
 }
 
-
 // ── Zoom & pan ─────────────────────────────────────────────────
 // A single CSS transform (translate + scale) on each map layer's
 // .zoom-layer wrapper handles zoom/pan for everything inside it (image,
@@ -4283,9 +4298,7 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
 // browser's native hit-testing on the SVG paths keep working with no
 // coordinate-math changes anywhere else.
 const ZOOM_MIN = 1;
-
 const ZOOM_MAX = 4;
-
 const ZOOM_WHEEL_FACTOR = 1.15;
 
 const zoomState = {
@@ -4347,7 +4360,6 @@ function zoomAtPoint(key, factor, px, py) {
 }
 
 function zoomIn()  { zoomButtonStep(ZOOM_WHEEL_FACTOR); }
-
 function zoomOut() { zoomButtonStep(1 / ZOOM_WHEEL_FACTOR); }
 
 function zoomButtonStep(factor) {
@@ -4525,7 +4537,6 @@ function panelImageHtml(id, label) {
 // character, rather than leaving it showing stale locked/unlocked state
 // until the visitor closes and reopens it themselves.
 let currentOpenPanelId = null;
-
 let currentOpenPanelLabel = null;
 
 function openPanel(id, label) {
@@ -4576,7 +4587,6 @@ function closeSecondaryPanel(kind) {
 }
 
 function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
-
 function closeSpeciesPanel()  { closeSecondaryPanel('species'); }
 
 function buildSpeciesPanelContent(id) {
@@ -4602,7 +4612,6 @@ function buildSpeciesPanelContent(id) {
 // plus an optional `body` — buildNpcPanelContent only adds a bio section
 // when one is present, rather than showing an empty one.
 function openNpcPanel(id) { openSecondaryPanel('npc', buildNpcPanelContent(id)); }
-
 function closeNpcPanel()  { closeSecondaryPanel('npc'); }
 
 function buildNpcPanelContent(id) {
@@ -4684,7 +4693,6 @@ function buildPanelContent(id, label) {
   if (lore.species) {
     html += buildPasswordSection(id);
   }
-
   return html;
 }
 
@@ -4875,14 +4883,14 @@ function buildWMContent(id, label) {
 // immediately unlocks everything tagged to that group across the whole
 // site, not just the one lock they typed into.
 const RECOGNIZED_GROUP_STORAGE_KEY = 'druskenvald_recognized_group';
-
 const RECOGNIZED_NAME_STORAGE_KEY = 'druskenvald_recognized_name';
 
-// name (lowercased) -> group id, built once from GROUPS.
-const NAME_TO_GROUP = {};
-
-Object.entries(GROUPS).forEach(([groupId, names]) => {
-  names.forEach(name => { NAME_TO_GROUP[name.toLowerCase()] = groupId; });
+// nameHash(name) -> group id, built once from GROUPS. build.js ships
+// GROUPS to the page already hashed (see src/js/hash.js), so the character
+// names themselves never appear in the page source.
+const NAME_HASH_TO_GROUP = {};
+Object.entries(GROUPS).forEach(([groupId, hashes]) => {
+  hashes.forEach(hash => { NAME_HASH_TO_GROUP[hash] = groupId; });
 });
 
 function getRecognizedGroup() {
@@ -4903,9 +4911,10 @@ function getRecognizedName() {
 // unlocks every Wickermoor id at once regardless of UNLOCKS, without
 // needing to belong to a specific party's group. Scoped to "wm_" ids only
 // in isUnlockedForGroup below — main-map provinces don't have anything to
-// bypass (their UNLOCKS rule is already "all").
-const ADMIN_PASSWORD = 'vermintoll';
-
+// bypass (their UNLOCKS rule is already "all"). Stored only as a hash —
+// to change the password, run `node build.js --hash newpassword` and paste
+// the result here.
+const ADMIN_PASSWORD_HASH = '1lurl23bacu';
 const ADMIN_UNLOCKED_STORAGE_KEY = 'druskenvald_admin_unlocked';
 
 function isAdminUnlocked() {
@@ -4996,10 +5005,10 @@ function buildPasswordSection(id) {
       leftover,
     };
   }
-  // Still locked — no images shown anywhere yet (top block or embedded),
-  // so no need to run interleaveImages here; the raw text just sits
-  // hidden in #locked-${id} until checkPassword's full panel rebuild
-  // re-renders everything under the new, unlocked state.
+  // Still locked — only the name prompt. The lore text is deliberately not
+  // put into the page at all (not even hidden), so it can't be read with
+  // the browser's inspector; checkPassword's full panel rebuild renders it
+  // once the visitor's group is recognized.
   return {
     html: `
       <div class="password-section">
@@ -5010,10 +5019,6 @@ function buildPasswordSection(id) {
           <button class="password-btn" onclick="checkPassword('${id}')">Unlock</button>
         </div>
         <div class="password-error" id="pw-err-${id}"></div>
-      </div>
-      <div class="locked-content" id="locked-${id}">
-        <div class="panel-section-title">Revealed Lore</div>
-        ${revealedLoreHtml(id, recognizedGroup, recognizedName)}
       </div>
     `,
     leftover: [],
@@ -5028,12 +5033,13 @@ function buildPasswordSection(id) {
 // shows the error, re-focusing the emptied input) if nothing matched.
 function recognizeEnteredName(input, err) {
   const entered = input.value.trim().toLowerCase();
-  if (entered === ADMIN_PASSWORD) {
+  const hash = nameHash(entered);
+  if (hash === ADMIN_PASSWORD_HASH) {
     setRecognizedIdentity({ admin: true });
     return true;
   }
-  if (NAME_TO_GROUP[entered]) {
-    setRecognizedIdentity({ groupId: NAME_TO_GROUP[entered], name: entered });
+  if (NAME_HASH_TO_GROUP[hash]) {
+    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered });
     return true;
   }
   err.textContent = "That name isn't recognized here.";

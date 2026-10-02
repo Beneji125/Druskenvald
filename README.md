@@ -56,6 +56,30 @@ Regenerates `docs/index.html` from everything under `src/`. Run this after
 editing `template.html`, `styles.css`, anything in `js/`, or either file in
 `src/data/`.
 
+The build first checks the data and stops with a clear message if anything
+is broken (unknown NPC/species ids, missing images or audio, `[[image]]`
+tags not listed for that location, a name in two groups…). Other options:
+
+```
+node build.js --report     to-do list: unused art/audio, NPCs without bios,
+                           locations no group has unlocked yet, etc.
+node build.js --force      build even if the checks found errors
+node build.js --hash WORD  print the hash for a new admin password
+                           (paste into ADMIN_PASSWORD_HASH in src/js/unlocks.js)
+```
+
+### Writing lore
+
+Link to an NPC or species with `{{npc:id}}`, `{{npc:id|shown text}}`,
+`{{species:id}}` or `{{species:id|shown text}}` (ids are the keys in
+`NPCS` / `SPECIES`). Place a location's image inside its text with
+`[[filename without extension]]`.
+
+Character names in `GROUPS` and the admin password reach the page only as
+hashes, and locked lore is never rendered until unlocked — enough to keep
+casual spoilers hidden, though the lore text itself is still in the page
+source for anyone determined.
+
 ## GitHub Pages
 
 Repo Settings → Pages → Source: **Deploy from a branch**, branch `main`,

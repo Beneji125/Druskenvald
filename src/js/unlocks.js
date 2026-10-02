@@ -15,14 +15,14 @@
 // immediately unlocks everything tagged to that group across the whole
 // site, not just the one lock they typed into.
 const RECOGNIZED_GROUP_STORAGE_KEY = 'druskenvald_recognized_group';
-
 const RECOGNIZED_NAME_STORAGE_KEY = 'druskenvald_recognized_name';
 
-// name (lowercased) -> group id, built once from GROUPS.
-const NAME_TO_GROUP = {};
-
-Object.entries(GROUPS).forEach(([groupId, names]) => {
-  names.forEach(name => { NAME_TO_GROUP[name.toLowerCase()] = groupId; });
+// nameHash(name) -> group id, built once from GROUPS. build.js ships
+// GROUPS to the page already hashed (see src/js/hash.js), so the character
+// names themselves never appear in the page source.
+const NAME_HASH_TO_GROUP = {};
+Object.entries(GROUPS).forEach(([groupId, hashes]) => {
+  hashes.forEach(hash => { NAME_HASH_TO_GROUP[hash] = groupId; });
 });
 
 function getRecognizedGroup() {
@@ -43,9 +43,10 @@ function getRecognizedName() {
 // unlocks every Wickermoor id at once regardless of UNLOCKS, without
 // needing to belong to a specific party's group. Scoped to "wm_" ids only
 // in isUnlockedForGroup below — main-map provinces don't have anything to
-// bypass (their UNLOCKS rule is already "all").
-const ADMIN_PASSWORD = 'vermintoll';
-
+// bypass (their UNLOCKS rule is already "all"). Stored only as a hash —
+// to change the password, run `node build.js --hash newpassword` and paste
+// the result here.
+const ADMIN_PASSWORD_HASH = '1lurl23bacu';
 const ADMIN_UNLOCKED_STORAGE_KEY = 'druskenvald_admin_unlocked';
 
 function isAdminUnlocked() {
@@ -136,10 +137,10 @@ function buildPasswordSection(id) {
       leftover,
     };
   }
-  // Still locked — no images shown anywhere yet (top block or embedded),
-  // so no need to run interleaveImages here; the raw text just sits
-  // hidden in #locked-${id} until checkPassword's full panel rebuild
-  // re-renders everything under the new, unlocked state.
+  // Still locked — only the name prompt. The lore text is deliberately not
+  // put into the page at all (not even hidden), so it can't be read with
+  // the browser's inspector; checkPassword's full panel rebuild renders it
+  // once the visitor's group is recognized.
   return {
     html: `
       <div class="password-section">
@@ -150,10 +151,6 @@ function buildPasswordSection(id) {
           <button class="password-btn" onclick="checkPassword('${id}')">Unlock</button>
         </div>
         <div class="password-error" id="pw-err-${id}"></div>
-      </div>
-      <div class="locked-content" id="locked-${id}">
-        <div class="panel-section-title">Revealed Lore</div>
-        ${revealedLoreHtml(id, recognizedGroup, recognizedName)}
       </div>
     `,
     leftover: [],
@@ -168,12 +165,13 @@ function buildPasswordSection(id) {
 // shows the error, re-focusing the emptied input) if nothing matched.
 function recognizeEnteredName(input, err) {
   const entered = input.value.trim().toLowerCase();
-  if (entered === ADMIN_PASSWORD) {
+  const hash = nameHash(entered);
+  if (hash === ADMIN_PASSWORD_HASH) {
     setRecognizedIdentity({ admin: true });
     return true;
   }
-  if (NAME_TO_GROUP[entered]) {
-    setRecognizedIdentity({ groupId: NAME_TO_GROUP[entered], name: entered });
+  if (NAME_HASH_TO_GROUP[hash]) {
+    setRecognizedIdentity({ groupId: NAME_HASH_TO_GROUP[hash], name: entered });
     return true;
   }
   err.textContent = "That name isn't recognized here.";

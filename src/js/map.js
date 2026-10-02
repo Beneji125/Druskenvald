@@ -13,7 +13,6 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
     const path = document.createElementNS(ns, 'path');
     path.setAttribute('d', hs.d);
     path.setAttribute('class', 'hotspot-poly');
-    path.setAttribute('data-label', hs.label);
 
     path.addEventListener('mousemove', (e) => {
       // Wickermoor hotspots are individually gated per group (see
@@ -50,7 +49,6 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
   });
 }
 
-
 // ── Zoom & pan ─────────────────────────────────────────────────
 // A single CSS transform (translate + scale) on each map layer's
 // .zoom-layer wrapper handles zoom/pan for everything inside it (image,
@@ -58,9 +56,7 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
 // browser's native hit-testing on the SVG paths keep working with no
 // coordinate-math changes anywhere else.
 const ZOOM_MIN = 1;
-
 const ZOOM_MAX = 4;
-
 const ZOOM_WHEEL_FACTOR = 1.15;
 
 const zoomState = {
@@ -122,7 +118,6 @@ function zoomAtPoint(key, factor, px, py) {
 }
 
 function zoomIn()  { zoomButtonStep(ZOOM_WHEEL_FACTOR); }
-
 function zoomOut() { zoomButtonStep(1 / ZOOM_WHEEL_FACTOR); }
 
 function zoomButtonStep(factor) {

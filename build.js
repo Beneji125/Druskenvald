@@ -8,6 +8,8 @@
 //   node build.js --report   also list unused assets, unexplored locations,
 //                            NPCs without a bio, etc. (a to-do list, not errors)
 //   node build.js --force    build even if validation found errors
+//   node build.js --hash X   print the hash of X (for ADMIN_PASSWORD_HASH
+//                            in src/js/unlocks.js), without building
 //
 // Edit the files under src/, never docs/index.html directly — it is
 // generated and gets overwritten. Media assets (maps, scenes/, species/,
@@ -23,6 +25,7 @@
 // An unknown id stops the build, so a typo can't ship as a dead link.
 const fs = require('fs');
 const path = require('path');
+const { nameHash } = require('./src/js/hash.js');
 
 const ROOT = __dirname;
 const SRC_DIR = path.join(ROOT, 'src');
@@ -39,6 +42,7 @@ const FORCE = args.has('--force');
 // functions can call each other freely across files. A .js file in src/js/
 // that isn't listed here stops the build rather than being silently left out.
 const SCRIPT_FILES = [
+  'hash.js',
   'util.js',
   'music.js',
   'lighting.js',
@@ -228,6 +232,10 @@ function build() {
   const expandErrors = [];
   const descriptions = expandShorthand(readJson('data/descriptions.json'), expandErrors);
   const result = validate(descriptions, hotspots);
+  // Character names are validated in plain text above, then shipped to the
+  // page only as hashes (see src/js/hash.js) so they can't be read from it.
+  descriptions.GROUPS = Object.fromEntries(
+    Object.entries(descriptions.GROUPS || {}).map(([g, names]) => [g, names.map(nameHash)]));
   const errors = [...expandErrors, ...result.errors];
 
   result.warnings.forEach(w => console.warn(`warning: ${w}`));
@@ -263,4 +271,11 @@ function build() {
   console.log(`Built ${path.relative(ROOT, OUTPUT_FILE)} (${output.length} bytes)`);
 }
 
-build();
+const hashArg = process.argv.indexOf('--hash');
+if (hashArg !== -1) {
+  const word = process.argv[hashArg + 1];
+  if (!word) { console.error('usage: node build.js --hash <word>'); process.exit(1); }
+  console.log(nameHash(word));
+} else {
+  build();
+}

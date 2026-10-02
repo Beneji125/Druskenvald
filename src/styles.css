@@ -781,7 +781,6 @@
   }
   .password-error.show { display: block; }
 
-  .locked-content { display: none; }
   .locked-content.unlocked { display: block; }
 
   /* Topbar "re-enter a character's name" widget — a popover off the 👤

@@ -335,11 +335,8 @@ function renderLightingForLayer(layerKey, t) {
 // or "light mode" is on, since the darkness/moon/light animation is
 // invisible in both cases.
 const LIGHTING_FRAME_INTERVAL = 1000 / 24; // ~24fps is plenty for slow ambient motion
-
 let lightingAnimationRunning = false;
-
 let lightingAnimationStart = null;
-
 let lastLightingRenderTime = 0;
 
 // "Light mode" — fully removes the night/darkness overlay so the map is

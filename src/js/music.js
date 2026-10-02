@@ -6,15 +6,10 @@
 // order listed in build.js) after the data constants, into one <script>.
 
 const MUSIC_VOLUME_DEFAULT = 0.1;
-
 const MUSIC_MUTED_STORAGE_KEY = 'druskenvald_music_muted';
-
 const MUSIC_VOLUME_STORAGE_KEY = 'druskenvald_music_volume';
-
 const DEFAULT_TRACK_SRC = 'audio/Creaking_Bones.mp3';
-
 const DEFAULT_TRACK_TITLE = 'Creaking Bones';
-
 let musicMuted = false;
 
 function initMusic() {

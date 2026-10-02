@@ -23,7 +23,6 @@ function panelImageHtml(id, label) {
 // character, rather than leaving it showing stale locked/unlocked state
 // until the visitor closes and reopens it themselves.
 let currentOpenPanelId = null;
-
 let currentOpenPanelLabel = null;
 
 function openPanel(id, label) {
@@ -74,7 +73,6 @@ function closeSecondaryPanel(kind) {
 }
 
 function openSpeciesPanel(id) { openSecondaryPanel('species', buildSpeciesPanelContent(id)); }
-
 function closeSpeciesPanel()  { closeSecondaryPanel('species'); }
 
 function buildSpeciesPanelContent(id) {
@@ -100,7 +98,6 @@ function buildSpeciesPanelContent(id) {
 // plus an optional `body` — buildNpcPanelContent only adds a bio section
 // when one is present, rather than showing an empty one.
 function openNpcPanel(id) { openSecondaryPanel('npc', buildNpcPanelContent(id)); }
-
 function closeNpcPanel()  { closeSecondaryPanel('npc'); }
 
 function buildNpcPanelContent(id) {
@@ -182,7 +179,6 @@ function buildPanelContent(id, label) {
   if (lore.species) {
     html += buildPasswordSection(id);
   }
-
   return html;
 }
 
