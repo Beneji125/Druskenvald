@@ -530,6 +530,42 @@
       "image": "npc/NPC_The_Phantom_Trainhopper.webp",
       "location": "wm_ghostlight_express",
       "body": "<p class=\"panel-body\">A phantom that rides the outside of the Ghostlight Express, breaking in through the windows and letting the wailing Shroud pour inside.</p>"
+    },
+    "charlotte": {
+      "name": "Charlotte Murdoch",
+      "image": "npc/NPC_Charlotte_Murdoch.webp"
+    },
+    "fen": {
+      "name": "Fen Sorn",
+      "image": "npc/NPC_Fen_Sorn.webp"
+    },
+    "geneva": {
+      "name": "Geneva Fairchild",
+      "image": "npc/NPC_Geneva_Fairchild.webp"
+    },
+    "lavender": {
+      "name": "Lavender Aster",
+      "image": "npc/NPC_Lavender_Aster.webp"
+    },
+    "margaret": {
+      "name": "Margaret Currant",
+      "image": "npc/NPC_Margaret_Currant.webp"
+    },
+    "owen": {
+      "name": "Owen Fell",
+      "image": "npc/NPC_Owen_Fell.webp"
+    },
+    "rose": {
+      "name": "Rose Somerton",
+      "image": "npc/NPC_Rose_Somerton.webp"
+    },
+    "rue": {
+      "name": "Rue Marsh",
+      "image": "npc/NPC_Rue_Marsh.webp"
+    },
+    "sofia": {
+      "name": "Sofia Roderick",
+      "image": "npc/NPC_Sofia_Roderick.webp"
     }
   },
   "WM_SCENES": {

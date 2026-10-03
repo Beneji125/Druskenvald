@@ -110,6 +110,12 @@ are moved to `source-assets/originals/`, never deleted, and references in
 `src/` are updated automatically. The two maps and the cover image are
 left untouched.
 
+To **update** an existing image or track, either replace its master in
+`source-assets/originals/` (same name) or drop the new version into `docs/`
+under the same name as before — then run the same two commands. The script
+rebuilds the published copy; it spots changed masters through
+`source-assets/originals/manifest.json`, so commit that file too.
+
 ## Building
 
 ```
