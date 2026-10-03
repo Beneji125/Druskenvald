@@ -71,9 +71,8 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
-  Unmet creatures show only as a blurred shadow, and unmet legendary
-  monsters as a plain "?" (their art isn't even loaded). Link to one from
-  lore with `{{creature:id}}`.
+  Creatures a group hasn't met don't appear at all (only a count of how
+  many remain unseen). Link to one from lore with `{{creature:id}}`.
 - **Rogues' Gallery:** fills itself — an NPC appears once they're
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if

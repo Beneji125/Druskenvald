@@ -1,8 +1,7 @@
 // The Codex (📜): a full-screen book over the map with three tabs —
-//   Bestiary         every creature (BESTIARY, data/bestiary.json); ones the
-//                    visitor's group has met are shown, the rest as dark
-//                    "???" silhouettes. Tag who has met what in each
-//                    entry's `groups` list.
+//   Bestiary         the creatures (BESTIARY, data/bestiary.json) the
+//                    visitor's group has met; the rest aren't shown at all.
+//                    Tag who has met what in each entry's `groups` list.
 //   Rogues' Gallery  portraits of the people met in lore the visitor can
 //                    read, grouped by location (each NPC's `location`).
 //   Chronicle        the group's unlocked Wickermoor story, in chapter order
@@ -122,40 +121,32 @@ function notRecognizedHint() {
 }
 
 // ── Bestiary ──────────────────────────────────────────────────────
+// Only creatures the visitor's group has met appear — nothing at all
+// (name, art or outline) for the rest, just a count of how many remain.
 function bestiaryHtml() {
   const ids = Object.keys(BESTIARY);
-  const metCount = ids.filter(hasMetCreature).length;
-  let html = `<p class="codex-intro">Your party has encountered <strong>${metCount}</strong> of the ${ids.length} creatures known to stalk Druskenvald.</p>`;
+  const met = ids.filter(hasMetCreature);
+  const unseen = ids.length - met.length;
+  let html = `<p class="codex-intro">Every horror your party has faced and lived to describe.</p>`;
   html += notRecognizedHint();
 
   ['legendary', 'monster', 'familiar'].forEach(kind => {
-    const inKind = ids.filter(id => BESTIARY[id].kind === kind);
+    const inKind = met.filter(id => BESTIARY[id].kind === kind);
     if (!inKind.length) return;
     html += `<h3 class="codex-section-title">${CREATURE_KIND_LABELS[kind].section}</h3><div class="codex-grid">`;
     inKind.forEach(id => {
       const c = BESTIARY[id];
       const img = (c.images || [])[0];
-      if (hasMetCreature(id)) {
-        html += `<button class="codex-card" data-creature="${escHtml(id)}">
-          ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
-          <span class="codex-card-name">${escHtml(c.name)}</span>
-        </button>`;
-      } else {
-        // Name and text stay out of the page. Ordinary creatures show only
-        // a heavily blurred shadow — a hint of size, not of shape; legendary
-        // monsters show nothing at all (not even their image is loaded), so
-        // a party can't recognise a boss before they've faced it.
-        const shadow = img && kind !== 'legendary'
-          ? `<img src="${img}" alt="" loading="lazy" decoding="async">`
-          : `<div class="codex-card-mystery" aria-hidden="true">?</div>`;
-        html += `<div class="codex-card unmet" aria-label="Unknown creature">
-          ${shadow}
-          <span class="codex-card-name">???</span>
-        </div>`;
-      }
+      html += `<button class="codex-card" data-creature="${escHtml(id)}">
+        ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
+        <span class="codex-card-name">${escHtml(c.name)}</span>
+      </button>`;
     });
     html += `</div>`;
   });
+
+  if (!met.length) html += `<p class="codex-note">Nothing has crossed your path yet… that you know of.</p>`;
+  if (unseen > 0) html += `<p class="codex-note">${unseen} ${unseen === 1 ? 'creature still lurks' : 'creatures still lurk'} unseen in the dark.</p>`;
   return html;
 }
 
