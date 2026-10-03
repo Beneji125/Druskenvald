@@ -63,7 +63,10 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   (or that has changed since) get a pulsing outline until opened.
 - **The Codex (📜):** Bestiary, Rogues' Gallery and Chronicle (see below).
 - **Lighting:** the 🌙 button cycles night, dusk and day (no darkness).
-- **Touch:** first tap on a place shows its name, second tap opens it.
+- **Phones:** in portrait the map opens zoomed to fill the screen (swipe
+  to explore, pinch out for the whole map, ⟲ to return). First tap on a
+  place shows its name, second tap opens it; double-tap empty map to zoom
+  in. Swipe a panel back the way it came in to close it.
 - **Keyboard:** Tab moves between places on the map, Enter opens, Escape
   closes the top-most panel.
 
@@ -71,9 +74,8 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
-  Unmet creatures show only as a blurred shadow, and unmet legendary
-  monsters as a plain "?" (their art isn't even loaded). Link to one from
-  lore with `{{creature:id}}`.
+  Creatures a group hasn't met don't appear at all (only a count of how
+  many remain unseen). Link to one from lore with `{{creature:id}}`.
 - **Rogues' Gallery:** fills itself — an NPC appears once they're
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if
@@ -107,6 +109,12 @@ music is re-encoded at LAME V0 with embedded cover art stripped. Originals
 are moved to `source-assets/originals/`, never deleted, and references in
 `src/` are updated automatically. The two maps and the cover image are
 left untouched.
+
+To **update** an existing image or track, either replace its master in
+`source-assets/originals/` (same name) or drop the new version into `docs/`
+under the same name as before — then run the same two commands. The script
+rebuilds the published copy; it spots changed masters through
+`source-assets/originals/manifest.json`, so commit that file too.
 
 ## Building
 

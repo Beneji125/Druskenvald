@@ -398,16 +398,25 @@
      candle-like pulse of the outline, drawing the eye without shouting.
      Reduced-motion visitors get a steady outline instead (see the
      prefers-reduced-motion block). */
-  .hotspot-poly.is-new {
-    stroke: rgb(232,213,163);
-    stroke-width: 2;
-    fill: rgba(232,213,163,0.03);
-    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+  /* The outlines live in their own overlay (see refreshHotspots in
+     js/map.js) and only the overlay's opacity animates — the GPU fades the
+     already-drawn layer instead of the map graphic repainting every frame. */
+  .new-lore-overlay { pointer-events: none; display: none; }
+  .new-lore-overlay.has-new {
+    display: block;
+    will-change: opacity;
     animation: new-lore-pulse 3.2s ease-in-out infinite;
   }
+  .new-lore-outline {
+    fill: rgba(232,213,163,0.03);
+    stroke: rgb(232,213,163);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+  }
   @keyframes new-lore-pulse {
-    0%, 100% { stroke-opacity: 0.25; }
-    50%      { stroke-opacity: 0.8; }
+    0%, 100% { opacity: 0.25; }
+    50%      { opacity: 0.8; }
   }
 
   /* Tooltip for SVG hotspots */
@@ -1039,28 +1048,6 @@
     margin-top: 0.45rem;
     line-height: 1.3;
   }
-  /* Creatures not yet met: a black silhouette with a faint gold edge. */
-  .codex-card.unmet { cursor: default; opacity: 0.7; }
-  /* Unmet creatures: a shadow blurred past recognition, with a faint glow
-     — enough to sense something there, not enough to tell what. The image
-     is drawn smaller than its box so the blur stays inside the card. */
-  .codex-card.unmet img {
-    filter: brightness(0) blur(14px) drop-shadow(0 0 10px rgba(201,169,110,0.35));
-    transform: scale(0.7);
-    opacity: 0.85;
-  }
-  /* Unmet legendary monsters: no shadow at all, just a smouldering sigil. */
-  .codex-card-mystery {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 2.6rem;
-    color: rgba(160,77,60,0.55);
-    text-shadow: 0 0 18px rgba(160,77,60,0.6);
-    background: radial-gradient(circle, rgba(122,59,46,0.18), transparent 65%);
-  }
-  .codex-card.unmet .codex-card-name { color: var(--gold-dim); letter-spacing: 0.3em; }
 
   .chronicle { list-style: none; margin: 1.2rem 0 0; padding: 0; }
   .chronicle-chapter {
@@ -1402,6 +1389,17 @@
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
     .music-player { flex-basis: calc(100% - 210px); }
+    /* Phones on their side: the map leaves empty strips at the sides, so
+       the zoom buttons stack into the right-hand strip instead of
+       covering the map art. */
+    #zoom-controls { flex-direction: column; bottom: auto; top: 50%; transform: translateY(-50%); gap: 0.3rem; }
+    .zoom-btn { width: 40px; height: 40px; }
+    .zoom-controls-divider {
+      width: 40px;
+      height: 1px;
+      margin: 0.1rem 0;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1412,7 +1410,7 @@
     }
     /* An infinite animation shortened to 0.01ms would flicker — show the
        "new lore" outline steadily instead. */
-    .hotspot-poly.is-new { animation: none; stroke-opacity: 0.8; }
+    .new-lore-overlay.has-new { animation: none; opacity: 0.8; }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */
@@ -2179,6 +2177,42 @@ const NPCS = {
     "image": "npc/NPC_The_Phantom_Trainhopper.webp",
     "location": "wm_ghostlight_express",
     "body": "<p class=\"panel-body\">A phantom that rides the outside of the Ghostlight Express, breaking in through the windows and letting the wailing Shroud pour inside.</p>"
+  },
+  "charlotte": {
+    "name": "Charlotte Murdoch",
+    "image": "npc/NPC_Charlotte_Murdoch.webp"
+  },
+  "fen": {
+    "name": "Fen Sorn",
+    "image": "npc/NPC_Fen_Sorn.webp"
+  },
+  "geneva": {
+    "name": "Geneva Fairchild",
+    "image": "npc/NPC_Geneva_Fairchild.webp"
+  },
+  "lavender": {
+    "name": "Lavender Aster",
+    "image": "npc/NPC_Lavender_Aster.webp"
+  },
+  "margaret": {
+    "name": "Margaret Currant",
+    "image": "npc/NPC_Margaret_Currant.webp"
+  },
+  "owen": {
+    "name": "Owen Fell",
+    "image": "npc/NPC_Owen_Fell.webp"
+  },
+  "rose": {
+    "name": "Rose Somerton",
+    "image": "npc/NPC_Rose_Somerton.webp"
+  },
+  "rue": {
+    "name": "Rue Marsh",
+    "image": "npc/NPC_Rue_Marsh.webp"
+  },
+  "sofia": {
+    "name": "Sofia Roderick",
+    "image": "npc/NPC_Sofia_Roderick.webp"
   }
 };
 
@@ -5507,25 +5541,29 @@ const MAP_LAYERS = {
   },
 };
 
+// The darkness and tint canvases are drawn at a fraction of the map's
+// resolution and stretched to full size by CSS. Everything on them is soft
+// (gradients and blurred glows), so the difference can't be seen — but it
+// cuts the pixels repainted and re-uploaded to the GPU every frame ~9x,
+// which was most of what the animation cost (the drawing code itself is
+// cheap; pushing two full 3000px canvases to the screen 24 times a second
+// was not). Drawing still happens in map coordinates: each frame sets a
+// matching scale transform first.
+const LIGHTING_RESOLUTION = 1 / 3;
+
 // One-time canvas buffer sizing — separate from the per-frame render so the
 // animation loop doesn't need to touch canvas.width/height every tick.
 function setupCanvasSizes() {
   Object.values(MAP_LAYERS).forEach(layer => {
-    const lightingCanvas = document.getElementById(layer.lightingCanvasId);
-    if (lightingCanvas) {
-      lightingCanvas.width  = layer.CW;
-      lightingCanvas.height = layer.CH;
-    }
-    const tintCanvas = document.getElementById(layer.tintCanvasId);
-    if (tintCanvas) {
-      tintCanvas.width  = layer.CW;
-      tintCanvas.height = layer.CH;
-    }
-    const hoverCanvas = document.getElementById(layer.hoverCanvasId);
-    if (hoverCanvas) {
-      hoverCanvas.width  = layer.CW;
-      hoverCanvas.height = layer.CH;
-    }
+    [layer.lightingCanvasId, layer.tintCanvasId].forEach(id => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      canvas.width  = Math.round(layer.CW * LIGHTING_RESOLUTION);
+      canvas.height = Math.round(layer.CH * LIGHTING_RESOLUTION);
+    });
+    // The hover reveal canvas draws the map art itself, so it needs full
+    // resolution — it's sized on first use instead (see showProvinceReveal),
+    // so a map nobody hovers over never allocates its ~23 MB buffer.
   });
 }
 
@@ -5566,7 +5604,7 @@ function shapeBoundsFromD(d) {
 // in the darkness) without touching blurPx/tier, since more blur alone
 // dilutes a small shape's peak opacity instead of just widening it (see the
 // blurPx comment in setupLightFlicker).
-function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1) {
+function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1, res = LIGHTING_RESOLUTION) {
   const b = shapeBoundsFromD(d);
   const cx = (b.minX + b.maxX) / 2;
   const cy = (b.minY + b.maxY) / 2;
@@ -5578,22 +5616,54 @@ function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1) {
   const x1 = Math.min(CW, Math.ceil(cx + halfW + pad));
   const y1 = Math.min(CH, Math.ceil(cy + halfH + pad));
 
+  // Rendered at the lighting canvases' reduced resolution (`res`); x/y/w/h
+  // say where it goes in map coordinates.
   const off = document.createElement('canvas');
-  off.width = Math.max(1, x1 - x0);
-  off.height = Math.max(1, y1 - y0);
+  off.width = Math.max(1, Math.ceil((x1 - x0) * res));
+  off.height = Math.max(1, Math.ceil((y1 - y0) * res));
   const octx = off.getContext('2d');
+  octx.scale(res, res);
   octx.translate(-x0, -y0);
   if (scale !== 1) {
     octx.translate(cx, cy);
     octx.scale(scale, scale);
     octx.translate(-cx, -cy);
   }
-  octx.filter = `blur(${blurPx}px)`;
+  octx.filter = `blur(${blurPx * res}px)`; // filter radius is in canvas pixels
   octx.fillStyle = fillStyle;
   octx.fill(new Path2D(d));
 
-  return { canvas: off, x: x0, y: y0 };
+  return { canvas: off, x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
+
+// A light's soft round glow, pre-rendered once as a small sprite instead of
+// building a new radial gradient for every light on every frame. `stops`
+// are [offset, alpha] pairs; the flicker is applied per frame through
+// globalAlpha, which scales every stop together exactly as the old
+// per-frame gradients did. Sprites are shared between lights with the same
+// size and colour.
+const glowSpriteCache = new Map();
+
+function glowSprite(radius, rgb, stops) {
+  const key = `${radius}|${rgb}|${stops}`;
+  if (glowSpriteCache.has(key)) return glowSpriteCache.get(key);
+  const px = Math.max(2, Math.ceil(radius * LIGHTING_RESOLUTION));
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = px * 2;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createRadialGradient(px, px, 0, px, px, px);
+  stops.forEach(([offset, alpha]) => g.addColorStop(offset, `rgba(${rgb},${alpha})`));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, px * 2, px * 2);
+  glowSpriteCache.set(key, canvas);
+  return canvas;
+}
+
+const TIER_RADIUS_MULT = { capital: 2.6, minor: 2.0, flavor: 1.8 };
+const TIER_STRENGTH    = { capital: 0.9, minor: 0.75, flavor: 0.65 };
+const DARK_GLOW_STOPS  = [[0, 1], [0.3, 0.75], [0.65, 0.35], [1, 0]];
+// Tint falls from a0 at the centre to a1 = a0 × 0.039/0.094 at 60%.
+const TINT_GLOW_STOPS  = [[0, 1], [0.6, 0.039 / 0.094], [1, 0]];
 
 // Assigns each light (across every map layer) its own randomized (but fixed
 // for the session) flicker parameters, so all the torches/hearths/lanterns
@@ -5628,6 +5698,12 @@ function setupLightFlicker() {
         const { r: cr, g: cg, b: cb } = light._rgb;
         light._glowDark = buildShapeGlowCache(light.shape, blur, 'rgba(0,0,0,1)', layer.CW, layer.CH, scale);
         light._glowTint = buildShapeGlowCache(light.shape, blur * 0.55, `rgba(${cr},${cg},${cb},1)`, layer.CW, layer.CH, scale);
+      } else {
+        const { r: cr, g: cg, b: cb } = light._rgb;
+        light._darkR = light.r * (TIER_RADIUS_MULT[light.tier] ?? 1.8);
+        light._tintR = light._darkR * 0.55;
+        light._darkSprite = glowSprite(light._darkR, '0,0,0', DARK_GLOW_STOPS);
+        light._tintSprite = glowSprite(light._tintR, `${cr},${cg},${cb}`, TINT_GLOW_STOPS);
       }
     });
   });
@@ -5660,6 +5736,8 @@ function renderLightingForLayer(layerKey, t) {
   const canvas = document.getElementById(layer.lightingCanvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  // Draw in map coordinates onto the reduced-resolution buffer.
+  ctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
 
   ctx.clearRect(0, 0, CW, CH);
 
@@ -5717,32 +5795,18 @@ function renderLightingForLayer(layerKey, t) {
   // follows that outline, via the pre-rendered caches from
   // setupLightFlicker()/buildShapeGlowCache() — just a cheap drawImage
   // modulated by globalAlpha per frame, not a live blur.
-  const tierRadiusMult = { capital: 2.6, minor: 2.0, flavor: 1.8 };
-  const tierStrength   = { capital: 0.9, minor: 0.75, flavor: 0.65 };
-
   layer.lights.forEach(light => {
     const flicker = flickerMultiplier(light._flicker, t);
-    const peak = clamp01((tierStrength[light.tier] ?? 0.7) * flicker);
-
+    ctx.globalAlpha = clamp01((TIER_STRENGTH[light.tier] ?? 0.7) * flicker);
     if (light.shape) {
-      ctx.save();
-      ctx.globalAlpha = peak;
-      ctx.drawImage(light._glowDark.canvas, light._glowDark.x, light._glowDark.y);
-      ctx.restore();
-      return;
+      const c = light._glowDark;
+      ctx.drawImage(c.canvas, c.x, c.y, c.w, c.h);
+    } else {
+      const r = light._darkR;
+      ctx.drawImage(light._darkSprite, light.x - r, light.y - r, r * 2, r * 2);
     }
-
-    const r = light.r * (tierRadiusMult[light.tier] ?? 1.8);
-    const g = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, r);
-    g.addColorStop(0,    `rgba(0,0,0,${peak.toFixed(3)})`);
-    g.addColorStop(0.3,  `rgba(0,0,0,${(peak * 0.75).toFixed(3)})`);
-    g.addColorStop(0.65, `rgba(0,0,0,${(peak * 0.35).toFixed(3)})`);
-    g.addColorStop(1,    'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(light.x, light.y, r, 0, Math.PI * 2);
-    ctx.fill();
   });
+  ctx.globalAlpha = 1;
 
   // Step 3 — reset composite mode (this canvas is reused every frame, and
   // Step 1 of the *next* frame needs a plain fillRect, not one still under
@@ -5765,6 +5829,7 @@ function renderLightingForLayer(layerKey, t) {
   const tintCanvas = document.getElementById(layer.tintCanvasId);
   if (!tintCanvas) return;
   const tctx = tintCanvas.getContext('2d');
+  tctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
   tctx.clearRect(0, 0, CW, CH);
 
   const tintMult = layer.tintMultiplier ?? 1;
@@ -5776,36 +5841,26 @@ function renderLightingForLayer(layerKey, t) {
     if (light.tintExempt) return;
 
     const flicker = flickerMultiplier(light._flicker, t);
-    const { r: cr, g: cg, b: cb } = light._rgb;
-    const a0 = clamp01(0.094 * flicker * tintMult);
-
+    tctx.globalAlpha = clamp01(0.094 * flicker * tintMult);
     if (light.shape) {
-      tctx.save();
-      tctx.globalAlpha = a0;
-      tctx.drawImage(light._glowTint.canvas, light._glowTint.x, light._glowTint.y);
-      tctx.restore();
-      return;
+      const c = light._glowTint;
+      tctx.drawImage(c.canvas, c.x, c.y, c.w, c.h);
+    } else {
+      const r = light._tintR;
+      tctx.drawImage(light._tintSprite, light.x - r, light.y - r, r * 2, r * 2);
     }
-
-    const r = light.r * (tierRadiusMult[light.tier] ?? 1.8) * 0.55;
-    const a1 = clamp01(0.039 * flicker * tintMult);
-    const g = tctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, r);
-    g.addColorStop(0,   `rgba(${cr},${cg},${cb},${a0.toFixed(3)})`);
-    g.addColorStop(0.6, `rgba(${cr},${cg},${cb},${a1.toFixed(3)})`);
-    g.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
-    tctx.fillStyle = g;
-    tctx.beginPath();
-    tctx.arc(light.x, light.y, r, 0, Math.PI * 2);
-    tctx.fill();
   });
+  tctx.globalAlpha = 1;
 }
 
 // Throttled requestAnimationFrame loop driving renderLightingForLayer() for
 // whichever map layer is currently active. Pauses (skips redraws, but keeps
-// ticking so it resumes smoothly) whenever the tab isn't in the foreground
-// or "light mode" is on, since the darkness/moon/light animation is
-// invisible in both cases.
-const LIGHTING_FRAME_INTERVAL = 1000 / 24; // ~24fps is plenty for slow ambient motion
+// ticking so it resumes smoothly) whenever the tab isn't in the foreground,
+// "light mode" is on, or the Codex covers the map, since the
+// darkness/moon/light animation is invisible in all three cases.
+// The flicker's fastest wave is under 2 cycles a second, so 15fps still
+// reads as smooth firelight at well under the cost of 24.
+const LIGHTING_FRAME_INTERVAL = 1000 / 15;
 let lightingAnimationRunning = false;
 let lightingAnimationStart = null;
 let lastLightingRenderTime = 0;
@@ -5861,12 +5916,13 @@ function setLightingMode(mode) {
   if (lightModeOn) {
     Object.values(MAP_LAYERS).forEach(layer => {
       const canvas = document.getElementById(layer.lightingCanvasId);
-      if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      // (Reset the frame's scale transform first, or only part would clear.)
+      if (canvas) { const c = canvas.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, canvas.width, canvas.height); }
       // Otherwise this stays frozen with whatever colour patches it last
       // had — the render loop (which normally repaints it every frame)
       // returns early while light mode is on.
       const tintCanvas = document.getElementById(layer.tintCanvasId);
-      if (tintCanvas) tintCanvas.getContext('2d').clearRect(0, 0, tintCanvas.width, tintCanvas.height);
+      if (tintCanvas) { const c = tintCanvas.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, tintCanvas.width, tintCanvas.height); }
     });
   }
   // Night/dusk need no explicit redraw here — the animation loop picks up
@@ -5878,6 +5934,8 @@ function lightingAnimationTick(timestamp) {
 
   if (document.hidden) return;
   if (lightModeOn) return;
+  // The Codex covers the whole map — nothing to animate behind it.
+  if (typeof isCodexOpen === 'function' && isCodexOpen()) return;
   if (timestamp - lastLightingRenderTime < LIGHTING_FRAME_INTERVAL) return;
 
   lastLightingRenderTime = timestamp;
@@ -5916,8 +5974,9 @@ function showProvinceReveal(layerKey, dString) {
     hoverRevealHideTimeouts[layerKey] = null;
   }
 
-  const ctx = hc.getContext('2d');
   const CW = layer.CW, CH = layer.CH;
+  if (hc.width !== CW || hc.height !== CH) { hc.width = CW; hc.height = CH; }
+  const ctx = hc.getContext('2d');
 
   ctx.clearRect(0, 0, CW, CH);
   ctx.save();
@@ -6073,13 +6132,51 @@ function setupHotspotDisarm() {
 // Re-labels every hotspot for the current recognition state (a locked
 // Wickermoor location is announced as "Unknown location", not its name)
 // and flags any with lore the visitor hasn't read yet (see isNewLore).
+//
+// The pulsing "new" outlines are copies drawn into a separate overlay <svg>
+// per map (newLoreOverlay), and it's that whole overlay whose opacity
+// pulses. Animating the hotspot paths themselves forced the browser to
+// repaint the entire full-size map graphic on every animation frame; fading
+// one overlay layer is handled by the GPU without repainting anything.
 function refreshHotspots() {
+  const newPaths = { main: [], wickermoor: [] };
   hotspotEls.forEach(({ layerKey, hs, path }) => {
     const label = hotspotLabel(layerKey, hs);
     path.setAttribute('aria-label', label === '???' ? 'Unknown location' : label);
     const isNew = hs.isWickermoor ? anyNewWickermoorLore() : isNewLore(hs.id);
-    path.classList.toggle('is-new', isNew);
+    path.classList.toggle('is-new', isNew); // marker only; drawn by the overlay
+    if (isNew) newPaths[layerKey].push(hs.d);
   });
+  Object.entries(newPaths).forEach(([layerKey, ds]) => {
+    const overlay = newLoreOverlay(layerKey);
+    if (!overlay) return;
+    overlay.replaceChildren(...ds.map(d => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('class', 'new-lore-outline');
+      return p;
+    }));
+    overlay.classList.toggle('has-new', ds.length > 0);
+  });
+}
+
+// The overlay for a map layer, created on first use just beneath that
+// layer's clickable hotspot <svg> (same viewBox, so the outlines line up;
+// pointer-events off, so clicks still reach the hotspots).
+function newLoreOverlay(layerKey) {
+  const id = `new-lore-${layerKey}`;
+  let overlay = document.getElementById(id);
+  if (overlay) return overlay;
+  const hotspotSvg = document.getElementById(layerKey === 'wickermoor' ? 'hotspots-wickermoor-svg' : 'hotspots-main-svg');
+  if (!hotspotSvg) return null;
+  overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  overlay.id = id;
+  overlay.setAttribute('class', 'hotspot-svg new-lore-overlay');
+  overlay.setAttribute('viewBox', hotspotSvg.getAttribute('viewBox'));
+  overlay.setAttribute('preserveAspectRatio', hotspotSvg.getAttribute('preserveAspectRatio'));
+  overlay.setAttribute('aria-hidden', 'true');
+  hotspotSvg.before(overlay);
+  return overlay;
 }
 
 // ── Zoom & pan ─────────────────────────────────────────────────
@@ -6111,15 +6208,45 @@ function getZoomLayerEl(key) {
   return document.getElementById(key === 'wickermoor' ? 'zoom-layer-wickermoor' : 'zoom-layer-main');
 }
 
+// Where the map art itself sits at zoom 1: the zoom layer fills the whole
+// viewport and the image is "contain"-fitted inside it, so on a screen
+// whose shape doesn't match the map's there's empty space on two sides.
+function mapFitBox(key) {
+  const wrapper = document.getElementById('map-wrapper');
+  const W = wrapper.clientWidth, H = wrapper.clientHeight;
+  const { CW, CH } = MAP_LAYERS[key];
+  const fit = Math.min(W / CW, H / CH);
+  const mw = CW * fit, mh = CH * fit;
+  return { W, H, mw, mh, offX: (W - mw) / 2, offY: (H - mh) / 2 };
+}
+
+// Keeps the map art itself (not the empty space around it) in view: along
+// an axis where the zoomed map is narrower than the screen it's centred;
+// where it's wider, it can be dragged no further than its own edges.
+function clampAxis(t, scale, view, size, offset) {
+  const shown = size * scale;
+  if (shown <= view) return (view - shown) / 2 - offset * scale;
+  return clampNum(t, view - shown - offset * scale, -offset * scale);
+}
+
 function clampPan(key) {
   const wrapper = document.getElementById('map-wrapper');
-  const state = zoomState[key];
   if (!wrapper) return;
-  const w = wrapper.clientWidth, h = wrapper.clientHeight;
-  const minTx = Math.min(0, w - w * state.scale);
-  const minTy = Math.min(0, h - h * state.scale);
-  state.tx = clampNum(state.tx, minTx, 0);
-  state.ty = clampNum(state.ty, minTy, 0);
+  const state = zoomState[key];
+  const b = mapFitBox(key);
+  state.tx = clampAxis(state.tx, state.scale, b.W, b.mw, b.offX);
+  state.ty = clampAxis(state.ty, state.scale, b.H, b.mh, b.offY);
+}
+
+// The "home" view a map opens at (and ⟲ returns to). Normally the whole
+// map. On a portrait phone that would leave the map a thin strip with most
+// of the screen empty, so it opens zoomed to fill the screen's height
+// instead — swipe sideways to explore, pinch out to see all of it.
+function homeScale(key) {
+  const b = mapFitBox(key);
+  const portraitPhone = b.H > b.W && window.matchMedia('(max-width: 760px)').matches;
+  const cover = Math.max(b.W / b.mw, b.H / b.mh);
+  return portraitPhone && cover > 1.25 ? Math.min(cover, ZOOM_MAX) : 1;
 }
 
 function applyZoomTransform(key) {
@@ -6129,8 +6256,24 @@ function applyZoomTransform(key) {
   el.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
 }
 
+// Back to the home view, centred. `atHome` lets a rotation or resize
+// re-fit a map the visitor hasn't moved, without undoing one they have.
 function resetZoomState(key) {
-  zoomState[key] = { scale: 1, tx: 0, ty: 0 };
+  const wrapper = document.getElementById('map-wrapper');
+  if (!wrapper || !wrapper.clientWidth) {
+    zoomState[key] = { scale: 1, tx: 0, ty: 0, atHome: true };
+    applyZoomTransform(key);
+    return;
+  }
+  const b = mapFitBox(key);
+  const scale = homeScale(key);
+  zoomState[key] = {
+    scale,
+    tx: (b.W - b.mw * scale) / 2 - b.offX * scale,
+    ty: (b.H - b.mh * scale) / 2 - b.offY * scale,
+    atHome: true,
+  };
+  clampPan(key);
   applyZoomTransform(key);
 }
 
@@ -6145,6 +6288,7 @@ function zoomAtPoint(key, factor, px, py) {
   state.tx = px - contentX * newScale;
   state.ty = py - contentY * newScale;
   state.scale = newScale;
+  state.atHome = false;
 
   clampPan(key);
   applyZoomTransform(key);
@@ -6167,6 +6311,8 @@ function resetZoomView() {
 function initZoomPan() {
   const wrapper = document.getElementById('map-wrapper');
   if (!wrapper) return;
+  resetZoomState('main');
+  resetZoomState('wickermoor');
 
   wrapper.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -6239,6 +6385,7 @@ function initZoomPan() {
       const state = zoomState[key];
       state.tx += dx;
       state.ty += dy;
+      state.atHome = false;
       clampPan(key);
       applyZoomTransform(key);
     }
@@ -6246,8 +6393,29 @@ function initZoomPan() {
     drag.lastY = e.clientY;
   });
 
+  // Double-tap on an empty part of the map (not a location) zooms in 2x
+  // around that spot, or back to the home view once fully zoomed in.
+  let lastTap = null;
+  function handleTap(e) {
+    if (e.pointerType !== 'touch' || e.target.closest?.('.hotspot-poly')) { lastTap = null; return; }
+    const now = performance.now();
+    if (lastTap && now - lastTap.time < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30) {
+      lastTap = null;
+      const key = getActiveMapKey();
+      if (zoomState[key].scale >= ZOOM_MAX * 0.95) {
+        resetZoomState(key);
+      } else {
+        const rect = wrapper.getBoundingClientRect();
+        zoomAtPoint(key, 2, e.clientX - rect.left, e.clientY - rect.top);
+      }
+      return;
+    }
+    lastTap = { time: now, x: e.clientX, y: e.clientY };
+  }
+
   function endPointer(e) {
     if (!pointers.has(e.pointerId)) return;
+    if (pointers.size === 1 && !gestureMoved && e.type === 'pointerup') handleTap(e);
     pointers.delete(e.pointerId);
     if (wrapper.hasPointerCapture?.(e.pointerId)) wrapper.releasePointerCapture(e.pointerId);
     if (pointers.size === 1) {
@@ -6270,10 +6438,14 @@ function initZoomPan() {
   wrapper.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
-    clampPan('main');
-    applyZoomTransform('main');
-    clampPan('wickermoor');
-    applyZoomTransform('wickermoor');
+    ['main', 'wickermoor'].forEach(key => {
+      if (zoomState[key].atHome) {
+        resetZoomState(key);
+      } else {
+        clampPan(key);
+        applyZoomTransform(key);
+      }
+    });
   });
 }
 
@@ -6746,6 +6918,32 @@ function buildWMContent(id, label) {
     ${passwordSection.html}
   `;
 }
+
+// ── Swipe to close (touch) ────────────────────────────────────────
+// A quick sideways swipe closes a panel in the direction it slid in from:
+// the lore panel (from the right) with a swipe right, the species/NPC/
+// creature panels (from the left) with a swipe left. Mostly-vertical
+// movement is left alone, so scrolling the text never closes anything.
+function enableSwipeToClose(panelId, direction, close) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  let start = null;
+  panel.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    start = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, time: performance.now() } : null;
+  }, { passive: true });
+  panel.addEventListener('touchend', e => {
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    const quick = performance.now() - start.time < 700;
+    start = null;
+    if (quick && Math.sign(dx) === direction && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) close();
+  }, { passive: true });
+}
+
+enableSwipeToClose('lore-panel', 1, () => closePanel());
+SECONDARY_PANELS.forEach(kind => enableSwipeToClose(`${kind}-panel`, -1, () => closeSecondaryPanel(kind)));
 
 // ─── src/js/unlocks.js ──────────────────────────────────────────────
 // Group-based unlocking: recognizing a character name (or the admin
@@ -7370,10 +7568,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── src/js/codex.js ────────────────────────────────────────────────
 // The Codex (📜): a full-screen book over the map with three tabs —
-//   Bestiary         every creature (BESTIARY, data/bestiary.json); ones the
-//                    visitor's group has met are shown, the rest as dark
-//                    "???" silhouettes. Tag who has met what in each
-//                    entry's `groups` list.
+//   Bestiary         the creatures (BESTIARY, data/bestiary.json) the
+//                    visitor's group has met; the rest aren't shown at all.
+//                    Tag who has met what in each entry's `groups` list.
 //   Rogues' Gallery  portraits of the people met in lore the visitor can
 //                    read, grouped by location (each NPC's `location`).
 //   Chronicle        the group's unlocked Wickermoor story, in chapter order
@@ -7493,40 +7690,32 @@ function notRecognizedHint() {
 }
 
 // ── Bestiary ──────────────────────────────────────────────────────
+// Only creatures the visitor's group has met appear — nothing at all
+// (name, art or outline) for the rest, just a count of how many remain.
 function bestiaryHtml() {
   const ids = Object.keys(BESTIARY);
-  const metCount = ids.filter(hasMetCreature).length;
-  let html = `<p class="codex-intro">Your party has encountered <strong>${metCount}</strong> of the ${ids.length} creatures known to stalk Druskenvald.</p>`;
+  const met = ids.filter(hasMetCreature);
+  const unseen = ids.length - met.length;
+  let html = `<p class="codex-intro">Every horror your party has faced and lived to describe.</p>`;
   html += notRecognizedHint();
 
   ['legendary', 'monster', 'familiar'].forEach(kind => {
-    const inKind = ids.filter(id => BESTIARY[id].kind === kind);
+    const inKind = met.filter(id => BESTIARY[id].kind === kind);
     if (!inKind.length) return;
     html += `<h3 class="codex-section-title">${CREATURE_KIND_LABELS[kind].section}</h3><div class="codex-grid">`;
     inKind.forEach(id => {
       const c = BESTIARY[id];
       const img = (c.images || [])[0];
-      if (hasMetCreature(id)) {
-        html += `<button class="codex-card" data-creature="${escHtml(id)}">
-          ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
-          <span class="codex-card-name">${escHtml(c.name)}</span>
-        </button>`;
-      } else {
-        // Name and text stay out of the page. Ordinary creatures show only
-        // a heavily blurred shadow — a hint of size, not of shape; legendary
-        // monsters show nothing at all (not even their image is loaded), so
-        // a party can't recognise a boss before they've faced it.
-        const shadow = img && kind !== 'legendary'
-          ? `<img src="${img}" alt="" loading="lazy" decoding="async">`
-          : `<div class="codex-card-mystery" aria-hidden="true">?</div>`;
-        html += `<div class="codex-card unmet" aria-label="Unknown creature">
-          ${shadow}
-          <span class="codex-card-name">???</span>
-        </div>`;
-      }
+      html += `<button class="codex-card" data-creature="${escHtml(id)}">
+        ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
+        <span class="codex-card-name">${escHtml(c.name)}</span>
+      </button>`;
     });
     html += `</div>`;
   });
+
+  if (!met.length) html += `<p class="codex-note">Nothing has crossed your path yet… that you know of.</p>`;
+  if (unseen > 0) html += `<p class="codex-note">${unseen} ${unseen === 1 ? 'creature still lurks' : 'creatures still lurk'} unseen in the dark.</p>`;
   return html;
 }
 

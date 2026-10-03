@@ -126,13 +126,51 @@ function setupHotspotDisarm() {
 // Re-labels every hotspot for the current recognition state (a locked
 // Wickermoor location is announced as "Unknown location", not its name)
 // and flags any with lore the visitor hasn't read yet (see isNewLore).
+//
+// The pulsing "new" outlines are copies drawn into a separate overlay <svg>
+// per map (newLoreOverlay), and it's that whole overlay whose opacity
+// pulses. Animating the hotspot paths themselves forced the browser to
+// repaint the entire full-size map graphic on every animation frame; fading
+// one overlay layer is handled by the GPU without repainting anything.
 function refreshHotspots() {
+  const newPaths = { main: [], wickermoor: [] };
   hotspotEls.forEach(({ layerKey, hs, path }) => {
     const label = hotspotLabel(layerKey, hs);
     path.setAttribute('aria-label', label === '???' ? 'Unknown location' : label);
     const isNew = hs.isWickermoor ? anyNewWickermoorLore() : isNewLore(hs.id);
-    path.classList.toggle('is-new', isNew);
+    path.classList.toggle('is-new', isNew); // marker only; drawn by the overlay
+    if (isNew) newPaths[layerKey].push(hs.d);
   });
+  Object.entries(newPaths).forEach(([layerKey, ds]) => {
+    const overlay = newLoreOverlay(layerKey);
+    if (!overlay) return;
+    overlay.replaceChildren(...ds.map(d => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('class', 'new-lore-outline');
+      return p;
+    }));
+    overlay.classList.toggle('has-new', ds.length > 0);
+  });
+}
+
+// The overlay for a map layer, created on first use just beneath that
+// layer's clickable hotspot <svg> (same viewBox, so the outlines line up;
+// pointer-events off, so clicks still reach the hotspots).
+function newLoreOverlay(layerKey) {
+  const id = `new-lore-${layerKey}`;
+  let overlay = document.getElementById(id);
+  if (overlay) return overlay;
+  const hotspotSvg = document.getElementById(layerKey === 'wickermoor' ? 'hotspots-wickermoor-svg' : 'hotspots-main-svg');
+  if (!hotspotSvg) return null;
+  overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  overlay.id = id;
+  overlay.setAttribute('class', 'hotspot-svg new-lore-overlay');
+  overlay.setAttribute('viewBox', hotspotSvg.getAttribute('viewBox'));
+  overlay.setAttribute('preserveAspectRatio', hotspotSvg.getAttribute('preserveAspectRatio'));
+  overlay.setAttribute('aria-hidden', 'true');
+  hotspotSvg.before(overlay);
+  return overlay;
 }
 
 // ── Zoom & pan ─────────────────────────────────────────────────
@@ -164,15 +202,45 @@ function getZoomLayerEl(key) {
   return document.getElementById(key === 'wickermoor' ? 'zoom-layer-wickermoor' : 'zoom-layer-main');
 }
 
+// Where the map art itself sits at zoom 1: the zoom layer fills the whole
+// viewport and the image is "contain"-fitted inside it, so on a screen
+// whose shape doesn't match the map's there's empty space on two sides.
+function mapFitBox(key) {
+  const wrapper = document.getElementById('map-wrapper');
+  const W = wrapper.clientWidth, H = wrapper.clientHeight;
+  const { CW, CH } = MAP_LAYERS[key];
+  const fit = Math.min(W / CW, H / CH);
+  const mw = CW * fit, mh = CH * fit;
+  return { W, H, mw, mh, offX: (W - mw) / 2, offY: (H - mh) / 2 };
+}
+
+// Keeps the map art itself (not the empty space around it) in view: along
+// an axis where the zoomed map is narrower than the screen it's centred;
+// where it's wider, it can be dragged no further than its own edges.
+function clampAxis(t, scale, view, size, offset) {
+  const shown = size * scale;
+  if (shown <= view) return (view - shown) / 2 - offset * scale;
+  return clampNum(t, view - shown - offset * scale, -offset * scale);
+}
+
 function clampPan(key) {
   const wrapper = document.getElementById('map-wrapper');
-  const state = zoomState[key];
   if (!wrapper) return;
-  const w = wrapper.clientWidth, h = wrapper.clientHeight;
-  const minTx = Math.min(0, w - w * state.scale);
-  const minTy = Math.min(0, h - h * state.scale);
-  state.tx = clampNum(state.tx, minTx, 0);
-  state.ty = clampNum(state.ty, minTy, 0);
+  const state = zoomState[key];
+  const b = mapFitBox(key);
+  state.tx = clampAxis(state.tx, state.scale, b.W, b.mw, b.offX);
+  state.ty = clampAxis(state.ty, state.scale, b.H, b.mh, b.offY);
+}
+
+// The "home" view a map opens at (and ⟲ returns to). Normally the whole
+// map. On a portrait phone that would leave the map a thin strip with most
+// of the screen empty, so it opens zoomed to fill the screen's height
+// instead — swipe sideways to explore, pinch out to see all of it.
+function homeScale(key) {
+  const b = mapFitBox(key);
+  const portraitPhone = b.H > b.W && window.matchMedia('(max-width: 760px)').matches;
+  const cover = Math.max(b.W / b.mw, b.H / b.mh);
+  return portraitPhone && cover > 1.25 ? Math.min(cover, ZOOM_MAX) : 1;
 }
 
 function applyZoomTransform(key) {
@@ -182,8 +250,24 @@ function applyZoomTransform(key) {
   el.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
 }
 
+// Back to the home view, centred. `atHome` lets a rotation or resize
+// re-fit a map the visitor hasn't moved, without undoing one they have.
 function resetZoomState(key) {
-  zoomState[key] = { scale: 1, tx: 0, ty: 0 };
+  const wrapper = document.getElementById('map-wrapper');
+  if (!wrapper || !wrapper.clientWidth) {
+    zoomState[key] = { scale: 1, tx: 0, ty: 0, atHome: true };
+    applyZoomTransform(key);
+    return;
+  }
+  const b = mapFitBox(key);
+  const scale = homeScale(key);
+  zoomState[key] = {
+    scale,
+    tx: (b.W - b.mw * scale) / 2 - b.offX * scale,
+    ty: (b.H - b.mh * scale) / 2 - b.offY * scale,
+    atHome: true,
+  };
+  clampPan(key);
   applyZoomTransform(key);
 }
 
@@ -198,6 +282,7 @@ function zoomAtPoint(key, factor, px, py) {
   state.tx = px - contentX * newScale;
   state.ty = py - contentY * newScale;
   state.scale = newScale;
+  state.atHome = false;
 
   clampPan(key);
   applyZoomTransform(key);
@@ -220,6 +305,8 @@ function resetZoomView() {
 function initZoomPan() {
   const wrapper = document.getElementById('map-wrapper');
   if (!wrapper) return;
+  resetZoomState('main');
+  resetZoomState('wickermoor');
 
   wrapper.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -292,6 +379,7 @@ function initZoomPan() {
       const state = zoomState[key];
       state.tx += dx;
       state.ty += dy;
+      state.atHome = false;
       clampPan(key);
       applyZoomTransform(key);
     }
@@ -299,8 +387,29 @@ function initZoomPan() {
     drag.lastY = e.clientY;
   });
 
+  // Double-tap on an empty part of the map (not a location) zooms in 2x
+  // around that spot, or back to the home view once fully zoomed in.
+  let lastTap = null;
+  function handleTap(e) {
+    if (e.pointerType !== 'touch' || e.target.closest?.('.hotspot-poly')) { lastTap = null; return; }
+    const now = performance.now();
+    if (lastTap && now - lastTap.time < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30) {
+      lastTap = null;
+      const key = getActiveMapKey();
+      if (zoomState[key].scale >= ZOOM_MAX * 0.95) {
+        resetZoomState(key);
+      } else {
+        const rect = wrapper.getBoundingClientRect();
+        zoomAtPoint(key, 2, e.clientX - rect.left, e.clientY - rect.top);
+      }
+      return;
+    }
+    lastTap = { time: now, x: e.clientX, y: e.clientY };
+  }
+
   function endPointer(e) {
     if (!pointers.has(e.pointerId)) return;
+    if (pointers.size === 1 && !gestureMoved && e.type === 'pointerup') handleTap(e);
     pointers.delete(e.pointerId);
     if (wrapper.hasPointerCapture?.(e.pointerId)) wrapper.releasePointerCapture(e.pointerId);
     if (pointers.size === 1) {
@@ -323,10 +432,14 @@ function initZoomPan() {
   wrapper.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
-    clampPan('main');
-    applyZoomTransform('main');
-    clampPan('wickermoor');
-    applyZoomTransform('wickermoor');
+    ['main', 'wickermoor'].forEach(key => {
+      if (zoomState[key].atHome) {
+        resetZoomState(key);
+      } else {
+        clampPan(key);
+        applyZoomTransform(key);
+      }
+    });
   });
 }
 
