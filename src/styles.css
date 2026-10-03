@@ -193,7 +193,7 @@
 
   /* Waveform seek bar — a static, decorative bar pattern (not derived from
      the actual audio) that fills in left-to-right as the track plays; see
-     buildWaveformBars()/updateWaveformProgress() in app.js. Click or drag
+     buildWaveformBars()/updateWaveformProgress() in js/music.js. Click or drag
      anywhere on it to seek. */
   .music-waveform {
     width: 110px;
@@ -242,7 +242,7 @@
 
   /* Reset-to-default-track button — same show/hide pattern as #back-btn:
      hidden until a location track is actually playing (see
-     toggleLocationTrack/resetToDefaultTrack in app.js), since there's
+     toggleLocationTrack/resetToDefaultTrack in js/music.js), since there's
      nothing to "return" to otherwise. */
   #music-reset-btn {
     display: none;
@@ -359,9 +359,28 @@
     transition: fill 0.2s ease, stroke 0.2s ease;
     vector-effect: non-scaling-stroke;
   }
-  .hotspot-poly:hover {
+  .hotspot-poly:hover,
+  .hotspot-poly:focus-visible {
     fill: rgba(201,169,110,0.16);
     stroke: rgba(201,169,110,0.5);
+  }
+  .hotspot-poly:focus { outline: none; }
+  .hotspot-poly:focus-visible { stroke-width: 2; }
+
+  /* Lore the visitor hasn't read yet (or that's changed since) — a slow,
+     candle-like pulse of the outline, drawing the eye without shouting.
+     Reduced-motion visitors get a steady outline instead (see the
+     prefers-reduced-motion block). */
+  .hotspot-poly.is-new {
+    stroke: rgb(232,213,163);
+    stroke-width: 2;
+    fill: rgba(232,213,163,0.03);
+    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+    animation: new-lore-pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes new-lore-pulse {
+    0%, 100% { stroke-opacity: 0.25; }
+    50%      { stroke-opacity: 0.8; }
   }
 
   /* Tooltip for SVG hotspots */
@@ -421,6 +440,26 @@
   }
   #panel-close:hover { color: var(--cream); }
 
+  /* Copy-link button, just left of the close button. */
+  #panel-link {
+    position: absolute;
+    top: 1rem; right: 3.25rem;
+    background: none; border: none;
+    color: var(--gold-dim); font-size: 0.95rem;
+    cursor: pointer; z-index: 2;
+    width: 2rem; height: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+    /* Tint the (blue) emoji toward the panel's gold palette. */
+    filter: grayscale(1) sepia(0.8) brightness(1.1);
+    transition: opacity 0.2s;
+  }
+  #panel-link:hover { opacity: 1; }
+
+  /* Panel contents take focus when a panel opens (for screen readers and
+     keyboard scrolling) — no visible ring needed on the whole panel. */
+  #panel-content:focus, #species-panel-content:focus, #npc-panel-content:focus, #creature-panel-content:focus { outline: none; }
+
   #panel-content {
     flex: 1;
     overflow-y: auto;
@@ -443,7 +482,8 @@
 
   /* ─── SPECIES PANEL (secondary panel, slides in from the left) ──── */
   #species-panel,
-  #npc-panel {
+  #npc-panel,
+  #creature-panel {
     position: fixed;
     top: 0; left: 0;
     width: min(420px, 100vw);
@@ -458,10 +498,12 @@
     overflow: hidden;
   }
   #species-panel.open,
-  #npc-panel.open { transform: translateX(0); }
+  #npc-panel.open,
+  #creature-panel.open { transform: translateX(0); }
 
   #species-panel-close,
-  #npc-panel-close {
+  #npc-panel-close,
+  #creature-panel-close {
     position: absolute;
     top: 1rem; right: 1rem;
     background: none; border: none;
@@ -473,10 +515,12 @@
     font-family: 'Cinzel', serif;
   }
   #species-panel-close:hover,
-  #npc-panel-close:hover { color: var(--cream); }
+  #npc-panel-close:hover,
+  #creature-panel-close:hover { color: var(--cream); }
 
   #species-panel-content,
-  #npc-panel-content {
+  #npc-panel-content,
+  #creature-panel-content {
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem 1.8rem 2rem;
@@ -484,14 +528,18 @@
     scrollbar-color: var(--oak) transparent;
   }
   #species-panel-content::-webkit-scrollbar,
-  #npc-panel-content::-webkit-scrollbar { width: 4px; }
+  #npc-panel-content::-webkit-scrollbar,
+  #creature-panel-content::-webkit-scrollbar { width: 4px; }
   #species-panel-content::-webkit-scrollbar-track,
-  #npc-panel-content::-webkit-scrollbar-track { background: transparent; }
+  #npc-panel-content::-webkit-scrollbar-track,
+  #creature-panel-content::-webkit-scrollbar-track { background: transparent; }
   #species-panel-content::-webkit-scrollbar-thumb,
-  #npc-panel-content::-webkit-scrollbar-thumb { background: var(--oak); border-radius: 2px; }
+  #npc-panel-content::-webkit-scrollbar-thumb,
+  #creature-panel-content::-webkit-scrollbar-thumb { background: var(--oak); border-radius: 2px; }
 
   #species-overlay,
-  #npc-overlay {
+  #npc-overlay,
+  #creature-overlay {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.5);
     z-index: 51;
@@ -499,10 +547,11 @@
     transition: opacity 0.3s;
   }
   #species-overlay.show,
-  #npc-overlay.show { opacity: 1; pointer-events: all; }
+  #npc-overlay.show,
+  #creature-overlay.show { opacity: 1; pointer-events: all; }
 
   /* Clickable NPC name mentioned inline in a Wickermoor location/being's
-     own lore text (see openNpcPanel in app.js) — same visual treatment as
+     own lore text (see openNpcPanel in js/panels.js) — same visual treatment as
      .species-link in province lore, so both read as "this is a clickable
      term" consistently across the whole site. */
   .npc-link {
@@ -512,6 +561,20 @@
     transition: color 0.2s;
   }
   .npc-link:hover { color: var(--crimson-lt); }
+  .creature-link {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+  .creature-link:hover { color: var(--gold); }
+  .species-link:focus-visible,
+  .npc-link:focus-visible,
+  .creature-link:focus-visible {
+    outline: 1px dashed var(--gold-dim);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 
   /* ─── PANEL TYPOGRAPHY ─────────────────────────────────────── */
   .panel-eyebrow {
@@ -775,7 +838,6 @@
   }
   .password-error.show { display: block; }
 
-  .locked-content { display: none; }
   .locked-content.unlocked { display: block; }
 
   /* Topbar "re-enter a character's name" widget — a popover off the 👤
@@ -801,6 +863,324 @@
   #reenter-name-prompt.open { display: flex; }
   #reenter-name-prompt .password-input { flex: 1 1 auto; min-width: 0; }
   #reenter-name-prompt .password-error { flex-basis: 100%; margin-top: 0; }
+
+  #identity-status {
+    flex-basis: 100%;
+    font-family: 'IM Fell English', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    line-height: 1.4;
+  }
+  #forget-me-btn { background: transparent; border: 1px solid var(--oak); color: var(--cream-dim); }
+  #forget-me-btn:hover { background: rgba(122,59,46,0.35); }
+
+  /* A small lit "candle" on the 👤 button once a character is recognized. */
+  #reenter-name-btn { position: relative; }
+  #reenter-name-btn.recognized::after {
+    content: '';
+    position: absolute;
+    top: 3px; right: 3px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  /* ─── THE CODEX (📜 full-screen book) ─────────────────────────── */
+  #codex {
+    position: fixed; inset: 0;
+    z-index: 45;
+    display: flex; flex-direction: column;
+    background: radial-gradient(ellipse at top, #1c1610 0%, #0f0c08 55%, #0a0806 100%);
+    opacity: 0; visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease, visibility 0s linear 0.35s;
+  }
+  #codex.open {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  #codex-close {
+    position: absolute;
+    top: max(1rem, env(safe-area-inset-top)); right: max(1rem, env(safe-area-inset-right));
+    background: none; border: none;
+    color: var(--gold-dim); font-size: 1.2rem;
+    cursor: pointer; z-index: 2;
+    width: 44px; height: 44px;
+    font-family: 'Cinzel', serif;
+  }
+  #codex-close:hover { color: var(--cream); }
+  .codex-header {
+    flex-shrink: 0;
+    text-align: center;
+    padding: max(1.4rem, env(safe-area-inset-top)) 3.5rem 0;
+  }
+  .codex-header .panel-eyebrow { margin-bottom: 0.8rem; }
+  .codex-tabs {
+    display: inline-flex; flex-wrap: wrap; justify-content: center;
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .codex-tab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: none; border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .codex-tab:hover { color: var(--gold); }
+  .codex-tab.active { color: var(--cream); border-bottom-color: var(--crimson-lt); }
+  .codex-tab:focus-visible { outline: 1px dashed var(--gold-dim); outline-offset: 2px; }
+  #codex-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.4rem max(1.5rem, calc((100% - 1040px) / 2)) max(2.5rem, env(safe-area-inset-bottom));
+    scrollbar-width: thin;
+    scrollbar-color: var(--oak) transparent;
+  }
+  #codex-content:focus { outline: none; }
+  .codex-intro {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    color: var(--cream-dim);
+    text-align: center;
+    font-size: 1.05rem;
+    margin: 0 auto 0.4rem;
+    max-width: 640px;
+  }
+  .codex-intro strong { color: var(--gold); font-style: normal; }
+  .codex-hint, .codex-note {
+    font-family: 'IM Fell English', serif;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    text-align: center;
+    margin: 0.4rem auto 0;
+  }
+  .codex-section-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 400;
+    font-size: 0.8rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 2rem 0 0.9rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .codex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 0.9rem;
+    margin-top: 1.2rem;
+  }
+  .codex-section-title + .codex-grid { margin-top: 0; }
+  .codex-card {
+    display: flex; flex-direction: column; align-items: stretch;
+    background: rgba(28,22,16,0.7);
+    border: 1px solid var(--oak);
+    padding: 0.5rem 0.5rem 0.6rem;
+    cursor: pointer;
+    color: var(--cream);
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  }
+  button.codex-card:hover, button.codex-card:focus-visible {
+    border-color: var(--gold-dim);
+    background: rgba(201,169,110,0.06);
+    transform: translateY(-2px);
+    outline: none;
+  }
+  .codex-card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: radial-gradient(circle, rgba(201,169,110,0.07), transparent 70%);
+  }
+  .codex-grid.portraits .codex-card img { aspect-ratio: 3 / 4; object-fit: cover; object-position: top; }
+  .codex-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-align: center;
+    margin-top: 0.45rem;
+    line-height: 1.3;
+  }
+  /* Creatures not yet met: a black silhouette with a faint gold edge. */
+  .codex-card.unmet { cursor: default; opacity: 0.7; }
+  /* Unmet creatures: a shadow blurred past recognition, with a faint glow
+     — enough to sense something there, not enough to tell what. The image
+     is drawn smaller than its box so the blur stays inside the card. */
+  .codex-card.unmet img {
+    filter: brightness(0) blur(14px) drop-shadow(0 0 10px rgba(201,169,110,0.35));
+    transform: scale(0.7);
+    opacity: 0.85;
+  }
+  /* Unmet legendary monsters: no shadow at all, just a smouldering sigil. */
+  .codex-card-mystery {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 2.6rem;
+    color: rgba(160,77,60,0.55);
+    text-shadow: 0 0 18px rgba(160,77,60,0.6);
+    background: radial-gradient(circle, rgba(122,59,46,0.18), transparent 65%);
+  }
+  .codex-card.unmet .codex-card-name { color: var(--gold-dim); letter-spacing: 0.3em; }
+
+  .chronicle { list-style: none; margin: 1.2rem 0 0; padding: 0; }
+  .chronicle-chapter {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--crimson-lt);
+    margin: 1.8rem 0 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .chronicle-entry {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 1.1rem;
+    padding: 0.8rem 0;
+  }
+  .chronicle-entry + .chronicle-entry { border-top: 1px dashed rgba(61,42,26,0.6); }
+  .chronicle-art {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border: 1px solid var(--oak);
+  }
+  .chronicle-art.blank { background: radial-gradient(circle, #1c1610, #0d0a07); }
+  .chronicle-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.05rem;
+    color: var(--cream);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  }
+  .chronicle-tag {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 0.05rem 0.35rem;
+  }
+  .chronicle-excerpt {
+    font-family: 'IM Fell English', serif;
+    color: var(--cream-dim);
+    line-height: 1.6;
+    margin: 0.35rem 0 0.5rem;
+  }
+  .chronicle-read {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: none;
+    border: 1px solid var(--gold-dim);
+    padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  .chronicle-read:hover, .chronicle-read:focus-visible { background: rgba(201,169,110,0.08); }
+  .chronicle-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  .chronicle-actions .wm-track-player { margin: 0; }
+
+  /* Rumour shown on a locked Wickermoor panel (WM_TEASERS). */
+  .rumour { margin: 0.4rem 0 1.2rem; text-align: center; }
+  .rumour blockquote {
+    margin: 0;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--cream-dim);
+  }
+  .rumour figcaption {
+    margin-top: 0.4rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  /* ─── SEARCH INDEX (🔍 popover) ───────────────────────────────── */
+  #index-widget { position: relative; }
+  #index-popover {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 20;
+    width: 300px;
+    max-height: min(70vh, 560px);
+    flex-direction: column;
+    background: var(--panel-bg);
+    border: 1px solid var(--gold-dim);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+  }
+  #index-popover.open { display: flex; }
+  #index-filter { flex: 0 0 auto; margin: 0.7rem; }
+  #index-results {
+    overflow-y: auto;
+    padding: 0 0.7rem 0.7rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--oak) transparent;
+  }
+  .index-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 0.8rem 0 0.3rem;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid var(--oak);
+  }
+  .index-section-title:first-child { margin-top: 0; }
+  .index-item {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%;
+    background: none; border: none;
+    color: var(--cream);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.95rem;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    padding: 0.3rem 0.4rem;
+    cursor: pointer;
+  }
+  .index-item:hover, .index-item:focus-visible { background: rgba(201,169,110,0.08); color: var(--gold); outline: none; }
+  .index-new {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--gold);
+    padding: 0.05rem 0.35rem;
+  }
+  .index-note {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--cream-dim);
+    opacity: 0.75;
+    padding: 0.3rem 0.4rem;
+  }
 
   /* ─── WICKERMOOR AMBIENCE TRACK PLAYER ────────────────────────── */
   .wm-track-player { margin: 0.8rem 0; }
@@ -902,12 +1282,22 @@
     }
     .music-player {
       order: 3;
-      flex: 1 1 calc(100% - 48px);
+      /* room for three 40px buttons plus the gaps between them */
+      flex: 1 1 calc(100% - 160px);
       min-width: 0;
       gap: 0.35rem;
       padding: 0.2rem 0.35rem;
     }
-    #reenter-name-widget { order: 4; flex: 0 0 44px; }
+    #codex-btn { order: 4; flex: 0 0 40px; }
+    #index-widget { order: 5; flex: 0 0 40px; }
+    #reenter-name-widget { order: 6; flex: 0 0 40px; }
+
+    .codex-header { padding-left: 1rem; padding-right: 3.2rem; text-align: left; }
+    .codex-tab { padding: 0.55rem 0.5rem; letter-spacing: 0.1em; font-size: 0.68rem; }
+    #codex-content { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+    .codex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
+    .chronicle-entry { grid-template-columns: 96px 1fr; gap: 0.8rem; }
+    .codex-tab, .chronicle-read { min-height: 44px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;
       min-height: 40px;
@@ -917,6 +1307,22 @@
     .music-waveform { flex: 1 1 70px; min-width: 50px; width: auto; }
     .music-now-playing { max-width: 82px; }
     .music-time { font-size: 0.55rem; width: 6.1em; }
+    #index-popover {
+      position: fixed;
+      top: auto;
+      right: max(0.6rem, env(safe-area-inset-right));
+      bottom: max(0.6rem, env(safe-area-inset-bottom));
+      left: max(0.6rem, env(safe-area-inset-left));
+      width: auto;
+      max-height: 70dvh;
+      z-index: 70;
+    }
+    #panel-link {
+      top: max(0.5rem, env(safe-area-inset-top));
+      right: calc(max(0.5rem, env(safe-area-inset-right)) + 48px);
+      width: 44px;
+      height: 44px;
+    }
     #reenter-name-prompt {
       position: fixed;
       top: auto;
@@ -940,13 +1346,13 @@
       background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
     }
 
-    #lore-panel, #species-panel, #npc-panel { width: 100vw; }
-    #panel-content, #species-panel-content, #npc-panel-content {
+    #lore-panel, #species-panel, #npc-panel, #creature-panel { width: 100vw; }
+    #panel-content, #species-panel-content, #npc-panel-content, #creature-panel-content {
       padding: max(1.25rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
     }
-    #panel-close, #species-panel-close, #npc-panel-close {
+    #panel-close, #species-panel-close, #npc-panel-close, #creature-panel-close {
       top: max(0.5rem, env(safe-area-inset-top));
       right: max(0.5rem, env(safe-area-inset-right));
       width: 44px;
@@ -954,7 +1360,7 @@
     }
     .password-input { font-size: 16px; min-width: 0; }
     .password-btn, .wm-track-btn { min-height: 44px; }
-    .species-link, .npc-link { text-underline-offset: 4px; }
+    .species-link, .npc-link, .creature-link { text-underline-offset: 4px; }
   }
 
   @media (max-width: 430px) {
@@ -968,7 +1374,7 @@
     .title-main { font-size: clamp(2rem, 10vh, 3.2rem); }
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
-    .music-player { flex-basis: calc(100% - 92px); }
+    .music-player { flex-basis: calc(100% - 210px); }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -977,6 +1383,9 @@
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
+    /* An infinite animation shortened to 0.01ms would flicker — show the
+       "new lore" outline steadily instead. */
+    .hotspot-poly.is-new { animation: none; stroke-opacity: 0.8; }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */
