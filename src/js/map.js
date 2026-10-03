@@ -126,13 +126,51 @@ function setupHotspotDisarm() {
 // Re-labels every hotspot for the current recognition state (a locked
 // Wickermoor location is announced as "Unknown location", not its name)
 // and flags any with lore the visitor hasn't read yet (see isNewLore).
+//
+// The pulsing "new" outlines are copies drawn into a separate overlay <svg>
+// per map (newLoreOverlay), and it's that whole overlay whose opacity
+// pulses. Animating the hotspot paths themselves forced the browser to
+// repaint the entire full-size map graphic on every animation frame; fading
+// one overlay layer is handled by the GPU without repainting anything.
 function refreshHotspots() {
+  const newPaths = { main: [], wickermoor: [] };
   hotspotEls.forEach(({ layerKey, hs, path }) => {
     const label = hotspotLabel(layerKey, hs);
     path.setAttribute('aria-label', label === '???' ? 'Unknown location' : label);
     const isNew = hs.isWickermoor ? anyNewWickermoorLore() : isNewLore(hs.id);
-    path.classList.toggle('is-new', isNew);
+    path.classList.toggle('is-new', isNew); // marker only; drawn by the overlay
+    if (isNew) newPaths[layerKey].push(hs.d);
   });
+  Object.entries(newPaths).forEach(([layerKey, ds]) => {
+    const overlay = newLoreOverlay(layerKey);
+    if (!overlay) return;
+    overlay.replaceChildren(...ds.map(d => {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('class', 'new-lore-outline');
+      return p;
+    }));
+    overlay.classList.toggle('has-new', ds.length > 0);
+  });
+}
+
+// The overlay for a map layer, created on first use just beneath that
+// layer's clickable hotspot <svg> (same viewBox, so the outlines line up;
+// pointer-events off, so clicks still reach the hotspots).
+function newLoreOverlay(layerKey) {
+  const id = `new-lore-${layerKey}`;
+  let overlay = document.getElementById(id);
+  if (overlay) return overlay;
+  const hotspotSvg = document.getElementById(layerKey === 'wickermoor' ? 'hotspots-wickermoor-svg' : 'hotspots-main-svg');
+  if (!hotspotSvg) return null;
+  overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  overlay.id = id;
+  overlay.setAttribute('class', 'hotspot-svg new-lore-overlay');
+  overlay.setAttribute('viewBox', hotspotSvg.getAttribute('viewBox'));
+  overlay.setAttribute('preserveAspectRatio', hotspotSvg.getAttribute('preserveAspectRatio'));
+  overlay.setAttribute('aria-hidden', 'true');
+  hotspotSvg.before(overlay);
+  return overlay;
 }
 
 // ── Zoom & pan ─────────────────────────────────────────────────

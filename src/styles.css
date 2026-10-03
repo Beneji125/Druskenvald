@@ -371,16 +371,25 @@
      candle-like pulse of the outline, drawing the eye without shouting.
      Reduced-motion visitors get a steady outline instead (see the
      prefers-reduced-motion block). */
-  .hotspot-poly.is-new {
-    stroke: rgb(232,213,163);
-    stroke-width: 2;
-    fill: rgba(232,213,163,0.03);
-    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+  /* The outlines live in their own overlay (see refreshHotspots in
+     js/map.js) and only the overlay's opacity animates — the GPU fades the
+     already-drawn layer instead of the map graphic repainting every frame. */
+  .new-lore-overlay { pointer-events: none; display: none; }
+  .new-lore-overlay.has-new {
+    display: block;
+    will-change: opacity;
     animation: new-lore-pulse 3.2s ease-in-out infinite;
   }
+  .new-lore-outline {
+    fill: rgba(232,213,163,0.03);
+    stroke: rgb(232,213,163);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 3px rgba(232,213,163,0.6));
+  }
   @keyframes new-lore-pulse {
-    0%, 100% { stroke-opacity: 0.25; }
-    50%      { stroke-opacity: 0.8; }
+    0%, 100% { opacity: 0.25; }
+    50%      { opacity: 0.8; }
   }
 
   /* Tooltip for SVG hotspots */
@@ -1012,28 +1021,6 @@
     margin-top: 0.45rem;
     line-height: 1.3;
   }
-  /* Creatures not yet met: a black silhouette with a faint gold edge. */
-  .codex-card.unmet { cursor: default; opacity: 0.7; }
-  /* Unmet creatures: a shadow blurred past recognition, with a faint glow
-     — enough to sense something there, not enough to tell what. The image
-     is drawn smaller than its box so the blur stays inside the card. */
-  .codex-card.unmet img {
-    filter: brightness(0) blur(14px) drop-shadow(0 0 10px rgba(201,169,110,0.35));
-    transform: scale(0.7);
-    opacity: 0.85;
-  }
-  /* Unmet legendary monsters: no shadow at all, just a smouldering sigil. */
-  .codex-card-mystery {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 2.6rem;
-    color: rgba(160,77,60,0.55);
-    text-shadow: 0 0 18px rgba(160,77,60,0.6);
-    background: radial-gradient(circle, rgba(122,59,46,0.18), transparent 65%);
-  }
-  .codex-card.unmet .codex-card-name { color: var(--gold-dim); letter-spacing: 0.3em; }
 
   .chronicle { list-style: none; margin: 1.2rem 0 0; padding: 0; }
   .chronicle-chapter {
@@ -1385,7 +1372,7 @@
     }
     /* An infinite animation shortened to 0.01ms would flicker — show the
        "new lore" outline steadily instead. */
-    .hotspot-poly.is-new { animation: none; stroke-opacity: 0.8; }
+    .new-lore-overlay.has-new { animation: none; opacity: 0.8; }
   }
 
   /* ─── CORNER ORNAMENTS ─────────────────────────────────────── */

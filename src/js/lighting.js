@@ -45,25 +45,29 @@ const MAP_LAYERS = {
   },
 };
 
+// The darkness and tint canvases are drawn at a fraction of the map's
+// resolution and stretched to full size by CSS. Everything on them is soft
+// (gradients and blurred glows), so the difference can't be seen — but it
+// cuts the pixels repainted and re-uploaded to the GPU every frame ~9x,
+// which was most of what the animation cost (the drawing code itself is
+// cheap; pushing two full 3000px canvases to the screen 24 times a second
+// was not). Drawing still happens in map coordinates: each frame sets a
+// matching scale transform first.
+const LIGHTING_RESOLUTION = 1 / 3;
+
 // One-time canvas buffer sizing — separate from the per-frame render so the
 // animation loop doesn't need to touch canvas.width/height every tick.
 function setupCanvasSizes() {
   Object.values(MAP_LAYERS).forEach(layer => {
-    const lightingCanvas = document.getElementById(layer.lightingCanvasId);
-    if (lightingCanvas) {
-      lightingCanvas.width  = layer.CW;
-      lightingCanvas.height = layer.CH;
-    }
-    const tintCanvas = document.getElementById(layer.tintCanvasId);
-    if (tintCanvas) {
-      tintCanvas.width  = layer.CW;
-      tintCanvas.height = layer.CH;
-    }
-    const hoverCanvas = document.getElementById(layer.hoverCanvasId);
-    if (hoverCanvas) {
-      hoverCanvas.width  = layer.CW;
-      hoverCanvas.height = layer.CH;
-    }
+    [layer.lightingCanvasId, layer.tintCanvasId].forEach(id => {
+      const canvas = document.getElementById(id);
+      if (!canvas) return;
+      canvas.width  = Math.round(layer.CW * LIGHTING_RESOLUTION);
+      canvas.height = Math.round(layer.CH * LIGHTING_RESOLUTION);
+    });
+    // The hover reveal canvas draws the map art itself, so it needs full
+    // resolution — it's sized on first use instead (see showProvinceReveal),
+    // so a map nobody hovers over never allocates its ~23 MB buffer.
   });
 }
 
@@ -104,7 +108,7 @@ function shapeBoundsFromD(d) {
 // in the darkness) without touching blurPx/tier, since more blur alone
 // dilutes a small shape's peak opacity instead of just widening it (see the
 // blurPx comment in setupLightFlicker).
-function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1) {
+function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1, res = LIGHTING_RESOLUTION) {
   const b = shapeBoundsFromD(d);
   const cx = (b.minX + b.maxX) / 2;
   const cy = (b.minY + b.maxY) / 2;
@@ -116,22 +120,54 @@ function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1) {
   const x1 = Math.min(CW, Math.ceil(cx + halfW + pad));
   const y1 = Math.min(CH, Math.ceil(cy + halfH + pad));
 
+  // Rendered at the lighting canvases' reduced resolution (`res`); x/y/w/h
+  // say where it goes in map coordinates.
   const off = document.createElement('canvas');
-  off.width = Math.max(1, x1 - x0);
-  off.height = Math.max(1, y1 - y0);
+  off.width = Math.max(1, Math.ceil((x1 - x0) * res));
+  off.height = Math.max(1, Math.ceil((y1 - y0) * res));
   const octx = off.getContext('2d');
+  octx.scale(res, res);
   octx.translate(-x0, -y0);
   if (scale !== 1) {
     octx.translate(cx, cy);
     octx.scale(scale, scale);
     octx.translate(-cx, -cy);
   }
-  octx.filter = `blur(${blurPx}px)`;
+  octx.filter = `blur(${blurPx * res}px)`; // filter radius is in canvas pixels
   octx.fillStyle = fillStyle;
   octx.fill(new Path2D(d));
 
-  return { canvas: off, x: x0, y: y0 };
+  return { canvas: off, x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
+
+// A light's soft round glow, pre-rendered once as a small sprite instead of
+// building a new radial gradient for every light on every frame. `stops`
+// are [offset, alpha] pairs; the flicker is applied per frame through
+// globalAlpha, which scales every stop together exactly as the old
+// per-frame gradients did. Sprites are shared between lights with the same
+// size and colour.
+const glowSpriteCache = new Map();
+
+function glowSprite(radius, rgb, stops) {
+  const key = `${radius}|${rgb}|${stops}`;
+  if (glowSpriteCache.has(key)) return glowSpriteCache.get(key);
+  const px = Math.max(2, Math.ceil(radius * LIGHTING_RESOLUTION));
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = px * 2;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createRadialGradient(px, px, 0, px, px, px);
+  stops.forEach(([offset, alpha]) => g.addColorStop(offset, `rgba(${rgb},${alpha})`));
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, px * 2, px * 2);
+  glowSpriteCache.set(key, canvas);
+  return canvas;
+}
+
+const TIER_RADIUS_MULT = { capital: 2.6, minor: 2.0, flavor: 1.8 };
+const TIER_STRENGTH    = { capital: 0.9, minor: 0.75, flavor: 0.65 };
+const DARK_GLOW_STOPS  = [[0, 1], [0.3, 0.75], [0.65, 0.35], [1, 0]];
+// Tint falls from a0 at the centre to a1 = a0 × 0.039/0.094 at 60%.
+const TINT_GLOW_STOPS  = [[0, 1], [0.6, 0.039 / 0.094], [1, 0]];
 
 // Assigns each light (across every map layer) its own randomized (but fixed
 // for the session) flicker parameters, so all the torches/hearths/lanterns
@@ -166,6 +202,12 @@ function setupLightFlicker() {
         const { r: cr, g: cg, b: cb } = light._rgb;
         light._glowDark = buildShapeGlowCache(light.shape, blur, 'rgba(0,0,0,1)', layer.CW, layer.CH, scale);
         light._glowTint = buildShapeGlowCache(light.shape, blur * 0.55, `rgba(${cr},${cg},${cb},1)`, layer.CW, layer.CH, scale);
+      } else {
+        const { r: cr, g: cg, b: cb } = light._rgb;
+        light._darkR = light.r * (TIER_RADIUS_MULT[light.tier] ?? 1.8);
+        light._tintR = light._darkR * 0.55;
+        light._darkSprite = glowSprite(light._darkR, '0,0,0', DARK_GLOW_STOPS);
+        light._tintSprite = glowSprite(light._tintR, `${cr},${cg},${cb}`, TINT_GLOW_STOPS);
       }
     });
   });
@@ -198,6 +240,8 @@ function renderLightingForLayer(layerKey, t) {
   const canvas = document.getElementById(layer.lightingCanvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+  // Draw in map coordinates onto the reduced-resolution buffer.
+  ctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
 
   ctx.clearRect(0, 0, CW, CH);
 
@@ -255,32 +299,18 @@ function renderLightingForLayer(layerKey, t) {
   // follows that outline, via the pre-rendered caches from
   // setupLightFlicker()/buildShapeGlowCache() — just a cheap drawImage
   // modulated by globalAlpha per frame, not a live blur.
-  const tierRadiusMult = { capital: 2.6, minor: 2.0, flavor: 1.8 };
-  const tierStrength   = { capital: 0.9, minor: 0.75, flavor: 0.65 };
-
   layer.lights.forEach(light => {
     const flicker = flickerMultiplier(light._flicker, t);
-    const peak = clamp01((tierStrength[light.tier] ?? 0.7) * flicker);
-
+    ctx.globalAlpha = clamp01((TIER_STRENGTH[light.tier] ?? 0.7) * flicker);
     if (light.shape) {
-      ctx.save();
-      ctx.globalAlpha = peak;
-      ctx.drawImage(light._glowDark.canvas, light._glowDark.x, light._glowDark.y);
-      ctx.restore();
-      return;
+      const c = light._glowDark;
+      ctx.drawImage(c.canvas, c.x, c.y, c.w, c.h);
+    } else {
+      const r = light._darkR;
+      ctx.drawImage(light._darkSprite, light.x - r, light.y - r, r * 2, r * 2);
     }
-
-    const r = light.r * (tierRadiusMult[light.tier] ?? 1.8);
-    const g = ctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, r);
-    g.addColorStop(0,    `rgba(0,0,0,${peak.toFixed(3)})`);
-    g.addColorStop(0.3,  `rgba(0,0,0,${(peak * 0.75).toFixed(3)})`);
-    g.addColorStop(0.65, `rgba(0,0,0,${(peak * 0.35).toFixed(3)})`);
-    g.addColorStop(1,    'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(light.x, light.y, r, 0, Math.PI * 2);
-    ctx.fill();
   });
+  ctx.globalAlpha = 1;
 
   // Step 3 — reset composite mode (this canvas is reused every frame, and
   // Step 1 of the *next* frame needs a plain fillRect, not one still under
@@ -303,6 +333,7 @@ function renderLightingForLayer(layerKey, t) {
   const tintCanvas = document.getElementById(layer.tintCanvasId);
   if (!tintCanvas) return;
   const tctx = tintCanvas.getContext('2d');
+  tctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
   tctx.clearRect(0, 0, CW, CH);
 
   const tintMult = layer.tintMultiplier ?? 1;
@@ -314,36 +345,26 @@ function renderLightingForLayer(layerKey, t) {
     if (light.tintExempt) return;
 
     const flicker = flickerMultiplier(light._flicker, t);
-    const { r: cr, g: cg, b: cb } = light._rgb;
-    const a0 = clamp01(0.094 * flicker * tintMult);
-
+    tctx.globalAlpha = clamp01(0.094 * flicker * tintMult);
     if (light.shape) {
-      tctx.save();
-      tctx.globalAlpha = a0;
-      tctx.drawImage(light._glowTint.canvas, light._glowTint.x, light._glowTint.y);
-      tctx.restore();
-      return;
+      const c = light._glowTint;
+      tctx.drawImage(c.canvas, c.x, c.y, c.w, c.h);
+    } else {
+      const r = light._tintR;
+      tctx.drawImage(light._tintSprite, light.x - r, light.y - r, r * 2, r * 2);
     }
-
-    const r = light.r * (tierRadiusMult[light.tier] ?? 1.8) * 0.55;
-    const a1 = clamp01(0.039 * flicker * tintMult);
-    const g = tctx.createRadialGradient(light.x, light.y, 0, light.x, light.y, r);
-    g.addColorStop(0,   `rgba(${cr},${cg},${cb},${a0.toFixed(3)})`);
-    g.addColorStop(0.6, `rgba(${cr},${cg},${cb},${a1.toFixed(3)})`);
-    g.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
-    tctx.fillStyle = g;
-    tctx.beginPath();
-    tctx.arc(light.x, light.y, r, 0, Math.PI * 2);
-    tctx.fill();
   });
+  tctx.globalAlpha = 1;
 }
 
 // Throttled requestAnimationFrame loop driving renderLightingForLayer() for
 // whichever map layer is currently active. Pauses (skips redraws, but keeps
-// ticking so it resumes smoothly) whenever the tab isn't in the foreground
-// or "light mode" is on, since the darkness/moon/light animation is
-// invisible in both cases.
-const LIGHTING_FRAME_INTERVAL = 1000 / 24; // ~24fps is plenty for slow ambient motion
+// ticking so it resumes smoothly) whenever the tab isn't in the foreground,
+// "light mode" is on, or the Codex covers the map, since the
+// darkness/moon/light animation is invisible in all three cases.
+// The flicker's fastest wave is under 2 cycles a second, so 15fps still
+// reads as smooth firelight at well under the cost of 24.
+const LIGHTING_FRAME_INTERVAL = 1000 / 15;
 let lightingAnimationRunning = false;
 let lightingAnimationStart = null;
 let lastLightingRenderTime = 0;
@@ -399,12 +420,13 @@ function setLightingMode(mode) {
   if (lightModeOn) {
     Object.values(MAP_LAYERS).forEach(layer => {
       const canvas = document.getElementById(layer.lightingCanvasId);
-      if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      // (Reset the frame's scale transform first, or only part would clear.)
+      if (canvas) { const c = canvas.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, canvas.width, canvas.height); }
       // Otherwise this stays frozen with whatever colour patches it last
       // had — the render loop (which normally repaints it every frame)
       // returns early while light mode is on.
       const tintCanvas = document.getElementById(layer.tintCanvasId);
-      if (tintCanvas) tintCanvas.getContext('2d').clearRect(0, 0, tintCanvas.width, tintCanvas.height);
+      if (tintCanvas) { const c = tintCanvas.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, tintCanvas.width, tintCanvas.height); }
     });
   }
   // Night/dusk need no explicit redraw here — the animation loop picks up
@@ -416,6 +438,8 @@ function lightingAnimationTick(timestamp) {
 
   if (document.hidden) return;
   if (lightModeOn) return;
+  // The Codex covers the whole map — nothing to animate behind it.
+  if (typeof isCodexOpen === 'function' && isCodexOpen()) return;
   if (timestamp - lastLightingRenderTime < LIGHTING_FRAME_INTERVAL) return;
 
   lastLightingRenderTime = timestamp;
@@ -454,8 +478,9 @@ function showProvinceReveal(layerKey, dString) {
     hoverRevealHideTimeouts[layerKey] = null;
   }
 
-  const ctx = hc.getContext('2d');
   const CW = layer.CW, CH = layer.CH;
+  if (hc.width !== CW || hc.height !== CH) { hc.width = CW; hc.height = CH; }
+  const ctx = hc.getContext('2d');
 
   ctx.clearRect(0, 0, CW, CH);
   ctx.save();
