@@ -165,9 +165,14 @@ function validate(data, hotspots) {
     });
   }
 
-  // Bestiary "met by" lists must name real groups.
+  // Bestiary "met by" lists must name real groups; per-picture limits must
+  // name the creature's own pictures and real groups.
   for (const [id, c] of Object.entries(data.BESTIARY || {})) {
     (c.groups || []).forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.groups: unknown group "${g}"`); });
+    for (const [src, groups] of Object.entries(c.imageGroups || {})) {
+      if (!(c.images || []).includes(src)) errors.push(`BESTIARY.${id}.imageGroups: "${src}" isn't in its images`);
+      groups.forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.imageGroups: unknown group "${g}"`); });
+    }
   }
 
   // An NPC's Rogues' Gallery location must be a real Wickermoor location.

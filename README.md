@@ -75,7 +75,11 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
   Creatures a group hasn't met don't appear at all (only a count of how
-  many remain unseen). Link to one from lore with `{{creature:id}}`.
+  many remain unseen). A creature with several forms can limit each
+  picture to the groups that met that form with `imageGroups` (see the
+  Vermin Familiar). Descriptions are written as what an onlooker would
+  know — no weaknesses, abilities or secret origins — so keep new ones
+  that way. Link to one from lore with `{{creature:id}}`.
 - **Rogues' Gallery:** fills itself — an NPC appears once they're
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if

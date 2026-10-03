@@ -35,6 +35,18 @@ function hasMetCreature(id) {
   return !!group && (c.groups || []).includes(group);
 }
 
+// A creature's pictures this visitor may see. An entry can limit a
+// picture to certain groups with `imageGroups` ({ "path": ["1", "2"] }) —
+// e.g. the Vermin Familiar's weasel, centipede and pigeon forms, so each
+// group sees only the forms it actually met. Unlisted pictures show to
+// everyone who has met the creature.
+function visibleCreatureImages(c) {
+  const limits = c.imageGroups || {};
+  if (isAdminUnlocked()) return c.images || [];
+  const group = getRecognizedGroup();
+  return (c.images || []).filter(src => !limits[src] || limits[src].includes(group));
+}
+
 // ── Creature panel ────────────────────────────────────────────────
 function buildCreaturePanelContent(id) {
   const c = BESTIARY[id];
@@ -48,7 +60,7 @@ function buildCreaturePanelContent(id) {
       <div class="panel-divider"></div>
       <p class="panel-body" style="font-style:italic; opacity:0.7;">Your party has not yet crossed paths with this creature, or lived to describe it.</p>`;
   }
-  const images = (c.images || []).map(src => imageFrameHtml(src, c.name)).join('');
+  const images = visibleCreatureImages(c).map(src => imageFrameHtml(src, c.name)).join('');
   const body = hasMeaningfulContent(c.body)
     ? c.body
     : `<p class="panel-body" style="font-style:italic; opacity:0.6;">No account of this creature has yet been recorded.</p>`;
@@ -136,7 +148,7 @@ function bestiaryHtml() {
     html += `<h3 class="codex-section-title">${CREATURE_KIND_LABELS[kind].section}</h3><div class="codex-grid">`;
     inKind.forEach(id => {
       const c = BESTIARY[id];
-      const img = (c.images || [])[0];
+      const img = visibleCreatureImages(c)[0];
       html += `<button class="codex-card" data-creature="${escHtml(id)}">
         ${img ? `<img src="${img}" alt="" loading="lazy" decoding="async">` : ''}
         <span class="codex-card-name">${escHtml(c.name)}</span>
