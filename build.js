@@ -190,6 +190,24 @@ function validate(data, hotspots) {
     if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === id)) errors.push(`WM_TEASERS.${id}: no Wickermoor hotspot has this id`);
   }
 
+  // The story timeline: real groups, real Wickermoor places, and any named
+  // beat must be a section heading in that group's write-up for that place.
+  const meaningful = h => !!(h && h.replace(/<[^>]*>/g, '').trim());
+  for (const [g, beats] of Object.entries(data.STORY_ORDER || {})) {
+    if (!GROUPS[g]) errors.push(`STORY_ORDER.${g}: unknown group`);
+    beats.forEach((b, i) => {
+      const where = `STORY_ORDER.${g}[${i}]`;
+      if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === b.place)) { errors.push(`${where}: "${b.place}" is not a Wickermoor hotspot id`); return; }
+      const rule = UNLOCKS[b.place];
+      if (!(rule === 'all' || (Array.isArray(rule) && rule.includes(g)))) warnings.push(`${where}: "${b.place}" isn't unlocked for group ${g}, so it won't show`);
+      if (!b.beat) return;
+      const entry = (data.WM_LORE || {})[b.place];
+      const text = typeof entry === 'string' ? entry : (entry && meaningful(entry.byGroup?.[g]) ? entry.byGroup[g] : entry?.default) || '';
+      const titles = [...text.matchAll(/<p class="panel-subheader">([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, '').trim());
+      if (!titles.includes(b.beat)) errors.push(`${where}: no section "${b.beat}" in group ${g}'s ${b.place} text (has: ${titles.join(' | ') || 'no headings'})`);
+    });
+  }
+
   // A character name must belong to exactly one group.
   const seenNames = {};
   for (const [groupId, names] of Object.entries(GROUPS)) {

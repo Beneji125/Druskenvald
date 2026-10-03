@@ -1038,7 +1038,8 @@
     },
     "wm_silverbell": {
       "chapter": 14,
-      "title": "The Crimson Monastery"
+      "title": "The Crimson Monastery",
+      "heading": "Along the Silverbell River"
     },
     "wm_crimson": {
       "chapter": 14,
@@ -1235,5 +1236,232 @@
       "text": "If you hear a train whistle where there are no tracks, stand very still. It isn't your stop. Not yet.",
       "source": "a mourner at the crossroads"
     }
+  },
+  "STORY_ORDER": {
+    "1": [
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "All Aboard"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "The Trainhopper"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Unfinished Business"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Lord and Lady Druskenvald"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Derailed"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Arrival"
+      },
+      {
+        "place": "wm_village",
+        "beat": "A Stone Finger"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Bad Seed"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Year Walk"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Cat Got Your Tongue?"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Cursed is the Winner"
+      },
+      {
+        "place": "wm_foxwillow",
+        "beat": "Fire in Foxwillow"
+      },
+      {
+        "place": "wm_foxwillow",
+        "beat": "What the Windmill Held"
+      },
+      {
+        "place": "wm_foxwillow",
+        "beat": "Secrets Uncovered"
+      },
+      {
+        "place": "wm_harvest_terror"
+      },
+      {
+        "place": "wm_foxwillow",
+        "beat": "The Last Song"
+      },
+      {
+        "place": "wm_murkwater",
+        "beat": "A Withered Arm"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "Need a Hand?"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "Crooked Fortune"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "Vex's Hexes"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "Alligator's Smile"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "Moonshine"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "And Stay Dead."
+      },
+      {
+        "place": "wm_murkwater",
+        "beat": "The Bayou King"
+      },
+      {
+        "place": "wm_murkwater",
+        "beat": "Screams in the Night"
+      },
+      {
+        "place": "wm_grinning_sinner"
+      },
+      {
+        "place": "wm_foxwillow",
+        "beat": "Passing Through Again"
+      },
+      {
+        "place": "wm_dawns_gate",
+        "beat": "A Familiar Face"
+      },
+      {
+        "place": "wm_dawns_gate",
+        "beat": "The Briar Public House"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "Night of Flames"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "Behind the Walls"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "The Dead Larder"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "Cromwell's Trophies"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "The Belfry"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "Into the Sanctum"
+      },
+      {
+        "place": "wm_crimson_abbot"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "The Abbot Falls"
+      },
+      {
+        "place": "wm_crimson",
+        "beat": "A Fragile Peace"
+      },
+      {
+        "place": "wm_silverbell"
+      },
+      {
+        "place": "wm_webwoods"
+      },
+      {
+        "place": "wm_moonsong"
+      },
+      {
+        "place": "wm_memorys_rest"
+      }
+    ],
+    "2": [
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "A Little Respite"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "The Trainhopper"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Unfinished Business"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Lord and Lady Druskenvald"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Derailed"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Arrival"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Play is a Deadly Thing"
+      },
+      {
+        "place": "wm_foxwillow"
+      },
+      {
+        "place": "wm_silverbell"
+      }
+    ],
+    "3": [
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "All Aboard"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "The Trainhopper"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Unfinished Business"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Lord and Lady Druskenvald"
+      },
+      {
+        "place": "wm_ghostlight_express",
+        "beat": "Derailed"
+      },
+      {
+        "place": "wm_village",
+        "beat": "Arrival"
+      }
+    ]
   }
 }

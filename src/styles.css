@@ -1080,6 +1080,41 @@
   }
   .chronicle-read:hover, .chronicle-read:focus-visible { background: rgba(201,169,110,0.08); }
   .chronicle-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  /* Timeline step number, the place (when the title is a section of it)
+     and the session date, if one was recorded. */
+  .chronicle-meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.2rem;
+  }
+  .chronicle-step {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.6rem; height: 1.6rem;
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    color: var(--gold);
+    letter-spacing: 0;
+  }
+  .chronicle-date { color: var(--cream-dim); letter-spacing: 0.08em; }
+  .chronicle-date::before { content: '·'; margin-right: 0.5rem; color: var(--gold-dim); }
+  /* The GM's "whose story" switcher. */
+  .chronicle-groups { display: flex; justify-content: center; gap: 0.4rem; margin: 0.8rem 0 0.2rem; }
+  .chronicle-group {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: none;
+    border: 1px solid var(--oak);
+    padding: 0.35rem 0.8rem;
+    cursor: pointer;
+  }
+  .chronicle-group.active { color: var(--cream); border-color: var(--gold-dim); background: rgba(201,169,110,0.08); }
   .chronicle-actions .wm-track-player { margin: 0; }
 
   /* Rumour shown on a locked Wickermoor panel (WM_TEASERS). */

@@ -1107,6 +1107,41 @@
   }
   .chronicle-read:hover, .chronicle-read:focus-visible { background: rgba(201,169,110,0.08); }
   .chronicle-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+  /* Timeline step number, the place (when the title is a section of it)
+     and the session date, if one was recorded. */
+  .chronicle-meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 0.2rem;
+  }
+  .chronicle-step {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.6rem; height: 1.6rem;
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    color: var(--gold);
+    letter-spacing: 0;
+  }
+  .chronicle-date { color: var(--cream-dim); letter-spacing: 0.08em; }
+  .chronicle-date::before { content: '·'; margin-right: 0.5rem; color: var(--gold-dim); }
+  /* The GM's "whose story" switcher. */
+  .chronicle-groups { display: flex; justify-content: center; gap: 0.4rem; margin: 0.8rem 0 0.2rem; }
+  .chronicle-group {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: none;
+    border: 1px solid var(--oak);
+    padding: 0.35rem 0.8rem;
+    cursor: pointer;
+  }
+  .chronicle-group.active { color: var(--cream); border-color: var(--gold-dim); background: rgba(201,169,110,0.08); }
   .chronicle-actions .wm-track-player { margin: 0; }
 
   /* Rumour shown on a locked Wickermoor panel (WM_TEASERS). */
@@ -2691,7 +2726,8 @@ const WM_CHAPTERS = {
   },
   "wm_silverbell": {
     "chapter": 14,
-    "title": "The Crimson Monastery"
+    "title": "The Crimson Monastery",
+    "heading": "Along the Silverbell River"
   },
   "wm_crimson": {
     "chapter": 14,
@@ -2889,6 +2925,234 @@ const WM_TEASERS = {
     "text": "If you hear a train whistle where there are no tracks, stand very still. It isn't your stop. Not yet.",
     "source": "a mourner at the crossroads"
   }
+};
+
+const STORY_ORDER = {
+  "1": [
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "All Aboard"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "The Trainhopper"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Unfinished Business"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Lord and Lady Druskenvald"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Derailed"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Arrival"
+    },
+    {
+      "place": "wm_village",
+      "beat": "A Stone Finger"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Bad Seed"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Year Walk"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Cat Got Your Tongue?"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Cursed is the Winner"
+    },
+    {
+      "place": "wm_foxwillow",
+      "beat": "Fire in Foxwillow"
+    },
+    {
+      "place": "wm_foxwillow",
+      "beat": "What the Windmill Held"
+    },
+    {
+      "place": "wm_foxwillow",
+      "beat": "Secrets Uncovered"
+    },
+    {
+      "place": "wm_harvest_terror"
+    },
+    {
+      "place": "wm_foxwillow",
+      "beat": "The Last Song"
+    },
+    {
+      "place": "wm_murkwater",
+      "beat": "A Withered Arm"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "Need a Hand?"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "Crooked Fortune"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "Vex's Hexes"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "Alligator's Smile"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "Moonshine"
+    },
+    {
+      "place": "wm_drowned",
+      "beat": "And Stay Dead."
+    },
+    {
+      "place": "wm_murkwater",
+      "beat": "The Bayou King"
+    },
+    {
+      "place": "wm_murkwater",
+      "beat": "Screams in the Night"
+    },
+    {
+      "place": "wm_grinning_sinner"
+    },
+    {
+      "place": "wm_foxwillow",
+      "beat": "Passing Through Again"
+    },
+    {
+      "place": "wm_dawns_gate",
+      "beat": "A Familiar Face"
+    },
+    {
+      "place": "wm_dawns_gate",
+      "beat": "The Briar Public House"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "Night of Flames"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "Behind the Walls"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "The Dead Larder"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "Cromwell's Trophies"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "The Belfry"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "Into the Sanctum"
+    },
+    {
+      "place": "wm_crimson_abbot"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "The Abbot Falls"
+    },
+    {
+      "place": "wm_crimson",
+      "beat": "A Fragile Peace"
+    },
+    {
+      "place": "wm_silverbell"
+    },
+    {
+      "place": "wm_webwoods"
+    },
+    {
+      "place": "wm_moonsong"
+    },
+    {
+      "place": "wm_memorys_rest"
+    }
+  ],
+  "2": [
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "A Little Respite"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "The Trainhopper"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Unfinished Business"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Lord and Lady Druskenvald"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Derailed"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Arrival"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Play is a Deadly Thing"
+    },
+    {
+      "place": "wm_foxwillow"
+    },
+    {
+      "place": "wm_silverbell"
+    }
+  ],
+  "3": [
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "All Aboard"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "The Trainhopper"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Unfinished Business"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Lord and Lady Druskenvald"
+    },
+    {
+      "place": "wm_ghostlight_express",
+      "beat": "Derailed"
+    },
+    {
+      "place": "wm_village",
+      "beat": "Arrival"
+    }
+  ]
 };
 
 const BESTIARY = {
@@ -7671,7 +7935,8 @@ document.addEventListener('DOMContentLoaded', () => {
 //                    Tag who has met what in each entry's `groups` list.
 //   Rogues' Gallery  portraits of the people met in lore the visitor can
 //                    read, grouped by location (each NPC's `location`).
-//   Chronicle        the group's unlocked Wickermoor story, in chapter order
+//   Chronicle        the group's story in the order it was played
+//                    (STORY_ORDER), filed under chapter headings
 //                    (WM_CHAPTERS), as a recap with links into each panel —
 //                    and that place's own ambience track (WM_TRACKS), for
 //                    the places that have one.
@@ -7899,34 +8164,83 @@ function loreExcerpt(html, max = 280) {
   return text.slice(0, text.lastIndexOf(' ', max)).replace(/[,;:.]$/, '') + '…';
 }
 
+// Whose story the Chronicle shows: the visitor's own group — or, for the
+// GM (admin), whichever group they've picked with the switcher.
+let chronicleGroupChoice = null;
+
+function chronicleGroup() {
+  if (isAdminUnlocked()) return chronicleGroupChoice || Object.keys(GROUPS)[0];
+  return getRecognizedGroup();
+}
+
+function groupCanSee(place, group) {
+  const rule = UNLOCKS[place];
+  return !!group && (rule === 'all' || (Array.isArray(rule) && rule.includes(group)));
+}
+
+// Splits a lore entry at its section headings (<p class="panel-subheader">)
+// into [{ title, html }]; text before the first heading has title ''.
+function loreSections(html) {
+  const sections = [{ title: '', html: '' }];
+  String(html || '').split(/(<p class="panel-subheader">[\s\S]*?<\/p>)/).forEach(part => {
+    const m = part.match(/^<p class="panel-subheader">([\s\S]*?)<\/p>$/);
+    if (m) sections.push({ title: m[1].replace(/<[^>]*>/g, '').trim(), html: '' });
+    else sections[sections.length - 1].html += part;
+  });
+  return sections.filter(s => s.title || hasMeaningfulContent(s.html));
+}
+
+// One beat of the timeline: a place, and optionally one headed section of
+// that group's write-up there.
+function timelineBeat(place, beatTitle, date, group, seen) {
+  const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === place);
+  if (!hs) return null;
+  const ch = WM_CHAPTERS[place] || {};
+  const entry = WM_LORE[place];
+  const own = !!(entry && typeof entry === 'object' && entry.byGroup && hasMeaningfulContent(entry.byGroup[group]));
+  const name = group === getRecognizedGroup() ? getRecognizedName() : null;
+  const html = revealedLoreHtml(place, group, name);
+  const section = beatTitle ? loreSections(html).find(s => s.title === beatTitle) : null;
+  return {
+    hs,
+    beat: section ? beatTitle : '',
+    date: date || '',
+    chapter: ch.chapter ?? 99,
+    title: ch.title || '',
+    heading: ch.heading || '',
+    art: ch.art,
+    own,
+    isNew: isNewLore(place, seen),
+    excerpt: loreExcerpt(section ? section.html : html),
+  };
+}
+
+// The group's story in the order it was played: STORY_ORDER[group] lists
+// beats ({ place, beat?, date? }). Anything the group has unlocked that the
+// order doesn't mention yet follows at the end, by chapter, so a new unlock
+// shows up even before it's been placed in the timeline.
 function chronicleEntries() {
-  const group = getRecognizedGroup();
-  const name = getRecognizedName();
+  const group = chronicleGroup();
+  if (!group) return [];
   const seen = loadSeenLore();
-  return WICKERMOOR_HOTSPOTS
-    .filter(hs => isUnlockedForGroup(hs.id, group))
-    .map(hs => {
-      const ch = WM_CHAPTERS[hs.id] || {};
-      const entry = WM_LORE[hs.id];
-      const own = !!(group && entry && typeof entry === 'object' && entry.byGroup && hasMeaningfulContent(entry.byGroup[group]));
-      return {
-        hs,
-        chapter: ch.chapter ?? 99,
-        title: ch.title || '',
-        heading: ch.heading || '',
-        art: ch.art,
-        own,
-        isNew: isNewLore(hs.id, seen),
-        excerpt: loreExcerpt(revealedLoreHtml(hs.id, group, name)),
-      };
-    })
-    .sort((a, b) => a.chapter - b.chapter || chapterListOrder(a.hs.id) - chapterListOrder(b.hs.id));
+  const listed = new Set();
+  const beats = [];
+  ((typeof STORY_ORDER !== 'undefined' && STORY_ORDER[group]) || []).forEach(b => {
+    if (!groupCanSee(b.place, group)) return;
+    const beat = timelineBeat(b.place, b.beat, b.date, group, seen);
+    if (beat) { beats.push(beat); listed.add(b.place); }
+  });
+  WICKERMOOR_HOTSPOTS
+    .filter(hs => groupCanSee(hs.id, group) && !listed.has(hs.id))
+    .map(hs => timelineBeat(hs.id, null, null, group, seen))
+    .sort((a, b) => a.chapter - b.chapter || chapterListOrder(a.hs.id) - chapterListOrder(b.hs.id))
+    .forEach(b => beats.push(b));
+  return beats;
 }
 
 // The heading an entry is filed under. WM_CHAPTERS can give a `heading`
 // of its own — e.g. "Interlude · The Webwoods" for a homebrew session that
-// isn't one of the book's chapters — while `chapter` still decides where it
-// sorts (decimals like 14.5 slot between chapters).
+// isn't one of the book's chapters.
 function chronicleHeading(e) {
   if (e.heading) return e.heading;
   if (e.chapter === 99) return 'Elsewhere in the Hollow';
@@ -7934,30 +8248,41 @@ function chronicleHeading(e) {
 }
 
 function chronicleHtml() {
-  const entries = chronicleEntries();
-  let html = `<p class="codex-intro">The tale of your party's wanderings through Wickermoor Hollow, as far as it has been told.</p>`;
+  let html = `<p class="codex-intro">The tale of your party's wanderings through Wickermoor Hollow, in the order it happened.</p>`;
+  if (isAdminUnlocked()) {
+    const current = chronicleGroup();
+    html += `<div class="chronicle-groups" role="group" aria-label="Show the story of">` +
+      Object.keys(GROUPS).map(g => `<button class="chronicle-group${g === current ? ' active' : ''}" data-chronicle-group="${escHtml(g)}" aria-pressed="${g === current}">Group ${escHtml(g)}</button>`).join('') +
+      `</div>`;
+  }
   html += notRecognizedHint();
+  const entries = chronicleEntries();
   if (!entries.length) return html;
 
-  let lastChapter = null;
+  let lastHeading = null;
+  const trackShown = new Set();
   html += `<ol class="chronicle">`;
-  entries.forEach(e => {
+  entries.forEach((e, i) => {
     const label = chronicleHeading(e);
-    if (label !== lastChapter) {
-      lastChapter = label;
+    if (label !== lastHeading) {
+      lastHeading = label;
       html += `<li class="chronicle-chapter" aria-hidden="true">${escHtml(label)}</li>`;
     }
+    // A place's ambience track is offered once, at its first beat.
+    const track = trackShown.has(e.hs.id) ? '' : trackButtonHtml(e.hs.id);
+    trackShown.add(e.hs.id);
     html += `<li class="chronicle-entry">
       ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : '<div class="chronicle-art blank"></div>'}
       <div class="chronicle-text">
-        <div class="chronicle-title">${escHtml(e.hs.label)}
-          ${e.own ? `<span class="chronicle-tag">Your party's tale</span>` : ''}
+        <div class="chronicle-meta"><span class="chronicle-step">${i + 1}</span>${e.beat ? escHtml(e.hs.label) : ''}${e.date ? `<span class="chronicle-date">${escHtml(e.date)}</span>` : ''}</div>
+        <div class="chronicle-title">${escHtml(e.beat || e.hs.label)}
+          ${e.own ? '' : `<span class="chronicle-tag">Visited</span>`}
           ${e.isNew ? `<span class="index-new">new</span>` : ''}
         </div>
         <p class="chronicle-excerpt">${escHtml(e.excerpt)}</p>
         <div class="chronicle-actions">
-          <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}">Read on →</button>
-          ${trackButtonHtml(e.hs.id)}
+          <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}" data-beat="${escHtml(e.beat)}">Read on →</button>
+          ${track}
         </div>
       </div>
     </li>`;
@@ -7966,18 +8291,27 @@ function chronicleHtml() {
   return html;
 }
 
-// "Read on" opens the location's own panel over the Codex; closing it
-// (or Back) returns here.
-function openChronicleEntry(id) {
+// "Read on" opens the location's own panel over the Codex, scrolled to the
+// beat's section; closing it (or Back) returns here.
+function openChronicleEntry(id, beatTitle) {
   const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === id);
   if (!hs) return;
   if (getActiveMapKey() !== 'wickermoor') openWickermoor();
   openPanel(hs.id, hs.label);
+  if (!beatTitle) return;
+  const heading = [...document.querySelectorAll('#panel-content .panel-subheader')]
+    .find(h => h.textContent.trim() === beatTitle);
+  if (heading) requestAnimationFrame(() => heading.scrollIntoView({ block: 'start' }));
 }
 
 document.addEventListener('click', e => {
   const read = e.target.closest?.('[data-chronicle]');
-  if (read) openChronicleEntry(read.dataset.chronicle);
+  if (read) { openChronicleEntry(read.dataset.chronicle, read.dataset.beat); return; }
+  const pick = e.target.closest?.('[data-chronicle-group]');
+  if (pick) {
+    chronicleGroupChoice = pick.dataset.chronicleGroup;
+    renderCodex();
+  }
 });
 
 // Arrow keys move between the tabs (standard tablist behaviour).
