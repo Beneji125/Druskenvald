@@ -428,3 +428,29 @@ function buildWMContent(id, label) {
     ${passwordSection.html}
   `;
 }
+
+// ── Swipe to close (touch) ────────────────────────────────────────
+// A quick sideways swipe closes a panel in the direction it slid in from:
+// the lore panel (from the right) with a swipe right, the species/NPC/
+// creature panels (from the left) with a swipe left. Mostly-vertical
+// movement is left alone, so scrolling the text never closes anything.
+function enableSwipeToClose(panelId, direction, close) {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  let start = null;
+  panel.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    start = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, time: performance.now() } : null;
+  }, { passive: true });
+  panel.addEventListener('touchend', e => {
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    const quick = performance.now() - start.time < 700;
+    start = null;
+    if (quick && Math.sign(dx) === direction && Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 2) close();
+  }, { passive: true });
+}
+
+enableSwipeToClose('lore-panel', 1, () => closePanel());
+SECONDARY_PANELS.forEach(kind => enableSwipeToClose(`${kind}-panel`, -1, () => closeSecondaryPanel(kind)));

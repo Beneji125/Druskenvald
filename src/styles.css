@@ -1362,6 +1362,17 @@
     #topbar { padding-top: max(0.2rem, env(safe-area-inset-top)); }
     #breadcrumb-text { display: none; }
     .music-player { flex-basis: calc(100% - 210px); }
+    /* Phones on their side: the map leaves empty strips at the sides, so
+       the zoom buttons stack into the right-hand strip instead of
+       covering the map art. */
+    #zoom-controls { flex-direction: column; bottom: auto; top: 50%; transform: translateY(-50%); gap: 0.3rem; }
+    .zoom-btn { width: 40px; height: 40px; }
+    .zoom-controls-divider {
+      width: 40px;
+      height: 1px;
+      margin: 0.1rem 0;
+      background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -63,7 +63,10 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   (or that has changed since) get a pulsing outline until opened.
 - **The Codex (📜):** Bestiary, Rogues' Gallery and Chronicle (see below).
 - **Lighting:** the 🌙 button cycles night, dusk and day (no darkness).
-- **Touch:** first tap on a place shows its name, second tap opens it.
+- **Phones:** in portrait the map opens zoomed to fill the screen (swipe
+  to explore, pinch out for the whole map, ⟲ to return). First tap on a
+  place shows its name, second tap opens it; double-tap empty map to zoom
+  in. Swipe a panel back the way it came in to close it.
 - **Keyboard:** Tab moves between places on the map, Enter opens, Escape
   closes the top-most panel.
 
