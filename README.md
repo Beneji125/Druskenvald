@@ -75,20 +75,27 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
   Creatures a group hasn't met don't appear at all (only a count of how
-  many remain unseen). Link to one from lore with `{{creature:id}}`.
+  many remain unseen). A creature with several forms can limit each
+  picture to the groups that met that form with `imageGroups` (see the
+  Vermin Familiar). Descriptions are written as what an onlooker would
+  know — no weaknesses, abilities or secret origins — so keep new ones
+  that way. Link to one from lore with `{{creature:id}}`.
 - **Rogues' Gallery:** fills itself — an NPC appears once they're
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if
   left out, the first place their name comes up). Bios are each entry's
   `body`.
-- **Chronicle:** lists a group's unlocked Wickermoor locations, ordered
-  by `WM_CHAPTERS` (chapter number, title, art) — renumber freely if your
-  parties went another way. A homebrew session that isn't one of the
-  book's chapters can have its own `heading` (e.g. "Interlude · The
-  Webwoods") with a decimal `chapter` like 14.5 to slot it in between; places in the same chapter keep the order
-  they're listed in. It quotes the group's own `byGroup` tale when there
-  is one, and offers the place's ambience track if it has one in
-  `WM_TRACKS` (not every place needs one).
+- **Chronicle:** each group's story in the order it was played, from
+  `STORY_ORDER` in `descriptions.json` — one list per group of beats like
+  `{ "place": "wm_village", "beat": "Arrival", "date": "14 Mar 2026" }`.
+  `beat` is one of the section headings in that group's write-up for the
+  place (leave it out to mean the whole place); `date` is optional. The
+  build stops if a beat's heading doesn't exist. Places a group has
+  unlocked but the list doesn't mention yet appear at the end. Beats are
+  filed under chapter headings from `WM_CHAPTERS` (chapter number, title,
+  art, or a custom `heading` such as "Interlude · The Webwoods"). "Read
+  on" opens the place scrolled to that section; signed in as the GM you
+  can switch between groups.
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
 

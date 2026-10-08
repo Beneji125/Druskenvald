@@ -165,9 +165,14 @@ function validate(data, hotspots) {
     });
   }
 
-  // Bestiary "met by" lists must name real groups.
+  // Bestiary "met by" lists must name real groups; per-picture limits must
+  // name the creature's own pictures and real groups.
   for (const [id, c] of Object.entries(data.BESTIARY || {})) {
     (c.groups || []).forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.groups: unknown group "${g}"`); });
+    for (const [src, groups] of Object.entries(c.imageGroups || {})) {
+      if (!(c.images || []).includes(src)) errors.push(`BESTIARY.${id}.imageGroups: "${src}" isn't in its images`);
+      groups.forEach(g => { if (!GROUPS[g]) errors.push(`BESTIARY.${id}.imageGroups: unknown group "${g}"`); });
+    }
   }
 
   // An NPC's Rogues' Gallery location must be a real Wickermoor location.
@@ -183,6 +188,24 @@ function validate(data, hotspots) {
   }
   for (const id of Object.keys(data.WM_TEASERS || {})) {
     if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === id)) errors.push(`WM_TEASERS.${id}: no Wickermoor hotspot has this id`);
+  }
+
+  // The story timeline: real groups, real Wickermoor places, and any named
+  // beat must be a section heading in that group's write-up for that place.
+  const meaningful = h => !!(h && h.replace(/<[^>]*>/g, '').trim());
+  for (const [g, beats] of Object.entries(data.STORY_ORDER || {})) {
+    if (!GROUPS[g]) errors.push(`STORY_ORDER.${g}: unknown group`);
+    beats.forEach((b, i) => {
+      const where = `STORY_ORDER.${g}[${i}]`;
+      if (!(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === b.place)) { errors.push(`${where}: "${b.place}" is not a Wickermoor hotspot id`); return; }
+      const rule = UNLOCKS[b.place];
+      if (!(rule === 'all' || (Array.isArray(rule) && rule.includes(g)))) warnings.push(`${where}: "${b.place}" isn't unlocked for group ${g}, so it won't show`);
+      if (!b.beat) return;
+      const entry = (data.WM_LORE || {})[b.place];
+      const text = typeof entry === 'string' ? entry : (entry && meaningful(entry.byGroup?.[g]) ? entry.byGroup[g] : entry?.default) || '';
+      const titles = [...text.matchAll(/<p class="panel-subheader">([\s\S]*?)<\/p>/g)].map(m => m[1].replace(/<[^>]*>/g, '').trim());
+      if (!titles.includes(b.beat)) errors.push(`${where}: no section "${b.beat}" in group ${g}'s ${b.place} text (has: ${titles.join(' | ') || 'no headings'})`);
+    });
   }
 
   // A character name must belong to exactly one group.

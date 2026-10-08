@@ -3,11 +3,11 @@
     "alpengrendel": {
       "name": "Alpengrendel",
       "kind": "monster",
-      "subtitle": "Brute Born of Mountain Ice",
+      "subtitle": "Brute of the Frozen Peaks",
       "images": [
         "monsters/MONSTER_Alpengrendel.webp"
       ],
-      "body": "<p class=\"panel-body\">Alpengrendel are hulking creatures covered in bluish white fur, with great tusks and horns. They were born of the ice and darkness of their mountaintop homes, shaped by the unseen hands of a deity of cold stone and gloam. The bitter cold of the mountain peaks infuses both their touch and their breath.</p>\n<p class=\"panel-body\">Alpengrendel draw upon the timelessness of the mountains, healing from otherwise lethal wounds in the blink of an eye. They fear only the power of lightning, which can slay them, and the power of the gods, whom they bitterly resent.</p>",
+      "body": "<p class=\"panel-body\">Hulking creatures shaggy with bluish-white fur, crowned with great tusks and horns. They keep to the high, cold places of the world, and travellers who meet one speak of the bitter chill that hangs about it like a second hide.</p>",
       "groups": []
     },
     "bat_hound": {
@@ -17,17 +17,19 @@
       "images": [
         "monsters/MONSTER_Bathound.webp"
       ],
-      "body": "<p class=\"panel-body\">Bat hounds are created through blood magic rituals that manipulate the curse of vampirism to transform a hound into a relentless stalker. Unswervingly loyal companions, bat hounds aid vampiric masters in tracking prey, able to outrun horses and their riders once they smell blood. They seek out stragglers or quarry that are escaping during a hunt and drag them back for capture.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Lean, leathery hounds with bat-like ears and a hunter's patience, kept by those who hunt after dark. Once they have the scent of blood they run down horse and rider alike, and they are said to bring stragglers back alive for their masters.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "bayou_beast": {
       "name": "Bayou Beast",
       "kind": "monster",
-      "subtitle": "Spirit Hex-Bound to the Swamp",
+      "subtitle": "Walking Mound of the Swamp",
       "images": [
         "monsters/MONSTER_Bayou_Beast.webp"
       ],
-      "body": "<p class=\"panel-body\">Bayou beasts are elemental spirits bound into great mounds of swamp plant matter through jinxcraft magic. These hulks obey their creators unfailingly, often</p>",
+      "body": "<p class=\"panel-body\">Great heaving mounds of reed, moss and black mud that rise out of the bayou on their own. Swamp-folk give them a very wide berth.</p>",
       "groups": [
         "1"
       ]
@@ -39,47 +41,59 @@
       "images": [
         "monsters/MONSTER_Boneflayer.webp"
       ],
-      "body": "<p class=\"panel-body\">Boneflayers are cruel, vulture-like creatures that originated from a broken fey pact. The creatures aren’t content to wait for something to die and instead make their own carrion to gorge upon—they delight in snatching prey in their talons, carrying it into the air, and dropping it to its death. Boneflayers earn their name by using their sizeable, filth-riddled beaks to cleave flesh from bone and hoard the meat until it ages enough for them to enjoy.</p>\n<p class=\"panel-body\">Cults sometimes use boneflayer killing grounds as a source of bones to burn in ritual bonfires, occasionally making pacts with the creatures to pay or trade for the creature’s castoffs. Villages that fear boneflayer attacks ward them off with thundering drums or gongs whenever they circle overhead.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Cruel, vulture-like creatures with filth-crusted beaks that do not wait for a meal to die. They snatch prey into the sky and let it fall. Villages that fear them beat drums and gongs whenever one circles overhead.</p>",
+      "groups": [
+        "2"
+      ]
     },
     "boogleswarm": {
       "name": "Boogleswarm",
       "kind": "monster",
-      "subtitle": "",
+      "subtitle": "Mob of Tooth-Thieving Weasels",
       "images": [
         "monsters/MONSTER_Boogleswarm.webp"
       ],
-      "body": "",
-      "groups": []
+      "body": "<p class=\"panel-body\">A slinking, chittering mob of weasels with too-knowing eyes. They covet teeth of every kind, and the old tales of tooth faeries trading coins for children's milk teeth may have started with them.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "centipede_hag": {
       "name": "Centipede Hag",
-      "kind": "monster",
-      "subtitle": "",
+      "kind": "legendary",
+      "subtitle": "Hag of the Deep Places",
       "images": [
         "monsters/MONSTER_Centipede_Hag.webp"
       ],
-      "body": "",
-      "groups": []
+      "body": "<p class=\"panel-body\">A crone of the dark tunnels, swarming with centipedes, whose lair reeks of sickness and whose interest in the human body is far too keen. One of three sisters, if the stories are true.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "corvodaemon": {
       "name": "Corvodaemon",
       "kind": "monster",
-      "subtitle": "Demon of Hunger and Secrets",
+      "subtitle": "Six-Eyed Crow",
       "images": [
         "monsters/MONSTER_Corvodaemon.webp"
       ],
-      "body": "<p class=\"panel-body\">Resembling a monstrous crow, the corvodaemon’s sleek and twisted form soars on elongated wings tipped with razor-sharp, finger-like claws, its six amber eyes constantly seeking for prey.</p>\n<p class=\"panel-body\">Insatiable hunger for both flesh and souls—along with their accumulated secrets—gnaws at these Fiends. Their mimicry lets them take on the voice of those known and trusted by their would-be meals, luring the hapless mortals to their doom.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A monstrous crow with sleek, twisted wings tipped in finger-like claws, and six amber eyes always searching. Its cawing sounds unsettlingly like speech.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "crimson_clergy": {
       "name": "Crimson Clergy",
       "kind": "monster",
-      "subtitle": "Vampiric Zealot",
+      "subtitle": "Bloodless Zealot",
       "images": [
         "monsters/MONSTER_Crimson_Clergy.webp"
       ],
-      "body": "<p class=\"panel-body\">Crimson clergy are Undead cultists, often created, led, and taught by a more powerful vampire. Crimson clergy view the consumption of blood—and in its use during their rituals and when casting spells—not only as necessary but sacred. Their hunger reaches beyond the limits of their fangs and claws, calling to the blood of their victims and drawing it out in scarlet ribbons.</p>",
+      "body": "<p class=\"panel-body\">The most devoted of the Crimson Faith: pale, vacant-eyed and soft-spoken, with the occasional glint of a fang. They speak of blood as something sacred, and of the Crimson Rose with an adoration that never wavers.</p>",
       "groups": [
         "1"
       ]
@@ -87,22 +101,26 @@
     "crooked_effigy": {
       "name": "Crooked Effigy",
       "kind": "monster",
-      "subtitle": "Splinter of Crooked Power",
+      "subtitle": "Thorned Wooden Figure",
       "images": [
         "monsters/MONSTER_Crooked_Effigy.webp"
       ],
-      "body": "<p class=\"panel-body\">Crooked effigies are servants of a twisted archfey known as the Crooked Queen. They are made of gnarled wood and show some bipedal and feminine features in their queen’s image. Crooked effigies impale their enemies with their branch-like arms and drag foes in close, where the thorns on their bodies carry the sting of a victim’s own corruption.</p>",
+      "body": "<p class=\"panel-body\">Gnarled figures of twisted wood and thorn, roughly the shape of a woman, with branch-like arms. Where they appear, the old stories of the hollow's first queen are never far behind.</p>",
       "groups": []
     },
     "crooked_man": {
       "name": "Crooked Man",
-      "kind": "monster",
-      "subtitle": "",
+      "kind": "legendary",
+      "subtitle": "The Man With the Crooked Grin",
       "images": [
         "monsters/MONSTER_Crooked_Man.webp"
       ],
-      "body": "",
-      "groups": []
+      "body": "<p class=\"panel-body\">A tall, gnarled figure of snapped and twisted limbs and a grin that stretches too wide, with curling claws for fingers. He is named in every frightening tale the hollow tells its children, and he seems to enjoy it.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "crowstorm": {
       "name": "Crowstorm",
@@ -111,27 +129,33 @@
       "images": [
         "monsters/MONSTER_Crowstorm.webp"
       ],
-      "body": "<p class=\"panel-body\">A crowstorm is a great, swirling mass of dark feathers accompanied constant, harshly malevolent crow calls. Hundreds of fiendish birds fly in unison, their beady eyes dripping blood as they swoop down to tear at the flesh of their victims. A crowstorm’s horrific caws mingle into an eerie cacophony of pleading whispers, and it robs the gift of flight from anything that draws too close.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A great swirling mass of black feathers and harsh, endless cawing — hundreds of crows flying as one, their beady eyes weeping blood. Within the din, some swear they hear whispered pleading.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "deepdreck": {
       "name": "Deepdreck",
       "kind": "monster",
-      "subtitle": "",
+      "subtitle": "Lost Thing of the Mine",
       "images": [
         "monsters/MONSTER_Deepdreck.webp"
       ],
-      "body": "",
-      "groups": []
+      "body": "<p class=\"panel-body\">Misshapen, cringing figures that haunt the deep tunnels, wearing scraps of what might once have been miners' clothes. They keep to the dark and scurry away from light and company alike.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "drakkenhob": {
       "name": "Drakkenhob",
       "kind": "monster",
-      "subtitle": "Dragon Disguised as a Festival Horse",
+      "subtitle": "Prancer of Parades",
       "images": [
         "monsters/MONSTER_Drakkenhob.webp"
       ],
-      "body": "<p class=\"panel-body\">The drakkenhob is a draconic monster with a sinister disguise, presenting itself as an actor wearing a horse costume, such as a mounted knight or a festively clad rider. Its draconic head resembles a decorated or armored horse’s head, and its sharp teeth fit together to appear like blunt, harmless decorations. The drakkenhob uses this benign guise to get close to its prey, which are typically within crowds near festivals or parades, before it summons its similarly garbed hunting hounds and strikes. Its breath is a blood-curdling wave of terror that makes lesser victims drop dead from fright alone.</p>",
+      "body": "<p class=\"panel-body\">At a glance, a costumed festival horse — a rider in a painted hobby-horse, the kind that prances at every fair and parade, to the delight of the crowds.</p>",
       "groups": []
     },
     "dream_eater": {
@@ -141,17 +165,17 @@
       "images": [
         "monsters/MONSTER_Dream_Eater.webp"
       ],
-      "body": "<p class=\"panel-body\">Dream eaters are horrors that feed on the dreams, sense of identity, and—some say—the very souls of other creatures.</p>\n<p class=\"panel-body\">Dream eaters have the bodies and wings of great owls, while their beaks are filled with blunt, humanlike teeth and hide long snaking tongues. Their feathers are drab colors on the exterior, but their wings display a dazzling cascade of rainbow hues on the undersides when unfurled.</p>\n<p class=\"panel-body\">These colors flow and shift, mesmerizing the dream eater’s prey and leaving them helpless. A creature whose dreams are devoured is left in a listless, near-blank state. Without help, their victims waste away.</p>",
+      "body": "<p class=\"panel-body\">Great owl-like creatures with drab outer feathers that open onto a dazzling cascade of shifting colour beneath. Their beaks are full of blunt, human-looking teeth.</p>",
       "groups": []
     },
     "ferryman": {
       "name": "Ferryman",
       "kind": "monster",
-      "subtitle": "Cursed Undead Boatman",
+      "subtitle": "Lantern-Bearing Boatman",
       "images": [
         "monsters/MONSTER_Ferryman.webp"
       ],
-      "body": "<p class=\"panel-body\">Ferrymen are Undead created through the use of curses and jinxcraft and are doomed to ply the waters where they were raised. They pole through the bayous and rivers, and even across land on a wave of swamp water, in coffin boats. They can focus the malice of their curse through the light of their lantern poles, jinxing enemies or those who try to force a ride without payment.</p>",
+      "body": "<p class=\"panel-body\">Gaunt dead men who pole coffin-shaped boats through the bayous and rivers by lantern light. They will carry passengers who pay — and in the Drowned Crossroads they are said to serve behind the bar, too.</p>",
       "groups": [
         "1"
       ]
@@ -163,18 +187,20 @@
       "images": [
         "monsters/MONSTER_Festerhulk.webp"
       ],
-      "body": "<p class=\"panel-body\">Festerhulks are dead giants whose corpses are infested with fungus engorged by the magic of decay. This fungus has consumed and replaced much of the giant’s flesh and now animates the corpse. The heads of these giants are often completely overtaken by repulsive mushrooms and other fungal growths. The spores given off by their infestation can spread to victims killed by festerhulks, giving rise to further Undead.</p>",
+      "body": "<p class=\"panel-body\">The corpses of giants, overgrown with mushrooms and fungal blooms until little flesh remains, lurching on regardless. A cloud of spores drifts wherever they walk.</p>",
       "groups": []
     },
     "fleshdobbin": {
       "name": "Fleshdobbin",
       "kind": "monster",
-      "subtitle": "Flesh-Crafted Amalgam of Knight and Horse",
+      "subtitle": "Horse and Rider Made One",
       "images": [
         "monsters/MONSTER_Fleshdobbin.webp"
       ],
-      "body": "<p class=\"panel-body\">Fleshdobbins are abominations created when a horse and its rider are horrifically melded through fleshcrafting magic. Their limbs stretch and deform, though afterward, their bodies resist further transformation. Fitted with saddles and bearing savage weaponry, these monsters may look like riderless horses from a distance, but each leg culminates in oddly human\u0002looking gnarled hands with fingers ending in wicked claws. Their voices are the comingled shrieks of human and horse.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">From a distance, a saddled horse without a rider. Closer, the truth: horse and rider fused into one twisted creature, each leg ending in a gnarled, clawed human hand, its cry a mingled shriek of man and beast.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "gloomwood": {
       "name": "Gloomwood",
@@ -183,7 +209,7 @@
       "images": [
         "monsters/MONSTER_Gloomwood.webp"
       ],
-      "body": "<p class=\"panel-body\">Gloomwoods were once treants in service to an archfey, but they were corrupted by a supernatural fungal blight. The growth bores through their trunks and into their souls, making the gloomwoods cruel and vicious, interested only in spreading more decay. Fungal spores drift from their trunks and branches, rotting any flesh and digging into the ground around them to spread the blight.</p>",
+      "body": "<p class=\"panel-body\">Towering walking trees whose bark is bored through with sickly fungus. Spores drift from their branches, and the ground where they have stood soon begins to rot.</p>",
       "groups": []
     },
     "gobblegeist": {
@@ -193,8 +219,10 @@
       "images": [
         "monsters/MONSTER_Gobblegeist.webp"
       ],
-      "body": "<p class=\"panel-body\">Gobblegeists are massive birdlike monsters with earth\u0002toned plumage, reptilian faces and claws, and a metallic beak edged with sharp teeth. These ravenous creatures descend from forest canopies or hilltops to snatch their prey unawares and carry them off to feed on their blood in solitude. Their single, unblinking eye can unnerve and dazzle more alert prey, making would-be threats an easy meal.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Massive birds with earth-toned plumage, reptilian faces and claws, and a metallic beak edged with teeth. A single unblinking eye watches from the treetops before it drops to snatch prey and carry it away.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "herald_of_fools": {
       "name": "Herald of Fools",
@@ -203,7 +231,7 @@
       "images": [
         "monsters/MONSTER_Herald_of_Fools.webp"
       ],
-      "body": "<p class=\"panel-body\">Heralds of fools lead troupes of fiendish revelers in service to the enigmatic Lord of Fools, a clown or jester entity who is a curious mix of levity and cruelty (though always with a sense of irony). The heralds are agile and graceful, every movement a dance, spinning their banner poles in intricate displays that can swiftly turn from entertainment to death.</p>",
+      "body": "<p class=\"panel-body\">Graceful, dancing figures who lead troupes of revellers, spinning their banner poles in dazzling displays. Their celebrations are wonderful to watch, and they do not take kindly to anyone who refuses to join.</p>",
       "groups": []
     },
     "hospital_horror": {
@@ -213,17 +241,17 @@
       "images": [
         "monsters/MONSTER_Hospital_Horror.webp"
       ],
-      "body": "<p class=\"panel-body\">Hospital horrors were once people, but now they are repulsive mockeries created through surgical and magical alteration. They have no memory of their past lives, existing only within a chemically induced rage. Often, they are conditioned by the use of specific command phrases that allow them to be controlled.</p>",
+      "body": "<p class=\"panel-body\">Hulking, scarred figures that were once people, stitched and altered almost past recognition. They seem to remember nothing of who they were, and answer only to the voices of those who keep them.</p>",
       "groups": []
     },
     "house_of_horror": {
       "name": "House of Horror",
       "kind": "monster",
-      "subtitle": "Cursed House Brought to Malevolent Life",
+      "subtitle": "The House That Hungers",
       "images": [
         "monsters/MONSTER_House_of_Horror.webp"
       ],
-      "body": "<p class=\"panel-body\">Houses of horror are living houses, often angry or bitter due to the circumstances of their awakening. They were once mundane buildings or dwellings where powerful magics of life and death took place and infused the stones and timber.</p>\n<p class=\"panel-body\">Houses of horror jealously covet the true life that its former inhabitants enjoyed, or they carry echoes of the suffering that bodies and souls experienced within them. The houses vent this fury on any who enter, tormenting and terrifying trespassers. The souls of those who die inside are trapped, waiting to be unleashed upon future victims.</p>",
+      "body": "<p class=\"panel-body\">An abandoned house the children dare each other to enter — and the ones who do never come back. Its rooms do not stay where they were, its doors lead somewhere new each time, and it does not want its guests to leave.</p>",
       "groups": [
         "2"
       ]
@@ -231,21 +259,21 @@
     "hypnovulfen": {
       "name": "Hypnovulfen",
       "kind": "monster",
-      "subtitle": "Hungry Hypnotizing Wolf",
+      "subtitle": "Hungry Wolf of the Shadows",
       "images": [
         "monsters/MONSTER_Hypnovulfen.webp"
       ],
-      "body": "<p class=\"panel-body\">Hypnovulfen resemble massive wolves with unnaturally large orange eyes and wide, crooked maws. Despite their size, hypnovulfen are shockingly stealthy, able to stalk their prey and snare them with a hypnotic gaze from the shadows. The gaze beguiles victims into seeing a loved one beckoning them closer for a warm embrace. All the better for a hypnovulfen to feed and consume the unfortunate morsel’s memories.</p>",
+      "body": "<p class=\"panel-body\">Massive wolves with unnaturally large orange eyes and wide, crooked maws, far quieter than anything that size has any right to be.</p>",
       "groups": []
     },
     "invader_out_of_space": {
       "name": "Invader Out of Space",
       "kind": "monster",
-      "subtitle": "",
+      "subtitle": "Visitor From Beyond the Stars",
       "images": [
         "monsters/MONSTER_Invader_Out_of_Space.webp"
       ],
-      "body": "",
+      "body": "<p class=\"panel-body\">Something that fell from the sky inside a burning stone. Few who have seen one can describe it the same way twice.</p>",
       "groups": []
     },
     "kackle": {
@@ -255,7 +283,7 @@
       "images": [
         "monsters/MONSTER_Kackle.webp"
       ],
-      "body": "<p class=\"panel-body\">Those who were particularly sadistic in life and died consumed by wicked mirth linger as Kackles—ghostly figures that drift above the ground, always flitting just out of sight. Adorned in tattered cloaks and concealing hoods or hats, their hollow laughter echoes through dark places, fading in and out to confuse and terrify their victims. Kackles always carry lanterns lit with ghostly flames, the color of which changes to reflect a kackle’s current cruelty of choice.</p>",
+      "body": "<p class=\"panel-body\">A ghostly figure in a tattered cloak and hood, always drifting just out of sight, carrying a lantern of pale fire. Its hollow laughter echoes through dark places, fading in and out until you cannot tell where it is coming from.</p>",
       "groups": [
         "2"
       ]
@@ -263,21 +291,21 @@
     "keeper_of_the_blight": {
       "name": "Keeper of the Blight",
       "kind": "monster",
-      "subtitle": "",
+      "subtitle": "Drummer of the Rot",
       "images": [
         "monsters/MONSTER_Keeper_of_the_Blight.webp"
       ],
-      "body": "",
+      "body": "<p class=\"panel-body\">Tall, antlered figures draped in moss and fungus who lead the drum circles of the blighted wood, chanting in an old tongue. The air around them is thick and sweet with decay.</p>",
       "groups": []
     },
     "ketgrinn": {
       "name": "Ketgrinn",
       "kind": "monster",
-      "subtitle": "Voice-Stealing Trickster",
+      "subtitle": "Grinning Feline Trickster",
       "images": [
         "monsters/MONSTER_Ketgrin.webp"
       ],
-      "body": "<p class=\"panel-body\">Ketgrinn are catlike Fey spirits who delight in puzzles, riddles, and bargains. They have large, bright eyes and too-wide grins that gleam starkly even in shadows. Ketgrinn are tricksters and spies, often sent by those they serve to steal the voices of a rival’s minions to sow chaos and confusion.</p>",
+      "body": "<p class=\"panel-body\">Catlike spirits with large, bright eyes and a too-wide grin that gleams even in shadow. They love riddles, puzzles and bargains — and they always seem to want something.</p>",
       "groups": [
         "1"
       ]
@@ -285,11 +313,11 @@
     "lake_dredger": {
       "name": "Lake Dredger",
       "kind": "monster",
-      "subtitle": "Undead Aquatic Monster",
+      "subtitle": "Horror of the Deep Water",
       "images": [
         "monsters/MONSTER_Lake_Dredger.webp"
       ],
-      "body": "<p class=\"panel-body\">Lake dredgers are Undead water behemoths, such as whales, giant fish, or dinosaurs. These creatures are reanimated through the deep, primal fear of the unknown horrors that lurk in the murky depths. They dwell in the beds of lakes, rivers, or oceans, dredging up the detritus to replenish their ever-rotting mass. They also add to their decaying bulk by feeding on living creatures, especially drawn to those who exhibit fear of the deep. Once prey is devoured, it is impaled on its cracked ribs until the waterlogged flesh becomes one with the beast’s.</p>",
+      "body": "<p class=\"panel-body\">A bloated, long-necked thing rotting beneath the kelp, the kind of shape old sailors only describe after a few drinks. It drifts along the bottom of deep lakes and rivers.</p>",
       "groups": [
         "1"
       ]
@@ -301,27 +329,33 @@
       "images": [
         "monsters/MONSTER_Lurker_in_the_Dark.webp"
       ],
-      "body": "<p class=\"panel-body\">Lurkers in the dark are wicked Fey creatures who prey upon the fearful, vulnerable, and alone. They resemble nightmarishly distorted people with gray skin, lank hair, and three-fingered, clawed hands. Their limbs move in impossible ways, allowing them to slip through and hide within spaces that seem far too small. They delight in stoking their victim’s fears by whispering from spaces a person couldn’t fit. When the terror crests, the lurkers strike, drag their victims into the dark, and vanish with them.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Grey-skinned, lank-haired figures with three-fingered claws and limbs that bend in all the wrong places. They whisper from places no one could fit — under beds, behind wardrobes — and the frightened and the lonely are said to vanish with them.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "maidenwood": {
       "name": "Maidenwood",
       "kind": "monster",
-      "subtitle": "Witch-Warped Ambushing Tree",
+      "subtitle": "Witch-Warped Tree",
       "images": [
         "monsters/MONSTER_Maidenwood.webp"
       ],
-      "body": "<p class=\"panel-body\">Maidenwoods are creatures birthed from tree stumps by old magics, often arising from curses that turn the forest against a transgressor. They scuttle on roots like legs, and the broken trunk becomes a fierce, grinding maw. The maidenwood’s tendrils blossom into lifelike figures it uses to lure its prey close.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A gnarled stump that scuttles on its roots like legs, its broken trunk a grinding maw. Its tendrils blossom into lifelike figures — often a beckoning young woman — to draw travellers close.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "mutant_nurse": {
       "name": "Mutant Nurse",
       "kind": "monster",
-      "subtitle": "Caregiver Twisted by Mutation",
+      "subtitle": "Porcelain-Masked Caregiver",
       "images": [
         "monsters/MONSTER_Mutant_Nurse.webp"
       ],
-      "body": "<p class=\"panel-body\">Mutant nurses resemble the Humanoids they once were, though an alien mutation writhes within their bodies. They serve as caretakers of healing institutions, though they are fully beholden to whoever, or whatever, altered them to their current state. The nurses all wear a white porcelain mask made in the likeness of their original features, which grounds them to their sense of self and prevents them from losing their will fully to the aberrant influence that changed them.</p>",
+      "body": "<p class=\"panel-body\">Nurses in starched uniforms whose faces are hidden behind white porcelain masks shaped like the faces they once had. Something moves beneath their skin that should not. They tend their patients with unwavering devotion, whether the patients wish it or not.</p>",
       "groups": [
         "1"
       ]
@@ -329,11 +363,11 @@
     "necrolisk": {
       "name": "Necrolisk",
       "kind": "monster",
-      "subtitle": "",
+      "subtitle": "Burrower in the Dark",
       "images": [
         "monsters/MONSTER_Necrolisk.webp"
       ],
-      "body": "",
+      "body": "<p class=\"panel-body\">Something huge that tunnels through the deep places of the earth, leaving its burrows lined with foul, shimmering slime.</p>",
       "groups": []
     },
     "night_creature": {
@@ -343,8 +377,10 @@
       "images": [
         "monsters/MONSTER_Night_Creature.webp"
       ],
-      "body": "<p class=\"panel-body\">Night creatures are fiendish spirits bound into vampire-blood-tainted corpses through profane rituals. The hulking brutes are fanatically loyal to their creators, a fact some vampire overlords learn too late when those they employ to create the night creatures develop ambitions of their own. Secrets. Night creatures are quickly undone by the purity of salt if wiped on a weapon and driven into a wound.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Hulking, bestial brutes with a vampire's hunger and none of a vampire's grace, kept by those who rule the night. They hunt with the single-minded loyalty of a hound.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "old_ways_chosen": {
       "name": "Old Ways Chosen",
@@ -353,8 +389,10 @@
       "images": [
         "monsters/MONSTER_Old_Ways_Chosen.webp"
       ],
-      "body": "<p class=\"panel-body\">Venerating old and forgotten gods who once held sway over the remote places of the world, the Old Ways chosen keep the last embers of belief and tradition burning. Many of the chosen are insular, keeping to the communities they foster. Some are more open to contact with outsiders, whether to be a beneficent presence or to draw in potential sacrifices to the Old Ways.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Keepers of the last embers of the Old Ways, the forgotten gods of remote and wild places, recognisable by their antlers, masks and offerings. Some keep to themselves; others welcome outsiders with open arms, for reasons of their own.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "phantom_hearse": {
       "name": "Phantom Hearse",
@@ -363,28 +401,32 @@
       "images": [
         "monsters/MONSTER_Phantom_Hearse.webp"
       ],
-      "body": "<p class=\"panel-body\">Phantom hearses are ghostly carriages complete with horses and coachmen—amalgamations of tormented souls driven to claim the living and drag them to the land of the dead.</p>\n<p class=\"panel-body\">The spirit coachmen strike with phantom whips and weapons, and even fly out to harry foes at a distance, while the ghostly horses drive the hearse in a crushing charge that gathers victims and seals them into a spectral coffin that drains the warmth and vitality from flesh and bone. The tolling bell on the carriage precedes the apparition’s appearance, and its sepulchral sound has caused more than a few witnesses to drop dead on the spot.</p>",
+      "body": "<p class=\"panel-body\">A spectral black carriage drawn by ghostly horses, its coachmen wailing, a bell tolling ahead of it. Those who hear that bell are told never to look back.</p>",
       "groups": []
     },
     "pigeon_hag": {
       "name": "Pigeon Hag",
-      "kind": "monster",
-      "subtitle": "",
+      "kind": "legendary",
+      "subtitle": "Hag of Feathers and Whispers",
       "images": [
         "monsters/MONSTER_Pigeon_Hag_.webp"
       ],
-      "body": "",
+      "body": "<p class=\"panel-body\">A crone always surrounded by pigeons, who seems to know every rumour and secret in the hollow before anyone else does. One of three sisters, if the stories are true.</p>",
       "groups": []
     },
     "pumpkin_head": {
       "name": "Pumpkin Head",
       "kind": "monster",
-      "subtitle": "Fiendish Effigy of the Fields",
+      "subtitle": "Scarecrow That Walks",
       "images": [
         "monsters/MONSTER_Pumpkin_Head.webp"
       ],
-      "body": "<p class=\"panel-body\">Pumpkin heads are scarecrows of straw, sticks, and clothing topped with a carved pumpkin for a head and animated by a fiendish spirit. They are crafted by demons to resemble their Humanoid victims and returned to wherever the unfortunate souls had been snatched from.</p>\n<p class=\"panel-body\">These living effigies speak with the voice of whomever they replaced, often repeating phrases and behaviors that the missing person said or did in life while stalking and killing new prey.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Scarecrows of straw, sticks and old clothes topped with a carved pumpkin, which wander away from their posts at night. The worst of it is that, sometimes, they speak.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "reveler_of_song": {
       "name": "Reveler of Song",
@@ -395,7 +437,7 @@
         "monsters/MONSTER_Reveler_of_Song_Drum.webp",
         "monsters/MONSTER_Reveler_of_Song_Hive.webp"
       ],
-      "body": "<p class=\"panel-body\">Revelers of song are Fiends of music and abandon who turn their art against their foes in destructive reverberation. The revelers dance and play at nearly all times and are known to fly into a murderous rage if their invitations to join the celebration are spurned. A variety of revelers of song exist, depending on the type of instrument a given reveler plays. Drone revelers play the hurdy gurdy and are surrounded by an accompanying swarm of bees. Drum revelers play drums or cymbals, and the world shakes to their beat. Bell revelers play some variety of bell, chime, or gong, and the ringing overtakes all other sounds.</p>",
+      "body": "<p class=\"panel-body\">Wild musicians who never stop playing — droning hurdy-gurdies wreathed in bees, drums that shake the ground, bells that drown out every other sound. Their invitations to dance are hard to refuse, and refusing them is said to be a terrible mistake.</p>",
       "groups": []
     },
     "reveler_of_stories": {
@@ -407,39 +449,41 @@
         "monsters/MONSTER_Reveler_of_Stories_Hut.webp",
         "monsters/MONSTER_Reveler_of_Stories_Tome.webp"
       ],
-      "body": "<p class=\"panel-body\">Timeless stories have inspired countless mortals, and the echoes of those stories in the Lower Planes have spawned fiendish embodiments of those tales—the revelers of stories. These Fiends twist the themes of their tales, turning inspiration into doom. The revelers’ forms and powers change depending on the theme of stories they embody. Great beast revelers of stories rise from tales of terrible monsters. Hero revelers of stories embody the exploits of knights and other mighty heroes. Witch revelers of stories bring to life tales of wicked witches, wizards, and other magicians.</p>",
+      "body": "<p class=\"panel-body\">Figures stepped out of old tales — a great beast, a storybook hero, a wicked witch — each a dark mirror of the story it came from. They play their parts with relish, and the endings are never happy.</p>",
       "groups": []
     },
     "rotweaver": {
       "name": "Rotweaver",
       "kind": "monster",
-      "subtitle": "Fey Thrall of Rot",
+      "subtitle": "Thrall of the Rot",
       "images": [
         "monsters/MONSTER_Rotweaver.webp"
       ],
-      "body": "<p class=\"panel-body\">Rotweavers were Fey caretakers of the natural world or fey planes who’ve been corrupted by the power of rot. Rotweavers serve powerful beings of withering and blight as minor acolytes and hunters, working to spread the bounds of their beloved decay.</p>",
+      "body": "<p class=\"panel-body\">Small fey creatures of moss and mould who tend the blight the way others tend a garden, and hunt those who would stop it.</p>",
       "groups": []
     },
     "serum_brute": {
       "name": "Serum Brute",
       "kind": "monster",
-      "subtitle": "Cursed Giant Enhanced by Alchemy",
+      "subtitle": "Stitched and Tubed Giant",
       "images": [
         "monsters/MONSTER_Serum_Brute.webp"
       ],
-      "body": "<p class=\"panel-body\">Serum brutes are descended from giants who suffered an enduring curse when they failed to take over a Fey domain. They have third eyes, usually in their foreheads, which channel the giants’ curse into the world around them. All three of their eyes are sewn or otherwise sealed shut to contain the curse.</p>\n<p class=\"panel-body\">Serum brutes are further enhanced with—and get their name from—a series of alchemical infusions, often delivered through implanted vessels and tubes, which seek to deaden their sorrow and pain, as well as the disturbing power of their third eyes. They form deep emotional bonds with any who offer them comfort and an escape from the pain of their curse, and they are often willing to die for those allies.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Huge, sorrowful giants with their eyes sewn shut and glass vessels and tubes threaded into their bodies. They move as if in constant pain.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "shrouded": {
       "name": "Shrouded",
       "kind": "monster",
-      "subtitle": "Soul Corrupted by the Shroud",
+      "subtitle": "Whispering Dead",
       "images": [
         "monsters/MONSTER_Shrouded_Grappler.webp",
         "monsters/MONSTER_Shrouded_Reaper.webp",
         "monsters/MONSTER_Shrouded_Scavenger.webp"
       ],
-      "body": "<p class=\"panel-body\">Shrouded are the spirits of the dead—devoid of any ability to reason and corrupted by the deathly mists known as the Shroud. They are raw emotional energy, unfettered and unleashed, manifested into being. The shrouded are constantly whispering about a victim’s incompetencies, weakness, foibles, and failings as they engulf their prey to drain the life from them, corrupting their soul.</p>",
+      "body": "<p class=\"panel-body\">Grey, half-formed spirits of the dead that drift out of the mists, endlessly whispering every failing and weakness of the living they come near.</p>",
       "groups": []
     },
     "skitterswarm": {
@@ -449,18 +493,24 @@
       "images": [
         "monsters/MONSTER_Skitterswarm.webp"
       ],
-      "body": "<p class=\"panel-body\">Disgusting Fey who delight in warping flesh and spreading sickness can gather into squirming masses of centipedes known as skitterswarms. These swarms lurk in places where foulness accumulates and often serve centipede hags.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A squirming carpet of centipedes that pours out of the foulest places — drains, middens, abandoned mines. Where they gather, sickness follows.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "soulfire_stoker": {
       "name": "Soulfire Stoker",
       "kind": "monster",
-      "subtitle": "Engine-Born Spirit of Flame and Death",
+      "subtitle": "Spirit of the Firebox",
       "images": [
         "monsters/MONSTER_Soulfire_Stoker.webp"
       ],
-      "body": "<p class=\"panel-body\">Soulfire stokers are Elemental spirits of fire who inhabit furnaces, engines, and boilers that burn bodies or souls. The resulting creature is composed of ghostly flames and steam, with swirling plates of phantom iron that resemble the engine or machine that gave it form. A crackling blend of fire and negative energy, soulfire stokers burn away souls as much as flesh.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A roaring shape of ghostly green flame, steam and phantom iron plating that lives in a furnace and tends its fire. It does not care much what — or who — it feeds into the flames.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "squabswarm": {
       "name": "Squabswarm",
@@ -469,20 +519,35 @@
       "images": [
         "monsters/MONSTER_Squabswarm.webp"
       ],
-      "body": "<p class=\"panel-body\">Fey messengers that take the form of pigeons can gather into flocks, or squabswarms. Hags and other influential Fey use squabswarms as spies and messengers—and sometimes as unerring trackers to locate any who flee responsibility or judgement.</p>",
+      "body": "<p class=\"panel-body\">A flock of pigeons that seems to watch a little too closely, and that turns up wherever you go. Folk say some pigeons carry more than letters.</p>",
       "groups": []
     },
     "vermin_familiar": {
       "name": "Vermin Familiar",
       "kind": "monster",
-      "subtitle": "Infesting Hag Companion",
+      "subtitle": "Pest With Too-Clever Eyes",
       "images": [
+        "monsters/MONSTER_Vermin_Familiar_Weasel.webp",
         "monsters/MONSTER_Vermin_Familiar_Centepede.webp",
-        "monsters/MONSTER_Vermin_Familiar_Pigeon.webp",
-        "monsters/MONSTER_Vermin_Familiar_Weasel.webp"
+        "monsters/MONSTER_Vermin_Familiar_Pigeon.webp"
       ],
-      "body": "<p class=\"panel-body\">Capricious Fey spirits incarnated into bodies reminiscent of normal pests, vermin familiars serve spellcasters and especially vermin hags. While they are most often drawn to serve wicked masters, they also delight in playing the part of dutiful servants to corrupt spellcasters who aren’t evil.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A weasel, a centipede or a pigeon at first glance — until it watches you with far more cunning than any pest should have. They are found in the company of those who practise darker crafts.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ],
+      "imageGroups": {
+        "monsters/MONSTER_Vermin_Familiar_Weasel.webp": [
+          "1",
+          "2",
+          "3"
+        ],
+        "monsters/MONSTER_Vermin_Familiar_Centepede.webp": [
+          "1"
+        ],
+        "monsters/MONSTER_Vermin_Familiar_Pigeon.webp": []
+      }
     },
     "vermin_infestation": {
       "name": "Vermin Infestation",
@@ -491,7 +556,7 @@
       "images": [
         "monsters/MONSTER_Vermin_Infestation.webp"
       ],
-      "body": "<p class=\"panel-body\">A nightmarish amalgamation of centipedes, pigeons, and weasels, vermin infestations are thankfully rare. These swarms of Fey roil and scratch and rend with individual pigeons streaking out to tear at distant foes, becoming a frenzied mass that throws all subtlety and coordination to the wind. At times, the constituent vermin-like Fey seem to be at each other’s throats as much as any victims of the swarm.</p>",
+      "body": "<p class=\"panel-body\">A nightmarish tangle of centipedes, pigeons and weasels moving as one frenzied, shrieking mass. Thankfully rare.</p>",
       "groups": []
     },
     "wayward_haint": {
@@ -501,7 +566,7 @@
       "images": [
         "monsters/MONSTER_Wayward_Haint.webp"
       ],
-      "body": "<p class=\"panel-body\">Wayward haints are restless spirits stuck between the realms of the living and the dead. Be it a curse or an unresolved conflict from their previous life, a haint can’t rest until their unfinished business is resolved. Haints only show hints of who they were in life, taking on a more symbolic form related to the hurt or loss they can’t let go of. They tend to repeat their monotonous actions—often imitating those performed in life or reenacting their sorrow—over and over for eternity. When provoked, they can display a volatile temper and lash out with a crushing wave of the grief and indecision that binds their spirit.</p>",
+      "body": "<p class=\"panel-body\">Restless spirits caught between the living and the dead, repeating the same small acts over and over — eating, weeping, hauling, performing. They take shapes that hint at whatever loss holds them back, and can sometimes be helped to move on.</p>",
       "groups": [
         "1",
         "2",
@@ -510,13 +575,17 @@
     },
     "weasel_hag": {
       "name": "Weasel Hag",
-      "kind": "monster",
-      "subtitle": "Hag of Soul Twisting and Terror",
+      "kind": "legendary",
+      "subtitle": "Hag of Teeth and Nightmares",
       "images": [
         "monsters/MONSTER_Weasel_Hag.webp"
       ],
-      "body": "<p class=\"panel-body\">Covetous and bedecked in stolen and gifted teeth, weasel hags are Fey creatures that sow nightmares and temptation to wickedness. They often surround themselves with weasels and boogleswarms, using them as spies, thieves to steal trinkets (especially lost teeth), and to spread their malign influence.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A covetous crone strung with necklaces of stolen and gifted teeth, attended by weasels and boogleswarms. She deals in temptation and bad dreams. The youngest of three sisters, if the stories are true.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "wellwyrm": {
       "name": "Wellwyrm",
@@ -525,8 +594,10 @@
       "images": [
         "monsters/MONSTER_Wellwyrm.webp"
       ],
-      "body": "<p class=\"panel-body\">Wellwyrms are serpents originally touched by cruel Fey masters. The wyrms live in shallow waters where land\u0002dwelling creatures frequent, such as wells and watering holes, lying in wait to coil around unsuspecting victims. Wellwyrms then drag their prey into water, or into burrows they dig under seemingly safe ground, to drown or suffocate.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Long, pale serpents that lie in wells, ponds and watering holes, waiting for something to come close enough to the water's edge.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "wildpyre": {
       "name": "Wildpyre",
@@ -535,27 +606,31 @@
       "images": [
         "monsters/MONSTER_Wildpyre.webp"
       ],
-      "body": "<p class=\"panel-body\">When animals perish in flames, their escaping spirits can cling to the fire that took their lives and arise as wildpyres. These Undead resemble the kind of animal they were in life, though made of ghostly flames. They lash out at anything in their vicinity, fanning the flames that consumed them.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">The ghost of an animal made of living flame — a stag, a hound, a great cat — lashing out at anything near it as if it were still burning.</p>",
+      "groups": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "woodwarped": {
       "name": "Woodwarped",
       "kind": "monster",
-      "subtitle": "Facsimile Grown of Root and Vine",
+      "subtitle": "Root-Grown Likeness",
       "images": [
         "monsters/MONSTER_Woodwarped.webp"
       ],
-      "body": "<p class=\"panel-body\">Whispered among forest dwellers is the tale of a cursed vine, said to creep into the bodies of the living or the dead, twisting them into woodwarped. These wooden creations of tangled roots and bark take shape into a crude yet eerily familiar imitation of their hosts. Those that slay their hosts are sometimes clad in the stolen clothing and armor of their victims, silently wandering the woods with hollow eyes that reflect the unnatural force that binds them to the forest. Cutting pieces from their bodies is a dangerous proposition, as the fragments quickly grow into new woodwarped.</p>",
+      "body": "<p class=\"panel-body\">Figures of tangled root and bark grown into the crude likeness of a person, sometimes wearing that person's clothes. Forest-folk whisper of a cursed vine behind them.</p>",
       "groups": []
     },
     "wormhost_surgeon": {
       "name": "Wormhost Surgeon",
       "kind": "monster",
-      "subtitle": "Parasitical Physician",
+      "subtitle": "Unsettling Surgeon",
       "images": [
         "monsters/MONSTER_Wormhost_Surgeon.webp"
       ],
-      "body": "<p class=\"panel-body\">Alien parasitic worms that infest the brains of Humanoid bodies mutate their hosts into wormhost surgeons. These aberrant husks are obsessed with anatomical study and with finding new Humanoids to infest with larval worm slurry to propagate their kind. They can pass for ordinary people in most cases but must take care to hide their exposed brains and the wriggling worms within their flesh.</p>",
+      "body": "<p class=\"panel-body\">Doctors who pass for ordinary people at a glance, always wearing a cap or hood. Their interest in anatomy is far too eager, and sometimes something wriggles beneath their skin.</p>",
       "groups": [
         "1"
       ]
@@ -567,17 +642,17 @@
       "images": [
         "monsters/BOSS_Barrow_King.webp"
       ],
-      "body": "<p class=\"panel-body\">The Barrow King is known only by the armies of Undead he commands, which all slumber in tombs and burial mounds. Wights and their zombie conscripts arise when trespassers violate the resting place of the king’s army, and tales speak of a tide of death that will sweep across the world if the king himself should awaken. Records of the king’s living exploits and identity are near nonexistent, but rumors abound, and the storm of stories and myths may conceal grains of truth.</p>",
+      "body": "<p class=\"panel-body\">A king of the dead known only through the armies slumbering in his tombs and barrows. Tales say the dead rise when his resting places are disturbed, and that a tide of death will follow if he himself should ever wake.</p>",
       "groups": []
     },
     "beast_of_blight": {
       "name": "The Beast of Blight",
       "kind": "legendary",
-      "subtitle": "Manifestation of Rot and Decay",
+      "subtitle": "The Rot in the Greenwood",
       "images": [
         "monsters/BOSS_Beast_of_Blight.webp"
       ],
-      "body": "<p class=\"panel-body\">The Beast of Blight was once known as Farryn of the Greenwood, a druidic protector of the natural cycle who delved into forbidden lore to save her dead lover. Her love was virtuous, but in the end, it caused nothing but pain. Rot overtook the druid, and she is now a monstrous being that spreads and thrives on decay. The Beast of Blight moves effortlessly through decay and spews putrid spores when roused to anger.</p>",
+      "body": "<p class=\"panel-body\">A colossal creature of rot and fungus that moves through decay as easily as through air. The forest dies a little more wherever it passes, and the woodcutters who live nearby say it is grieving.</p>",
       "groups": []
     },
     "brimstone_behemoth": {
@@ -587,28 +662,28 @@
       "images": [
         "monsters/BOSS_Brimstone_Behemoth.webp"
       ],
-      "body": "<p class=\"panel-body\">The emergence of the Brimstone Behemoth means armageddon for whatever realm it erupts into. A Fiend as old as time itself, it is made of hellfire, brimstone, and dying worlds. It has a malevolent will that seeks only to bring about mass extinction and apocalypse. The only hope for many civilizations has been through the regular willing sacrifice of citizens to slow or delay the inevitable doom to come.</p>",
+      "body": "<p class=\"panel-body\">A titan of hellfire and brimstone spoken of only in prophecies of the end of the world. Some realms are said to have bought time against it with terrible sacrifices.</p>",
       "groups": []
     },
     "chained_reaper": {
       "name": "The Chained Reaper",
       "kind": "legendary",
-      "subtitle": "Burdened Harbinger of Death",
+      "subtitle": "Bearer of Chains",
       "images": [
         "monsters/BOSS_Chained_Reaper.webp"
       ],
-      "body": "<p class=\"panel-body\">The Chained Reaper is all that remains of a once-noble orc caretaker of the departed called Yorgrim. Having been corrupted by the mists of death known as the Shroud, the Chained Reaper is a being of hatred and bitterness, striving to cremate all living things in its balefire before binding them in chains of anguish.</p>",
+      "body": "<p class=\"panel-body\">A towering figure wrapped in heavy chains and wreathed in pale fire, glimpsed out past the cemetery fence. Those who hear its chains rattle at night lock their doors.</p>",
       "groups": []
     },
     "crimson_abbot": {
       "name": "The Crimson Abbot",
       "kind": "legendary",
-      "subtitle": "Unholy Crusader of Blood",
+      "subtitle": "Master of the Crimson Rose",
       "images": [
         "monsters/BOSS_Crimson_Abbot_Normal.webp",
         "monsters/BOSS_Crimson_Abbot_Transformed.webp"
       ],
-      "body": "<p class=\"panel-body\">In life, the Crimson Abbot was a virtuous crusader named Sir Marius Renathyr but was seduced by the sweet whispers of an archdevil of deceit and pride who masqueraded as a goddess of righteousness. On the brink of death, the abbot accepted the whispered offer for eternal life, and in so doing, was transformed into a creature of unbearable pride with an unquenchable thirst for blood. He continues to work in the name of his “goddess” and has gathered a fanatically loyal congregation eager for his promise of pure, everlasting life.</p>",
+      "body": "<p class=\"panel-body\">The magnetic abbot of the Crimson Faith, whose sermons promise purity and everlasting life and whose congregation adores him without reservation. Those who have seen his true face in the sanctum speak of something monstrous beneath the vestments.</p>",
       "groups": [
         "1"
       ]
@@ -620,7 +695,7 @@
       "images": [
         "monsters/BOSS_Dusk_Mother.webp"
       ],
-      "body": "<p class=\"panel-body\">The keening wail of a mother is unmistakable and haunting, and the legends that tell of the Dusk Mother barely scratch the surface of her terrifying existence. She carries a pair of oversized shears and a great bell she tolls to accompany her wailing. Her eternal torment stems from her children, who met their fate due to the Dusk Mother’s negligence—or perhaps her wrath. Now she cries in shame for that loss as she searches for her children, or for souls to claim and fashion into dolls in a futile attempt to fill the void in her doomed soul.</p>",
+      "body": "<p class=\"panel-body\">A wailing spectre carrying oversized shears and a great bell that tolls with her cries. She searches endlessly for her lost children — and for others to take their place.</p>",
       "groups": []
     },
     "galloping_headsman": {
@@ -630,7 +705,7 @@
       "images": [
         "monsters/BOSS_Galloping_Headsman.webp"
       ],
-      "body": "<p class=\"panel-body\">The Galloping Headsman is a formidable combination of human and horse musculature fused with nightmarish magic and dark revenge. Gouts of flame burst from where its head and tail should be and dance dangerously along the edge of its massive two-headed axe. A burning, skull-shaped pumpkin floats eerily in one hand, its fiery visage a constantly shifting train of agonized faces.</p>",
+      "body": "<p class=\"panel-body\">A headless horror of man and horse fused into one, flames pouring from where its head should be, carrying a great axe and a burning, skull-faced pumpkin. It rides for vengeance, and does not stop.</p>",
       "groups": []
     },
     "ghostlight_locomotive": {
@@ -640,7 +715,7 @@
       "images": [
         "monsters/BOSS_Ghostlight_Locomotive.webp"
       ],
-      "body": "<p class=\"panel-body\">The Ghostlight Locomotive is the engine of a phantom train that travels unseen between the realms of life and death, ferrying souls of the dead to their afterlife. During its normal operation, the locomotive burns doomed spirits for fuel and races along spectral, misty rails that appear as it travels, and it has little awareness beyond its crucial task.</p>\n<p class=\"panel-body\">Only a drastic event, such as the corruption of its soul-made fuel source, can turn the Ghostlight Locomotive from its endless duty, whereupon it stokes a consciousness of the innumerable souls it has burned and vents the fury of the damned upon any obstacles in its path. When pressed, the residue of wicked souls left from the burning of its corrupted fuel overwhelms the engine’s amoral nature, driving it to malevolent and hateful destruction.</p>\n<p class=\"panel-body\">THE GHOSTLIGHT LOCOMOTIVE'S LAIR The Ghostlight Locomotive's lair is a 1-mile-radius Emanation of shrouding mist originating from the locomotive. This mist doesn't extend within the cars of the Ghostight Express that the locomotive pulls. The region containing the Ghostlight Locomotive's lair is changed by its presence, creating the following effects: Ghastly Shroud. When a creature that isn't Undead finishes a Short or Long Rest within 1 mile of the locomotive, the creature must succeed on a DC 15 Constitution saving throw or any time it regains Hit Points, it only regains half the amount. This effect ends when the creature next finishes a Long Rest or receives a Lesser Restoration spell or similar magic.</p>\n<p class=\"panel-body\">Spirit Calling. Within 1 mile of the locomotive, Hostile Shrouded* and Specters are abundant and drawn to any creature that attacks the Ghostlight Locomotive or that tries to keep pace with, climb, or enter the Ghostlight Express.</p>\n<p class=\"panel-body\">If the Ghostlight Locomotive dies, these effects end immediately.</p>",
+      "body": "<p class=\"panel-body\">The engine of the phantom train that carries the dead across the Shroud. When something corrupts its fire it wakes with a will of its own, its smokestack a gaping face, its eyes burning with every soul it has ever consumed.</p>",
       "groups": [
         "1",
         "2",
@@ -654,7 +729,7 @@
       "images": [
         "monsters/BOSS_Grinning_Sinner.webp"
       ],
-      "body": "<p class=\"panel-body\">Once the dashing pirate captain Briggsy Kratch, the crocodile-folk now known as the Grinning Sinner made a bargain for power with a spirit known as Snake Eye Jack. The sinner grew discontent with the power he was gifted and tricked Jack into a coffin before sealing him inside. Now the Grinning Sinner siphons his trapped patron’s cursed power and makes bargains of his own to snare the souls of the desperate and foolish.</p>",
+      "body": "<p class=\"panel-body\">A grinning crocodile-folk gambler who will play any game for any stake and always seems to know the odds. The bayou says he never loses — and that those who deal with him eventually lose everything.</p>",
       "groups": [
         "1"
       ]
@@ -662,85 +737,91 @@
     "harvest_terror": {
       "name": "The Harvest Terror",
       "kind": "legendary",
-      "subtitle": "Demon of Secrets and Despair",
+      "subtitle": "Terror of the Fields",
       "images": [
         "monsters/BOSS_Harvest_Terror.webp"
       ],
-      "body": "<p class=\"panel-body\">Once a jovial soul imbued into the body of a scarecrow called Ol’ Jericho Sticks, the Harvest Terror is now a nightmarish abomination. It is a mockery of demonic flesh molded in the shape of a crow-like scarecrow. Its twisted body is made of molding wicker with four tattered, black\u0002feathered wings sprouting from its back. An oversized corvid head with amber eyes sits upon its broad shoulders, its dark beak a jagged mess, and it wields a chipped, wicked scythe covered in old blood. Forever hungry, the Harvest Terror feeds on secrets and those that keep them.</p>",
+      "body": "<p class=\"panel-body\">A towering scarecrow of mouldering wicker with four tattered black wings and a great crow's head with amber eyes, carrying a chipped, bloodied scythe. It stalks the fields after dark, and the crows will not land where it walks.</p>",
       "groups": [
-        "1"
+        "1",
+        "2",
+        "3"
       ]
     },
     "horned_king": {
       "name": "The Horned King",
       "kind": "legendary",
-      "subtitle": "Sin Made Manifest",
+      "subtitle": "Crowned in Horns",
       "images": [
         "monsters/BOSS_Horned_King.webp"
       ],
-      "body": "<p class=\"panel-body\">Every sinful, selfish action in the world pours a fraction of itself into the Horned King, a being composed of every mortal who has surrendered to temptation. Fortunately, under normal circumstances, the Horned King exists as an ephemeral spirit with no physical presence. During times of upheaval, when a great many mortals give in to their selfish desires or when another power—such as a deity, demon lord, or archfey—interferes, the Horned King is made manifest, and with it comes the weight of sin flooding back into the world that created it.</p>\n<p class=\"panel-body\">THE HORNED KING’S LAIR The Horned King’s lair is the forest clearing where a twisted tree focuses the malevolent will that gave rise to the king’s physical presence.</p>\n<p class=\"panel-body\">The region containing the Horned King’s lair is changed by its presence, creating the following effects: Sweet Temp tation. Within 1 mile of the lair, a creature that acts on a sinful impulse to the detriment of a Friendly or Indifferent creature increases its Hit Point maximum and current Hit Points by 10 until it finishes a Long Rest. Creatures are aware of this effect. This can’t occur again until the creature finishes a Long Rest.</p>\n<p class=\"panel-body\">Tenacious Curses. Within 1 mile of the lair, saving throws against curses have Disadvantage.</p>\n<p class=\"panel-body\">If the Horned King dies or moves its lair elsewhere, these effects end immediately.</p>",
+      "body": "<p class=\"panel-body\">A shape glimpsed in the deepest woods: horns, three eyes the colour of old blood, and a voice that offers you everything you have ever wanted. The hollow's oldest warnings say never to sign anything he offers.</p>",
       "groups": []
     },
     "jinxed_leviathan": {
       "name": "The Jinxed Leviathan",
       "kind": "legendary",
-      "subtitle": "Curse-Wrought Swamp Monster",
+      "subtitle": "Monster of the Black Water",
       "images": [
         "monsters/BOSS_Jinxed_Leviathan.webp"
       ],
-      "body": "<p class=\"panel-body\">Once a normal alligator that dwelled in a cursed swamp, the Jinxed Leviathan was warped by the strange hexes and twisted spells of nefarious magicians who sought to defeat the deathly spirit known as Snake Eye Jack. Growing to colossal proportions and infusing with the essence of misfortune itself, the Monstrosity could not be controlled and devoured its makers. Now, it lurks in the still, black water of hexed bayous, always seeking its next meal, upon which it unleashes its jinxcraft before feasting.</p>",
+      "body": "<p class=\"panel-body\">An alligator grown to impossible size, lurking in the still, black water of hexed bayous. Bad luck seems to gather around it like flies.</p>",
       "groups": []
     },
     "lord_of_fools": {
       "name": "The Lord of Fools",
       "kind": "legendary",
-      "subtitle": "Fiendish Master of Revels",
+      "subtitle": "Master of Revels",
       "images": [
         "monsters/BOSS_Lord_of_Fools.webp"
       ],
-      "body": "<p class=\"panel-body\">The Lord of Fools is the embodiment of revelry, cherishing amusement at any cost. He most often leads a procession of revelers of song, revelers of stories, and heralds of fools, compelling townsfolk and travelers to join their celebration to the exclusion of all other concerns. Many of these celebrants dance, drink, and make merry until they drop—sometimes dead! The Lord of Fools laughs all the louder and longer at their demise.</p>",
+      "body": "<p class=\"panel-body\">A grinning, jester-like lord who leads endless processions of revellers from town to town, compelling all who hear his music to dance, drink and make merry — until they drop.</p>",
       "groups": []
     },
     "tall_man": {
       "name": "The Tall Man",
       "kind": "legendary",
-      "subtitle": "Murderous Archfey of the Dark Wood",
+      "subtitle": "The Thing Between the Trees",
       "images": [
         "monsters/BOSS_The_Tall_Man.webp"
       ],
-      "body": "<p class=\"panel-body\">The Tall Man is a mysterious entity that haunts an accursed forest. Once, he was an archfey who ruled a now-forgotten court, renowned for its dances that lasted for nights on end. Doomed now to walk his rotting forest, the Tall Man finds pleasure where he can by tempting travelers and forest denizens alike to play hide and seek with him—with deadly results.</p>",
+      "body": "<p class=\"panel-body\">An impossibly tall, thin figure glimpsed between the trunks of a rotting forest, who invites travellers to play hide and seek. Nobody who has played has ever told how the game ends.</p>",
       "groups": []
     },
     "vermintoll_abomination": {
       "name": "The Vermintoll Abomination",
       "kind": "legendary",
-      "subtitle": "Verminous Coven Amalgamation",
+      "subtitle": "The Thing in the Cauldron",
       "images": [
         "monsters/BOSS_Vermintoll_Abomination.webp"
       ],
-      "body": "<p class=\"panel-body\">The magic that binds hag covens together is far more powerful than many spellcasters can fully comprehend. Vermintoll abominations come about when the magics of a centipede hag, a pigeon hag, and a weasel hag enmesh and fuse the witches into one mass, bound to their cauldron.</p>\n<p class=\"panel-body\">THE VERMINTOLL ABOMINATION’S LAIR The Vermintoll Abomination’s lair is a decrepit hideaway, often hidden in plain sight such as an attic, basement, or a seized home.</p>\n<p class=\"panel-body\">The region containing the Vermintoll Abomination’s lair is changed by its presence, creating the following effects: Endless Vermin. Within 1 mile of the lair, Giant Centipedes, Giant Weasels, and pigeons (use the Raven stat block) are common nuisances. They steal Tiny objects and befoul food.</p>\n<p class=\"panel-body\">Loyal Dwelling. The lair itself, including any greater structure or complex it resides within, rejects intruders. Ability checks to pick locks or find secret doors have Disadvantage.</p>\n<p class=\"panel-body\">If the Vermintoll Abomination dies or moves its lair elsewhere, these effects end immediately.</p>",
+      "body": "<p class=\"panel-body\">A heaving horror of feathers, fur and chitin bound to a great iron cauldron, shrieking in three voices at once. No one in the hollow will say where it came from.</p>",
       "groups": []
     },
     "weeping_widow": {
       "name": "The Weeping Widow",
       "kind": "legendary",
-      "subtitle": "Matron of Malevolent Medicine",
+      "subtitle": "The Grieving Matron",
       "images": [
         "monsters/BOSS_Weeping_Widow_Normal.webp",
         "monsters/BOSS_Weeping_Widow_Brute.webp"
       ],
-      "body": "<p class=\"panel-body\">Once a priestess committed to healing the sick through divine rites, the Weeping Widow abandoned the gods after a personal tragedy and turned to sinister science. Believing she knows how to best treat the suffering and make them stronger, she employs a harrowing regimen of alchemical and medical experimentation to wipe minds and alter bodies, whether the patient wants the treatment or not.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A tall, veiled figure of grief whose cheeks are streaked with ink-black tears, surrounded by the cold tools of a surgeon. Her cures are said to work — though her patients are rarely the same afterwards.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "white_worm": {
       "name": "The White Worm",
       "kind": "legendary",
-      "subtitle": "Eldritch Devourer of Memories",
+      "subtitle": "The Pale Thing Below",
       "images": [
         "monsters/BOSS_White_Worm.webp"
       ],
-      "body": "<p class=\"panel-body\">Born of a forgotten realm beyond the stars, the White Worm is an eldritch horror resembling a humungous, pallid grub that ravenously hungers for memory. Greedily consuming the memories of any beings capable of remembering, its mere existence sends out shockwaves of alien psychic energy. It also serves as the queen of a hivemind colony of infinite wormlike spawn that seek mortal hosts to feast upon and control.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A gargantuan, pallid grub from somewhere far beyond the stars, attended by countless smaller worms. Those who have stood near it speak of their thoughts slipping away like water.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "wicker_man": {
       "name": "The Wicker Man",
@@ -749,7 +830,7 @@
       "images": [
         "monsters/BOSS_Wicker_Man.webp"
       ],
-      "body": "<p class=\"panel-body\">The ultimate expression of a cult’s dedication to its patron is the Wicker Man. This massive Construct is woven from wicker and bound with wire and iron bands in the shape of a great bipedal effigy. The chest cavity and limbs are hollow where sacrifices can be secured, with the wicker skin forming cage-like bars and gaps. Celebrated and protected with a cult’s very existence, the Wicker Man stands silent and impassive until it is ignited while filled with living sacrifices. Then it comes to life and seeks to consume any nonbelievers—and sometimes even the faithful.</p>\n<p class=\"panel-body\">THE WICKER MAN’S LAIR The Wicker Man’s lair is the hilltop where it is constructed and venerated.</p>\n<p class=\"panel-body\">The region containing the Wicker Man’s lair is changed by its presence, creating the following effects: Biting Flames. Within 1 mile of the lair, when Fire damage is dealt to a creature outside the Wicker Man’s dedicated cult that has Resistance or Immunity to Fire damage, the creature takes an extra 1d6 Necrotic damage. Endless Praise. Within 1 mile of the lair, cultists of the Wicker Man who sing their cult’s praises or hymns can be heard up to 300 feet away, even through a Silence spell. If the Wicker Man dies or moves its lair elsewhere, these effects end immediately.</p>",
+      "body": "<p class=\"panel-body\">A towering effigy of woven wicker, iron and wire, raised on a hilltop by its faithful, its hollow chest and limbs built like cages. It stands silent and still — until it is lit.</p>",
       "groups": []
     },
     "wild_titan": {
@@ -759,7 +840,7 @@
       "images": [
         "monsters/MONSTER_Wild_Titan.webp"
       ],
-      "body": "<p class=\"panel-body\">Wandering the most inhospitable mountain ranges, the Wild Titan is the wilderness made manifest, created long ago by a forgotten will for a purpose that none know. Favoring solitude in the most remote places of the world, when it encounters settlements and “civilized” people, it wants only to turn them to primal savagery or crush them beneath its immense bulk.</p>",
+      "body": "<p class=\"panel-body\">A colossal giant of the most remote mountain ranges, the wilderness itself given shape. It wants nothing to do with towns and their people, and woe betide any that stand in its way.</p>",
       "groups": []
     },
     "corn_dolly": {
@@ -769,8 +850,10 @@
       "images": [
         "monsters/FAMILIAR_Corn_Dolly.webp"
       ],
-      "body": "<p class=\"panel-body\">Crafted from dried husks and bound with twine, corn dollies’ delicate forms are stitched together with rustic care. Their faces are ink-brushed with simple, childlike expressions—smiling mouths that curve a bit too wide and hollow eyes that seem to stare far beyond the physical world. The Constructs are spirits of deceased Humanoids drawn to the hollow corn husk shell, seeking refuge. These spirits retain faint traces of who they once were—a protective instinct entwined with a simmering fury. Once animated, the dolls reflect this dual nature: acting as silent guardians one moment and vengeful specters the next.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Little figures of dried husk bound with twine, their faces ink-brushed with childlike smiles that curve a bit too wide. They seem to stand guard over those they choose — and their moods can turn in an instant.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "crooked_hare": {
       "name": "Crooked Hare",
@@ -779,7 +862,7 @@
       "images": [
         "monsters/FAMILIAR_Crooked_Hare.webp"
       ],
-      "body": "<p class=\"panel-body\">Crooked hares look like rabbits at first glance, but their true nature is given away by the antlers and wings they grow and the cunning gleam in their eyes. They are mischievous tricksters that delight in stealing things from unsuspecting travelers and hiding them in amusing, slightly dangerous, or just unlikely places. If roused to anger or cornered, crooked hares deliver a bite that carries an unsettling—if minor—curse. Despite their troublesome nature, crooked hares might serve as companions for woods-crafty folk who have a good sense of humor.</p>",
+      "body": "<p class=\"panel-body\">At first glance a rabbit — until you notice the small antlers, the wings, and the cunning gleam in its eye. Crooked hares steal things from travellers and hide them in amusing, unlikely places.</p>",
       "groups": []
     },
     "devils_glove": {
@@ -789,8 +872,10 @@
       "images": [
         "monsters/FAMILIAR_Devils_Glove.webp"
       ],
-      "body": "<p class=\"panel-body\">Comprised of five twitching, blood-red tendrils lined with black slime, the devil’s glove fungus feeds voraciously off decaying matter, unwary insects, and small creatures. Resembling a long-fingered hand, they grow from bulbous roots that look like leathery, white eggs and constantly emit an overpowering scent of death and rot. Despite their unpleasant aura, these fungus creatures can form beneficial relationships with others, providing nourishment and resilience in exchange for protection and a ready supply of decaying material to feed upon.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A blood-red fungus of five twitching, slime-slick tendrils, shaped like a long-fingered hand, growing from leathery white bulbs. It smells overpoweringly of death and rot — and some keep one anyway.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "dingpot": {
       "name": "Dingpot",
@@ -799,7 +884,7 @@
       "images": [
         "monsters/FAMILIAR_Dingpot.webp"
       ],
-      "body": "<p class=\"panel-body\">Dingpots are animated objects created to assist in magical and alchemical research—or simply to help in the kitchen. Often cheerful, dingpots delight in serving up delicious meals, soothing tea, and the occasional magical draught.</p>",
+      "body": "<p class=\"panel-body\">A cheerful, bustling little cauldron that loves nothing more than serving up a good meal, a soothing tea or the occasional bubbling draught.</p>",
       "groups": []
     },
     "ghost_crawler": {
@@ -809,8 +894,10 @@
       "images": [
         "monsters/FAMILIAR_Ghost_Crawler.webp"
       ],
-      "body": "<p class=\"panel-body\">Silent and nearly invisible, ghost crawlers skitter between the darkest corners, hiding and watching. Their diminutive, ghostly, spider-like bodies are ill-defined and as translucent as a wisp of smoke, while their legs are long, uneven, and jarringly solid. The webs they spin are ephemeral and ghastly, allowing the crawlers to sense through them regardless of the distance.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A small, ghostly spider, translucent as smoke apart from its long, jarringly solid legs, that skitters silently between the darkest corners and spins webs that fade from sight.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "goatstealer": {
       "name": "Goatstealer",
@@ -819,8 +906,10 @@
       "images": [
         "monsters/FAMILIAR_Goatstealer.webp"
       ],
-      "body": "<p class=\"panel-body\">The hairless, reeking goatstealers are vicious predators and scavengers that earn their name from their habit of preying upon livestock. They latch onto prey with wicked, needle-like teeth, delivering lethal venom and devouring creatures far larger than its wiry frame would suggest is possible. Especially dangerous in packs, the carrion-yet-peaty stench of goatstealers is the stuff of legend.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Hairless, reeking little predators with needle teeth that prey on livestock far larger than themselves. Their carrion-and-peat stench is the stuff of legend among herders.</p>",
+      "groups": [
+        "2"
+      ]
     },
     "hemonculus": {
       "name": "Hemonculus",
@@ -829,8 +918,10 @@
       "images": [
         "monsters/FAMILIAR_Hemonculus.webp"
       ],
-      "body": "<p class=\"panel-body\">Hemonculus are servitors created by a blood magic ritual that binds a fiendish spirit into a blood-formed body. For the cost of a small sacrifice in blood (the creator’s own or otherwise), the creatures serve as spies and assist in procuring further blood for magical use.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A small, wet, crimson creature that seems to be made of blood, darting about on errands for whoever keeps it.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "magpie_of_omens": {
       "name": "Magpie of Omens",
@@ -839,7 +930,7 @@
       "images": [
         "monsters/FAMILIAR_Magpie_of_Omens.webp"
       ],
-      "body": "<p class=\"panel-body\">To those who respect the Old Ways, this bird of black and white brings tidings both fair and foul. Although the omens the magpie delivers can bring joy and grief in equal measure, they are always trustworthy.</p>",
+      "body": "<p class=\"panel-body\">A black-and-white bird that brings tidings both fair and foul. To those who keep the Old Ways, its omens are always to be trusted.</p>",
       "groups": []
     },
     "moonshine": {
@@ -849,7 +940,7 @@
       "images": [
         "monsters/FAMILIAR_Moonshine.webp"
       ],
-      "body": "<p class=\"panel-body\">When a person dies with unfinished business, their soul can remain shackled to the living world as an Undead spirit. Usually such spirits rest and move on when their business is concluded, but some remain as companions, guides, and helpers for the living. Moonshines are spirits who resolved their emotional tethers but have chosen to linger on. They often take a liking to a living person and choose to help them through their life’s journey.</p>",
+      "body": "<p class=\"panel-body\">A gentle wandering spirit who has made peace with whatever once held it back, and chosen to stay a while anyway — often attaching itself to a living person it has taken a liking to.</p>",
       "groups": [
         "1"
       ]
@@ -861,8 +952,10 @@
       "images": [
         "monsters/FAMILIAR_Nameless_Thing.webp"
       ],
-      "body": "<p class=\"panel-body\">Nameless things are alien minds bound into physical vessels, most often diminutive animals, objects, or pieces of monsters. These creatures can creep into the world when outer influence seeps into existence but are usually deliberately invited.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">Something that is not quite a small animal, an object or a piece of something larger — and is not from here. Looking at it for too long is unpleasant.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "ravencraft": {
       "name": "Ravencraft",
@@ -871,8 +964,11 @@
       "images": [
         "monsters/FAMILIAR_Ravencraft.webp"
       ],
-      "body": "<p class=\"panel-body\">Ravencrafts are a grotesque fusion of feathers, sinew, and bone. Their tiny form is a contorted and twisted nightmare carelessly sewn together into the mockery of a bird. The mere presence of a ravencraft is an affront to natural death and can keep further death at bay, or they can chill the hearts of their foes with cries of torment from beyond the grave.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A tiny, grotesque mockery of a bird, carelessly sewn together from feathers, sinew and bone. Its cries sound like they come from somewhere much further away.</p>",
+      "groups": [
+        "1",
+        "3"
+      ]
     },
     "salmon_of_knowledge": {
       "name": "Salmon of Knowledge",
@@ -881,8 +977,10 @@
       "images": [
         "monsters/FAMILIAR_Salmon_of_Knowledge.webp"
       ],
-      "body": "<p class=\"panel-body\">Legends speak of the salmon of knowledge—shimmering fish said to embody the wisdom of the ages. Their scales gleam with an iridescent light, and they are forever enveloped in a sphere of gently flowing water that defies gravity. This magical orb is said to carry the essence of the sacred Current of Wisdom—where knowledge of all time and space flows through the rivers of the cosmos.</p>",
-      "groups": []
+      "body": "<p class=\"panel-body\">A shimmering, iridescent fish swimming within a floating sphere of gently flowing water. Legends say it carries the wisdom of the ages.</p>",
+      "groups": [
+        "1"
+      ]
     },
     "witchwoven": {
       "name": "Witchwoven",
@@ -891,7 +989,7 @@
       "images": [
         "monsters/FAMILIAR_Witchwoven.webp"
       ],
-      "body": "<p class=\"panel-body\">Witchwoven are little dolls or effigies made of sticks, twine, and other simple materials, then imbued with life. Some happen naturally in places suffused with old nature magic, but most are created to serve as familiars by spellcasters knowledgeable in the Old Ways.</p>",
+      "body": "<p class=\"panel-body\">Little dolls of sticks, twine and scraps brought to life — sometimes by old nature magic, more often by those who know the Old Ways. Some are surprisingly romantic.</p>",
       "groups": [
         "1"
       ]
