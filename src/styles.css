@@ -736,6 +736,28 @@
     margin: 2rem 0 0.5rem;
   }
 
+  /* A beat's step in the party's timeline (see numberStoryBeats). */
+  .beat-step {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.5rem; height: 1.5rem;
+    padding: 0 0.3rem;
+    margin-right: 0.6rem;
+    border: 1px solid var(--gold-dim);
+    border-radius: 999px;
+    font-size: 0.65rem;
+    letter-spacing: 0;
+    color: var(--gold);
+    vertical-align: middle;
+  }
+  .beat-whole {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin: 0 0 0.8rem;
+  }
+
   .panel-body strong {
     color: var(--cream);
     font-style: normal;
@@ -1033,24 +1055,29 @@
     padding-bottom: 0.35rem;
     border-bottom: 1px solid var(--oak);
   }
-  .chronicle-entry {
-    display: grid;
-    grid-template-columns: 170px 1fr;
-    gap: 1.1rem;
-    padding: 0.8rem 0;
-  }
+  /* Each beat is written out in full, so the Chronicle reads like a book:
+     heading, the beat's own picture, then its text. */
+  .chronicle-entry { padding: 1.2rem 0 1.6rem; max-width: 720px; margin: 0 auto; }
   .chronicle-entry + .chronicle-entry { border-top: 1px dashed rgba(61,42,26,0.6); }
+  .chronicle-chapter { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .chronicle-head { margin-bottom: 0.8rem; }
+  /* Shown whole (portrait art as well as scenes), never cropped. */
   .chronicle-art {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 460px;
+    margin: 0 auto;
     border: 1px solid var(--oak);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+    margin-bottom: 1.1rem;
   }
-  .chronicle-art.blank { background: radial-gradient(circle, #1c1610, #0d0a07); }
   .chronicle-title {
     font-family: 'Cinzel', serif;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
+    font-weight: normal;
     color: var(--cream);
+    margin: 0;
     display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
   }
   .chronicle-tag {
@@ -1061,12 +1088,9 @@
     border: 1px solid var(--gold-dim);
     padding: 0.05rem 0.35rem;
   }
-  .chronicle-excerpt {
-    font-family: 'IM Fell English', serif;
-    color: var(--cream-dim);
-    line-height: 1.6;
-    margin: 0.35rem 0 0.5rem;
-  }
+  .chronicle-body .panel-body { font-size: 0.95rem; }
+  .chronicle-body .panel-image-frame { margin: 0.4rem 0 1.2rem; }
+  .chronicle-body > :last-child { margin-bottom: 0.8rem; }
   .chronicle-read {
     font-family: 'Cinzel', serif;
     font-size: 0.65rem;
@@ -1318,7 +1342,7 @@
     .codex-tab { padding: 0.55rem 0.5rem; letter-spacing: 0.1em; font-size: 0.68rem; }
     #codex-content { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
     .codex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
-    .chronicle-entry { grid-template-columns: 96px 1fr; gap: 0.8rem; }
+    .chronicle-art { max-height: 340px; }
     .codex-tab, .chronicle-read { min-height: 44px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;

@@ -6,7 +6,7 @@
 //                    read, grouped by location (each NPC's `location`).
 //   Chronicle        the group's story in the order it was played
 //                    (STORY_ORDER), filed under chapter headings
-//                    (WM_CHAPTERS), as a recap with links into each panel —
+//                    (WM_CHAPTERS), each beat written out in full —
 //                    and that place's own ambience track (WM_TRACKS), for
 //                    the places that have one.
 // Also the creature panel, opened from a Bestiary card or a
@@ -135,11 +135,10 @@ function notRecognizedHint() {
 
 // ── Bestiary ──────────────────────────────────────────────────────
 // Only creatures the visitor's group has met appear — nothing at all
-// (name, art or outline) for the rest, just a count of how many remain.
+// (name, art, outline or a count) for the rest.
 function bestiaryHtml() {
   const ids = Object.keys(BESTIARY);
   const met = ids.filter(hasMetCreature);
-  const unseen = ids.length - met.length;
   let html = `<p class="codex-intro">Every horror your party has faced and lived to describe.</p>`;
   html += notRecognizedHint();
 
@@ -159,7 +158,6 @@ function bestiaryHtml() {
   });
 
   if (!met.length) html += `<p class="codex-note">Nothing has crossed your path yet… that you know of.</p>`;
-  if (unseen > 0) html += `<p class="codex-note">${unseen} ${unseen === 1 ? 'creature still lurks' : 'creatures still lurk'} unseen in the dark.</p>`;
   return html;
 }
 
@@ -180,7 +178,6 @@ function npcGalleryLocation(id) {
 function galleryHtml() {
   const group = getRecognizedGroup();
   const known = [...knownNpcIds()].filter(id => NPCS[id]);
-  const unknown = Object.keys(NPCS).length - known.length;
 
   // Group by location. A location the visitor hasn't unlocked isn't named —
   // its people go under "Elsewhere in the Hollow" instead.
@@ -208,7 +205,6 @@ function galleryHtml() {
     });
     html += `</div>`;
   });
-  if (unknown > 0) html += `<p class="codex-note">${unknown} ${unknown === 1 ? 'face remains' : 'faces remain'} unknown.</p>`;
   return html;
 }
 
@@ -220,19 +216,6 @@ function chapterListOrder(id) {
 }
 
 // ── Chronicle ─────────────────────────────────────────────────────
-// A short plain-text excerpt of a lore entry: subheadings and [[image]]
-// tags removed, cut at a word boundary.
-function loreExcerpt(html, max = 280) {
-  const text = String(html || '')
-    .replace(/<p class="panel-subheader">[\s\S]*?<\/p>/g, ' ')
-    .replace(/\[\[[^\]]*\]\]/g, ' ')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (text.length <= max) return text;
-  return text.slice(0, text.lastIndexOf(' ', max)).replace(/[,;:.]$/, '') + '…';
-}
-
 // Whose story the Chronicle shows: the visitor's own group — or, for the
 // GM (admin), whichever group they've picked with the switcher.
 let chronicleGroupChoice = null;
@@ -259,52 +242,105 @@ function loreSections(html) {
   return sections.filter(s => s.title || hasMeaningfulContent(s.html));
 }
 
-// One beat of the timeline: a place, and optionally one headed section of
-// that group's write-up there.
-function timelineBeat(place, beatTitle, date, group, seen) {
+// A group's story as numbered steps, in the order it was played:
+// STORY_ORDER[group] lists beats ({ place, beat?, date? }). Anything the
+// group has unlocked that the order doesn't mention yet follows at the
+// end, by chapter, so a new unlock shows up even before it's been placed.
+// Shared by the Chronicle and the step numbers in each place's panel.
+function timelineSteps(group) {
+  if (!group) return [];
+  const steps = [];
+  const listed = new Set();
+  ((typeof STORY_ORDER !== 'undefined' && STORY_ORDER[group]) || []).forEach(b => {
+    if (!groupCanSee(b.place, group) || !WICKERMOOR_HOTSPOTS.some(h => h.id === b.place)) return;
+    steps.push({ place: b.place, beat: b.beat || '', date: b.date || '' });
+    listed.add(b.place);
+  });
+  WICKERMOOR_HOTSPOTS
+    .filter(hs => groupCanSee(hs.id, group) && !listed.has(hs.id))
+    .sort((a, b) => (WM_CHAPTERS[a.id]?.chapter ?? 99) - (WM_CHAPTERS[b.id]?.chapter ?? 99) || chapterListOrder(a.id) - chapterListOrder(b.id))
+    .forEach(hs => steps.push({ place: hs.id, beat: '', date: '' }));
+  return steps.map((s, i) => ({ ...s, step: i + 1 }));
+}
+
+// Puts each beat's timeline step number in front of its heading in a
+// place's panel (and in front of the panel's lore when the whole place is
+// one beat), so the order things happened in can be followed from the map
+// too — gaps in the numbers are what happened elsewhere in between.
+function numberStoryBeats(html, place, group) {
+  const steps = timelineSteps(group).filter(s => s.place === place);
+  if (!steps.length) return html;
+  const chip = n => `<span class="beat-step" title="Step ${n} of your party's story">${n}</span>`;
+  const whole = steps.find(s => !s.beat);
+  let out = html.replace(/<p class="panel-subheader">([\s\S]*?)<\/p>/g, (m, inner) => {
+    const title = inner.replace(/<[^>]*>/g, '').trim();
+    const s = steps.find(x => x.beat === title);
+    return s ? `<p class="panel-subheader" data-beat="${escHtml(title)}">${chip(s.step)}${inner}</p>` : m;
+  });
+  if (whole) out = `<p class="beat-whole">${chip(whole.step)}In your party's story</p>` + out;
+  return out;
+}
+
+// The images a place's text can name with [[image]] tokens.
+function placeImages(place) {
+  return [...(WM_SCENES[place] || []), ...(WM_PORTRAITS[place] || [])];
+}
+
+// One beat of the Chronicle, written out in full: the beat's own section of
+// the group's write-up (or the whole text). The first image the section
+// names becomes its picture; without one, the place's chapter art is used.
+function timelineBeat(step, group, seen) {
+  const { place, beat: beatTitle, date } = step;
   const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === place);
   if (!hs) return null;
   const ch = WM_CHAPTERS[place] || {};
   const entry = WM_LORE[place];
   const own = !!(entry && typeof entry === 'object' && entry.byGroup && hasMeaningfulContent(entry.byGroup[group]));
   const name = group === getRecognizedGroup() ? getRecognizedName() : null;
-  const html = revealedLoreHtml(place, group, name);
-  const section = beatTitle ? loreSections(html).find(s => s.title === beatTitle) : null;
+  const raw = revealedLoreHtml(place, group, name);
+
+  let body = raw;
+  let beat = '';
+  if (beatTitle) {
+    const sections = loreSections(raw);
+    const i = sections.findIndex(s => s.title === beatTitle);
+    if (i !== -1) {
+      beat = beatTitle;
+      body = sections[i].html;
+      // Whatever comes before the first heading (often the place's opening
+      // picture) belongs with the first beat.
+      const firstTitled = sections.findIndex(s => s.title);
+      if (i === firstTitled && i > 0) body = sections[0].html + body;
+    }
+  }
+
+  const images = placeImages(place);
+  let art = null;
+  const used = new Set();
+  body = body.replace(/\[\[([^\]]+)\]\]/g, (m, rawName) => {
+    const idx = images.findIndex((src, j) => !used.has(j) && imageBasename(src) === rawName.trim());
+    if (idx === -1) return '';
+    used.add(idx);
+    if (!art) { art = images[idx]; return ''; }
+    return imageFrameHtml(images[idx], '');
+  });
+
   return {
-    hs,
-    beat: section ? beatTitle : '',
-    date: date || '',
+    hs, beat, date, step: step.step,
     chapter: ch.chapter ?? 99,
     title: ch.title || '',
     heading: ch.heading || '',
-    art: ch.art,
+    art: art || ch.art,
     own,
     isNew: isNewLore(place, seen),
-    excerpt: loreExcerpt(section ? section.html : html),
+    body,
   };
 }
 
-// The group's story in the order it was played: STORY_ORDER[group] lists
-// beats ({ place, beat?, date? }). Anything the group has unlocked that the
-// order doesn't mention yet follows at the end, by chapter, so a new unlock
-// shows up even before it's been placed in the timeline.
 function chronicleEntries() {
   const group = chronicleGroup();
-  if (!group) return [];
   const seen = loadSeenLore();
-  const listed = new Set();
-  const beats = [];
-  ((typeof STORY_ORDER !== 'undefined' && STORY_ORDER[group]) || []).forEach(b => {
-    if (!groupCanSee(b.place, group)) return;
-    const beat = timelineBeat(b.place, b.beat, b.date, group, seen);
-    if (beat) { beats.push(beat); listed.add(b.place); }
-  });
-  WICKERMOOR_HOTSPOTS
-    .filter(hs => groupCanSee(hs.id, group) && !listed.has(hs.id))
-    .map(hs => timelineBeat(hs.id, null, null, group, seen))
-    .sort((a, b) => a.chapter - b.chapter || chapterListOrder(a.hs.id) - chapterListOrder(b.hs.id))
-    .forEach(b => beats.push(b));
-  return beats;
+  return timelineSteps(group).map(s => timelineBeat(s, group, seen)).filter(Boolean);
 }
 
 // The heading an entry is filed under. WM_CHAPTERS can give a `heading`
@@ -331,7 +367,7 @@ function chronicleHtml() {
   let lastHeading = null;
   const trackShown = new Set();
   html += `<ol class="chronicle">`;
-  entries.forEach((e, i) => {
+  entries.forEach(e => {
     const label = chronicleHeading(e);
     if (label !== lastHeading) {
       lastHeading = label;
@@ -341,18 +377,18 @@ function chronicleHtml() {
     const track = trackShown.has(e.hs.id) ? '' : trackButtonHtml(e.hs.id);
     trackShown.add(e.hs.id);
     html += `<li class="chronicle-entry">
-      ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : '<div class="chronicle-art blank"></div>'}
-      <div class="chronicle-text">
-        <div class="chronicle-meta"><span class="chronicle-step">${i + 1}</span>${e.beat ? escHtml(e.hs.label) : ''}${e.date ? `<span class="chronicle-date">${escHtml(e.date)}</span>` : ''}</div>
-        <div class="chronicle-title">${escHtml(e.beat || e.hs.label)}
+      <div class="chronicle-head">
+        <div class="chronicle-meta"><span class="chronicle-step">${e.step}</span>${e.beat ? escHtml(e.hs.label) : ''}${e.date ? `<span class="chronicle-date">${escHtml(e.date)}</span>` : ''}</div>
+        <h4 class="chronicle-title">${escHtml(e.beat || e.hs.label)}
           ${e.own ? '' : `<span class="chronicle-tag">Visited</span>`}
           ${e.isNew ? `<span class="index-new">new</span>` : ''}
-        </div>
-        <p class="chronicle-excerpt">${escHtml(e.excerpt)}</p>
-        <div class="chronicle-actions">
-          <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}" data-beat="${escHtml(e.beat)}">Read on →</button>
-          ${track}
-        </div>
+        </h4>
+      </div>
+      ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : ''}
+      <div class="chronicle-body">${e.body}</div>
+      <div class="chronicle-actions">
+        <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}" data-beat="${escHtml(e.beat)}">Show on the map</button>
+        ${track}
       </div>
     </li>`;
   });
@@ -360,8 +396,8 @@ function chronicleHtml() {
   return html;
 }
 
-// "Read on" opens the location's own panel over the Codex, scrolled to the
-// beat's section; closing it (or Back) returns here.
+// "Show on the map" opens the location's own panel over the Codex,
+// scrolled to the beat's section; closing it (or Back) returns here.
 function openChronicleEntry(id, beatTitle) {
   const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === id);
   if (!hs) return;
@@ -369,7 +405,7 @@ function openChronicleEntry(id, beatTitle) {
   openPanel(hs.id, hs.label);
   if (!beatTitle) return;
   const heading = [...document.querySelectorAll('#panel-content .panel-subheader')]
-    .find(h => h.textContent.trim() === beatTitle);
+    .find(h => (h.dataset.beat || h.textContent.trim()) === beatTitle);
   if (heading) requestAnimationFrame(() => heading.scrollIntoView({ block: 'start' }));
 }
 
