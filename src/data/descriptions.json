@@ -1383,7 +1383,15 @@
       },
       {
         "place": "wm_drowned",
+        "beat": "Alligator's Smile"
+      },
+      {
+        "place": "wm_drowned",
         "beat": "Moonshine"
+      },
+      {
+        "place": "wm_drowned",
+        "beat": "And Stay Dead."
       },
       {
         "place": "wm_murkwater",
@@ -1394,15 +1402,7 @@
         "beat": "Screams in the Night"
       },
       {
-        "place": "wm_drowned",
-        "beat": "Alligator's Smile"
-      },
-      {
         "place": "wm_grinning_sinner"
-      },
-      {
-        "place": "wm_drowned",
-        "beat": "And Stay Dead."
       },
       {
         "place": "wm_drowned",
