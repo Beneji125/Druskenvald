@@ -1,7 +1,8 @@
-# Catches the two easy-to-miss mistakes: lore data with broken references
+# Catches the easy-to-miss mistakes: lore data with broken references
 # (unknown NPC/species ids, missing images, bad [[image]] tokens — see the
-# validation in build.js), and editing src/ without re-running
-# `node build.js`, which would leave the live site on stale content.
+# validation in build.js), editing src/ without re-running `node build.js`
+# (which would leave the live site on stale content), and anything broken
+# a player would notice in the browser (tests/smoke.js).
 name: Check build
 
 on:
@@ -24,3 +25,9 @@ jobs:
             echo "::error file=docs/index.html::docs/index.html is out of date — run 'node build.js' and commit the result."
             exit 1
           fi
+      - name: Install a headless browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Browser smoke test (every group's panels, Codex and Chronicle)
+        run: node tests/smoke.js

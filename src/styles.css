@@ -1125,6 +1125,42 @@
   }
   .chronicle-date { color: var(--cream-dim); letter-spacing: 0.08em; }
   .chronicle-date::before { content: '·'; margin-right: 0.5rem; color: var(--gold-dim); }
+  /* Chapter list and "Continue reading" at the top of the Chronicle. */
+  .chronicle-toc { max-width: 720px; margin: 1.2rem auto 0; }
+  .chronicle-toc ol { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chronicle-toc summary {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    cursor: pointer;
+    padding: 0.3rem 0;
+    min-height: 32px;
+  }
+  .chronicle-toc summary:focus-visible { outline: 1px dashed var(--gold-dim); outline-offset: 2px; }
+  .chronicle-toc button {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    background: none;
+    border: 1px solid var(--oak);
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+  }
+  .chronicle-toc button:hover, .chronicle-toc button:focus-visible { color: var(--cream); border-color: var(--gold-dim); }
+  .chronicle-toc-steps { color: var(--cream-dim); letter-spacing: 0.05em; }
+  .chronicle-toc .chronicle-resume {
+    display: flex; margin: 0 0 0.6rem;
+    color: var(--gold);
+    border-color: var(--gold-dim);
+    background: rgba(201,169,110,0.08);
+  }
+  .chronicle-entry, .chronicle-chapter { scroll-margin-top: 0.8rem; }
+
   /* The GM's "whose story" switcher. */
   .chronicle-groups { display: flex; justify-content: center; gap: 0.4rem; margin: 0.8rem 0 0.2rem; }
   .chronicle-group {
@@ -1343,7 +1379,7 @@
     #codex-content { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
     .codex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
     .chronicle-art { max-height: 340px; }
-    .codex-tab, .chronicle-read { min-height: 44px; }
+    .codex-tab, .chronicle-read, .chronicle-toc button { min-height: 44px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;
       min-height: 40px;
