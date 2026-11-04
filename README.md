@@ -152,6 +152,14 @@ node build.js --hash WORD  print the hash for a new admin password
                            (paste into ADMIN_PASSWORD_HASH in src/js/unlocks.js)
 ```
 
+On every push, GitHub also runs `tests/smoke.js`: it opens the built site
+in a headless browser as one character of each group and goes through
+every panel they can read, the Bestiary, the Gallery and the Chronicle,
+failing on script errors, missing images or tracks, leftover `{{…}}` /
+`[[…]]` tags, or a Chronicle beat with no text. To run it yourself:
+`npm install --no-save playwright && npx playwright install chromium`,
+then `node tests/smoke.js`.
+
 ### Writing lore
 
 Link to an NPC or species with `{{npc:id}}`, `{{npc:id|shown text}}`,
