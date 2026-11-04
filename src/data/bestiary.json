@@ -8,7 +8,9 @@
         "monsters/MONSTER_Alpengrendel.webp"
       ],
       "body": "<p class=\"panel-body\">Hulking creatures shaggy with bluish-white fur, crowned with great tusks and horns. They keep to the high, cold places of the world, and travellers who meet one speak of the bitter chill that hangs about it like a second hide.</p>",
-      "groups": []
+      "groups": [
+        "3"
+      ]
     },
     "bat_hound": {
       "name": "Bat Hound",
@@ -979,7 +981,8 @@
       ],
       "body": "<p class=\"panel-body\">A shimmering, iridescent fish swimming within a floating sphere of gently flowing water. Legends say it carries the wisdom of the ages.</p>",
       "groups": [
-        "1"
+        "1",
+        "3"
       ]
     },
     "witchwoven": {
