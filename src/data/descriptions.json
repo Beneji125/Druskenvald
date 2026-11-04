@@ -855,9 +855,10 @@
       "image": "npc/NPC_Mariana_Grey.webp",
       "location": "wm_village",
       "metBy": [
-        "2"
+        "1",
+        "3"
       ],
-      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
+      "body": "<p class=\"panel-body\">The stablemistress of the Green Queen Inn, who looks after its horses and mules for Alda Farnum. Shy around people, but kind and friendly to anyone who takes the time to talk with her, and happiest among four-legged creatures.</p>"
     },
     "vessla": {
       "name": "Vessla Browntooth",
