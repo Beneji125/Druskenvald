@@ -2,8 +2,10 @@
 //   Bestiary         the creatures (BESTIARY, data/bestiary.json) the
 //                    visitor's group has met; the rest aren't shown at all.
 //                    Tag who has met what in each entry's `groups` list.
-//   Rogues' Gallery  portraits of the people met in lore the visitor can
-//                    read, grouped by location (each NPC's `location`).
+//   Faces of the Hollow
+//                    portraits of the people the visitor's group has met
+//                    (named in lore they can read, or NPCS `metBy`),
+//                    grouped by location (each NPC's `location`).
 //   Chronicle        the group's story in the order it was played
 //                    (STORY_ORDER), filed under chapter headings
 //                    (WM_CHAPTERS), each beat written out in full, with a
@@ -166,7 +168,7 @@ function bestiaryHtml() {
   return html;
 }
 
-// ── Rogues' Gallery ───────────────────────────────────────────────
+// ── Faces of the Hollow ───────────────────────────────────────────────
 // Where an NPC is listed: their `location` in NPCS (a Wickermoor id) if
 // set; otherwise the first place, in chapter order, whose readable lore
 // mentions them — so a newly added NPC still lands somewhere sensible.
@@ -292,8 +294,9 @@ function placeImages(place) {
 }
 
 // One beat of the Chronicle, written out in full: the beat's own section of
-// the group's write-up (or the whole text). The first image the section
-// names becomes its picture; without one, the place's chapter art is used.
+// the group's write-up (or the whole text). The images the section names
+// become its pictures (shown beside the text, not in it); without any, the
+// place's chapter art is offered instead.
 function timelineBeat(step, group, seen) {
   const { place, beat: beatTitle, date } = step;
   const hs = WICKERMOOR_HOTSPOTS.find(h => h.id === place);
@@ -320,32 +323,37 @@ function timelineBeat(step, group, seen) {
   }
 
   const images = placeImages(place);
-  let art = null;
-  const used = new Set();
+  const pictures = [];
   body = body.replace(/\[\[([^\]]+)\]\]/g, (m, rawName) => {
-    const idx = images.findIndex((src, j) => !used.has(j) && imageBasename(src) === rawName.trim());
-    if (idx === -1) return '';
-    used.add(idx);
-    if (!art) { art = images[idx]; return ''; }
-    return imageFrameHtml(images[idx], '');
+    const src = images.find(s => !pictures.includes(s) && imageBasename(s) === rawName.trim());
+    if (src) pictures.push(src);
+    return '';
   });
+  if (!pictures.length && ch.art) pictures.push(ch.art);
 
   return {
     hs, beat, date, step: step.step,
     chapter: ch.chapter ?? 99,
     title: ch.title || '',
     heading: ch.heading || '',
-    art: art || ch.art,
+    pictures,
     own,
     isNew: isNewLore(place, seen),
     body,
   };
 }
 
+// Each picture appears once, at the first beat that has it — a place
+// visited over several beats doesn't repeat the same image every time.
 function chronicleEntries() {
   const group = chronicleGroup();
   const seen = loadSeenLore();
-  return timelineSteps(group).map(s => timelineBeat(s, group, seen)).filter(Boolean);
+  const shown = new Set();
+  return timelineSteps(group).map(s => timelineBeat(s, group, seen)).filter(Boolean).map(e => {
+    e.pictures = e.pictures.filter(src => !shown.has(src));
+    e.pictures.forEach(src => shown.add(src));
+    return e;
+  });
 }
 
 // The heading an entry is filed under. WM_CHAPTERS can give a `heading`
@@ -413,7 +421,8 @@ function chronicleHtml() {
           ${e.isNew ? `<span class="index-new">new</span>` : ''}
         </h4>
       </div>
-      ${e.art ? `<img class="chronicle-art" src="${e.art}" alt="" loading="lazy" decoding="async">` : ''}
+      ${e.pictures.length ? `<div class="chronicle-figures">${e.pictures.map(src =>
+        `<button class="chronicle-figure" data-lightbox="${escHtml(src)}" aria-label="Show the picture larger"><img src="${src}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>` : ''}
       <div class="chronicle-body">${e.body}</div>
       <div class="chronicle-actions">
         <button class="chronicle-read" data-chronicle="${escHtml(e.hs.id)}" data-beat="${escHtml(e.beat)}">Show on the map</button>
@@ -492,6 +501,8 @@ function openChronicleEntry(id, beatTitle) {
 document.addEventListener('click', e => {
   const read = e.target.closest?.('[data-chronicle]');
   if (read) { openChronicleEntry(read.dataset.chronicle, read.dataset.beat); return; }
+  const figure = e.target.closest?.('[data-lightbox]');
+  if (figure) { openLightbox(figure.dataset.lightbox); return; }
   const jump = e.target.closest?.('[data-chronicle-jump]');
   if (jump) { document.getElementById(jump.dataset.chronicleJump)?.scrollIntoView({ block: 'start' }); return; }
   const pick = e.target.closest?.('[data-chronicle-group]');
@@ -500,6 +511,33 @@ document.addEventListener('click', e => {
     renderCodex();
   }
 });
+
+// A Chronicle picture shown full size over everything; any click or
+// Escape closes it (before Escape reaches the Codex itself).
+function openLightbox(src) {
+  let box = document.getElementById('lightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-label', 'Picture');
+    box.innerHTML = '<img alt="">';
+    box.addEventListener('click', closeLightbox);
+    document.body.appendChild(box);
+  }
+  box.querySelector('img').src = src;
+  box.classList.add('open');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox')?.classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !document.getElementById('lightbox')?.classList.contains('open')) return;
+  e.stopImmediatePropagation();
+  closeLightbox();
+}, true);
 
 // Arrow keys move between the tabs (standard tablist behaviour).
 document.addEventListener('keydown', e => {

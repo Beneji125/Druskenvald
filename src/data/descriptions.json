@@ -323,6 +323,9 @@
       "name": "Matron Lethica",
       "image": "npc/NPC_Matron_Lethica.webp",
       "location": "wm_memorys_rest",
+      "metBy": [
+        "1"
+      ],
       "body": "<p class=\"panel-body\">The soft-spoken matron of Memory's Rest, pale-skinned, veiled, her cheeks streaked with ink-black tears. Once a white-haired priestess of the Nightmother, a goddess of evening, peace and healing.</p>"
     },
     "crossroads": {
@@ -383,6 +386,9 @@
       "name": "Inquisitor Cromwell",
       "image": "npc/NPC_Leona_Cromwell.webp",
       "location": "wm_crimson",
+      "metBy": [
+        "3"
+      ],
       "body": "<p class=\"panel-body\">The Crimson Faith's inquisitor: suspicious, relentless, and fond of her trophies. Few in the monastery would dare to cross her.</p>"
     },
     "jaeger": {
@@ -413,36 +419,55 @@
       "name": "Martha Langtree",
       "image": "npc/NPC_Martha_Langtree.webp",
       "location": "wm_foxwillow",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A widowed farmer of Foxwillow and mother of the Langtree children, holding her family and her fields together as the town unravels around her.</p>"
     },
     "jonah": {
       "name": "Jonah Sawyer",
       "image": "npc/NPC_Jonah_Sawyer.webp",
       "location": "wm_foxwillow",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">Foxwillow's butcher, a man of long memory and longer grudges.</p>"
     },
     "william": {
       "name": "William Lodge",
       "image": "npc/NPC_William_Lodge.webp",
       "location": "wm_foxwillow",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A salt-of-the-earth Foxwillow farmer with a folksy drawl and an earnest love for his failing village, who drove you to its gates.</p>"
     },
     "adelaide": {
       "name": "Adelaide Langtree",
       "image": "npc/NPC_Adelaide_Langtree.webp",
       "location": "wm_foxwillow",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">The Langtree daughter of Foxwillow, a quiet girl who was once Ol' Jericho's dearest friend.</p>"
     },
     "alda": {
       "name": "Alda Farnum",
       "image": "npc/NPC_Alda_Farnum.webp",
       "location": "wm_village",
+      "metBy": [
+        "2",
+        "3"
+      ],
       "body": "<p class=\"panel-body\">Owner of the Green Queen Inn in Wickermoor Village, all warm smiles, for whom everything is a transaction, paid in coin or in favours.</p>"
     },
     "eleanor": {
       "name": "Eleanor Heyling",
       "image": "npc/NPC_Eleanor_Heyling.webp",
       "location": "wm_village",
+      "metBy": [
+        "3"
+      ],
       "body": "<p class=\"panel-body\">Wickermoor Village's bookseller, who will not sell a book until she has read it herself. Some say her reading has cursed her; others, that it's made her powerful.</p>"
     },
     "elias": {
@@ -461,6 +486,10 @@
       "name": "Howie Butterman",
       "image": "npc/NPC_Howie_Butterman.webp",
       "location": "wm_village",
+      "metBy": [
+        "2",
+        "3"
+      ],
       "body": "<p class=\"panel-body\">Deputy of Wickermoor Village, short, wiry and friendly, the affable half of the hollow's law, and quicker in a fight than he looks.</p>"
     },
     "kristoff": {
@@ -473,18 +502,28 @@
       "name": "Siv Harga",
       "image": "npc/NPC_Siv_Harga.webp",
       "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">Wickermoor Village's butcher, a tall, braided woman raised among the hollow's travelling herders, who took over the shop when her old master passed.</p>"
     },
     "walter": {
       "name": "Walter Jenkin",
       "image": "npc/NPC_Walter_Jenkin.webp",
       "location": "wm_village",
+      "metBy": [
+        "2",
+        "3"
+      ],
       "body": "<p class=\"panel-body\">A Wickermoor villager who lost his voice one night, and never quite got the whole of it back.</p>"
     },
     "weston": {
       "name": "Weston Murdoch",
       "image": "npc/NPC_Weston_Murdoch.webp",
       "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A devout believer in the Brightsinger who welcomes any new godliness to the hollow, and who sent you looking for a missing man called Gareth.</p>"
     },
     "sweetheart": {
@@ -533,91 +572,395 @@
       "name": "The Phantom Trainhopper",
       "image": "npc/NPC_The_Phantom_Trainhopper.webp",
       "location": "wm_ghostlight_express",
+      "metBy": [
+        "2",
+        "3"
+      ],
       "body": "<p class=\"panel-body\">A phantom that rides the outside of the Ghostlight Express, breaking in through the windows and letting the wailing Shroud pour inside.</p>"
     },
     "charlotte": {
       "name": "Charlotte Murdoch",
-      "image": "npc/NPC_Charlotte_Murdoch.webp"
+      "image": "npc/NPC_Charlotte_Murdoch.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">Weston Murdoch's daughter.</p>"
     },
     "fen": {
       "name": "Fen Sorn",
-      "image": "npc/NPC_Fen_Sorn.webp"
+      "image": "npc/NPC_Fen_Sorn.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
     },
     "geneva": {
       "name": "Geneva Fairchild",
-      "image": "npc/NPC_Geneva_Fairchild.webp"
+      "image": "npc/NPC_Geneva_Fairchild.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">The postmaster's assistant, who carries the post's deliveries and is rarely in the village for long.</p>"
     },
     "lavender": {
       "name": "Lavender Aster",
-      "image": "npc/NPC_Lavender_Aster.webp"
+      "image": "npc/NPC_Lavender_Aster.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of baker Holly Aster's two daughters, who helps at the bakery when she isn't at school.</p>"
     },
     "margaret": {
       "name": "Margaret Currant",
-      "image": "npc/NPC_Margaret_Currant.webp"
+      "image": "npc/NPC_Margaret_Currant.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
     },
     "owen": {
       "name": "Owen Fell",
-      "image": "npc/NPC_Owen_Fell.webp"
+      "image": "npc/NPC_Owen_Fell.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
     },
     "rose": {
       "name": "Rose Somerton",
-      "image": "npc/NPC_Rose_Somerton.webp"
+      "image": "npc/NPC_Rose_Somerton.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">The mayor's daughter.</p>"
     },
     "rue": {
       "name": "Rue Marsh",
-      "image": "npc/NPC_Rue_Marsh.webp"
+      "image": "npc/NPC_Rue_Marsh.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
     },
     "sofia": {
       "name": "Sofia Roderick",
-      "image": "npc/NPC_Sofia_Roderick.webp"
+      "image": "npc/NPC_Sofia_Roderick.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">The stonemason's young daughter, who helps in his workshop when she isn't at Finneas Trout's lessons.</p>"
     },
     "morgan": {
       "name": "Morgan",
       "image": "npc/NPC_Morgan.webp",
       "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
       "body": "<p class=\"panel-body\">Wickermoor Village's apothecary: quiet, watchful, and wiser in the ways of the forest than most in town would guess.</p>"
     },
     "tolliver": {
       "name": "Baltus Tolliver",
       "image": "npc/NPC_Baltus_Tolliver.webp",
       "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
       "body": "<p class=\"panel-body\">Keeps Wickermoor's general store, and has never once been talked down on a price he didn't want to give.</p>"
     },
     "rusty": {
       "name": "Old Rusty",
       "image": "npc/NPC_Old_Rusty.webp",
       "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A rambling, colourful soul of Wickermoor, once a servant's son in the Lockwood household, and certain the Crooked Man still walks the village.</p>"
     },
     "sister_rain": {
       "name": "Sister Rain",
       "image": "npc/NPC_Sister_Rain.webp",
       "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A red-haired priestess of the Patient Lady who travels the Hollow, offering her blessing to those who would help it.</p>"
     },
     "jeremiah": {
       "name": "Jeremiah Stover",
       "image": "npc/NPC_Jeremiah_Stover.webp",
       "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
       "body": "<p class=\"panel-body\">A man of Foxwillow who carried word of its troubles to Lord Druskenvald, and a good friend of William Lodge.</p>"
     },
     "beatrice": {
       "name": "Beatrice Wells",
       "image": "npc/NPC_Beatrice_Wells.webp",
       "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
       "body": "<p class=\"panel-body\">A carpenter who took over the old clockmaker's workshop in Wickermoor, and knows a thing or two about the houses around it.</p>"
     },
     "jean": {
       "name": "Jean Myriel",
       "image": "npc/NPC_Jean_Myriel.webp",
       "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
       "body": "<p class=\"panel-body\">Wickermoor's blacksmith, with fine armour to sell and a missing friend on his mind.</p>"
     },
     "mori": {
       "name": "Mori Shade",
       "image": "npc/NPC_Mori_Shade.webp",
       "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
       "body": "<p class=\"panel-body\">Wickermoor's gravedigger, keeper of the black marble mortuary.</p>"
+    },
+    "gilly": {
+      "name": "Gilly Jenkin",
+      "image": "npc/NPC_Gilly_Jenkin.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">A caretaker in Wickermoor, married to Walter and mother of little Dani.</p>"
+    },
+    "dani": {
+      "name": "Dani Jenkin",
+      "image": "npc/NPC_Dani_Jenkin.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">Gilly and Walter Jenkin's daughter.</p>"
+    },
+    "doris": {
+      "name": "Doris Squire",
+      "image": "npc/NPC_Doris_Squire.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's constable, who keeps the village jail and the peace alongside her deputy, Howie Butterman.</p>"
+    },
+    "gaston": {
+      "name": "Gaston Doray",
+      "image": "npc/NPC_Gaston_Doray.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A young painter whose every work has something ethereal about it. He came to Wickermoor on a fog-shrouded night a few years ago, and nobody has managed to learn much of his past.</p>"
+    },
+    "holly": {
+      "name": "Holly Aster",
+      "image": "npc/NPC_Holly_Aster.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's baker, more often found fussing by her ovens than anywhere else.</p>"
+    },
+    "oswick": {
+      "name": "Oswick Frey",
+      "image": "npc/NPC_Oswick_Frey.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's chandler, a cheerful young man who makes most of the village's candles and gets about in a wheeled chair of his own design.</p>"
+    },
+    "randall": {
+      "name": "Randall Graham",
+      "image": "npc/NPC_Randall_Graham.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">The village barber-surgeon: a haircut, a pulled tooth, a quick stitch-up or a friendly ear, and one of the most trusted folk in Wickermoor.</p>"
+    },
+    "wendel": {
+      "name": "Mayor Wendel Somerton",
+      "image": "npc/NPC_Mayor_Wendel_Somerton.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's officious, self-important mayor, never seen out of a finely tailored suit and bowler hat.</p>"
+    },
+    "theodora": {
+      "name": "Theodora Mayville",
+      "image": "npc/NPC_Theodora_Mayville.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's postmaster, who keeps messages moving across the valley and beyond with a flock of carefully trained carrier pigeons.</p>"
+    },
+    "thomasin": {
+      "name": "Thomasin Ardor",
+      "image": "npc/NPC_Thomasin_Ardor.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">Wickermoor's tailor, who dreams up fanciful outfits for a village that mostly wants plain, sturdy clothes, and mends shoes on the side.</p>"
+    },
+    "solomon": {
+      "name": "Solomon Roderick",
+      "image": "npc/NPC_Solomon_Roderick.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">The hollow's most skilled stonemason, heavyset and heavily scarred, who is raising his daughter on his own.</p>"
+    },
+    "mariana": {
+      "name": "Mariana Grey",
+      "image": "npc/NPC_Mariana_Grey.webp",
+      "location": "wm_village",
+      "metBy": [
+        "2"
+      ],
+      "body": "<p class=\"panel-body\">One of Wickermoor Village's children.</p>"
+    },
+    "vessla": {
+      "name": "Vessla Browntooth",
+      "image": "npc/NPC_Vessla_Browntooth.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">The weasel hag of the Crooked House.</p>"
+    },
+    "crooked_man": {
+      "name": "The Crooked Man",
+      "image": "npc/NPC_The_Crooked_Man.webp",
+      "location": "wm_village",
+      "metBy": [
+        "1",
+        "2",
+        "3"
+      ],
+      "body": "<p class=\"panel-body\">A tall, twisted figure in a crooked hat who walks Wickermoor's streets by night, and seems to take an unsettling interest in you.</p>"
+    },
+    "belkin": {
+      "name": "Doctor Belkin",
+      "image": "npc/NPC_Doctor_Belkin.webp",
+      "location": "wm_memorys_rest",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">The chief surgeon of Memory's Rest.</p>"
+    },
+    "hugo": {
+      "name": "Hugo",
+      "image": "npc/NPC_Hugo.webp",
+      "location": "wm_memorys_rest",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">Matron Lethica's ward and hulking bodyguard at Memory's Rest.</p>"
+    },
+    "sarah_godlee": {
+      "name": "Sarah Godlee",
+      "image": "npc/NPC_Sarah_Godlee.webp",
+      "location": "wm_memorys_rest",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">Matron Lethica's second-in-command at Memory's Rest, and the only one of its orderlies who goes without a mask.</p>"
+    },
+    "corran": {
+      "name": "Corran Bell",
+      "image": "npc/NPC_Corran_Bell.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
+    },
+    "dantry": {
+      "name": "Dantry Folke",
+      "image": "npc/NPC_Dantry_Folke.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
+    },
+    "lotte": {
+      "name": "Lotte Ashfen",
+      "image": "npc/NPC_Lotte_Ashfen.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
+    },
+    "pip": {
+      "name": "Pip",
+      "image": "npc/NPC_Pip.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
+    },
+    "mira": {
+      "name": "Mira Solt",
+      "image": "npc/NPC_Mira_Solt.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
+    },
+    "vessa": {
+      "name": "Vessa Greenthorn",
+      "image": "npc/NPC_Vessa_Greenthorn.webp",
+      "location": "wm_foxwillow",
+      "metBy": [
+        "1"
+      ],
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     }
   },
   "WM_SCENES": {
