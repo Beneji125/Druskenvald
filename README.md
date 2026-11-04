@@ -74,8 +74,7 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 
 - **A party meets a creature:** add its group id to that creature's
   `groups` in `src/data/bestiary.json` (e.g. `"groups": ["1", "2"]`).
-  Creatures a group hasn't met don't appear at all (only a count of how
-  many remain unseen). A creature with several forms can limit each
+  Creatures a group hasn't met don't appear at all. A creature with several forms can limit each
   picture to the groups that met that form with `imageGroups` (see the
   Vermin Familiar). Descriptions are written as what an onlooker would
   know — no weaknesses, abilities or secret origins — so keep new ones
@@ -93,9 +92,13 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   build stops if a beat's heading doesn't exist. Places a group has
   unlocked but the list doesn't mention yet appear at the end. Beats are
   filed under chapter headings from `WM_CHAPTERS` (chapter number, title,
-  art, or a custom `heading` such as "Interlude · The Webwoods"). "Read
-  on" opens the place scrolled to that section; signed in as the GM you
-  can switch between groups.
+  art, or a custom `heading` such as "Interlude · The Webwoods"). Each
+  beat is written out in full in the Chronicle, under the first
+  `[[image]]` its section names (or the chapter art if it names none).
+  Keep a place's sections in the order they happened: each heading in
+  the place's panel carries its step number from the timeline. "Show on
+  the map" opens the place at that section; signed in as the GM you can
+  switch between groups.
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
 

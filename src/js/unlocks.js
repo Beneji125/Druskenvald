@@ -201,7 +201,7 @@ function buildPasswordSection(id) {
       html: `
         <div class="locked-content unlocked">
           <div class="panel-section-title">Revealed Lore</div>
-          ${loreHtml}
+          ${numberStoryBeats(loreHtml, id, recognizedGroup)}
         </div>
       `,
       leftover,
