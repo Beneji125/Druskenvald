@@ -98,7 +98,11 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   Keep a place's sections in the order they happened: each heading in
   the place's panel carries its step number from the timeline. "Show on
   the map" opens the place at that section; signed in as the GM you can
-  switch between groups.
+  switch between groups. A "Chapters" list at the top jumps to any
+  chapter, and "Continue reading" picks up after the last beat the
+  visitor read to the end (remembered in their browser). Reading a
+  place's last beat in the Chronicle also clears its "new" glow on the
+  map.
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
 

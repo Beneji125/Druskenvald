@@ -6,7 +6,8 @@
 //                    read, grouped by location (each NPC's `location`).
 //   Chronicle        the group's story in the order it was played
 //                    (STORY_ORDER), filed under chapter headings
-//                    (WM_CHAPTERS), each beat written out in full —
+//                    (WM_CHAPTERS), each beat written out in full, with a
+//                    chapter list and a "Continue reading" bookmark —
 //                    and that place's own ambience track (WM_TRACKS), for
 //                    the places that have one.
 // Also the creature panel, opened from a Bestiary card or a
@@ -90,6 +91,10 @@ function openCodex(tab = codexTab) {
   closeIndex();
   closeReenterNamePrompt();
   codexTab = CODEX_TABS.includes(tab) ? tab : 'bestiary';
+  // A fresh opening starts at the top (where "Continue reading" is), and
+  // before rendering, so the Chronicle doesn't count whatever happened to
+  // be on screen last time as read.
+  if (!wasOpen) content.scrollTop = 0;
   renderCodex();
   codex.classList.add('open');
   afterPanelOpened('codex', content, wasOpen);
@@ -123,7 +128,7 @@ function renderCodex() {
   });
   content.setAttribute('aria-labelledby', `codex-tab-${codexTab}`);
   if (codexTab === 'gallery') content.innerHTML = galleryHtml();
-  else if (codexTab === 'chronicle') content.innerHTML = chronicleHtml();
+  else if (codexTab === 'chronicle') { content.innerHTML = chronicleHtml(); watchChronicleReading(content); }
   else content.innerHTML = bestiaryHtml();
 }
 
@@ -364,6 +369,29 @@ function chronicleHtml() {
   const entries = chronicleEntries();
   if (!entries.length) return html;
 
+  // Chapter list: one link per heading, in story order (a chapter the
+  // party came back to later is listed again, with its own steps).
+  const runs = [];
+  entries.forEach(e => {
+    const label = chronicleHeading(e);
+    const last = runs[runs.length - 1];
+    if (last && last.label === label) last.to = e.step;
+    else runs.push({ label, from: e.step, to: e.step });
+  });
+
+  const resume = chronicleResumeStep(entries);
+  html += `<nav class="chronicle-toc" aria-label="Chapters">` +
+    (resume ? `<button class="chronicle-resume" data-chronicle-jump="chronicle-step-${resume}">Continue reading · step ${resume}</button>` : '') +
+    `<details><summary>Chapters</summary><ol>` +
+    runs.map((r, i) => `<li><button data-chronicle-jump="chronicle-ch-${i}">${escHtml(r.label)}<span class="chronicle-toc-steps">${r.from === r.to ? r.from : `${r.from}–${r.to}`}</span></button></li>`).join('') +
+    `</ol></details></nav>`;
+
+  // The last beat of each place: reading to the end of it counts as having
+  // read that place's lore (clears its "new" marker on the map).
+  const lastOfPlace = new Map();
+  entries.forEach(e => lastOfPlace.set(e.hs.id, e.step));
+
+  let run = -1;
   let lastHeading = null;
   const trackShown = new Set();
   html += `<ol class="chronicle">`;
@@ -371,12 +399,13 @@ function chronicleHtml() {
     const label = chronicleHeading(e);
     if (label !== lastHeading) {
       lastHeading = label;
-      html += `<li class="chronicle-chapter" aria-hidden="true">${escHtml(label)}</li>`;
+      run++;
+      html += `<li class="chronicle-chapter" id="chronicle-ch-${run}" aria-hidden="true">${escHtml(label)}</li>`;
     }
     // A place's ambience track is offered once, at its first beat.
     const track = trackShown.has(e.hs.id) ? '' : trackButtonHtml(e.hs.id);
     trackShown.add(e.hs.id);
-    html += `<li class="chronicle-entry">
+    html += `<li class="chronicle-entry" id="chronicle-step-${e.step}" data-step="${e.step}" data-place="${escHtml(e.hs.id)}"${lastOfPlace.get(e.hs.id) === e.step ? ' data-last-of-place' : ''}>
       <div class="chronicle-head">
         <div class="chronicle-meta"><span class="chronicle-step">${e.step}</span>${e.beat ? escHtml(e.hs.label) : ''}${e.date ? `<span class="chronicle-date">${escHtml(e.date)}</span>` : ''}</div>
         <h4 class="chronicle-title">${escHtml(e.beat || e.hs.label)}
@@ -396,6 +425,57 @@ function chronicleHtml() {
   return html;
 }
 
+// ── Reading progress ──────────────────────────────────────────────
+// Remembers, per group, the furthest step read to its end, so the
+// Chronicle can offer "Continue reading" at the next one — handy once a
+// new session's beats have been added.
+const CHRONICLE_PROGRESS_KEY = 'druskenvald_chronicle_read';
+
+function loadChronicleProgress() {
+  try { return JSON.parse(store.get(CHRONICLE_PROGRESS_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function chronicleResumeStep(entries) {
+  const read = loadChronicleProgress()[chronicleGroup()] || 0;
+  const next = entries.find(e => e.step > read);
+  return read && next ? next.step : null;
+}
+
+function noteChronicleStepRead(step) {
+  const group = chronicleGroup();
+  const progress = loadChronicleProgress();
+  if ((progress[group] || 0) >= step) return;
+  progress[group] = step;
+  store.set(CHRONICLE_PROGRESS_KEY, JSON.stringify(progress));
+}
+
+// Watches for the end of each beat scrolling into view: that step counts
+// as read, and at a place's last beat, so does the place's lore — but only
+// in the visitor's own group's story (not one the GM is browsing).
+let chronicleObserver = null;
+
+function watchChronicleReading(content) {
+  chronicleObserver?.disconnect();
+  chronicleObserver = null;
+  if (typeof IntersectionObserver === 'undefined') return;
+  const ownStory = chronicleGroup() === getRecognizedGroup();
+  chronicleObserver = new IntersectionObserver(seen => {
+    seen.forEach(({ isIntersecting, target }) => {
+      if (!isIntersecting) return;
+      chronicleObserver.unobserve(target);
+      const entry = target.closest('.chronicle-entry');
+      noteChronicleStepRead(Number(entry.dataset.step));
+      if (ownStory && entry.hasAttribute('data-last-of-place')) {
+        const place = entry.dataset.place;
+        markLoreSeen(place);
+        content.querySelectorAll(`.chronicle-entry[data-place="${place}"] .index-new`).forEach(n => n.remove());
+      }
+    });
+  }, { root: content });
+  content.querySelectorAll('.chronicle-actions').forEach(n => chronicleObserver.observe(n));
+}
+
 // "Show on the map" opens the location's own panel over the Codex,
 // scrolled to the beat's section; closing it (or Back) returns here.
 function openChronicleEntry(id, beatTitle) {
@@ -412,6 +492,8 @@ function openChronicleEntry(id, beatTitle) {
 document.addEventListener('click', e => {
   const read = e.target.closest?.('[data-chronicle]');
   if (read) { openChronicleEntry(read.dataset.chronicle, read.dataset.beat); return; }
+  const jump = e.target.closest?.('[data-chronicle-jump]');
+  if (jump) { document.getElementById(jump.dataset.chronicleJump)?.scrollIntoView({ block: 'start' }); return; }
   const pick = e.target.closest?.('[data-chronicle-group]');
   if (pick) {
     chronicleGroupChoice = pick.dataset.chronicleGroup;
