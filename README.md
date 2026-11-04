@@ -61,7 +61,7 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   lets them switch, or "Forget me".
 - **New lore:** Wickermoor locations with lore the visitor hasn't read yet
   (or that has changed since) get a pulsing outline until opened.
-- **The Codex (📜):** Bestiary, Rogues' Gallery and Chronicle (see below).
+- **The Codex (📜):** Bestiary, Faces of the Hollow and Chronicle (see below).
 - **Lighting:** the 🌙 button cycles night, dusk and day (no darkness).
 - **Phones:** in portrait the map opens zoomed to fill the screen (swipe
   to explore, pinch out for the whole map, ⟲ to return). First tap on a
@@ -79,7 +79,7 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   Vermin Familiar). Descriptions are written as what an onlooker would
   know — no weaknesses, abilities or secret origins — so keep new ones
   that way. Link to one from lore with `{{creature:id}}`.
-- **Rogues' Gallery:** fills itself — an NPC appears once they're
+- **Faces of the Hollow:** fills itself — an NPC appears once they're
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if
   left out, the first place their name comes up). Bios are each entry's
@@ -94,8 +94,10 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   unlocked but the list doesn't mention yet appear at the end. Beats are
   filed under chapter headings from `WM_CHAPTERS` (chapter number, title,
   art, or a custom `heading` such as "Interlude · The Webwoods"). Each
-  beat is written out in full in the Chronicle, under the first
-  `[[image]]` its section names (or the chapter art if it names none).
+  beat is written out in full in the Chronicle, with the `[[image]]`s its
+  section names set beside the text (or the chapter art if it names
+  none); each picture appears only once, at the first beat that has it,
+  and opens full size when clicked.
   Keep a place's sections in the order they happened: each heading in
   the place's panel carries its step number from the timeline. "Show on
   the map" opens the place at that section; signed in as the GM you can

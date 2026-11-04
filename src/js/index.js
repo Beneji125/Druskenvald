@@ -15,7 +15,7 @@ function npcIdsIn(html) {
 // all) or in Wickermoor lore their group has unlocked, or marked in NPCS
 // as met by their group (`metBy`, for people the story text doesn't name).
 // Listing every NPC would spoil who turns up in places their party hasn't
-// been. Shared with the Codex's Rogues' Gallery.
+// been. Shared with the Codex's Faces of the Hollow.
 function knownNpcIds() {
   const group = getRecognizedGroup();
   const name = getRecognizedName();

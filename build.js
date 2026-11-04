@@ -175,7 +175,7 @@ function validate(data, hotspots) {
     }
   }
 
-  // An NPC's Rogues' Gallery location must be a real Wickermoor location.
+  // An NPC's Faces of the Hollow location must be a real Wickermoor location.
   for (const [id, n] of Object.entries(data.NPCS || {})) {
     if (n.location && !(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === n.location)) {
       errors.push(`NPCS.${id}.location: "${n.location}" is not a Wickermoor hotspot id`);

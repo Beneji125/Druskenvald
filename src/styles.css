@@ -1056,22 +1056,38 @@
     border-bottom: 1px solid var(--oak);
   }
   /* Each beat is written out in full, so the Chronicle reads like a book:
-     heading, the beat's own picture, then its text. */
-  .chronicle-entry { padding: 1.2rem 0 1.6rem; max-width: 720px; margin: 0 auto; }
+     heading, then its text, with the beat's pictures set beside it. */
+  .chronicle-entry { padding: 1.2rem 0 1.6rem; max-width: 720px; margin: 0 auto; display: flow-root; }
   .chronicle-entry + .chronicle-entry { border-top: 1px dashed rgba(61,42,26,0.6); }
   .chronicle-chapter { max-width: 720px; margin-left: auto; margin-right: auto; }
   .chronicle-head { margin-bottom: 0.8rem; }
-  /* Shown whole (portrait art as well as scenes), never cropped. */
-  .chronicle-art {
+  .chronicle-figures {
+    float: right;
+    width: 38%;
+    margin: 0.3rem 0 0.8rem 1.4rem;
+    display: flex; flex-direction: column; gap: 0.7rem;
+  }
+  .chronicle-figure {
     display: block;
-    width: auto;
-    max-width: 100%;
-    max-height: 460px;
-    margin: 0 auto;
+    padding: 0;
+    background: none;
     border: 1px solid var(--oak);
     box-shadow: 0 4px 18px rgba(0,0,0,0.6);
-    margin-bottom: 1.1rem;
+    cursor: zoom-in;
   }
+  .chronicle-figure:focus-visible { outline: 1px dashed var(--gold-dim); outline-offset: 3px; }
+  .chronicle-figure img { display: block; width: 100%; height: auto; max-height: 420px; object-fit: cover; object-position: top; }
+  #lightbox {
+    position: fixed; inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 1.5rem;
+    background: rgba(5,4,3,0.92);
+    cursor: zoom-out;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--oak); box-shadow: 0 8px 40px rgba(0,0,0,0.8); }
   .chronicle-title {
     font-family: 'Cinzel', serif;
     font-size: 1.15rem;
@@ -1375,10 +1391,12 @@
     #reenter-name-widget { order: 6; flex: 0 0 40px; }
 
     .codex-header { padding-left: 1rem; padding-right: 3.2rem; text-align: left; }
-    .codex-tab { padding: 0.55rem 0.5rem; letter-spacing: 0.1em; font-size: 0.68rem; }
+    .codex-tabs { gap: 0.1rem; flex-wrap: nowrap; }
+    .codex-tab { padding: 0.55rem 0.35rem; letter-spacing: 0.04em; font-size: 0.64rem; white-space: nowrap; }
     #codex-content { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
     .codex-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
-    .chronicle-art { max-height: 340px; }
+    .chronicle-figures { float: none; width: auto; margin: 0 0 1rem; align-items: center; }
+    .chronicle-figure img { width: auto; max-width: 100%; max-height: 240px; object-fit: contain; }
     .codex-tab, .chronicle-read, .chronicle-toc button { min-height: 44px; }
     .icon-btn, #reenter-name-btn {
       min-width: 40px;

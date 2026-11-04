@@ -911,50 +911,56 @@
     "corran": {
       "name": "Corran Bell",
       "image": "npc/NPC_Corran_Bell.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     },
     "dantry": {
       "name": "Dantry Folke",
       "image": "npc/NPC_Dantry_Folke.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     },
     "lotte": {
       "name": "Lotte Ashfen",
       "image": "npc/NPC_Lotte_Ashfen.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     },
     "pip": {
       "name": "Pip",
       "image": "npc/NPC_Pip.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     },
     "mira": {
       "name": "Mira Solt",
       "image": "npc/NPC_Mira_Solt.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     },
     "vessa": {
       "name": "Vessa Greenthorn",
       "image": "npc/NPC_Vessa_Greenthorn.webp",
+      "location": "wm_foxwillow",
       "metBy": [
         "1"
       ],
-      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe.</p>"
+      "body": "<p class=\"panel-body\">A member of a travelling theatre troupe, met on the road between the Drowned Crossroads and Foxwillow.</p>"
     }
   },
   "WM_SCENES": {
