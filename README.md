@@ -83,7 +83,8 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   mentioned (`{{npc:id}}`) in lore the visitor can read — grouped by
   each NPC's `location` in `NPCS` (a Wickermoor id like `wm_village`; if
   left out, the first place their name comes up). Bios are each entry's
-  `body`.
+  `body`. Someone a group met who isn't named in their story text can be
+  added with `metBy`, e.g. `"metBy": ["1", "3"]`.
 - **Chronicle:** each group's story in the order it was played, from
   `STORY_ORDER` in `descriptions.json` — one list per group of beats like
   `{ "place": "wm_village", "beat": "Arrival", "date": "14 Mar 2026" }`.

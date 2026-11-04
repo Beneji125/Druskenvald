@@ -180,6 +180,13 @@ function validate(data, hotspots) {
     if (n.location && !(hotspots.WICKERMOOR_HOTSPOTS || []).some(h => h.id === n.location)) {
       errors.push(`NPCS.${id}.location: "${n.location}" is not a Wickermoor hotspot id`);
     }
+    // metBy: the groups who have met this NPC, shown in their Gallery even
+    // if no lore they can read names them.
+    if (n.metBy !== undefined) {
+      if (!Array.isArray(n.metBy)) errors.push(`NPCS.${id}.metBy: should be a list of group ids, like ["1", "3"]`);
+      else n.metBy.filter(g => !GROUPS[g]).forEach(g => errors.push(`NPCS.${id}.metBy: "${g}" is not a group in GROUPS`));
+      if (!n.body) warnings.push(`NPCS.${id}: met by a group but has no bio`);
+    }
   }
 
   // Chronicle entries must belong to real Wickermoor locations.

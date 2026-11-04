@@ -11,14 +11,16 @@ function npcIdsIn(html) {
   return [...String(html || '').matchAll(/data-npc="([^"]+)"/g)].map(m => m[1]);
 }
 
-// The people a visitor has read about — named in the provinces' lore
-// (open to all) or in Wickermoor lore their group has unlocked. Listing
-// every NPC would spoil who turns up in places their party hasn't been.
-// Shared with the Codex's Rogues' Gallery.
+// The people a visitor knows of — named in the provinces' lore (open to
+// all) or in Wickermoor lore their group has unlocked, or marked in NPCS
+// as met by their group (`metBy`, for people the story text doesn't name).
+// Listing every NPC would spoil who turns up in places their party hasn't
+// been. Shared with the Codex's Rogues' Gallery.
 function knownNpcIds() {
   const group = getRecognizedGroup();
   const name = getRecognizedName();
   const ids = new Set();
+  Object.entries(NPCS).forEach(([id, n]) => { if (group && n.metBy?.includes(group)) ids.add(id); });
   Object.values(LORE).forEach(l => npcIdsIn(l.body).forEach(id => ids.add(id)));
   WICKERMOOR_HOTSPOTS
     .filter(hs => isUnlockedForGroup(hs.id, group))
