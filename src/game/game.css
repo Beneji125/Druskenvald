@@ -43,7 +43,17 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #start .back { color: var(--cream-dim); font-size: 0.9rem; }
 #start .error { color: #e0a090; }
 #start .credits { font-size: 0.78rem; opacity: 0.75; }
-#btn-music.off { text-decoration: line-through; opacity: 0.6; }
+#sound-panel {
+  position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 46px)); right: max(14px, env(safe-area-inset-right));
+  z-index: 8; width: 230px;
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px;
+  padding: 14px 16px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; box-shadow: 0 8px 30px #000;
+}
+#sound-panel label { font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--cream-dim); }
+#sound-panel input[type=range] { width: 100%; accent-color: var(--gold); min-width: 0; }
+#btn-mute { grid-column: 1 / -1; font-family: 'Cinzel', serif; font-size: 0.78rem; padding: 0.35em 0.7em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#btn-mute:hover, #btn-mute:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
+@media (max-width: 640px) { #sound-panel { top: max(112px, calc(env(safe-area-inset-top) + 100px)); } }
 
 /* ── The view and the HUD ── */
 #game { position: fixed; inset: 0; }

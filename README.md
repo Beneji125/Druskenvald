@@ -161,14 +161,17 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
     its grid of squares from the walls, so moving a wall here moves it in
     the game.
 - **Music and the storm:** `MUSIC` at the top of `src/game/js/audio.js` says
-  what plays where: the storm recording (*Dark and Stormy*, Tabletop Audio,
-  credited on the title screen) all the time, clearer on the porch and
-  through the conservatory glass; *Silent Hours* and *The Echoes* taking
-  turns while you explore; *These Splitting Walls* when Dread reaches 7
-  (until it falls back to 4); *The Harpsichord* in the music room once its
-  curse is broken. Music drops away for the séance and the cursed waltz.
-  The tracks are in `docs/audio/crooked-house/` (masters in
-  `source-assets/originals/`); ♪ in the game turns music off, 🔊 all sound.
+  what plays where: the storm recording (*Dark and Stormy*, Tabletop Audio)
+  all the time, clearer on the porch and through the conservatory glass;
+  *Silent Hours* while you explore; *These Splitting Walls* when Dread
+  reaches 7 (until it falls back to 4); *The Harpsichord* as the music
+  room's cursed waltz; and *The Echoes* as Patrini's song, from the moment
+  the harpsichord puzzle is solved (it plays through wherever you go, and
+  again whenever you're back in the music room). Music drops away for the
+  séance. Credits are on the title screen (*Silent Hours* and *These
+  Splitting Walls*: The Blasting Company). The tracks are in
+  `docs/audio/crooked-house/` (masters in `source-assets/originals/`); the
+  🔊 button opens Volume and Music sliders and Mute, kept between visits.
 - **The spirit board:** the séance uses the official board and planchette
   art (`docs/explore/Ouija_Board.webp`, `Planchette.webp`). `OUIJA_SPOTS`
   in `story.js` is where each letter, number and word sits in the board

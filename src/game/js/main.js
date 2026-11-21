@@ -25,6 +25,7 @@ function quality() {
 
 function startGame(fresh) {
   if (fresh || !loadGame()) newGame();
+  game.echoesPlaying = false;
   sound.start();
   $('start').hidden = true;
   $('game').hidden = false;
@@ -295,7 +296,9 @@ function loop(now) {
 
   // Music for where you are and how you feel.
   sound.setTheme(musicFor(here));
-  sound.duck(game.curse ? 0 : ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0 : 1);
+  // Quiet for the séance; the waltz drops back while you're at the keys
+  // so you can hear the tune you're playing.
+  sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
 
   if (busy()) ui.setPrompt(null);
   else {
@@ -311,10 +314,13 @@ let dreadTheme = false;
 function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
+  if (game.curse) return 'waltz';
+  if (game.echoesPlaying) return 'echoes';      // Patrini's song plays through
   if (dreadTheme) return 'dread';
-  if (here.room === 'music' && game.flags.musicSolved) return 'harpsichord';
+  if (here.room === 'music' && game.flags.musicSolved) return 'echoes';
   return 'house';
 }
+sound.onThemeEnded = name => { if (name === 'echoes') game.echoesPlaying = false; };
 
 // ─── Controls ─────────────────────────────────────────────────────────
 
@@ -327,6 +333,8 @@ const KEYMAP = {
 document.addEventListener('keydown', e => {
   if ($('game').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.toLowerCase();
+  if (k === 'escape' && !soundPanel.hidden) { e.preventDefault(); toggleSoundPanel(false); $('btn-sound').focus(); return; }
+  if (e.target.closest && e.target.closest('input')) return;     // a slider's arrow keys move the slider
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
@@ -345,13 +353,31 @@ $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
 document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
 $('room-card-close').addEventListener('click', hideRoomCard);
 const soundBtn = $('btn-sound');
-const showSound = () => { soundBtn.textContent = sound.on ? '🔊' : '🔇'; soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.title = sound.on ? 'Sound on' : 'Sound off'; };
-soundBtn.addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
+const showSound = () => {
+  soundBtn.textContent = sound.on ? '🔊' : '🔇';
+  soundBtn.title = 'Volume';
+  $('btn-mute').textContent = sound.on ? 'Mute' : 'Unmute';
+  $('btn-mute').setAttribute('aria-pressed', String(!sound.on));
+};
+soundBtn.addEventListener('click', () => toggleSoundPanel());
+// The volume panel: opened by the 🔊 button; Volume (everything), Music,
+// and Mute. Kept between visits.
+const soundPanel = $('sound-panel');
+const volSlider = $('vol-all'), musicSlider = $('vol-music');
+volSlider.value = Math.round(sound.volume * 100);
+musicSlider.value = Math.round(sound.musicVolume * 100);
+volSlider.addEventListener('input', () => { sound.setVolume(volSlider.value / 100); if (!sound.on && volSlider.value > 0) { sound.setOn(true); showSound(); } });
+musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.value / 100));
+$('btn-mute').addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
+const toggleSoundPanel = open => {
+  soundPanel.hidden = open === undefined ? !soundPanel.hidden : !open;
+  soundBtn.setAttribute('aria-expanded', String(!soundPanel.hidden));
+  if (!soundPanel.hidden) volSlider.focus({ preventScroll: true });
+};
+document.addEventListener('pointerdown', e => {
+  if (!soundPanel.hidden && !e.target.closest('#sound-panel, #btn-sound')) toggleSoundPanel(false);
+});
 showSound();
-const musicBtn = $('btn-music');
-const showMusic = () => { musicBtn.classList.toggle('off', !sound.musicOn); musicBtn.setAttribute('aria-pressed', String(sound.musicOn)); musicBtn.title = sound.musicOn ? 'Music on' : 'Music off'; };
-musicBtn.addEventListener('click', () => { sound.setMusicOn(!sound.musicOn); showMusic(); });
-showMusic();
 
 $('btn-continue').hidden = !hasSave();
 $('btn-continue').addEventListener('click', () => startGame(false));

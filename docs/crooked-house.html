@@ -57,7 +57,17 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #start .back { color: var(--cream-dim); font-size: 0.9rem; }
 #start .error { color: #e0a090; }
 #start .credits { font-size: 0.78rem; opacity: 0.75; }
-#btn-music.off { text-decoration: line-through; opacity: 0.6; }
+#sound-panel {
+  position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 46px)); right: max(14px, env(safe-area-inset-right));
+  z-index: 8; width: 230px;
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px;
+  padding: 14px 16px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; box-shadow: 0 8px 30px #000;
+}
+#sound-panel label { font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--cream-dim); }
+#sound-panel input[type=range] { width: 100%; accent-color: var(--gold); min-width: 0; }
+#btn-mute { grid-column: 1 / -1; font-family: 'Cinzel', serif; font-size: 0.78rem; padding: 0.35em 0.7em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#btn-mute:hover, #btn-mute:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
+@media (max-width: 640px) { #sound-panel { top: max(112px, calc(env(safe-area-inset-top) + 100px)); } }
 
 /* ── The view and the HUD ── */
 #game { position: fixed; inset: 0; }
@@ -231,7 +241,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
     <button type="button" id="btn-new" class="big">Start again</button>
   </div>
   <p class="note">Turn your sound on for the storm. Your progress is kept in this browser.</p>
-  <p class="note credits">Storm: “Dark and Stormy” by Tabletop Audio (tabletopaudio.com)</p>
+  <p class="note credits">Music: “Silent Hours” and “These Splitting Walls” by The Blasting Company · Storm: “Dark and Stormy” by Tabletop Audio (tabletopaudio.com)</p>
   <p class="note error" id="start-error" hidden>Your browser couldn’t draw the house in 3D: WebGL is turned off or not available. Try another browser, or turn on hardware acceleration in this one’s settings.</p>
   <a class="back" href="index.html#wickermoor/wm_village">↩ Back to the map of Wickermoor</a>
 </section>
@@ -249,10 +259,17 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
     <div class="hud-right">
       <button type="button" id="btn-map" title="Map (M)">Map</button>
       <button type="button" id="btn-journal" title="Journal (J)">Journal</button>
-      <button type="button" id="btn-music" aria-pressed="true">♪</button>
-      <button type="button" id="btn-sound" aria-pressed="true">🔊</button>
+      <button type="button" id="btn-sound" aria-expanded="false" aria-controls="sound-panel">🔊</button>
       <a id="btn-leave" href="index.html#wickermoor/wm_village" title="Back to the map of Wickermoor">Leave</a>
     </div>
+  </div>
+
+  <div id="sound-panel" hidden role="group" aria-label="Volume">
+    <label for="vol-all">Volume</label>
+    <input type="range" id="vol-all" min="0" max="100" step="1">
+    <label for="vol-music">Music</label>
+    <input type="range" id="vol-music" min="0" max="100" step="1">
+    <button type="button" id="btn-mute" aria-pressed="false">Mute</button>
   </div>
 
   <div id="room-card" hidden>
@@ -935,23 +952,32 @@ function mirrorTexture() {
 // ─── src/game/js/audio.js ────────────────────────────────────────────
 // Sound. The storm and the music are recordings (MUSIC, below), streamed
 // as they play. Everything else is made in the browser with Web Audio:
-// thunder to match the lightning, a plucked harpsichord (the cursed waltz
-// and Patrini's tune), the séance drone, doors, the planchette.
+// thunder to match the lightning, the harpsichord notes of the melody
+// puzzle, the séance drone, doors, the planchette.
 
 const SOUND_KEY = 'crooked_house_sound';
-const MUSIC_KEY = 'crooked_house_music';
+const VOLUME_KEY = 'crooked_house_volume';
+const MUSIC_VOLUME_KEY = 'crooked_house_music_volume';
 
-// What plays where. `house` is a playlist that alternates while you
-// explore; `dread` takes over when Dread runs high; `harpsichord` fills
-// the music room once its curse is broken. See musicFor() in main.js.
+// What plays where (see musicFor() in main.js):
+//   house   while you explore
+//   dread   when Dread runs high
+//   waltz   the music room's cursed waltz
+//   echoes  Patrini's song: from the moment the harpsichord puzzle is
+//           solved, and in the music room ever after
+// A list with more than one track plays them in turn. `once` themes don't
+// loop: when the track ends, musicFor() decides what comes next.
 const MUSIC = {
   storm: 'audio/crooked-house/Dark and Stormy.mp3',
-  house: ['audio/crooked-house/Silent Hours.mp3', 'audio/04 The Echoes.mp3'],
+  house: ['audio/crooked-house/Silent Hours.mp3'],
   dread: ['audio/crooked-house/These Splitting Walls.mp3'],
-  harpsichord: ['audio/crooked-house/The Harpsichord.mp3'],
+  waltz: ['audio/crooked-house/The Harpsichord.mp3'],
+  echoes: ['audio/04 The Echoes.mp3'],
 };
-const MUSIC_VOLUME = 0.42;
+const MUSIC_ONCE = new Set(['echoes']);
+const MUSIC_VOLUME = 0.55;
 const FADE_S = 2.5;
+const readLevel = (key, fallback) => { const v = parseFloat(store.get(key)); return Number.isFinite(v) ? clamp01(v) : fallback; };
 
 // How the storm sounds from where you stand: wide open on the porch,
 // through glass in the conservatory, muffled everywhere else.
@@ -964,8 +990,8 @@ const NOTE = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.0, A: 440.0, B
 
 const sound = {
   ctx: null, master: null, noise: null, on: store.get(SOUND_KEY) !== 'off',
-  musicOn: store.get(MUSIC_KEY) !== 'off',
-  discordTimer: null, drone: null,
+  volume: readLevel(VOLUME_KEY, 0.7), musicVolume: readLevel(MUSIC_VOLUME_KEY, 0.75),
+  drone: null, onThemeEnded: null,
   tracks: {}, theme: null, duckLevel: 1, place: 'out',
 
   // Must be called from a click or key press (browsers only allow sound
@@ -977,7 +1003,7 @@ const sound = {
     try { this.ctx = new Ctx(); } catch { return; }
     const ctx = this.ctx;
     this.master = ctx.createGain();
-    this.master.gain.value = this.on ? 0.7 : 0;
+    this.master.gain.value = this.on ? this.volume : 0;
     this.master.connect(ctx.destination);
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const ch = buf.getChannelData(0);
@@ -994,15 +1020,15 @@ const sound = {
     this.setPlace(this.place);
     this.playEl(storm.el);
 
-    // Music: its own volume (the ♪ button), and a duck for scenes that
-    // want quiet.
-    this.musicGain = ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_VOLUME : 0;
+    // Music: its own volume (the Music slider), and a duck for scenes
+    // that want quiet.
+    this.musicGain = ctx.createGain(); this.musicGain.gain.value = MUSIC_VOLUME * this.musicVolume;
     this.duckGain = ctx.createGain();
     this.duckGain.connect(this.musicGain).connect(this.master);
     // Browsers (iOS especially) only let audio start from a click or key
     // press: touch every track now, during the one that started the game,
     // so they can start later on their own.
-    [...MUSIC.house, ...MUSIC.dread, ...MUSIC.harpsichord].forEach(src => {
+    [...MUSIC.house, ...MUSIC.dread, ...MUSIC.waltz, ...MUSIC.echoes].forEach(src => {
       const t = this.track(src, null, false);
       t.el.play().then(() => { if (t !== this.current) t.el.pause(); }).catch(() => {});
     });
@@ -1032,9 +1058,9 @@ const sound = {
     rain.start();
   },
 
-  // Crossfades to a theme ('house', 'dread', 'harpsichord'), or to silence
-  // with null. A playlist moves on to its next track when one ends.
-  setTheme(name) {
+  // Crossfades to a theme (a key of MUSIC), or to silence with null.
+  // `fade` is in seconds; `restart` starts the track from the top.
+  setTheme(name, { fade = FADE_S, restart = false } = {}) {
     if (!this.ctx || name === this.theme) return;
     this.theme = name;
     const t = this.ctx.currentTime;
@@ -1042,25 +1068,27 @@ const sound = {
     if (old) {
       old.gain.gain.cancelScheduledValues(t);
       old.gain.gain.setValueAtTime(old.gain.gain.value, t);
-      old.gain.gain.linearRampToValueAtTime(0, t + FADE_S);
-      setTimeout(() => { if (old !== this.current) old.el.pause(); }, FADE_S * 1000 + 100);
+      old.gain.gain.linearRampToValueAtTime(0, t + fade);
+      setTimeout(() => { if (old !== this.current) old.el.pause(); }, fade * 1000 + 100);
     }
     this.current = null;
     if (!name) return;
     const list = MUSIC[name];
     this.playlistPos = this.playlistPos || {};
     const pos = this.playlistPos[name] || 0;
-    const next = this.track(list[pos % list.length], null, list.length === 1);
+    const next = this.track(list[pos % list.length], null, false);
+    next.el.loop = list.length === 1 && !MUSIC_ONCE.has(name);
     next.el.onended = () => {
       if (this.current !== next) return;
       this.playlistPos[name] = (pos + 1) % list.length;
       this.theme = null;
-      this.setTheme(name);
+      this.current = null;
+      if (this.onThemeEnded) this.onThemeEnded(name);
     };
-    if (next.el.ended) next.el.currentTime = 0;
+    if (restart || next.el.ended) next.el.currentTime = 0;
     next.gain.gain.cancelScheduledValues(t);
     next.gain.gain.setValueAtTime(next.gain.gain.value, t);
-    next.gain.gain.linearRampToValueAtTime(1, t + FADE_S);
+    next.gain.gain.linearRampToValueAtTime(1, t + fade);
     this.current = next;
     this.playEl(next.el);
   },
@@ -1072,10 +1100,16 @@ const sound = {
     this.duckGain.gain.setTargetAtTime(level, this.ctx.currentTime, seconds / 3);
   },
 
-  setMusicOn(on) {
-    this.musicOn = on;
-    store.set(MUSIC_KEY, on ? 'on' : 'off');
-    if (this.ctx) this.musicGain.gain.setTargetAtTime(on ? MUSIC_VOLUME : 0, this.ctx.currentTime, 0.3);
+  // The two sliders: overall volume, and music on its own (0–1 each).
+  setVolume(v) {
+    this.volume = clamp01(v);
+    store.set(VOLUME_KEY, this.volume.toFixed(2));
+    if (this.ctx && this.on) this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.05);
+  },
+  setMusicVolume(v) {
+    this.musicVolume = clamp01(v);
+    store.set(MUSIC_VOLUME_KEY, this.musicVolume.toFixed(2));
+    if (this.ctx) this.musicGain.gain.setTargetAtTime(MUSIC_VOLUME * this.musicVolume, this.ctx.currentTime, 0.05);
   },
 
   setOn(on) {
@@ -1083,7 +1117,7 @@ const sound = {
     store.set(SOUND_KEY, on ? 'on' : 'off');
     if (!this.ctx) return;
     if (on && this.ctx.state === 'suspended') this.ctx.resume();
-    this.master.gain.setTargetAtTime(on ? 0.7 : 0, this.ctx.currentTime, 0.3);
+    this.master.gain.setTargetAtTime(on ? this.volume : 0, this.ctx.currentTime, 0.3);
   },
 
   // 'out', 'glass' or 'in': see STORM_PLACES.
@@ -1129,22 +1163,6 @@ const sound = {
     o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(this.master);
     o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
   },
-
-  // The cursed waltz: a lurching three-beat figure, out of tune and
-  // getting worse, until something stops it.
-  startDiscord() {
-    if (!this.ctx || this.discordTimer) return;
-    let beat = 0;
-    const roots = [NOTE.C / 2, NOTE.F / 2, NOTE.G / 2, NOTE.E / 2];
-    this.discordTimer = setInterval(() => {
-      const root = roots[Math.floor(beat / 3) % roots.length];
-      const sour = 30 + Math.min(70, beat * 2);
-      if (beat % 3 === 0) this.pluck(root, 0, 1.2, 0.26, -sour);
-      else { this.pluck(root * 2.52, 0, 0.5, 0.12, sour); this.pluck(root * 3.0, 0.01, 0.5, 0.1, -sour / 2); }
-      beat++;
-    }, 330);
-  },
-  stopDiscord() { clearInterval(this.discordTimer); this.discordTimer = null; },
 
   startDrone() {
     if (!this.ctx || this.drone) return;
@@ -2348,7 +2366,9 @@ function isDanceFloor(c) { return ((c.x - DANCE.x) / DANCE.rx) ** 2 + ((c.y - DA
 function startCurse() {
   game.curse = true;
   game.curseStart = performance.now();
-  sound.startDiscord();
+  // The Harpsichord crashes in at once (musicFor plays it while the
+  // curse lasts).
+  sound.setTheme('waltz', { fade: 0.25, restart: true });
   world.weasels.forEach(s => { s.visible = true; });
   ui.log('The harpsichord crashes into a lurching, discordant waltz. In the cracked mirror the room is full of dancers.', 'scare');
   setTimeout(() => { if (game.curse) ui.log('“Vessla Browntooth will sacrifice your souls!” chitter the weasels pouring from the walls, all in one voice.', 'scare'); }, 2600);
@@ -2357,7 +2377,6 @@ function startCurse() {
 
 function endCurse(quiet) {
   game.curse = false;
-  sound.stopDiscord();
   world.weasels.forEach(s => { s.visible = false; });
   if (!quiet) ui.log('The music fades behind you, though your feet still want to dance.', 'note');
 }
@@ -2380,7 +2399,10 @@ async function harpsichordScene() {
   endCurse(true);
   showPatrini();
   ui.log('The waltz breaks off. In the silence a shimmering blue figure sits at the harpsichord and plays, slow and sad.', 'note');
-  PATRINI_TUNE.concat(PATRINI_TUNE).forEach((n, i) => sound.pluck(NOTE[n], i * 0.6, 1.2, 0.18));
+  // Patrini's song: The Echoes, from the top, and it plays through wherever
+  // you go (see musicFor in main.js).
+  game.echoesPlaying = true;
+  sound.setTheme('echoes', { fade: 1.5, restart: true });
   await ui.say('Joseph Patrini', 'He sings, very softly, of a kitchen fire that never went out, of children’s feet on the stairs, of a house that was warm once. The song ends before it should, as though he can’t remember the rest.');
   await ui.say('', 'The figure fades. With a soft crack, a single black ivory key springs loose and clatters to the floor.');
   game.flags.musicSolved = true;
@@ -2544,6 +2566,7 @@ function quality() {
 
 function startGame(fresh) {
   if (fresh || !loadGame()) newGame();
+  game.echoesPlaying = false;
   sound.start();
   $('start').hidden = true;
   $('game').hidden = false;
@@ -2814,7 +2837,9 @@ function loop(now) {
 
   // Music for where you are and how you feel.
   sound.setTheme(musicFor(here));
-  sound.duck(game.curse ? 0 : ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0 : 1);
+  // Quiet for the séance; the waltz drops back while you're at the keys
+  // so you can hear the tune you're playing.
+  sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
 
   if (busy()) ui.setPrompt(null);
   else {
@@ -2830,10 +2855,13 @@ let dreadTheme = false;
 function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
+  if (game.curse) return 'waltz';
+  if (game.echoesPlaying) return 'echoes';      // Patrini's song plays through
   if (dreadTheme) return 'dread';
-  if (here.room === 'music' && game.flags.musicSolved) return 'harpsichord';
+  if (here.room === 'music' && game.flags.musicSolved) return 'echoes';
   return 'house';
 }
+sound.onThemeEnded = name => { if (name === 'echoes') game.echoesPlaying = false; };
 
 // ─── Controls ─────────────────────────────────────────────────────────
 
@@ -2846,6 +2874,8 @@ const KEYMAP = {
 document.addEventListener('keydown', e => {
   if ($('game').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.toLowerCase();
+  if (k === 'escape' && !soundPanel.hidden) { e.preventDefault(); toggleSoundPanel(false); $('btn-sound').focus(); return; }
+  if (e.target.closest && e.target.closest('input')) return;     // a slider's arrow keys move the slider
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
@@ -2864,13 +2894,31 @@ $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
 document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
 $('room-card-close').addEventListener('click', hideRoomCard);
 const soundBtn = $('btn-sound');
-const showSound = () => { soundBtn.textContent = sound.on ? '🔊' : '🔇'; soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.title = sound.on ? 'Sound on' : 'Sound off'; };
-soundBtn.addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
+const showSound = () => {
+  soundBtn.textContent = sound.on ? '🔊' : '🔇';
+  soundBtn.title = 'Volume';
+  $('btn-mute').textContent = sound.on ? 'Mute' : 'Unmute';
+  $('btn-mute').setAttribute('aria-pressed', String(!sound.on));
+};
+soundBtn.addEventListener('click', () => toggleSoundPanel());
+// The volume panel: opened by the 🔊 button; Volume (everything), Music,
+// and Mute. Kept between visits.
+const soundPanel = $('sound-panel');
+const volSlider = $('vol-all'), musicSlider = $('vol-music');
+volSlider.value = Math.round(sound.volume * 100);
+musicSlider.value = Math.round(sound.musicVolume * 100);
+volSlider.addEventListener('input', () => { sound.setVolume(volSlider.value / 100); if (!sound.on && volSlider.value > 0) { sound.setOn(true); showSound(); } });
+musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.value / 100));
+$('btn-mute').addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
+const toggleSoundPanel = open => {
+  soundPanel.hidden = open === undefined ? !soundPanel.hidden : !open;
+  soundBtn.setAttribute('aria-expanded', String(!soundPanel.hidden));
+  if (!soundPanel.hidden) volSlider.focus({ preventScroll: true });
+};
+document.addEventListener('pointerdown', e => {
+  if (!soundPanel.hidden && !e.target.closest('#sound-panel, #btn-sound')) toggleSoundPanel(false);
+});
 showSound();
-const musicBtn = $('btn-music');
-const showMusic = () => { musicBtn.classList.toggle('off', !sound.musicOn); musicBtn.setAttribute('aria-pressed', String(sound.musicOn)); musicBtn.title = sound.musicOn ? 'Music on' : 'Music off'; };
-musicBtn.addEventListener('click', () => { sound.setMusicOn(!sound.musicOn); showMusic(); });
-showMusic();
 
 $('btn-continue').hidden = !hasSave();
 $('btn-continue').addEventListener('click', () => startGame(false));

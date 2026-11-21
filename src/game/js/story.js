@@ -476,7 +476,9 @@ function isDanceFloor(c) { return ((c.x - DANCE.x) / DANCE.rx) ** 2 + ((c.y - DA
 function startCurse() {
   game.curse = true;
   game.curseStart = performance.now();
-  sound.startDiscord();
+  // The Harpsichord crashes in at once (musicFor plays it while the
+  // curse lasts).
+  sound.setTheme('waltz', { fade: 0.25, restart: true });
   world.weasels.forEach(s => { s.visible = true; });
   ui.log('The harpsichord crashes into a lurching, discordant waltz. In the cracked mirror the room is full of dancers.', 'scare');
   setTimeout(() => { if (game.curse) ui.log('“Vessla Browntooth will sacrifice your souls!” chitter the weasels pouring from the walls, all in one voice.', 'scare'); }, 2600);
@@ -485,7 +487,6 @@ function startCurse() {
 
 function endCurse(quiet) {
   game.curse = false;
-  sound.stopDiscord();
   world.weasels.forEach(s => { s.visible = false; });
   if (!quiet) ui.log('The music fades behind you, though your feet still want to dance.', 'note');
 }
@@ -508,7 +509,10 @@ async function harpsichordScene() {
   endCurse(true);
   showPatrini();
   ui.log('The waltz breaks off. In the silence a shimmering blue figure sits at the harpsichord and plays, slow and sad.', 'note');
-  PATRINI_TUNE.concat(PATRINI_TUNE).forEach((n, i) => sound.pluck(NOTE[n], i * 0.6, 1.2, 0.18));
+  // Patrini's song: The Echoes, from the top, and it plays through wherever
+  // you go (see musicFor in main.js).
+  game.echoesPlaying = true;
+  sound.setTheme('echoes', { fade: 1.5, restart: true });
   await ui.say('Joseph Patrini', 'He sings, very softly, of a kitchen fire that never went out, of children’s feet on the stairs, of a house that was warm once. The song ends before it should, as though he can’t remember the rest.');
   await ui.say('', 'The figure fades. With a soft crack, a single black ivory key springs loose and clatters to the floor.');
   game.flags.musicSolved = true;

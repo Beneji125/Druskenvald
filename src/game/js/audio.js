@@ -1,22 +1,31 @@
 // Sound. The storm and the music are recordings (MUSIC, below), streamed
 // as they play. Everything else is made in the browser with Web Audio:
-// thunder to match the lightning, a plucked harpsichord (the cursed waltz
-// and Patrini's tune), the séance drone, doors, the planchette.
+// thunder to match the lightning, the harpsichord notes of the melody
+// puzzle, the séance drone, doors, the planchette.
 
 const SOUND_KEY = 'crooked_house_sound';
-const MUSIC_KEY = 'crooked_house_music';
+const VOLUME_KEY = 'crooked_house_volume';
+const MUSIC_VOLUME_KEY = 'crooked_house_music_volume';
 
-// What plays where. `house` is a playlist that alternates while you
-// explore; `dread` takes over when Dread runs high; `harpsichord` fills
-// the music room once its curse is broken. See musicFor() in main.js.
+// What plays where (see musicFor() in main.js):
+//   house   while you explore
+//   dread   when Dread runs high
+//   waltz   the music room's cursed waltz
+//   echoes  Patrini's song: from the moment the harpsichord puzzle is
+//           solved, and in the music room ever after
+// A list with more than one track plays them in turn. `once` themes don't
+// loop: when the track ends, musicFor() decides what comes next.
 const MUSIC = {
   storm: 'audio/crooked-house/Dark and Stormy.mp3',
-  house: ['audio/crooked-house/Silent Hours.mp3', 'audio/04 The Echoes.mp3'],
+  house: ['audio/crooked-house/Silent Hours.mp3'],
   dread: ['audio/crooked-house/These Splitting Walls.mp3'],
-  harpsichord: ['audio/crooked-house/The Harpsichord.mp3'],
+  waltz: ['audio/crooked-house/The Harpsichord.mp3'],
+  echoes: ['audio/04 The Echoes.mp3'],
 };
-const MUSIC_VOLUME = 0.42;
+const MUSIC_ONCE = new Set(['echoes']);
+const MUSIC_VOLUME = 0.55;
 const FADE_S = 2.5;
+const readLevel = (key, fallback) => { const v = parseFloat(store.get(key)); return Number.isFinite(v) ? clamp01(v) : fallback; };
 
 // How the storm sounds from where you stand: wide open on the porch,
 // through glass in the conservatory, muffled everywhere else.
@@ -29,8 +38,8 @@ const NOTE = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.0, A: 440.0, B
 
 const sound = {
   ctx: null, master: null, noise: null, on: store.get(SOUND_KEY) !== 'off',
-  musicOn: store.get(MUSIC_KEY) !== 'off',
-  discordTimer: null, drone: null,
+  volume: readLevel(VOLUME_KEY, 0.7), musicVolume: readLevel(MUSIC_VOLUME_KEY, 0.75),
+  drone: null, onThemeEnded: null,
   tracks: {}, theme: null, duckLevel: 1, place: 'out',
 
   // Must be called from a click or key press (browsers only allow sound
@@ -42,7 +51,7 @@ const sound = {
     try { this.ctx = new Ctx(); } catch { return; }
     const ctx = this.ctx;
     this.master = ctx.createGain();
-    this.master.gain.value = this.on ? 0.7 : 0;
+    this.master.gain.value = this.on ? this.volume : 0;
     this.master.connect(ctx.destination);
     const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const ch = buf.getChannelData(0);
@@ -59,15 +68,15 @@ const sound = {
     this.setPlace(this.place);
     this.playEl(storm.el);
 
-    // Music: its own volume (the ♪ button), and a duck for scenes that
-    // want quiet.
-    this.musicGain = ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_VOLUME : 0;
+    // Music: its own volume (the Music slider), and a duck for scenes
+    // that want quiet.
+    this.musicGain = ctx.createGain(); this.musicGain.gain.value = MUSIC_VOLUME * this.musicVolume;
     this.duckGain = ctx.createGain();
     this.duckGain.connect(this.musicGain).connect(this.master);
     // Browsers (iOS especially) only let audio start from a click or key
     // press: touch every track now, during the one that started the game,
     // so they can start later on their own.
-    [...MUSIC.house, ...MUSIC.dread, ...MUSIC.harpsichord].forEach(src => {
+    [...MUSIC.house, ...MUSIC.dread, ...MUSIC.waltz, ...MUSIC.echoes].forEach(src => {
       const t = this.track(src, null, false);
       t.el.play().then(() => { if (t !== this.current) t.el.pause(); }).catch(() => {});
     });
@@ -97,9 +106,9 @@ const sound = {
     rain.start();
   },
 
-  // Crossfades to a theme ('house', 'dread', 'harpsichord'), or to silence
-  // with null. A playlist moves on to its next track when one ends.
-  setTheme(name) {
+  // Crossfades to a theme (a key of MUSIC), or to silence with null.
+  // `fade` is in seconds; `restart` starts the track from the top.
+  setTheme(name, { fade = FADE_S, restart = false } = {}) {
     if (!this.ctx || name === this.theme) return;
     this.theme = name;
     const t = this.ctx.currentTime;
@@ -107,25 +116,27 @@ const sound = {
     if (old) {
       old.gain.gain.cancelScheduledValues(t);
       old.gain.gain.setValueAtTime(old.gain.gain.value, t);
-      old.gain.gain.linearRampToValueAtTime(0, t + FADE_S);
-      setTimeout(() => { if (old !== this.current) old.el.pause(); }, FADE_S * 1000 + 100);
+      old.gain.gain.linearRampToValueAtTime(0, t + fade);
+      setTimeout(() => { if (old !== this.current) old.el.pause(); }, fade * 1000 + 100);
     }
     this.current = null;
     if (!name) return;
     const list = MUSIC[name];
     this.playlistPos = this.playlistPos || {};
     const pos = this.playlistPos[name] || 0;
-    const next = this.track(list[pos % list.length], null, list.length === 1);
+    const next = this.track(list[pos % list.length], null, false);
+    next.el.loop = list.length === 1 && !MUSIC_ONCE.has(name);
     next.el.onended = () => {
       if (this.current !== next) return;
       this.playlistPos[name] = (pos + 1) % list.length;
       this.theme = null;
-      this.setTheme(name);
+      this.current = null;
+      if (this.onThemeEnded) this.onThemeEnded(name);
     };
-    if (next.el.ended) next.el.currentTime = 0;
+    if (restart || next.el.ended) next.el.currentTime = 0;
     next.gain.gain.cancelScheduledValues(t);
     next.gain.gain.setValueAtTime(next.gain.gain.value, t);
-    next.gain.gain.linearRampToValueAtTime(1, t + FADE_S);
+    next.gain.gain.linearRampToValueAtTime(1, t + fade);
     this.current = next;
     this.playEl(next.el);
   },
@@ -137,10 +148,16 @@ const sound = {
     this.duckGain.gain.setTargetAtTime(level, this.ctx.currentTime, seconds / 3);
   },
 
-  setMusicOn(on) {
-    this.musicOn = on;
-    store.set(MUSIC_KEY, on ? 'on' : 'off');
-    if (this.ctx) this.musicGain.gain.setTargetAtTime(on ? MUSIC_VOLUME : 0, this.ctx.currentTime, 0.3);
+  // The two sliders: overall volume, and music on its own (0–1 each).
+  setVolume(v) {
+    this.volume = clamp01(v);
+    store.set(VOLUME_KEY, this.volume.toFixed(2));
+    if (this.ctx && this.on) this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.05);
+  },
+  setMusicVolume(v) {
+    this.musicVolume = clamp01(v);
+    store.set(MUSIC_VOLUME_KEY, this.musicVolume.toFixed(2));
+    if (this.ctx) this.musicGain.gain.setTargetAtTime(MUSIC_VOLUME * this.musicVolume, this.ctx.currentTime, 0.05);
   },
 
   setOn(on) {
@@ -148,7 +165,7 @@ const sound = {
     store.set(SOUND_KEY, on ? 'on' : 'off');
     if (!this.ctx) return;
     if (on && this.ctx.state === 'suspended') this.ctx.resume();
-    this.master.gain.setTargetAtTime(on ? 0.7 : 0, this.ctx.currentTime, 0.3);
+    this.master.gain.setTargetAtTime(on ? this.volume : 0, this.ctx.currentTime, 0.3);
   },
 
   // 'out', 'glass' or 'in': see STORM_PLACES.
@@ -194,22 +211,6 @@ const sound = {
     o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(this.master);
     o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
   },
-
-  // The cursed waltz: a lurching three-beat figure, out of tune and
-  // getting worse, until something stops it.
-  startDiscord() {
-    if (!this.ctx || this.discordTimer) return;
-    let beat = 0;
-    const roots = [NOTE.C / 2, NOTE.F / 2, NOTE.G / 2, NOTE.E / 2];
-    this.discordTimer = setInterval(() => {
-      const root = roots[Math.floor(beat / 3) % roots.length];
-      const sour = 30 + Math.min(70, beat * 2);
-      if (beat % 3 === 0) this.pluck(root, 0, 1.2, 0.26, -sour);
-      else { this.pluck(root * 2.52, 0, 0.5, 0.12, sour); this.pluck(root * 3.0, 0.01, 0.5, 0.1, -sour / 2); }
-      beat++;
-    }, 330);
-  },
-  stopDiscord() { clearInterval(this.discordTimer); this.discordTimer = null; },
 
   startDrone() {
     if (!this.ctx || this.drone) return;
