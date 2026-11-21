@@ -17,6 +17,8 @@ docs/            The published site — this is what GitHub Pages serves
   npc/             NPC portraits (NPCS / WM_PORTRAITS)
   monsters/        monster, boss and familiar art
   audio/           background music and location ambience tracks
+  explore/         floor plans for the explorable 3D places
+  vendor/          three-explore.min.js, a trimmed three.js for the 3D places
 
 src/              Source files that get combined into docs/index.html
   template.html    HTML skeleton
@@ -27,6 +29,7 @@ src/              Source files that get combined into docs/index.html
     lighting.js      map layers, night lighting, light mode, hover reveal;
                      drops to a lighter quality on slow devices (remembered)
     ambient.js       sparks rising from the lights and drifting wisps at night
+    explore.js       the explorable 3D places (the Crooked House)
     map.js           hotspots, zoom & pan, switching maps
     panels.js        lore / species / NPC panels and lore images
     unlocks.js       character-name recognition and group unlocks
@@ -38,6 +41,7 @@ src/              Source files that get combined into docs/index.html
     hotspots.json        map hotspot shapes + settlement light positions
     map-previews.json    tiny blurred copies of the two maps, shown while the
                          real ones download (made by optimize_assets.py)
+    explore.json         the 3D places: walls, rooms, things to inspect, lights
 
 source-assets/    Large working files, not part of the published site
   MAP_Druskenvald_Sources.xcf        GIMP source — the main map's paths/vectors
@@ -112,6 +116,41 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
   map.
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
+
+## Exploring the Crooked House in 3D
+
+The Crooked House's first floor can be walked through in 3D: the floor plan
+becomes the ground, its walls are raised around it, and the visitor carries
+a lantern through the dark rooms while a storm rages outside. Entering a
+room shows its description; sparkles mark things to inspect. It's the same
+for every group.
+
+- **The way in:** put `{{explore:crooked_house|Enter the Crooked House}}` in
+  any lore text, e.g. Wickermoor Village's panel. It becomes a button. (The
+  text after `|` is optional; it defaults to "The Crooked House".)
+- **Controls:** click or tap the floor to walk there (WASD/arrows also walk),
+  drag to turn the view (or Q/E), scroll or pinch to zoom, and click a
+  sparkle or press Enter near one to inspect it. "Rooms" walks to a room.
+  Escape, Back, or "Leave the house" returns to the panel.
+- **What's where:** `src/data/explore.json`, in the floor image's pixel
+  coordinates (x right, y down). `walls` are centrelines (a gap between two
+  wall lines is a doorway), `walkable` are the areas you can walk in, and
+  `rooms`, `pois` (things to inspect) and `lights` are what they sound like.
+  Room and point-of-interest texts describe what anyone walking in would
+  see, not the GM's notes. The build checks that every point of interest
+  names a real room.
+- **three.js:** `docs/vendor/three-explore.min.js` holds only the parts of
+  three.js (r187) that `explore.js` uses, and is fetched only when someone
+  opens the house. If `explore.js` starts using another part, the build says
+  which is missing. Rebuild it from a scratch folder:
+
+  ```
+  npm install three@0.187.0 esbuild
+  echo "export { ...names the build listed, plus the existing ones... } from 'three';" > entry.js
+  npx esbuild entry.js --bundle --minify --format=esm --legal-comments=none --outfile=three-explore.min.js
+  ```
+
+  then copy `three-explore.min.js` into `docs/vendor/`.
 
 ## Adding art or music
 

@@ -1,0 +1,139 @@
+{
+  "EXPLORE_PLACES": {
+    "crooked_house": {
+      "title": "The Crooked House",
+      "floors": [
+        {
+          "id": "first",
+          "name": "First Floor",
+          "image": "explore/Crooked_House_First_Floor.jpg",
+          "width": 1313,
+          "height": 1500,
+          "wallHeight": 70,
+          "start": { "x": 575, "y": 1140, "facing": 0 },
+          "returnTo": { "x": 575, "y": 1140 },
+          "walls": [
+            { "note": "conservatory and parlour west wall, gallery turret", "outer": true,
+              "points": [[310,112],[288,128],[281,180],[281,260],[282,400],[283,497],[284,600],[283,742],[235,745],[195,765],[165,800],[152,845],[150,885],[110,885],[98,905],[100,975],[148,982],[165,1005],[195,1030],[250,1052],[320,1056],[375,1048],[409,1012]] },
+            { "note": "conservatory glass roof edge", "glass": true, "points": [[695,108],[600,118],[450,115],[310,112]] },
+            { "note": "conservatory east wall, up to the door into the kitchen", "outer": true,
+              "points": [[695,108],[700,150],[690,215],[689,272]] },
+            { "note": "freestanding wall between conservatory and kitchen", "points": [[687,340],[686,508]] },
+            { "note": "kitchen north and east walls", "outer": true,
+              "points": [[690,218],[870,226],[1050,232],[1040,370],[1032,500]] },
+            { "note": "kitchen / dining room", "points": [[748,505],[1032,505]] },
+            { "note": "dining room east wall, step out, music room east and south walls", "outer": true,
+              "points": [[1032,500],[1030,782],[1065,782],[1063,1065],[748,1068]] },
+            { "note": "dining room / music room", "points": [[745,797],[1030,784]] },
+            { "note": "parlour north wall, west of the door from the conservatory", "points": [[283,497],[365,497]] },
+            { "note": "parlour north wall east of that door, and its jog round the head of the hallway", "points": [[445,497],[612,500],[612,557],[682,568]] },
+            { "note": "parlour south-west corner (fireplace) and foyer north wall up to its door", "points": [[283,742],[328,772],[345,795],[420,797]] },
+            { "note": "foyer north wall east of the door to the parlour", "points": [[495,797],[682,797]] },
+            { "note": "foyer west wall above the gallery door", "points": [[409,797],[410,868]] },
+            { "note": "foyer west wall below the gallery door", "outer": true, "points": [[411,947],[409,1012],[412,1105],[545,1105]] },
+            { "note": "foyer south wall east of the front door, and the end of the hallway", "outer": true,
+              "points": [[605,1105],[680,1108],[748,1110],[748,1068]] },
+            { "note": "hallway west wall, north of the parlour door", "points": [[682,568],[683,680]] },
+            { "note": "hallway west wall between the parlour and foyer doors", "points": [[683,760],[678,850],[673,992]] },
+            { "note": "hallway west wall south of the foyer door", "points": [[676,1067],[680,1108]] },
+            { "note": "hallway east wall, north of the dining room door", "points": [[746,505],[745,617]] },
+            { "note": "hallway east wall between the dining and music room doors", "points": [[744,697],[744,932]] },
+            { "note": "hallway east wall south of the music room door", "points": [[745,1010],[748,1068]] }
+          ],
+          "windows": [
+            { "x": 283, "y": 560 }, { "x": 284, "y": 640 },
+            { "x": 1045, "y": 300 },
+            { "x": 1031, "y": 560 }, { "x": 1031, "y": 668 },
+            { "x": 1064, "y": 880 },
+            { "x": 714, "y": 1109 }
+          ],
+          "walkable": [
+            { "note": "the house", "points": [[310,112],[450,115],[600,118],[695,108],[700,150],[690,215],[870,226],[1050,232],[1040,370],[1032,500],[1030,782],[1065,782],[1063,1065],[748,1068],[748,1110],[680,1108],[605,1105],[412,1105],[409,1012],[375,1048],[320,1056],[250,1052],[195,1030],[165,1005],[148,982],[100,975],[98,905],[110,885],[150,885],[152,845],[165,800],[195,765],[235,745],[283,742],[284,600],[283,497],[282,400],[281,260],[281,180],[288,128]] },
+            { "note": "the porch", "points": [[160,1000],[195,1165],[305,1205],[470,1172],[705,1172],[960,1190],[985,1125],[1125,1122],[1128,722],[1035,722],[1035,790],[1063,790],[1063,1070],[748,1112],[412,1108],[410,1015],[375,1050],[320,1058],[250,1055],[195,1033],[165,1007]] },
+            { "note": "the front steps", "points": [[480,1165],[705,1165],[705,1240],[480,1240]] },
+            { "note": "the front doorway, joining the porch to the foyer", "points": [[540,1085],[610,1085],[610,1125],[540,1125]] }
+          ],
+          "noEscape": {
+            "points": [[480,1182],[705,1182],[705,1240],[480,1240]],
+            "text": "Thunder cracks overhead and lightning strikes the path. When your eyes clear, you are standing on the porch again."
+          },
+          "rooms": [
+            { "id": "porch", "name": "The Porch", "area": "H1",
+              "points": [[160,1000],[195,1165],[305,1205],[470,1172],[480,1240],[705,1240],[705,1172],[960,1190],[985,1125],[1125,1122],[1128,722],[1035,722],[1035,790],[1063,790],[1063,1070],[748,1112],[412,1108],[410,1015],[375,1050],[320,1058],[250,1055],[195,1033],[165,1007]],
+              "text": "A sagging wooden porch wraps around the front of the house. The storm never lets up out here: rain comes in sideways, thunder shakes the boards, and the front door stands open as if it has been expecting you." },
+            { "id": "foyer", "name": "The Foyer", "area": "H2",
+              "points": [[409,797],[682,797],[680,1108],[412,1105]],
+              "text": "It must have been grand once. Now a crooked chandelier sways overhead, a staircase twists up the wall towards a balcony lost in darkness, and every inch of wall is crowded with portraits whose frightened eyes seem to follow you." },
+            { "id": "parlor", "name": "The Parlour", "area": "H3",
+              "points": [[283,497],[612,500],[612,557],[682,568],[682,797],[345,795],[283,742]],
+              "text": "Chairs with rotting upholstery ring a round table beside a cobwebbed fireplace. On the table lies a beautifully made spirit board, its little heart-shaped planchette engraved with the initials A.D." },
+            { "id": "gallery", "name": "The Gallery", "area": "H4",
+              "points": [[283,742],[345,795],[409,797],[409,1012],[375,1048],[320,1056],[250,1052],[195,1030],[165,1005],[148,982],[100,975],[98,905],[110,885],[150,885],[152,845],[165,800],[195,765],[235,745]],
+              "text": "A round room at the foot of the turret. Landscapes and stern marble busts line the curving wall, their name plates long since worn away. In the alcove at the far end stands a huge marble peacock with one red stone for an eye." },
+            { "id": "music", "name": "The Music Room", "area": "H5",
+              "points": [[745,797],[1030,784],[1065,782],[1063,1065],[748,1068]],
+              "text": "Decaying instruments surround a blackened wooden dance floor. A tall oval mirror, split by one long crack, bends the room into something not quite right, and at the far end a harpsichord waits with its lid propped open like a coffin." },
+            { "id": "dining", "name": "The Dining Room", "area": "H6",
+              "points": [[748,505],[1032,505],[1030,784],[745,797]],
+              "text": "Dust lies thick on every chair and cabinet, but not on the table. That is spotless, and laid with a feast: roasts, fish and fowl on gleaming silver, gravy, sweets. It smells wonderful. It should not be here." },
+            { "id": "kitchen", "name": "The Kitchen", "area": "H7",
+              "points": [[690,218],[1050,232],[1032,505],[748,505],[686,508],[689,272]],
+              "text": "Ruin. A heavy shelf has torn loose from the wall and crushed the table beneath it, and the floor is a litter of broken crockery and rusted knives. In the corner squats a great brick oven, its iron door locked shut." },
+            { "id": "conservatory", "name": "The Conservatory", "area": "H8", "glassRoof": true,
+              "points": [[288,128],[310,112],[695,108],[700,150],[690,215],[689,272],[687,340],[686,500],[612,500],[283,497],[281,180]],
+              "text": "Rain hammers on the glass. Dead vines and withered shrubs choke the room, all but one tree in the middle, green and heavy with fruit as if nothing here had ever died. A stone bench faces it, as though someone still comes to sit." },
+            { "id": "hallway", "name": "The Hallway",
+              "points": [[612,500],[686,508],[748,505],[748,1110],[680,1108],[682,568],[612,557]],
+              "text": "A narrow passage runs the length of the house, its floor tilted just enough to make every step feel wrong. Doors open off it on both sides." }
+          ],
+          "pois": [
+            { "id": "front_door", "room": "porch", "x": 575, "y": 1112, "name": "The front door",
+              "text": "Heavy, old and open. It creaked open by itself when you reached it, the way a mouth opens." },
+            { "id": "chandelier", "room": "foyer", "x": 535, "y": 950, "name": "The chandelier",
+              "text": "It hangs crooked and sways gently though there is no draught at all. Its candles burn with a cold, pale light." },
+            { "id": "portraits", "room": "foyer", "x": 432, "y": 985, "name": "The portraits",
+              "text": "Families, generation after generation, every one painted with wide and frightened eyes. Most of the name plates are worn away. A few are not: the Lockwoods, whose patriarch wears a familiar crooked grin; the Druskenvalds, Phillip weeping beneath a black crown; and one newer than the rest that looks unsettlingly like you, smiling with no teeth." },
+            { "id": "staircase", "room": "foyer", "x": 628, "y": 880, "name": "The staircase",
+              "text": "It twists unnaturally along the wall up to a balcony on the floor above. The upper floor isn't open to explore yet." },
+            { "id": "spirit_board", "room": "parlor", "x": 505, "y": 630, "name": "The spirit board",
+              "text": "Adela Druskenvald's spirit board, finely carved, with YES, NO, HELLO and GOODBYE set around the letters and numbers. Rest a hand on the planchette and it feels faintly warm, as if someone else's hand had only just left it." },
+            { "id": "fireplace", "room": "parlor", "x": 362, "y": 752, "name": "The fireplace",
+              "text": "Cold, black and thick with cobwebs. Yet now and then a single ember seems to glow deep in the ashes." },
+            { "id": "peacock", "room": "gallery", "x": 120, "y": 930, "name": "The peacock",
+              "text": "A larger-than-life albino peacock carved from weathered marble, its tail fanned across the alcove. One eye socket is empty. The other holds a dull red bloodstone." },
+            { "id": "landscapes", "room": "gallery", "x": 205, "y": 800, "name": "The landscapes",
+              "text": "Feverish, dreamlike paintings of hills and woods, all by the same hand. Look at any of them for long enough and you become sure something in it is looking back." },
+            { "id": "harpsichord", "room": "music", "x": 960, "y": 845, "name": "The harpsichord",
+              "text": "Its lid is propped open like a coffin and its rusted wires stretch across it like old, dry tendons. The yellowed keys are tangled in cobwebs." },
+            { "id": "mirror", "room": "music", "x": 845, "y": 812, "name": "The cracked mirror",
+              "text": "One long, jagged crack runs through the glass, and the room on either side of it doesn't quite agree with itself: stretched, warped, crooked." },
+            { "id": "dance_floor", "room": "music", "x": 850, "y": 930, "name": "The dance floor",
+              "text": "Old boards, blackened and splintered, worn smooth in a ring by a great many dancing feet." },
+            { "id": "feast", "room": "dining", "x": 865, "y": 650, "name": "The feast",
+              "text": "Roast boar, poultry, fish, sautéed vegetables, rich gravy and trays of sweets, every dish perfect and steaming. The smell is intoxicating. Underneath it is something else, faint and sour." },
+            { "id": "oven", "room": "kitchen", "x": 965, "y": 445, "name": "The oven",
+              "text": "A hulking brick oven with an iron door, sealed by a thick, rusted lock. The bricks are warm to the touch." },
+            { "id": "collapsed_shelf", "room": "kitchen", "x": 870, "y": 268, "name": "The collapsed shelf",
+              "text": "It ripped whole chunks of plaster out of the wall when it fell, and flattened the table beneath it." },
+            { "id": "tree", "room": "conservatory", "x": 490, "y": 300, "name": "The bergamot tree",
+              "text": "A bergamot tree, green and thriving, its branches heavy with fruit in a room where everything else has died." },
+            { "id": "bench", "room": "conservatory", "x": 520, "y": 478, "name": "The bench",
+              "text": "A mossy stone bench facing the tree. Petunia Lockwood used to sit here with her tea, and the stone still feels as though somebody has only just stood up." }
+          ],
+          "lights": [
+            { "id": "chandelier", "x": 535, "y": 950, "h": 95, "color": "#d9ceff", "intensity": 1.0, "distance": 330, "flicker": 0.08, "shadow": true },
+            { "id": "fireplace", "x": 358, "y": 752, "h": 14, "color": "#ff7a30", "intensity": 0.55, "distance": 230, "flicker": 0.35, "shadow": true },
+            { "id": "oven", "x": 958, "y": 452, "h": 18, "color": "#ff4518", "intensity": 0.5, "distance": 220, "flicker": 0.25, "shadow": true },
+            { "id": "spirit_board", "x": 505, "y": 630, "h": 22, "color": "#c39bff", "intensity": 0.35, "distance": 150, "flicker": 0.15 },
+            { "id": "tree", "x": 490, "y": 300, "h": 45, "color": "#a8e38f", "intensity": 0.3, "distance": 190, "flicker": 0.05 },
+            { "id": "feast", "x": 865, "y": 650, "h": 35, "color": "#ffbf6b", "intensity": 0.35, "distance": 170, "flicker": 0.2 }
+          ],
+          "events": [
+            { "id": "crooked_man", "after": "spirit_board", "room": "hallway",
+              "text": "“I cut them down, one by one!”" }
+          ]
+        }
+      ]
+    }
+  }
+}

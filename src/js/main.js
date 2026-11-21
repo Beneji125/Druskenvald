@@ -50,6 +50,9 @@ const LORE_LINK_SELECTOR = '[data-npc], [data-species], [data-creature]';
 document.addEventListener('click', e => {
   const link = e.target.closest(LORE_LINK_SELECTOR);
   if (link) openLoreLink(link);
+  // {{explore:id}} buttons in lore open that place in 3D (js/explore.js).
+  const explore = e.target.closest('[data-explore]');
+  if (explore) openExplore(explore.dataset.explore);
 });
 
 // (Real <button>s, like the Codex cards, already turn Enter/Space into a

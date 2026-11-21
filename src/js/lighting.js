@@ -505,6 +505,8 @@ function lightingAnimationTick(timestamp) {
   if (lightModeOn) return;
   // The Codex covers the whole map — nothing to animate behind it.
   if (typeof isCodexOpen === 'function' && isCodexOpen()) return;
+  // Nor behind a 3D place (js/explore.js).
+  if (typeof isExploreOpen === 'function' && isExploreOpen()) return;
   if (timestamp - lastLightingRenderTime < lightingFrameInterval) return;
 
   lastLightingRenderTime = timestamp;
