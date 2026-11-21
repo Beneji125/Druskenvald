@@ -60,6 +60,7 @@ const game = {
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
   Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false });
+  game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
 
@@ -67,6 +68,7 @@ function saveGame() {
   store.set(SAVE_KEY, JSON.stringify({
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
+    doorsOpen: [...game.doorsOpen],
   }));
 }
 
@@ -75,11 +77,16 @@ function loadGame() {
     const s = JSON.parse(store.get(SAVE_KEY));
     if (!s || s.v !== 1 || !GRID.at(s.cx, s.cy)?.walk) return false;
     Object.assign(game, { cx: s.cx, cy: s.cy, dir: s.dir, dread: s.dread, mementos: new Set(s.mementos), clues: new Set(s.clues), flags: s.flags || {}, seen: new Set(s.seen), roomsSeen: new Set(s.roomsSeen), curse: false });
+    game.doorsOpen = s.doorsOpen ? new Set(s.doorsOpen.filter(id => DOORS.byId(id))) : frontDoorOpen();
     return true;
   } catch { return false; }
 }
 
 function hasSave() { return !!store.get(SAVE_KEY); }
+
+// Every door starts closed, except the front door: the house opened that
+// one for you.
+function frontDoorOpen() { return new Set(DOORS.list.filter(d => d.rooms.includes('porch')).map(d => d.id)); }
 
 // ─── Dread, mementos, clues ───────────────────────────────────────────
 
@@ -191,6 +198,7 @@ async function useThing(t) {
     else await ui.say(t.name, t.text);
   } finally {
     game.busy = false;
+    lockInput(250);
   }
 }
 
@@ -383,8 +391,9 @@ function openOuija() {
           b.addEventListener('click', () => done(c.id));
           box.appendChild(b);
         });
-        const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); } };
-        const done = id => { document.removeEventListener('keydown', onKey, true); box.innerHTML = ''; resolve(id); };
+        const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= choices.length) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[n - 1].id); } };
+        let answered = false;
+        const done = id => { if (answered) return; answered = true; document.removeEventListener('keydown', onKey, true); box.innerHTML = ''; resolve(id); };
         document.addEventListener('keydown', onKey, true);
         box.querySelector('button')?.focus({ preventScroll: true });
       });
@@ -539,8 +548,9 @@ function melodyPuzzle(guided) {
         setTimeout(playTune, 1400);
       }
     };
-    const onKey = e => { const i = Number(e.key) - 1; if (i >= 0 && i < notes.length) { e.preventDefault(); press(notes[i]); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
-    const finish = ok => { document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; resolve(ok); };
+    const onKey = e => { const i = Number(e.key) - 1; if (i >= 0 && i < notes.length) { e.preventDefault(); e.stopImmediatePropagation(); press(notes[i]); } else if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); finish(false); } else e.stopImmediatePropagation(); };
+    let finished = false;
+    const finish = ok => { if (finished) return; finished = true; document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; lockInput(300); resolve(ok); };
     root.querySelectorAll('.key').forEach(k => k.addEventListener('click', () => press(k.dataset.note)));
     root.querySelector('.keys-leave').addEventListener('click', () => finish(false));
     document.addEventListener('keydown', onKey, true);

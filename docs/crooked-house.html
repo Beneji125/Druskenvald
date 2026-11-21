@@ -313,6 +313,8 @@ const FLOOR = PLACE.floors[0];
 const CELL = FLOOR.grid.cell;          // one square, in floor-plan pixels (~5 ft)
 const WALL_H = 112;                    // ~10 ft ceilings
 const EYE_H = 60;
+const WALL_T = 8;                      // wall thickness
+const DOOR_H = 90;                     // door height (the lintel sits above)
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];   // N, E, S, W (y grows south)
 const DIR_NAMES = ['north', 'east', 'south', 'west'];
 
@@ -403,10 +405,39 @@ const GRID = (() => {
   return { cols, rows, cells, at, centre, cellAtPx, ox, oy, segs };
 })();
 
+// ─── Doors ────────────────────────────────────────────────────────────
+// Every doorway on the grid gets a door: one square wide, or — where two
+// doorways sit side by side between the same two rooms — a double door.
+// Closed doors block the way; world.js draws them and main.js swings them.
+
+const DOORS = (() => {
+  const list = [], byEdge = new Map();
+  const key = (c, d) => `${c.cx},${c.cy},${d}`;
+  GRID.cells.forEach(c => {
+    if (!c.walk) return;
+    [1, 2].forEach(d => {
+      if (c.edges[d] !== 'door' || byEdge.has(key(c, d))) return;
+      const n = GRID.at(c.cx + DIRS[d][0], c.cy + DIRS[d][1]);
+      const step = d === 1 ? [0, 1] : [1, 0];      // the next square along the same wall
+      const c2 = GRID.at(c.cx + step[0], c.cy + step[1]);
+      const n2 = c2 && GRID.at(c2.cx + DIRS[d][0], c2.cy + DIRS[d][1]);
+      const double = !!(c2 && c2.walk && c2.edges[d] === 'door' && c2.room === c.room && n2 && n2.room === n.room);
+      const door = { id: key(c, d), dir: d, cells: double ? [c, c2] : [c], rooms: [c.room, n.room], open: false };
+      door.cells.forEach(x => {
+        byEdge.set(key(x, d), door);
+        byEdge.set(key(GRID.at(x.cx + DIRS[d][0], x.cy + DIRS[d][1]), (d + 2) % 4), door);
+      });
+      list.push(door);
+    });
+  });
+  return { list, at: (c, d) => (c ? byEdge.get(key(c, d)) || null : null), byId: id => list.find(x => x.id === id) || null };
+})();
+
 function canStep(c, dir) {
   if (!c) return false;
   const e = c.edges[dir];
   if (e === 'wall' || e === 'rail' || e === 'none') return false;
+  if (e === 'door' && !DOORS.at(c, dir)?.open) return false;
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
   return !!(n && n.walk && !n.blocked);   // `blocked`: big furniture (world.js)
 }
@@ -804,6 +835,27 @@ function brickTexture() {
   return artTexture(c);
 }
 
+// A door leaf: dark panelled wood, scuffed, with a tarnished brass knob.
+// The same picture on both faces.
+function doorTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(17);
+  ctx.fillStyle = '#2b1a0e'; ctx.fillRect(0, 0, 128, 256);
+  for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(0,0,0,${(rand() * 0.2).toFixed(2)})`; ctx.fillRect(rand() * 128, 0, 1 + rand() * 2, 256); }
+  const panel = (x, y, w, h) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(255,220,170,0.06)'; ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 2; ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+  };
+  panel(14, 14, 44, 96); panel(70, 14, 44, 96);
+  panel(14, 128, 44, 112); panel(70, 128, 44, 112);
+  ctx.fillStyle = '#8a6a2a'; ctx.beginPath(); ctx.arc(112, 122, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c9a050'; ctx.beginPath(); ctx.arc(110, 120, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#111'; ctx.fillRect(110, 132, 4, 8);                 // keyhole
+  artGrime(ctx, 128, 256, rand, 0.8);
+  return artTexture(c);
+}
+
 // The oven's front: brick, with a black iron door and its heavy lock.
 function ovenFrontTexture() {
   const [c, ctx] = artCanvas(128, 128);
@@ -911,7 +963,7 @@ const sound = {
     const rain = ctx.createBufferSource();
     rain.buffer = buf; rain.loop = true;
     const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 0.4;
-    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.12;
+    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.05;
     rain.connect(f).connect(this.rainGain).connect(this.master);
     rain.start();
   },
@@ -926,7 +978,7 @@ const sound = {
 
   // Indoors the rain is muffled; on the porch it's loud.
   setOutdoors(outdoors) {
-    if (this.rainGain) this.rainGain.gain.setTargetAtTime(outdoors ? 0.3 : 0.1, this.ctx.currentTime, 0.6);
+    if (this.rainGain) this.rainGain.gain.setTargetAtTime(outdoors ? 0.14 : 0.045, this.ctx.currentTime, 0.6);
   },
 
   thunder(strength = 1) {
@@ -994,6 +1046,25 @@ const sound = {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
     oscs.forEach(o => o.stop(t + 1.6));
     this.drone = null;
+  },
+
+  // A door: a long, groaning creak opening; a dull thud closing.
+  door(opening) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    if (opening) {
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(140, t + 0.35); o.frequency.linearRampToValueAtTime(95, t + 0.7);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6;
+      bp.frequency.setValueAtTime(500, t); bp.frequency.linearRampToValueAtTime(1300, t + 0.4); bp.frequency.linearRampToValueAtTime(700, t + 0.75);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+      o.connect(bp).connect(g).connect(this.master); o.start(t); o.stop(t + 0.85);
+    } else {
+      const src = ctx.createBufferSource(); src.buffer = this.noise;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t + 0.35); g.gain.exponentialRampToValueAtTime(0.5, t + 0.37); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      src.connect(lp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.75);
+    }
   },
 
   // A soft scrape for the planchette moving across the board.
@@ -1065,24 +1136,54 @@ function buildWorld(renderer, quality) {
   const flash = { value: 0 };
   const w = { scene, camera, flash, sprites: [], fixedLights: [], windowMats: [], hearthMats: [], disposables: [] };
   world = w;
+  const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
+    m.position.set(x, y, z); m.rotation.y = rotY;
+    m.castShadow = m.receiveShadow = true;
+    scene.add(m);
+    return m;
+  };
 
-  // ── Walls ──
+  // ── Walls and doors ──
+  // Walls are solid slabs WALL_T thick, centred on the line between two
+  // squares, papered on each face with the paper of the room it faces. They
+  // meet at corners, show their thickness at wall ends, and leave a framed
+  // opening wherever there's a door.
   const wallMats = {};
   const wallMat = key => wallMats[key] || (wallMats[key] = new THREE.MeshStandardMaterial({
-    map: key === 'exterior' ? exteriorTexture() : wallTexture(key), roughness: 0.95, metalness: 0 }));
-  const quads = {};
-  const pushQuad = (key, a, b, inset, h0, h1, lean = true) => {
-    // a→b along the floor; the face is pushed `inset` towards the room.
-    const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-    const nx = dz / len, nz = -dx / len;           // points into the room
-    const A = [a[0] + nx * inset, a[1] + nz * inset], B = [b[0] + nx * inset, b[1] + nz * inset];
-    const top = p => { const l = lean ? wallLean(p[0], p[1]) : [0, 0]; return [p[0] + l[0], h1, p[1] + l[1]]; };
-    const q = quads[key] || (quads[key] = { pos: [], uv: [] });
-    const p0 = [A[0], h0, A[1]], p1 = [B[0], h0, B[1]], p2 = top(B), p3 = top(A);
-    // Wound so the front faces the room.
-    q.pos.push(...p0, ...p2, ...p1, ...p0, ...p3, ...p2);
-    const v0 = h0 / WALL_H, v1 = h1 / WALL_H;
-    q.uv.push(1, v0, 0, v1, 0, v0, 1, v0, 1, v1, 0, v1);
+    map: key === 'exterior' ? exteriorTexture() : key === 'top' ? null : wallTexture(key),
+    color: key === 'top' ? 0x2a221b : 0xffffff, roughness: 0.95, metalness: 0 }));
+  const faces = {};
+  // One flat quad, wound so its front faces `normal`.
+  const quad = (key, pts, normal, uvs) => {
+    const [p0, p1, p2] = pts;
+    const ux = p1[0] - p0[0], uy = p1[1] - p0[1], uz = p1[2] - p0[2];
+    const vx = p2[0] - p0[0], vy = p2[1] - p0[1], vz = p2[2] - p0[2];
+    const cross = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+    let order = [0, 1, 2, 0, 2, 3];
+    if (cross[0] * normal[0] + cross[1] * normal[1] + cross[2] * normal[2] < 0) order = [0, 2, 1, 0, 3, 2];
+    const f = faces[key] || (faces[key] = { pos: [], uv: [] });
+    order.forEach(i => { f.pos.push(...pts[i]); f.uv.push(...uvs[i]); });
+  };
+  const lean = (x, z, h) => { const l = wallLean(x, z); return [l[0] * h / WALL_H, l[1] * h / WALL_H]; };
+  // A slab along the wall line a→b (2D points), from s0 to s1 along it and
+  // from height h0 to h1; `n` is the unit normal towards side A.
+  const slab = (a, b, s0, s1, h0, h1, keyA, keyB, n, { bottom = false } = {}) => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const ux = (b[0] - a[0]) / len, uz = (b[1] - a[1]) / len;
+    const at = (s, side, h) => {
+      const x = a[0] + ux * s, z = a[1] + uz * s, l = lean(x, z, h);
+      return [x + n[0] * side * WALL_T / 2 + l[0], h, z + n[1] * side * WALL_T / 2 + l[1]];
+    };
+    const v0 = h0 / WALL_H, v1 = h1 / WALL_H, u0 = s0 / CELL, u1 = s1 / CELL;
+    const uvSide = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+    quad(keyA, [at(s0, 1, h0), at(s1, 1, h0), at(s1, 1, h1), at(s0, 1, h1)], [n[0], 0, n[1]], uvSide);
+    quad(keyB, [at(s0, -1, h0), at(s1, -1, h0), at(s1, -1, h1), at(s0, -1, h1)], [-n[0], 0, -n[1]], uvSide);
+    const flat = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    quad('top', [at(s0, 1, h1), at(s1, 1, h1), at(s1, -1, h1), at(s0, -1, h1)], [0, 1, 0], flat);
+    if (bottom) quad('frame', [at(s0, 1, h0), at(s1, 1, h0), at(s1, -1, h0), at(s0, -1, h0)], [0, -1, 0], flat);
+    quad(bottom ? 'frame' : 'top', [at(s0, 1, h0), at(s0, -1, h0), at(s0, -1, h1), at(s0, 1, h1)], [-ux, 0, -uz], flat);
+    quad(bottom ? 'frame' : 'top', [at(s1, 1, h0), at(s1, -1, h0), at(s1, -1, h1), at(s1, 1, h1)], [ux, 0, uz], flat);
   };
   const corners = c => {
     const h = CELL / 2;
@@ -1090,20 +1191,76 @@ function buildWorld(renderer, quality) {
   };
   // The edge on side `dir`, ordered so the room is on its left (faces in).
   const edgeOf = (c, dir) => { const k = corners(c); return [[k[1], k[0]], [k[2], k[1]], [k[3], k[2]], [k[0], k[3]]][dir]; };
+  const paper = c => (!c || !c.walk) ? 'exterior' : c.room === 'porch' ? 'exterior' : (c.room || 'hallway');
 
+  // Plain walls: each edge once — from the square to its east or south, or
+  // to any side that has no square beyond it.
   GRID.cells.forEach(c => {
     if (!c.walk) return;
     c.edges.forEach((e, dir) => {
       if (e !== 'wall') return;
+      const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+      if ((dir === 0 || dir === 3) && n && n.walk) return;    // the neighbour draws it
       const [a, b] = edgeOf(c, dir);
-      const key = c.room === 'porch' ? 'exterior' : (c.room || 'hallway');
-      pushQuad(key, a, b, 3.5, 0, WALL_H);
+      slab(a, b, 0, CELL, 0, WALL_H, paper(c), paper(n), [-DIRS[dir][0], -DIRS[dir][1]]);
     });
   });
-  Object.entries(quads).forEach(([key, q]) => {
+
+  // Doorways: wall either side of the opening and a lintel over it, a
+  // moulded frame round it, and the door itself, hinged at the side.
+  w.doors = {};
+  const frameMat = new THREE.MeshStandardMaterial({ map: woodTexture('#3a2414'), roughness: 0.8 });
+  wallMats.frame = frameMat;
+  // The leaf's picture, and the same picture flipped for its back face, so
+  // the knob is at the free edge from both sides.
+  const doorTex = doorTexture();
+  const doorTexBack = doorTex.clone();
+  doorTexBack.wrapS = THREE.RepeatWrapping; doorTexBack.repeat.x = -1; doorTexBack.offset.x = 1;
+  const doorFront = new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.7 });
+  const doorBack = new THREE.MeshStandardMaterial({ map: doorTexBack, roughness: 0.7 });
+  const doorMats = [frameMat, frameMat, frameMat, frameMat, doorFront, doorBack];
+  const doorMatsMirror = [frameMat, frameMat, frameMat, frameMat, doorBack, doorFront];
+  DOORS.list.forEach(door => {
+    const c = door.cells[0], d = door.dir;
+    const k = corners(c), L = CELL * door.cells.length;
+    const a = d === 1 ? k[1] : k[3];                                   // NE going south, or SW going east
+    const u = d === 1 ? [0, 1] : [1, 0];
+    const b = [a[0] + u[0] * L, a[1] + u[1] * L];
+    const n = [-DIRS[d][0], -DIRS[d][1]];                              // towards the first room
+    const nb = GRID.at(c.cx + DIRS[d][0], c.cy + DIRS[d][1]);
+    const W = door.cells.length === 1 ? 38 : 2 * CELL - 26, o0 = (L - W) / 2, o1 = (L + W) / 2;
+    slab(a, b, 0, o0, 0, WALL_H, paper(c), paper(nb), n);
+    slab(a, b, o1, L, 0, WALL_H, paper(c), paper(nb), n);
+    slab(a, b, o0, o1, DOOR_H, WALL_H, paper(c), paper(nb), n, { bottom: true });
+    // The frame: two posts and a head, standing a little proud of both faces.
+    const along = Math.atan2(-u[1], u[0]);
+    const at = s => [a[0] + u[0] * s, a[1] + u[1] * s];
+    [[o0 - 3], [o1 + 3]].forEach(([s]) => box(6, DOOR_H + 6, WALL_T + 3, frameMat, at(s)[0], (DOOR_H + 6) / 2, at(s)[1], along));
+    const mid = at((o0 + o1) / 2);
+    box(W + 12, 7, WALL_T + 3, frameMat, mid[0], DOOR_H + 3.5, mid[1], along);
+    // The leaves, hinged on the posts: one, or a pair meeting in the middle.
+    const leaves = (door.cells.length === 1 ? [[o0, 1]] : [[o0, 1], [o1, -1]]).map(([s, toward]) => {
+      const lw = W / door.cells.length - 1;
+      const geo = new THREE.BoxGeometry(lw, DOOR_H - 1, 3.5);
+      geo.translate(lw / 2, (DOOR_H - 1) / 2, 0);
+      const leaf = new THREE.Mesh(geo, toward === 1 ? doorMats : doorMatsMirror);
+      leaf.castShadow = leaf.receiveShadow = true;
+      const pivot = new THREE.Group();
+      const p = at(s);
+      pivot.position.set(p[0], 0.5, p[1]);
+      const base = Math.atan2(-u[1] * toward, u[0] * toward);           // closed: lying along the wall
+      pivot.rotation.y = base;
+      pivot.add(leaf);
+      scene.add(pivot);
+      return { pivot, base, sign: 1 };
+    });
+    w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u };
+  });
+
+  Object.entries(faces).forEach(([key, f]) => {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(q.pos, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(q.uv, 2));
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(f.pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(f.uv, 2));
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, wallMat(key));
     mesh.castShadow = mesh.receiveShadow = true;
@@ -1150,35 +1307,18 @@ function buildWorld(renderer, quality) {
     scene.add(new THREE.Mesh(flatGeo(list, WALL_H, true), m));
   });
 
-  // ── Door frames and the porch railing ──
-  const frameMat = new THREE.MeshStandardMaterial({ map: woodTexture('#3a2414'), roughness: 0.8 });
+  // ── The porch railing ──
   const railMat = new THREE.MeshStandardMaterial({ map: woodTexture('#2e2620'), roughness: 0.9 });
-  const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
-    m.position.set(x, y, z); m.rotation.y = rotY;
-    m.castShadow = m.receiveShadow = true;
-    scene.add(m);
-    return m;
-  };
   GRID.cells.forEach(c => {
     if (!c.walk) return;
     c.edges.forEach((e, dir) => {
+      if (e !== 'rail') return;
       const [a, b] = edgeOf(c, dir);
       const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
       const along = dir % 2 === 0 ? 0 : Math.PI / 2;
-      if (e === 'door' && (dir === 1 || dir === 2)) {
-        // Posts at either side of the opening and a lintel over it: the
-        // opening is a little narrower than the square, like a real door.
-        const off = CELL / 2 - 5;
-        const ux = dir % 2 === 0 ? 1 : 0, uz = dir % 2 === 0 ? 0 : 1;
-        box(10, WALL_H, 12, frameMat, mx - ux * off, WALL_H / 2, mz - uz * off, along);
-        box(10, WALL_H, 12, frameMat, mx + ux * off, WALL_H / 2, mz + uz * off, along);
-        box(CELL, WALL_H - 92, 12, frameMat, mx, (WALL_H + 92) / 2, mz, along);
-      } else if (e === 'rail') {
-        box(CELL, 4, 5, railMat, mx, 40, mz, along);
-        box(CELL, 3, 4, railMat, mx, 20, mz, along);
-        box(5, 44, 5, railMat, a[0], 22, a[1]);
-      }
+      box(CELL, 4, 5, railMat, mx, 40, mz, along);
+      box(CELL, 3, 4, railMat, mx, 20, mz, along);
+      box(5, 44, 5, railMat, a[0], 22, a[1]);
     });
   });
 
@@ -1202,7 +1342,7 @@ function buildWorld(renderer, quality) {
     const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
     const nx = dz / len, nz = -dx / len;
     const plane = new THREE.Mesh(new THREE.PlaneGeometry(CELL, WALL_H), winMat);
-    plane.position.set((a[0] + b[0]) / 2 + nx * 4.5, WALL_H / 2, (a[1] + b[1]) / 2 + nz * 4.5);
+    plane.position.set((a[0] + b[0]) / 2 + nx * (WALL_T / 2 + 0.6), WALL_H / 2, (a[1] + b[1]) / 2 + nz * (WALL_T / 2 + 0.6));
     plane.rotation.y = Math.atan2(nx, nz);
     scene.add(plane);
   });
@@ -1268,7 +1408,7 @@ function buildWorld(renderer, quality) {
 
 // Leaning tops: depends only on position, so joined walls lean together.
 function wallLean(x, z) {
-  return [Math.sin(x * 0.013 + z * 0.007) * 5 + Math.sin(z * 0.031) * 2, Math.cos(z * 0.011 - x * 0.005) * 5 + Math.sin(x * 0.027) * 2];
+  return [Math.sin(x * 0.013 + z * 0.007) * 3 + Math.sin(z * 0.031) * 1.2, Math.cos(z * 0.011 - x * 0.005) * 3 + Math.sin(x * 0.027) * 1.2];
 }
 
 function addScenery(w, p, box) {
@@ -1495,15 +1635,23 @@ const ui = {
         b.addEventListener('click', () => done(c.id));
         list.appendChild(b);
       });
+      // Keys answering the dialogue go no further: the Enter or Space that
+      // closes it mustn't also reach the game and use whatever is in front
+      // of you.
       const onKey = e => {
         const n = Number(e.key);
-        if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); }
-        else if (choices.length === 1 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); done(choices[0].id); }
+        if (n >= 1 && n <= choices.length) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[n - 1].id); }
+        else if (choices.length === 1 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[0].id); }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); }
       };
+      let answered = false;
       const done = id => {
+        if (answered) return;      // a double click answers once
+        answered = true;
         document.removeEventListener('keydown', onKey, true);
         box.hidden = true;
         ui.overlay = null;
+        lockInput(300);
         resolve(id);
       };
       // Wait a moment before listening, so the key that opened the
@@ -1524,7 +1672,7 @@ const ui = {
     $(id).querySelector('.close')?.focus({ preventScroll: true });
   },
   close() {
-    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; }
+    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; lockInput(150); }
   },
   toggle(id) { if (ui.overlay === id) ui.close(); else if (!ui.overlay) ui.open(id); },
 
@@ -1648,6 +1796,7 @@ const game = {
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
   Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false });
+  game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
 
@@ -1655,6 +1804,7 @@ function saveGame() {
   store.set(SAVE_KEY, JSON.stringify({
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
+    doorsOpen: [...game.doorsOpen],
   }));
 }
 
@@ -1663,11 +1813,16 @@ function loadGame() {
     const s = JSON.parse(store.get(SAVE_KEY));
     if (!s || s.v !== 1 || !GRID.at(s.cx, s.cy)?.walk) return false;
     Object.assign(game, { cx: s.cx, cy: s.cy, dir: s.dir, dread: s.dread, mementos: new Set(s.mementos), clues: new Set(s.clues), flags: s.flags || {}, seen: new Set(s.seen), roomsSeen: new Set(s.roomsSeen), curse: false });
+    game.doorsOpen = s.doorsOpen ? new Set(s.doorsOpen.filter(id => DOORS.byId(id))) : frontDoorOpen();
     return true;
   } catch { return false; }
 }
 
 function hasSave() { return !!store.get(SAVE_KEY); }
+
+// Every door starts closed, except the front door: the house opened that
+// one for you.
+function frontDoorOpen() { return new Set(DOORS.list.filter(d => d.rooms.includes('porch')).map(d => d.id)); }
 
 // ─── Dread, mementos, clues ───────────────────────────────────────────
 
@@ -1779,6 +1934,7 @@ async function useThing(t) {
     else await ui.say(t.name, t.text);
   } finally {
     game.busy = false;
+    lockInput(250);
   }
 }
 
@@ -1971,8 +2127,9 @@ function openOuija() {
           b.addEventListener('click', () => done(c.id));
           box.appendChild(b);
         });
-        const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); } };
-        const done = id => { document.removeEventListener('keydown', onKey, true); box.innerHTML = ''; resolve(id); };
+        const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= choices.length) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[n - 1].id); } };
+        let answered = false;
+        const done = id => { if (answered) return; answered = true; document.removeEventListener('keydown', onKey, true); box.innerHTML = ''; resolve(id); };
         document.addEventListener('keydown', onKey, true);
         box.querySelector('button')?.focus({ preventScroll: true });
       });
@@ -2127,8 +2284,9 @@ function melodyPuzzle(guided) {
         setTimeout(playTune, 1400);
       }
     };
-    const onKey = e => { const i = Number(e.key) - 1; if (i >= 0 && i < notes.length) { e.preventDefault(); press(notes[i]); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
-    const finish = ok => { document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; resolve(ok); };
+    const onKey = e => { const i = Number(e.key) - 1; if (i >= 0 && i < notes.length) { e.preventDefault(); e.stopImmediatePropagation(); press(notes[i]); } else if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); finish(false); } else e.stopImmediatePropagation(); };
+    let finished = false;
+    const finish = ok => { if (finished) return; finished = true; document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; lockInput(300); resolve(ok); };
     root.querySelectorAll('.key').forEach(k => k.addEventListener('click', () => press(k.dataset.note)));
     root.querySelector('.keys-leave').addEventListener('click', () => finish(false));
     document.addEventListener('keydown', onKey, true);
@@ -2226,6 +2384,16 @@ let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
 let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+const DOOR_SWING = 1.75, DOOR_MS = 550;   // how far doors swing open (radians), and how fast
+
+// After a dialogue, an overlay or a scene ends, input is ignored for a
+// moment, so the key press that closed it (or a quick double-tap) can't
+// also set off whatever comes next.
+let inputLockUntil = 0;
+function lockInput(ms) {
+  inputLockUntil = Math.max(inputLockUntil, performance.now() + ms);
+  queued.length = 0;
+}
 
 function quality() {
   const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
@@ -2262,6 +2430,12 @@ function startGame(fresh) {
     requestAnimationFrame(loop);
   }
   world.sprites.find(s => s.userData.kind === 'petunia').visible = !game.flags.petuniaGone;
+  DOORS.list.forEach(d => {
+    d.open = game.doorsOpen.has(d.id);
+    const v = world.doors[d.id];
+    v.amount = v.target = d.open ? 1 : 0;
+    v.leaves.forEach(l => { l.sign = 1; l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
+  });
   yaw = -game.dir * Math.PI / 2;
   motion.from = motion.to = null;
   ui.setDread(game.dread);
@@ -2298,20 +2472,66 @@ function resize() {
 
 // ─── Moving ───────────────────────────────────────────────────────────
 
-function busy() { return game.busy || !!ui.overlay || !!motion.to || game.flags.breaking; }
+function doorsMoving() { return Object.values(world.doors).some(v => v.amount !== v.target); }
+function busy() { return game.busy || !!ui.overlay || !!motion.to || doorsMoving() || game.flags.breaking; }
 
 function act(cmd) {
-  if (busy()) { if (queued.length < 1 && !game.busy && !ui.overlay) queued.push(cmd); return; }
+  if (performance.now() < inputLockUntil) return;
+  if (game.busy || ui.overlay || game.flags.breaking) return;
+  if (busy()) {
+    // Mid-step: remember one more move, but only near the end of this
+    // one, so tapping fast doesn't pile up moves that run on afterwards.
+    const k = motion.to ? (performance.now() - motion.t0) / motion.ms : 1;
+    if (k > 0.45 && queued.length < 1 && cmd !== 'use') queued.push(cmd);
+    return;
+  }
   if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
-  if (cmd === 'use') { const t = thingAtHand(); if (t) useThing(t); return; }
+  const door = doorAhead();
+  if (cmd === 'use') {
+    if (door && !door.open) return swingDoor(door, true);
+    const t = thingAtHand();
+    if (t) return useThing(t);
+    if (door && door.open) return swingDoor(door, false);
+    return;
+  }
   const rel = { forward: 0, strafeRight: 1, back: 2, strafeLeft: 3 }[cmd];
   if (rel === undefined) return;
+  // Walking into a closed door opens it.
+  if (rel === 0 && door && !door.open) return swingDoor(door, true);
   // On the cursed dance floor your feet don't always obey.
   if (game.curse && Math.random() < 0.3) {
     ui.log('You spin with the dancers.', 'scare');
     return turn(Math.random() < 0.5 ? -1 : 1);
   }
   step((game.dir + rel) % 4);
+}
+
+// ─── Doors ────────────────────────────────────────────────────────────
+
+function doorAhead() {
+  const c = GRID.at(game.cx, game.cy);
+  return c && c.edges[game.dir] === 'door' ? DOORS.at(c, game.dir) : null;
+}
+
+// Doors swing away from you: into the next room when you open them.
+function swingDoor(door, open) {
+  const v = world.doors[door.id];
+  if (open) {
+    const mine = door.cells.some(c => c.cx === game.cx && c.cy === game.cy);
+    const pn = mine ? v.normal : [-v.normal[0], -v.normal[1]];    // points back at you
+    v.leaves.forEach(l => {
+      const a = l.base + DOOR_SWING;
+      l.sign = (Math.cos(a) * pn[0] - Math.sin(a) * pn[1]) < 0 ? 1 : -1;
+    });
+    game.doorsOpen.add(door.id);
+  } else {
+    game.doorsOpen.delete(door.id);
+  }
+  door.open = open;
+  v.from = v.amount; v.t0 = performance.now();
+  v.target = open ? 1 : 0;
+  sound.door(open);
+  saveGame();
 }
 
 function step(dir) {
@@ -2374,7 +2594,7 @@ function loop(now) {
       motion.from = motion.to = null; motion.turning = false;
       yaw = -game.dir * Math.PI / 2 + Math.round((yaw + game.dir * Math.PI / 2) / (Math.PI * 2)) * Math.PI * 2;
       if (wasStep) enteredCell(from);
-      if (queued.length && !busy()) act(queued.shift());
+      if (queued.length && !busy()) { const next = queued.shift(); act(next); }
     }
   } else { px = here.x; pz = here.y; }
   // Bumping into a wall: a little lurch forward and back.
@@ -2427,6 +2647,19 @@ function loop(now) {
   if (game.dread > 0 && !game.curse && !game.busy && clock - (game.dreadEbb || 0) > 30) { game.dreadEbb = clock; addDread(-1); }
   else if (game.dread === 0 || game.curse || game.busy) game.dreadEbb = clock;
 
+  // Doors swinging.
+  Object.values(world.doors).forEach(v => {
+    if (v.amount === v.target) return;
+    // By the clock, not by frames, so a slow device can't stall a door.
+    const k = Math.min(1, (now - v.t0) / (DOOR_MS * Math.abs(v.target - v.from)));
+    v.amount = k >= 1 ? v.target : lerp(v.from, v.target, k);
+    const e = v.amount * v.amount * (3 - 2 * v.amount);
+    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * e * DOOR_SWING; });
+    // The house's own lights cast their shadows once; redo them now a
+    // door has moved.
+    if (v.amount === v.target) world.fixedLights.forEach(f => { if (f.castShadow) f.shadow.needsUpdate = true; });
+  });
+
   // Cut-outs turn to face you.
   billboards.forEach(b => { b.rotation.y = yaw; });
 
@@ -2437,7 +2670,11 @@ function loop(now) {
     s.material.opacity = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : (s.userData.kind === 'petunia' ? 0.92 : 1);
   });
 
-  ui.setPrompt(busy() ? null : thingAtHand());
+  if (busy()) ui.setPrompt(null);
+  else {
+    const door = doorAhead(), t = thingAtHand();
+    ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
+  }
   renderer.render(world.scene, cam);
 }
 
@@ -2455,7 +2692,7 @@ document.addEventListener('keydown', e => {
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
-  if (ui.overlay || game.busy) return;
+  if (ui.overlay || game.busy || performance.now() < inputLockUntil) return;
   if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
   const cmd = KEYMAP[k];
   if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
@@ -2480,7 +2717,7 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world };
+window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
 </script>
 </body>
 </html>

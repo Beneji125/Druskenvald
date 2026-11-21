@@ -69,15 +69,23 @@ const ui = {
         b.addEventListener('click', () => done(c.id));
         list.appendChild(b);
       });
+      // Keys answering the dialogue go no further: the Enter or Space that
+      // closes it mustn't also reach the game and use whatever is in front
+      // of you.
       const onKey = e => {
         const n = Number(e.key);
-        if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); }
-        else if (choices.length === 1 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); done(choices[0].id); }
+        if (n >= 1 && n <= choices.length) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[n - 1].id); }
+        else if (choices.length === 1 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopImmediatePropagation(); done(choices[0].id); }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopImmediatePropagation(); }
       };
+      let answered = false;
       const done = id => {
+        if (answered) return;      // a double click answers once
+        answered = true;
         document.removeEventListener('keydown', onKey, true);
         box.hidden = true;
         ui.overlay = null;
+        lockInput(300);
         resolve(id);
       };
       // Wait a moment before listening, so the key that opened the
@@ -98,7 +106,7 @@ const ui = {
     $(id).querySelector('.close')?.focus({ preventScroll: true });
   },
   close() {
-    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; }
+    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; lockInput(150); }
   },
   toggle(id) { if (ui.overlay === id) ui.close(); else if (!ui.overlay) ui.open(id); },
 

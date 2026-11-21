@@ -17,6 +17,8 @@ const FLOOR = PLACE.floors[0];
 const CELL = FLOOR.grid.cell;          // one square, in floor-plan pixels (~5 ft)
 const WALL_H = 112;                    // ~10 ft ceilings
 const EYE_H = 60;
+const WALL_T = 8;                      // wall thickness
+const DOOR_H = 90;                     // door height (the lintel sits above)
 const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];   // N, E, S, W (y grows south)
 const DIR_NAMES = ['north', 'east', 'south', 'west'];
 
@@ -107,10 +109,39 @@ const GRID = (() => {
   return { cols, rows, cells, at, centre, cellAtPx, ox, oy, segs };
 })();
 
+// ─── Doors ────────────────────────────────────────────────────────────
+// Every doorway on the grid gets a door: one square wide, or — where two
+// doorways sit side by side between the same two rooms — a double door.
+// Closed doors block the way; world.js draws them and main.js swings them.
+
+const DOORS = (() => {
+  const list = [], byEdge = new Map();
+  const key = (c, d) => `${c.cx},${c.cy},${d}`;
+  GRID.cells.forEach(c => {
+    if (!c.walk) return;
+    [1, 2].forEach(d => {
+      if (c.edges[d] !== 'door' || byEdge.has(key(c, d))) return;
+      const n = GRID.at(c.cx + DIRS[d][0], c.cy + DIRS[d][1]);
+      const step = d === 1 ? [0, 1] : [1, 0];      // the next square along the same wall
+      const c2 = GRID.at(c.cx + step[0], c.cy + step[1]);
+      const n2 = c2 && GRID.at(c2.cx + DIRS[d][0], c2.cy + DIRS[d][1]);
+      const double = !!(c2 && c2.walk && c2.edges[d] === 'door' && c2.room === c.room && n2 && n2.room === n.room);
+      const door = { id: key(c, d), dir: d, cells: double ? [c, c2] : [c], rooms: [c.room, n.room], open: false };
+      door.cells.forEach(x => {
+        byEdge.set(key(x, d), door);
+        byEdge.set(key(GRID.at(x.cx + DIRS[d][0], x.cy + DIRS[d][1]), (d + 2) % 4), door);
+      });
+      list.push(door);
+    });
+  });
+  return { list, at: (c, d) => (c ? byEdge.get(key(c, d)) || null : null), byId: id => list.find(x => x.id === id) || null };
+})();
+
 function canStep(c, dir) {
   if (!c) return false;
   const e = c.edges[dir];
   if (e === 'wall' || e === 'rail' || e === 'none') return false;
+  if (e === 'door' && !DOORS.at(c, dir)?.open) return false;
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
   return !!(n && n.walk && !n.blocked);   // `blocked`: big furniture (world.js)
 }

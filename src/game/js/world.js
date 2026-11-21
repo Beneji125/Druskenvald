@@ -54,24 +54,54 @@ function buildWorld(renderer, quality) {
   const flash = { value: 0 };
   const w = { scene, camera, flash, sprites: [], fixedLights: [], windowMats: [], hearthMats: [], disposables: [] };
   world = w;
+  const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
+    m.position.set(x, y, z); m.rotation.y = rotY;
+    m.castShadow = m.receiveShadow = true;
+    scene.add(m);
+    return m;
+  };
 
-  // ── Walls ──
+  // ── Walls and doors ──
+  // Walls are solid slabs WALL_T thick, centred on the line between two
+  // squares, papered on each face with the paper of the room it faces. They
+  // meet at corners, show their thickness at wall ends, and leave a framed
+  // opening wherever there's a door.
   const wallMats = {};
   const wallMat = key => wallMats[key] || (wallMats[key] = new THREE.MeshStandardMaterial({
-    map: key === 'exterior' ? exteriorTexture() : wallTexture(key), roughness: 0.95, metalness: 0 }));
-  const quads = {};
-  const pushQuad = (key, a, b, inset, h0, h1, lean = true) => {
-    // a→b along the floor; the face is pushed `inset` towards the room.
-    const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-    const nx = dz / len, nz = -dx / len;           // points into the room
-    const A = [a[0] + nx * inset, a[1] + nz * inset], B = [b[0] + nx * inset, b[1] + nz * inset];
-    const top = p => { const l = lean ? wallLean(p[0], p[1]) : [0, 0]; return [p[0] + l[0], h1, p[1] + l[1]]; };
-    const q = quads[key] || (quads[key] = { pos: [], uv: [] });
-    const p0 = [A[0], h0, A[1]], p1 = [B[0], h0, B[1]], p2 = top(B), p3 = top(A);
-    // Wound so the front faces the room.
-    q.pos.push(...p0, ...p2, ...p1, ...p0, ...p3, ...p2);
-    const v0 = h0 / WALL_H, v1 = h1 / WALL_H;
-    q.uv.push(1, v0, 0, v1, 0, v0, 1, v0, 1, v1, 0, v1);
+    map: key === 'exterior' ? exteriorTexture() : key === 'top' ? null : wallTexture(key),
+    color: key === 'top' ? 0x2a221b : 0xffffff, roughness: 0.95, metalness: 0 }));
+  const faces = {};
+  // One flat quad, wound so its front faces `normal`.
+  const quad = (key, pts, normal, uvs) => {
+    const [p0, p1, p2] = pts;
+    const ux = p1[0] - p0[0], uy = p1[1] - p0[1], uz = p1[2] - p0[2];
+    const vx = p2[0] - p0[0], vy = p2[1] - p0[1], vz = p2[2] - p0[2];
+    const cross = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+    let order = [0, 1, 2, 0, 2, 3];
+    if (cross[0] * normal[0] + cross[1] * normal[1] + cross[2] * normal[2] < 0) order = [0, 2, 1, 0, 3, 2];
+    const f = faces[key] || (faces[key] = { pos: [], uv: [] });
+    order.forEach(i => { f.pos.push(...pts[i]); f.uv.push(...uvs[i]); });
+  };
+  const lean = (x, z, h) => { const l = wallLean(x, z); return [l[0] * h / WALL_H, l[1] * h / WALL_H]; };
+  // A slab along the wall line a→b (2D points), from s0 to s1 along it and
+  // from height h0 to h1; `n` is the unit normal towards side A.
+  const slab = (a, b, s0, s1, h0, h1, keyA, keyB, n, { bottom = false } = {}) => {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const ux = (b[0] - a[0]) / len, uz = (b[1] - a[1]) / len;
+    const at = (s, side, h) => {
+      const x = a[0] + ux * s, z = a[1] + uz * s, l = lean(x, z, h);
+      return [x + n[0] * side * WALL_T / 2 + l[0], h, z + n[1] * side * WALL_T / 2 + l[1]];
+    };
+    const v0 = h0 / WALL_H, v1 = h1 / WALL_H, u0 = s0 / CELL, u1 = s1 / CELL;
+    const uvSide = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+    quad(keyA, [at(s0, 1, h0), at(s1, 1, h0), at(s1, 1, h1), at(s0, 1, h1)], [n[0], 0, n[1]], uvSide);
+    quad(keyB, [at(s0, -1, h0), at(s1, -1, h0), at(s1, -1, h1), at(s0, -1, h1)], [-n[0], 0, -n[1]], uvSide);
+    const flat = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    quad('top', [at(s0, 1, h1), at(s1, 1, h1), at(s1, -1, h1), at(s0, -1, h1)], [0, 1, 0], flat);
+    if (bottom) quad('frame', [at(s0, 1, h0), at(s1, 1, h0), at(s1, -1, h0), at(s0, -1, h0)], [0, -1, 0], flat);
+    quad(bottom ? 'frame' : 'top', [at(s0, 1, h0), at(s0, -1, h0), at(s0, -1, h1), at(s0, 1, h1)], [-ux, 0, -uz], flat);
+    quad(bottom ? 'frame' : 'top', [at(s1, 1, h0), at(s1, -1, h0), at(s1, -1, h1), at(s1, 1, h1)], [ux, 0, uz], flat);
   };
   const corners = c => {
     const h = CELL / 2;
@@ -79,20 +109,76 @@ function buildWorld(renderer, quality) {
   };
   // The edge on side `dir`, ordered so the room is on its left (faces in).
   const edgeOf = (c, dir) => { const k = corners(c); return [[k[1], k[0]], [k[2], k[1]], [k[3], k[2]], [k[0], k[3]]][dir]; };
+  const paper = c => (!c || !c.walk) ? 'exterior' : c.room === 'porch' ? 'exterior' : (c.room || 'hallway');
 
+  // Plain walls: each edge once — from the square to its east or south, or
+  // to any side that has no square beyond it.
   GRID.cells.forEach(c => {
     if (!c.walk) return;
     c.edges.forEach((e, dir) => {
       if (e !== 'wall') return;
+      const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+      if ((dir === 0 || dir === 3) && n && n.walk) return;    // the neighbour draws it
       const [a, b] = edgeOf(c, dir);
-      const key = c.room === 'porch' ? 'exterior' : (c.room || 'hallway');
-      pushQuad(key, a, b, 3.5, 0, WALL_H);
+      slab(a, b, 0, CELL, 0, WALL_H, paper(c), paper(n), [-DIRS[dir][0], -DIRS[dir][1]]);
     });
   });
-  Object.entries(quads).forEach(([key, q]) => {
+
+  // Doorways: wall either side of the opening and a lintel over it, a
+  // moulded frame round it, and the door itself, hinged at the side.
+  w.doors = {};
+  const frameMat = new THREE.MeshStandardMaterial({ map: woodTexture('#3a2414'), roughness: 0.8 });
+  wallMats.frame = frameMat;
+  // The leaf's picture, and the same picture flipped for its back face, so
+  // the knob is at the free edge from both sides.
+  const doorTex = doorTexture();
+  const doorTexBack = doorTex.clone();
+  doorTexBack.wrapS = THREE.RepeatWrapping; doorTexBack.repeat.x = -1; doorTexBack.offset.x = 1;
+  const doorFront = new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.7 });
+  const doorBack = new THREE.MeshStandardMaterial({ map: doorTexBack, roughness: 0.7 });
+  const doorMats = [frameMat, frameMat, frameMat, frameMat, doorFront, doorBack];
+  const doorMatsMirror = [frameMat, frameMat, frameMat, frameMat, doorBack, doorFront];
+  DOORS.list.forEach(door => {
+    const c = door.cells[0], d = door.dir;
+    const k = corners(c), L = CELL * door.cells.length;
+    const a = d === 1 ? k[1] : k[3];                                   // NE going south, or SW going east
+    const u = d === 1 ? [0, 1] : [1, 0];
+    const b = [a[0] + u[0] * L, a[1] + u[1] * L];
+    const n = [-DIRS[d][0], -DIRS[d][1]];                              // towards the first room
+    const nb = GRID.at(c.cx + DIRS[d][0], c.cy + DIRS[d][1]);
+    const W = door.cells.length === 1 ? 38 : 2 * CELL - 26, o0 = (L - W) / 2, o1 = (L + W) / 2;
+    slab(a, b, 0, o0, 0, WALL_H, paper(c), paper(nb), n);
+    slab(a, b, o1, L, 0, WALL_H, paper(c), paper(nb), n);
+    slab(a, b, o0, o1, DOOR_H, WALL_H, paper(c), paper(nb), n, { bottom: true });
+    // The frame: two posts and a head, standing a little proud of both faces.
+    const along = Math.atan2(-u[1], u[0]);
+    const at = s => [a[0] + u[0] * s, a[1] + u[1] * s];
+    [[o0 - 3], [o1 + 3]].forEach(([s]) => box(6, DOOR_H + 6, WALL_T + 3, frameMat, at(s)[0], (DOOR_H + 6) / 2, at(s)[1], along));
+    const mid = at((o0 + o1) / 2);
+    box(W + 12, 7, WALL_T + 3, frameMat, mid[0], DOOR_H + 3.5, mid[1], along);
+    // The leaves, hinged on the posts: one, or a pair meeting in the middle.
+    const leaves = (door.cells.length === 1 ? [[o0, 1]] : [[o0, 1], [o1, -1]]).map(([s, toward]) => {
+      const lw = W / door.cells.length - 1;
+      const geo = new THREE.BoxGeometry(lw, DOOR_H - 1, 3.5);
+      geo.translate(lw / 2, (DOOR_H - 1) / 2, 0);
+      const leaf = new THREE.Mesh(geo, toward === 1 ? doorMats : doorMatsMirror);
+      leaf.castShadow = leaf.receiveShadow = true;
+      const pivot = new THREE.Group();
+      const p = at(s);
+      pivot.position.set(p[0], 0.5, p[1]);
+      const base = Math.atan2(-u[1] * toward, u[0] * toward);           // closed: lying along the wall
+      pivot.rotation.y = base;
+      pivot.add(leaf);
+      scene.add(pivot);
+      return { pivot, base, sign: 1 };
+    });
+    w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u };
+  });
+
+  Object.entries(faces).forEach(([key, f]) => {
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(q.pos, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(q.uv, 2));
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(f.pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(f.uv, 2));
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, wallMat(key));
     mesh.castShadow = mesh.receiveShadow = true;
@@ -139,35 +225,18 @@ function buildWorld(renderer, quality) {
     scene.add(new THREE.Mesh(flatGeo(list, WALL_H, true), m));
   });
 
-  // ── Door frames and the porch railing ──
-  const frameMat = new THREE.MeshStandardMaterial({ map: woodTexture('#3a2414'), roughness: 0.8 });
+  // ── The porch railing ──
   const railMat = new THREE.MeshStandardMaterial({ map: woodTexture('#2e2620'), roughness: 0.9 });
-  const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
-    m.position.set(x, y, z); m.rotation.y = rotY;
-    m.castShadow = m.receiveShadow = true;
-    scene.add(m);
-    return m;
-  };
   GRID.cells.forEach(c => {
     if (!c.walk) return;
     c.edges.forEach((e, dir) => {
+      if (e !== 'rail') return;
       const [a, b] = edgeOf(c, dir);
       const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
       const along = dir % 2 === 0 ? 0 : Math.PI / 2;
-      if (e === 'door' && (dir === 1 || dir === 2)) {
-        // Posts at either side of the opening and a lintel over it: the
-        // opening is a little narrower than the square, like a real door.
-        const off = CELL / 2 - 5;
-        const ux = dir % 2 === 0 ? 1 : 0, uz = dir % 2 === 0 ? 0 : 1;
-        box(10, WALL_H, 12, frameMat, mx - ux * off, WALL_H / 2, mz - uz * off, along);
-        box(10, WALL_H, 12, frameMat, mx + ux * off, WALL_H / 2, mz + uz * off, along);
-        box(CELL, WALL_H - 92, 12, frameMat, mx, (WALL_H + 92) / 2, mz, along);
-      } else if (e === 'rail') {
-        box(CELL, 4, 5, railMat, mx, 40, mz, along);
-        box(CELL, 3, 4, railMat, mx, 20, mz, along);
-        box(5, 44, 5, railMat, a[0], 22, a[1]);
-      }
+      box(CELL, 4, 5, railMat, mx, 40, mz, along);
+      box(CELL, 3, 4, railMat, mx, 20, mz, along);
+      box(5, 44, 5, railMat, a[0], 22, a[1]);
     });
   });
 
@@ -191,7 +260,7 @@ function buildWorld(renderer, quality) {
     const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
     const nx = dz / len, nz = -dx / len;
     const plane = new THREE.Mesh(new THREE.PlaneGeometry(CELL, WALL_H), winMat);
-    plane.position.set((a[0] + b[0]) / 2 + nx * 4.5, WALL_H / 2, (a[1] + b[1]) / 2 + nz * 4.5);
+    plane.position.set((a[0] + b[0]) / 2 + nx * (WALL_T / 2 + 0.6), WALL_H / 2, (a[1] + b[1]) / 2 + nz * (WALL_T / 2 + 0.6));
     plane.rotation.y = Math.atan2(nx, nz);
     scene.add(plane);
   });
@@ -257,7 +326,7 @@ function buildWorld(renderer, quality) {
 
 // Leaning tops: depends only on position, so joined walls lean together.
 function wallLean(x, z) {
-  return [Math.sin(x * 0.013 + z * 0.007) * 5 + Math.sin(z * 0.031) * 2, Math.cos(z * 0.011 - x * 0.005) * 5 + Math.sin(x * 0.027) * 2];
+  return [Math.sin(x * 0.013 + z * 0.007) * 3 + Math.sin(z * 0.031) * 1.2, Math.cos(z * 0.011 - x * 0.005) * 3 + Math.sin(x * 0.027) * 1.2];
 }
 
 function addScenery(w, p, box) {

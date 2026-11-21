@@ -7,6 +7,16 @@ let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
 let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+const DOOR_SWING = 1.75, DOOR_MS = 550;   // how far doors swing open (radians), and how fast
+
+// After a dialogue, an overlay or a scene ends, input is ignored for a
+// moment, so the key press that closed it (or a quick double-tap) can't
+// also set off whatever comes next.
+let inputLockUntil = 0;
+function lockInput(ms) {
+  inputLockUntil = Math.max(inputLockUntil, performance.now() + ms);
+  queued.length = 0;
+}
 
 function quality() {
   const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
@@ -43,6 +53,12 @@ function startGame(fresh) {
     requestAnimationFrame(loop);
   }
   world.sprites.find(s => s.userData.kind === 'petunia').visible = !game.flags.petuniaGone;
+  DOORS.list.forEach(d => {
+    d.open = game.doorsOpen.has(d.id);
+    const v = world.doors[d.id];
+    v.amount = v.target = d.open ? 1 : 0;
+    v.leaves.forEach(l => { l.sign = 1; l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
+  });
   yaw = -game.dir * Math.PI / 2;
   motion.from = motion.to = null;
   ui.setDread(game.dread);
@@ -79,20 +95,66 @@ function resize() {
 
 // ─── Moving ───────────────────────────────────────────────────────────
 
-function busy() { return game.busy || !!ui.overlay || !!motion.to || game.flags.breaking; }
+function doorsMoving() { return Object.values(world.doors).some(v => v.amount !== v.target); }
+function busy() { return game.busy || !!ui.overlay || !!motion.to || doorsMoving() || game.flags.breaking; }
 
 function act(cmd) {
-  if (busy()) { if (queued.length < 1 && !game.busy && !ui.overlay) queued.push(cmd); return; }
+  if (performance.now() < inputLockUntil) return;
+  if (game.busy || ui.overlay || game.flags.breaking) return;
+  if (busy()) {
+    // Mid-step: remember one more move, but only near the end of this
+    // one, so tapping fast doesn't pile up moves that run on afterwards.
+    const k = motion.to ? (performance.now() - motion.t0) / motion.ms : 1;
+    if (k > 0.45 && queued.length < 1 && cmd !== 'use') queued.push(cmd);
+    return;
+  }
   if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
-  if (cmd === 'use') { const t = thingAtHand(); if (t) useThing(t); return; }
+  const door = doorAhead();
+  if (cmd === 'use') {
+    if (door && !door.open) return swingDoor(door, true);
+    const t = thingAtHand();
+    if (t) return useThing(t);
+    if (door && door.open) return swingDoor(door, false);
+    return;
+  }
   const rel = { forward: 0, strafeRight: 1, back: 2, strafeLeft: 3 }[cmd];
   if (rel === undefined) return;
+  // Walking into a closed door opens it.
+  if (rel === 0 && door && !door.open) return swingDoor(door, true);
   // On the cursed dance floor your feet don't always obey.
   if (game.curse && Math.random() < 0.3) {
     ui.log('You spin with the dancers.', 'scare');
     return turn(Math.random() < 0.5 ? -1 : 1);
   }
   step((game.dir + rel) % 4);
+}
+
+// ─── Doors ────────────────────────────────────────────────────────────
+
+function doorAhead() {
+  const c = GRID.at(game.cx, game.cy);
+  return c && c.edges[game.dir] === 'door' ? DOORS.at(c, game.dir) : null;
+}
+
+// Doors swing away from you: into the next room when you open them.
+function swingDoor(door, open) {
+  const v = world.doors[door.id];
+  if (open) {
+    const mine = door.cells.some(c => c.cx === game.cx && c.cy === game.cy);
+    const pn = mine ? v.normal : [-v.normal[0], -v.normal[1]];    // points back at you
+    v.leaves.forEach(l => {
+      const a = l.base + DOOR_SWING;
+      l.sign = (Math.cos(a) * pn[0] - Math.sin(a) * pn[1]) < 0 ? 1 : -1;
+    });
+    game.doorsOpen.add(door.id);
+  } else {
+    game.doorsOpen.delete(door.id);
+  }
+  door.open = open;
+  v.from = v.amount; v.t0 = performance.now();
+  v.target = open ? 1 : 0;
+  sound.door(open);
+  saveGame();
 }
 
 function step(dir) {
@@ -155,7 +217,7 @@ function loop(now) {
       motion.from = motion.to = null; motion.turning = false;
       yaw = -game.dir * Math.PI / 2 + Math.round((yaw + game.dir * Math.PI / 2) / (Math.PI * 2)) * Math.PI * 2;
       if (wasStep) enteredCell(from);
-      if (queued.length && !busy()) act(queued.shift());
+      if (queued.length && !busy()) { const next = queued.shift(); act(next); }
     }
   } else { px = here.x; pz = here.y; }
   // Bumping into a wall: a little lurch forward and back.
@@ -208,6 +270,19 @@ function loop(now) {
   if (game.dread > 0 && !game.curse && !game.busy && clock - (game.dreadEbb || 0) > 30) { game.dreadEbb = clock; addDread(-1); }
   else if (game.dread === 0 || game.curse || game.busy) game.dreadEbb = clock;
 
+  // Doors swinging.
+  Object.values(world.doors).forEach(v => {
+    if (v.amount === v.target) return;
+    // By the clock, not by frames, so a slow device can't stall a door.
+    const k = Math.min(1, (now - v.t0) / (DOOR_MS * Math.abs(v.target - v.from)));
+    v.amount = k >= 1 ? v.target : lerp(v.from, v.target, k);
+    const e = v.amount * v.amount * (3 - 2 * v.amount);
+    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * e * DOOR_SWING; });
+    // The house's own lights cast their shadows once; redo them now a
+    // door has moved.
+    if (v.amount === v.target) world.fixedLights.forEach(f => { if (f.castShadow) f.shadow.needsUpdate = true; });
+  });
+
   // Cut-outs turn to face you.
   billboards.forEach(b => { b.rotation.y = yaw; });
 
@@ -218,7 +293,11 @@ function loop(now) {
     s.material.opacity = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : (s.userData.kind === 'petunia' ? 0.92 : 1);
   });
 
-  ui.setPrompt(busy() ? null : thingAtHand());
+  if (busy()) ui.setPrompt(null);
+  else {
+    const door = doorAhead(), t = thingAtHand();
+    ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
+  }
   renderer.render(world.scene, cam);
 }
 
@@ -236,7 +315,7 @@ document.addEventListener('keydown', e => {
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
-  if (ui.overlay || game.busy) return;
+  if (ui.overlay || game.busy || performance.now() < inputLockUntil) return;
   if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
   const cmd = KEYMAP[k];
   if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
@@ -261,4 +340,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world };
+window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

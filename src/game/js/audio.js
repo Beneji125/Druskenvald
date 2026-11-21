@@ -28,7 +28,7 @@ const sound = {
     const rain = ctx.createBufferSource();
     rain.buffer = buf; rain.loop = true;
     const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 0.4;
-    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.12;
+    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.05;
     rain.connect(f).connect(this.rainGain).connect(this.master);
     rain.start();
   },
@@ -43,7 +43,7 @@ const sound = {
 
   // Indoors the rain is muffled; on the porch it's loud.
   setOutdoors(outdoors) {
-    if (this.rainGain) this.rainGain.gain.setTargetAtTime(outdoors ? 0.3 : 0.1, this.ctx.currentTime, 0.6);
+    if (this.rainGain) this.rainGain.gain.setTargetAtTime(outdoors ? 0.14 : 0.045, this.ctx.currentTime, 0.6);
   },
 
   thunder(strength = 1) {
@@ -111,6 +111,25 @@ const sound = {
     g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
     oscs.forEach(o => o.stop(t + 1.6));
     this.drone = null;
+  },
+
+  // A door: a long, groaning creak opening; a dull thud closing.
+  door(opening) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    if (opening) {
+      const o = ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(140, t + 0.35); o.frequency.linearRampToValueAtTime(95, t + 0.7);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6;
+      bp.frequency.setValueAtTime(500, t); bp.frequency.linearRampToValueAtTime(1300, t + 0.4); bp.frequency.linearRampToValueAtTime(700, t + 0.75);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+      o.connect(bp).connect(g).connect(this.master); o.start(t); o.stop(t + 0.85);
+    } else {
+      const src = ctx.createBufferSource(); src.buffer = this.noise;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t + 0.35); g.gain.exponentialRampToValueAtTime(0.5, t + 0.37); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      src.connect(lp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.75);
+    }
   },
 
   // A soft scrape for the planchette moving across the board.

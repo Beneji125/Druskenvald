@@ -388,6 +388,27 @@ function brickTexture() {
   return artTexture(c);
 }
 
+// A door leaf: dark panelled wood, scuffed, with a tarnished brass knob.
+// The same picture on both faces.
+function doorTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(17);
+  ctx.fillStyle = '#2b1a0e'; ctx.fillRect(0, 0, 128, 256);
+  for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(0,0,0,${(rand() * 0.2).toFixed(2)})`; ctx.fillRect(rand() * 128, 0, 1 + rand() * 2, 256); }
+  const panel = (x, y, w, h) => {
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = 'rgba(255,220,170,0.06)'; ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 2; ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+  };
+  panel(14, 14, 44, 96); panel(70, 14, 44, 96);
+  panel(14, 128, 44, 112); panel(70, 128, 44, 112);
+  ctx.fillStyle = '#8a6a2a'; ctx.beginPath(); ctx.arc(112, 122, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c9a050'; ctx.beginPath(); ctx.arc(110, 120, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#111'; ctx.fillRect(110, 132, 4, 8);                 // keyhole
+  artGrime(ctx, 128, 256, rand, 0.8);
+  return artTexture(c);
+}
+
 // The oven's front: brick, with a black iron door and its heavy lock.
 function ovenFrontTexture() {
   const [c, ctx] = artCanvas(128, 128);

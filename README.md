@@ -142,7 +142,10 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   game page (the text after `|` is optional).
 - **Controls:** WASD or the arrow keys to walk, Q/E or ←/→ to turn, Space to
   look at or use what's in front of you, M for the map, J for the journal.
-  On a phone, the on-screen buttons.
+  On a phone, the on-screen buttons. Doors start closed (except the front
+  door): walk into one or press Space to open it, Space again to close it.
+  Every doorway on the plan gets a door automatically (`DOORS` in
+  `core.js`); two doorways side by side become a double door.
 - **Where things are:**
   - `src/game/js/` — the game, joined in the order of `GAME_FILES` in
     build.js: `core.js` (the grid), `art.js` (all the placeholder art),
