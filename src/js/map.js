@@ -71,6 +71,7 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
       showTooltip(hotspotLabel(layerKey, hs), e.clientX, e.clientY);
     });
     path.addEventListener('mouseenter', () => {
+      if (hs.isWickermoor) loadWickermoorMap();
       showProvinceReveal(layerKey, hs.d);
     });
     path.addEventListener('mouseleave', () => {
@@ -82,6 +83,7 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
       // Only for keyboard focus — a mouse click also focuses the path, but
       // then the tooltip should keep following the cursor instead.
       if (!path.matches(':focus-visible')) return;
+      if (hs.isWickermoor) loadWickermoorMap();
       showProvinceReveal(layerKey, hs.d);
       showTooltipForPath(path, hotspotLabel(layerKey, hs));
     });
@@ -99,6 +101,7 @@ function buildSvgHotspots(layerKey, svgId, hotspots) {
       if (justPanned) return;
       if (lastPointerType === 'touch' && armedHotspot !== path) {
         armedHotspot = path;
+        if (hs.isWickermoor) loadWickermoorMap();
         showProvinceReveal(layerKey, hs.d);
         showTooltipForPath(path, hotspotLabel(layerKey, hs));
         return;
@@ -443,12 +446,21 @@ function initZoomPan() {
   });
 }
 
-function openWickermoor() {
+// The 3MB Wickermoor map isn't fetched with the page (see the data-src
+// note in template.html). It starts downloading as soon as someone shows
+// interest in going there — hovering, focusing or first-tapping its
+// hotspot — so it's usually most of the way in by the time they click,
+// instead of starting from nothing then. Safe to call repeatedly.
+function loadWickermoorMap() {
   const wmImg = document.getElementById('wickermoor-map-img');
   if (wmImg && wmImg.dataset.src) {
     wmImg.src = wmImg.dataset.src;
     delete wmImg.dataset.src;
   }
+}
+
+function openWickermoor() {
+  loadWickermoorMap();
   document.getElementById('layer-main').classList.add('hidden');
   document.getElementById('layer-wickermoor').classList.remove('hidden');
   document.getElementById('back-btn').classList.add('visible');

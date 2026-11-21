@@ -34,9 +34,15 @@ What it does:
 Left alone on purpose (see KEEP): the two maps, which can be zoomed to 4x
 and are the site's centrepiece, and the cover image, which stays a JPEG for
 link previews.
+
+Each map does get a tiny blurred preview (src/data/map-previews.json),
+which build.js puts behind the map so there's something to see while the
+full image downloads. It's remade here whenever a map changes; the build
+warns when one is out of date.
 """
 
 import argparse
+import base64
 import hashlib
 import json
 import re
@@ -62,6 +68,9 @@ WEBP_QUALITY = 90
 MIN_SAVING = 0.15
 MP3_VBR_QUALITY = 0          # LAME -V0
 MP3_MAX_BITRATE = 260_000    # above this (or with cover art) gets re-encoded
+MAPS = ["MAP_Druskenvald.jpeg", "MAP_Wickermoor_Hollow.jpeg"]
+MAP_PREVIEWS = ROOT / "src" / "data" / "map-previews.json"
+MAP_PREVIEW_WIDTH = 96       # px; shown stretched to full size, so it reads as a blur
 
 
 def run(cmd):
@@ -107,6 +116,36 @@ def move_original(path, apply, replace=False):
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(path), str(dest))
     return dest
+
+
+def update_map_previews(apply):
+    """Remakes the preview of any map whose image changed since its preview
+    was made (or that has none). Returns how many were (or would be) made."""
+    try:
+        previews = json.loads(MAP_PREVIEWS.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        previews = {}
+    made = 0
+    for name in MAPS:
+        path = DOCS / name
+        if not path.exists():
+            continue
+        sha = fingerprint(path)
+        if previews.get(name, {}).get("sha1") == sha:
+            continue
+        print(f"preview {name}: {'making' if apply else 'would make'} its blurred preview")
+        made += 1
+        if apply:
+            with tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp) / "preview.webp"
+                run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-frames:v", "1",
+                     "-vf", f"scale={MAP_PREVIEW_WIDTH}:-2", "-c:v", "libwebp",
+                     "-quality", "60", str(out)])
+                data = base64.b64encode(out.read_bytes()).decode("ascii")
+            previews[name] = {"sha1": sha, "dataUri": f"data:image/webp;base64,{data}"}
+    if apply and made:
+        MAP_PREVIEWS.write_text(json.dumps(previews, indent=1) + "\n", encoding="utf-8")
+    return made
 
 
 def fingerprint(path):
@@ -187,7 +226,7 @@ def main():
     renames = {}
     before = after = 0
     manifest = load_manifest()
-    refreshed = 0
+    refreshed = update_map_previews(args.apply)
     tmp = Path(tempfile.mkdtemp())
     try:
         # 1. Masters that were replaced in source-assets/originals/.
@@ -267,11 +306,13 @@ def main():
               + ", ".join(str(t.relative_to(ROOT)) for t in touched))
     if refreshed:
         print(f"{'Rebuilt' if args.apply else 'Would rebuild'} {refreshed} published "
-              f"file(s) from updated masters.")
+              f"file(s) from updated masters or maps.")
     if not args.apply:
         print("Dry run only — re-run with --apply to make these changes.")
     elif before or refreshed:
-        print(f"Originals moved to {ORIGINALS.relative_to(ROOT)}/. Now run: node build.js")
+        if before:
+            print(f"Originals moved to {ORIGINALS.relative_to(ROOT)}/.")
+        print("Now run: node build.js")
 
 
 if __name__ == "__main__":

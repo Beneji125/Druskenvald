@@ -25,7 +25,7 @@ function enterSite() {
 }
 
 function buildHotspots() {
-  setupCanvasSizes();
+  setLightingQuality(initialLightingQuality()); // also sizes the lighting canvases
   buildSvgHotspots('main', 'hotspots-main-svg', MAIN_HOTSPOTS_SVG);
   buildSvgHotspots('wickermoor', 'hotspots-wickermoor-svg', WICKERMOOR_HOTSPOTS);
   startLightingAnimation();

@@ -330,6 +330,57 @@
     display: block;
   }
 
+  /* ─── AMBIENT SPARKS & WISPS (js/ambient.js) ───────────────── */
+  /* Sized in map pixels through --u (one map pixel on screen at zoom 1,
+     set by layoutAmbientLayers). Only transform and opacity animate, so
+     the browser moves them without repainting the map. */
+  .ambient-layer {
+    position: absolute;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .ambient-spark, .ambient-wisp {
+    position: absolute;
+    width: calc(var(--s) * var(--u));
+    height: calc(var(--s) * var(--u));
+    margin: calc(var(--s) * var(--u) / -2) 0 0 calc(var(--s) * var(--u) / -2);
+    border-radius: 50%;
+    opacity: 0;
+  }
+  .ambient-spark {
+    background: radial-gradient(circle, rgba(255, 244, 214, 1) 0, rgba(var(--c), 0.9) 30%, rgba(var(--c), 0) 70%);
+    animation: ambient-spark-rise var(--d) linear var(--delay) infinite;
+  }
+  /* Rises and fades over the first ~55% of the cycle, then rests unseen,
+     so only some of each light's sparks are in the air at a time. */
+  @keyframes ambient-spark-rise {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    6%   { opacity: var(--o); }
+    25%  { transform: translate(calc(var(--wx) * var(--u)), calc(var(--dy) * 0.4 * var(--u))); }
+    40%  { opacity: calc(var(--o) * 0.55); }
+    55%, 100% { transform: translate(calc(var(--dx) * var(--u)), calc(var(--dy) * var(--u))); opacity: 0; }
+  }
+  .ambient-wisp {
+    background: radial-gradient(circle, rgba(235, 255, 250, 0.95) 0, rgba(var(--c), 0.55) 28%, rgba(var(--c), 0) 70%);
+    animation: ambient-wisp-drift var(--d) ease-in-out var(--delay) infinite;
+  }
+  @keyframes ambient-wisp-drift {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    12%  { opacity: var(--o); }
+    30%  { transform: translate(calc(var(--x1) * var(--u)), calc(var(--y1) * var(--u))); opacity: calc(var(--o) * 0.35); }
+    50%  { opacity: var(--o); }
+    65%  { transform: translate(calc(var(--x2) * var(--u)), calc(var(--y2) * var(--u))); }
+    88%  { opacity: calc(var(--o) * 0.6); }
+    100% { transform: translate(calc(var(--x3) * var(--u)), calc(var(--y3) * var(--u))); opacity: 0; }
+  }
+  /* Nothing to see in day mode or behind the Codex; and none at all for
+     visitors who ask for reduced motion. */
+  html[data-lighting="day"] .ambient-layer,
+  body:has(#codex.open) .ambient-layer { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-layer { display: none; }
+  }
+
   /* ─── SVG HOTSPOT SYSTEM ───────────────────────────────────── */
   /* Must mirror the .map-img's object-fit:contain box exactly so that
      SVG path coordinates (0-100 normalized) line up pixel-for-pixel

@@ -24,7 +24,9 @@ src/              Source files that get combined into docs/index.html
   js/              all JS logic, joined in the order listed in build.js
     util.js          storage wrapper and small helpers
     music.js         background music and location ambience tracks
-    lighting.js      map layers, night lighting, light mode, hover reveal
+    lighting.js      map layers, night lighting, light mode, hover reveal;
+                     drops to a lighter quality on slow devices (remembered)
+    ambient.js       sparks rising from the lights and drifting wisps at night
     map.js           hotspots, zoom & pan, switching maps
     panels.js        lore / species / NPC panels and lore images
     unlocks.js       character-name recognition and group unlocks
@@ -34,6 +36,8 @@ src/              Source files that get combined into docs/index.html
                          and track references, chapters, locked teasers
     bestiary.json        the Codex's creatures (text, images, who's met them)
     hotspots.json        map hotspot shapes + settlement light positions
+    map-previews.json    tiny blurred copies of the two maps, shown while the
+                         real ones download (made by optimize_assets.py)
 
 source-assets/    Large working files, not part of the published site
   MAP_Druskenvald_Sources.xcf        GIMP source — the main map's paths/vectors
@@ -125,7 +129,9 @@ It needs [ffmpeg](https://ffmpeg.org/download.html). Images become WebP
 music is re-encoded at LAME V0 with embedded cover art stripped. Originals
 are moved to `source-assets/originals/`, never deleted, and references in
 `src/` are updated automatically. The two maps and the cover image are
-left untouched.
+left untouched, but if a map changes the script remakes its blurred
+preview (`src/data/map-previews.json`); the build warns when one is out of
+date.
 
 To **update** an existing image or track, either replace its master in
 `source-assets/originals/` (same name) or drop the new version into `docs/`

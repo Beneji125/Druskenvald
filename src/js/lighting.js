@@ -53,7 +53,70 @@ const MAP_LAYERS = {
 // cheap; pushing two full 3000px canvases to the screen 24 times a second
 // was not). Drawing still happens in map coordinates: each frame sets a
 // matching scale transform first.
-const LIGHTING_RESOLUTION = 1 / 3;
+//
+// How far below full resolution, and how often per second, depends on the
+// device (see LIGHTING_QUALITY below): `lightingResolution` and
+// `lightingFrameInterval` hold the values for the tier in use.
+//
+// The fastest flicker wave is under 2 cycles a second, so 15fps still reads
+// as smooth firelight at well under the cost of 24, and 10fps on a slow
+// device is barely different.
+const LIGHTING_QUALITY = {
+  high: { resolution: 1 / 3, fps: 15 },
+  low:  { resolution: 1 / 4, fps: 10 },
+};
+const LIGHTING_QUALITY_STORAGE_KEY = 'druskenvald_lighting_quality';
+let lightingQuality = 'high';
+let lightingResolution = LIGHTING_QUALITY.high.resolution;
+let lightingFrameInterval = 1000 / LIGHTING_QUALITY.high.fps;
+
+// The starting tier: whatever this browser settled on last visit (see
+// noteLightingFrameCost), otherwise a guess from the hardware — a device
+// reporting 2GB of memory or less, or 2 CPU cores or fewer, starts on low.
+// (Browsers that don't report these, like Safari, start on high and step
+// down only if the frames turn out to be slow.)
+function initialLightingQuality() {
+  const saved = store.get(LIGHTING_QUALITY_STORAGE_KEY);
+  if (saved && LIGHTING_QUALITY[saved]) return saved;
+  const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+  if ((mem && mem <= 2) || (cores && cores <= 2)) return 'low';
+  return 'high';
+}
+
+// Switches tier: resizes the lighting canvases and rebuilds the glow
+// sprites and shape caches, which are all drawn at the tier's resolution.
+function setLightingQuality(tier) {
+  if (!LIGHTING_QUALITY[tier]) return;
+  lightingQuality = tier;
+  lightingResolution = LIGHTING_QUALITY[tier].resolution;
+  lightingFrameInterval = 1000 / LIGHTING_QUALITY[tier].fps;
+  document.documentElement.dataset.lightingQuality = tier;
+  setupCanvasSizes();
+  glowSpriteCache.clear();
+  if (lightingAnimationRunning) setupLightFlicker();
+  if (ambientReady) buildAmbientParticles();
+}
+
+// Adaptive step-down, measured on the visitor's own device: a rolling
+// average of how long each lighting frame takes to draw. If it stays above
+// LIGHTING_SLOW_FRAME_MS once things have settled, the lighting drops to the
+// low tier and the choice is remembered, so the next visit starts there
+// instead of stuttering first. (Only steps down, never back up — a frame
+// that's cheap on low says nothing about how high would do.)
+const LIGHTING_SLOW_FRAME_MS = 8;
+const LIGHTING_SETTLE_FRAMES = 45;
+let lightingFrameCostAvg = 0;
+let lightingFramesMeasured = 0;
+
+function noteLightingFrameCost(ms) {
+  if (lightingQuality === 'low') return;
+  lightingFramesMeasured++;
+  lightingFrameCostAvg = lightingFramesMeasured === 1 ? ms : lightingFrameCostAvg * 0.9 + ms * 0.1;
+  if (lightingFramesMeasured >= LIGHTING_SETTLE_FRAMES && lightingFrameCostAvg > LIGHTING_SLOW_FRAME_MS) {
+    setLightingQuality('low');
+    store.set(LIGHTING_QUALITY_STORAGE_KEY, 'low');
+  }
+}
 
 // One-time canvas buffer sizing — separate from the per-frame render so the
 // animation loop doesn't need to touch canvas.width/height every tick.
@@ -62,8 +125,8 @@ function setupCanvasSizes() {
     [layer.lightingCanvasId, layer.tintCanvasId].forEach(id => {
       const canvas = document.getElementById(id);
       if (!canvas) return;
-      canvas.width  = Math.round(layer.CW * LIGHTING_RESOLUTION);
-      canvas.height = Math.round(layer.CH * LIGHTING_RESOLUTION);
+      canvas.width  = Math.round(layer.CW * lightingResolution);
+      canvas.height = Math.round(layer.CH * lightingResolution);
     });
     // The hover reveal canvas draws the map art itself, so it needs full
     // resolution — it's sized on first use instead (see showProvinceReveal),
@@ -108,7 +171,7 @@ function shapeBoundsFromD(d) {
 // in the darkness) without touching blurPx/tier, since more blur alone
 // dilutes a small shape's peak opacity instead of just widening it (see the
 // blurPx comment in setupLightFlicker).
-function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1, res = LIGHTING_RESOLUTION) {
+function buildShapeGlowCache(d, blurPx, fillStyle, CW, CH, scale = 1, res = lightingResolution) {
   const b = shapeBoundsFromD(d);
   const cx = (b.minX + b.maxX) / 2;
   const cy = (b.minY + b.maxY) / 2;
@@ -151,7 +214,7 @@ const glowSpriteCache = new Map();
 function glowSprite(radius, rgb, stops) {
   const key = `${radius}|${rgb}|${stops}`;
   if (glowSpriteCache.has(key)) return glowSpriteCache.get(key);
-  const px = Math.max(2, Math.ceil(radius * LIGHTING_RESOLUTION));
+  const px = Math.max(2, Math.ceil(radius * lightingResolution));
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = px * 2;
   const ctx = canvas.getContext('2d');
@@ -173,12 +236,14 @@ const TINT_GLOW_STOPS  = [[0, 1], [0.6, 0.039 / 0.094], [1, 0]];
 // for the session) flicker parameters, so all the torches/hearths/lanterns
 // flicker independently instead of pulsing in unison. Also pre-renders the
 // blurred glow caches for any light traced as a full shape (see
-// buildShapeGlowCache).
+// buildShapeGlowCache) and the round glow sprites — called again by
+// setLightingQuality to redraw those at a new resolution, keeping each
+// light's flicker as it was.
 function setupLightFlicker() {
   Object.values(MAP_LAYERS).forEach(layer => {
     layer.lights.forEach(light => {
       light._rgb = hexToRgb(light.color);
-      light._flicker = {
+      if (!light._flicker) light._flicker = {
         f1: 1.6 + Math.random() * 1.2,
         f2: 3.6 + Math.random() * 2.2,
         f3: 7.6 + Math.random() * 3.6,
@@ -241,7 +306,7 @@ function renderLightingForLayer(layerKey, t) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   // Draw in map coordinates onto the reduced-resolution buffer.
-  ctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
+  ctx.setTransform(lightingResolution, 0, 0, lightingResolution, 0, 0);
 
   ctx.clearRect(0, 0, CW, CH);
 
@@ -333,7 +398,7 @@ function renderLightingForLayer(layerKey, t) {
   const tintCanvas = document.getElementById(layer.tintCanvasId);
   if (!tintCanvas) return;
   const tctx = tintCanvas.getContext('2d');
-  tctx.setTransform(LIGHTING_RESOLUTION, 0, 0, LIGHTING_RESOLUTION, 0, 0);
+  tctx.setTransform(lightingResolution, 0, 0, lightingResolution, 0, 0);
   tctx.clearRect(0, 0, CW, CH);
 
   const tintMult = layer.tintMultiplier ?? 1;
@@ -361,10 +426,8 @@ function renderLightingForLayer(layerKey, t) {
 // whichever map layer is currently active. Pauses (skips redraws, but keeps
 // ticking so it resumes smoothly) whenever the tab isn't in the foreground,
 // "light mode" is on, or the Codex covers the map, since the
-// darkness/moon/light animation is invisible in all three cases.
-// The flicker's fastest wave is under 2 cycles a second, so 15fps still
-// reads as smooth firelight at well under the cost of 24.
-const LIGHTING_FRAME_INTERVAL = 1000 / 15;
+// darkness/moon/light animation is invisible in all three cases. Runs at
+// the current quality tier's frame rate (lightingFrameInterval, above).
 let lightingAnimationRunning = false;
 let lightingAnimationStart = null;
 let lastLightingRenderTime = 0;
@@ -407,6 +470,8 @@ function toggleLightMode() {
 function setLightingMode(mode) {
   lightingMode = mode;
   lightModeOn = mode === 'day';
+  // Lets CSS hide the ambient sparks and wisps in day mode (ambient.js).
+  document.documentElement.dataset.lighting = mode;
   const btn = document.getElementById('light-mode-btn');
   if (btn) {
     const info = LIGHTING_MODE_INFO[mode];
@@ -440,17 +505,20 @@ function lightingAnimationTick(timestamp) {
   if (lightModeOn) return;
   // The Codex covers the whole map — nothing to animate behind it.
   if (typeof isCodexOpen === 'function' && isCodexOpen()) return;
-  if (timestamp - lastLightingRenderTime < LIGHTING_FRAME_INTERVAL) return;
+  if (timestamp - lastLightingRenderTime < lightingFrameInterval) return;
 
   lastLightingRenderTime = timestamp;
   if (lightingAnimationStart === null) lightingAnimationStart = timestamp;
+  const t0 = performance.now();
   renderLightingForLayer(getActiveMapKey(), (timestamp - lightingAnimationStart) / 1000);
+  noteLightingFrameCost(performance.now() - t0);
 }
 
 function startLightingAnimation() {
   if (lightingAnimationRunning) return;
   lightingAnimationRunning = true;
   setupLightFlicker();
+  initAmbientParticles();
   requestAnimationFrame(lightingAnimationTick);
 }
 
