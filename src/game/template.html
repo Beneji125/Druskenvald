@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- docs/crooked-house.html is generated from this by build.js: edit this,
+     src/game/game.css and src/game/js/*.js, then run `node build.js`. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Crooked House — Druskenvald</title>
+<meta name="description" content="Walk the Crooked House by lantern light: find the mementos, speak with the dead, and try not to lose your nerve.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' font-size='90'><text y='.9em'>🏚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/*__STYLES__*/
+</style>
+</head>
+<body>
+
+<section id="start">
+  <h1>The Crooked House</h1>
+  <p class="floor">First Floor</p>
+  <p>The storm drove you up the hill, and the front door opened before you knocked. Somewhere in this house are six mementos that open the way to the attic, and whatever waits up there.</p>
+  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
+  <div class="start-buttons">
+    <button type="button" id="btn-continue" class="big">Continue</button>
+    <button type="button" id="btn-new" class="big">Start again</button>
+  </div>
+  <p class="note">Turn your sound on for the storm. Your progress is kept in this browser.</p>
+  <p class="note error" id="start-error" hidden>Your browser couldn’t draw the house in 3D: WebGL is turned off or not available. Try another browser, or turn on hardware acceleration in this one’s settings.</p>
+  <a class="back" href="index.html#wickermoor/wm_village">↩ Back to the map of Wickermoor</a>
+</section>
+
+<section id="game" hidden>
+  <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
+
+  <div id="hud-top">
+    <div class="hud-left">
+      <div id="room-name"></div>
+      <div id="dread" role="meter" aria-label="Dread" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+        <span class="dread-label">Dread</span><span id="dread-pips"></span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button type="button" id="btn-map" title="Map (M)">Map</button>
+      <button type="button" id="btn-journal" title="Journal (J)">Journal</button>
+      <button type="button" id="btn-sound" aria-pressed="true">🔊</button>
+      <a id="btn-leave" href="index.html#wickermoor/wm_village" title="Back to the map of Wickermoor">Leave</a>
+    </div>
+  </div>
+
+  <div id="room-card" hidden>
+    <button type="button" id="room-card-close" aria-label="Close">×</button>
+    <h2 id="room-card-title"></h2>
+    <p id="room-card-text"></p>
+  </div>
+
+  <div id="log" aria-live="polite"></div>
+  <button type="button" id="prompt" hidden></button>
+
+  <div id="pad" aria-label="Movement">
+    <button type="button" data-cmd="left" aria-label="Turn left">↶</button>
+    <button type="button" data-cmd="forward" aria-label="Step forward">▲</button>
+    <button type="button" data-cmd="right" aria-label="Turn right">↷</button>
+    <button type="button" data-cmd="strafeLeft" aria-label="Step left">◀</button>
+    <button type="button" data-cmd="back" aria-label="Step back">▼</button>
+    <button type="button" data-cmd="strafeRight" aria-label="Step right">▶</button>
+    <button type="button" data-cmd="use" class="use" aria-label="Look or use">Use</button>
+  </div>
+
+  <div id="dialog" hidden role="dialog" aria-modal="true">
+    <p id="dialog-speaker"></p>
+    <p id="dialog-text"></p>
+    <div id="dialog-choices"></div>
+  </div>
+
+  <div id="journal" class="overlay" hidden role="dialog" aria-label="Journal">
+    <div class="sheet">
+      <button type="button" class="close" aria-label="Close">×</button>
+      <h2>Mementos</h2>
+      <ul id="memento-slots"></ul>
+      <h2>What you’ve learned</h2>
+      <ul id="clue-list"></ul>
+    </div>
+  </div>
+
+  <div id="map" class="overlay" hidden role="dialog" aria-label="Map">
+    <div class="sheet map-sheet">
+      <button type="button" class="close" aria-label="Close">×</button>
+      <h2>The First Floor</h2>
+      <div class="map-frame"><canvas id="map-canvas"></canvas></div>
+    </div>
+  </div>
+
+  <div id="ouija" hidden role="dialog" aria-label="The spirit board"></div>
+  <div id="keys" hidden role="dialog" aria-label="The harpsichord"></div>
+  <div id="flash" aria-hidden="true"></div>
+</section>
+
+<script type="module">
+import * as THREE from './vendor/three-explore.min.js';
+/*__GAME_SCRIPT__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+/* The Crooked House: the site's own palette and type (see src/styles.css),
+   on a page that is almost all darkness. */
+:root {
+  --ink: #0d0a07;
+  --panel: rgba(18, 16, 13, 0.92);
+  --gold: #c9a96e;
+  --gold-dim: #8a6e42;
+  --cream: #e8d5a3;
+  --cream-dim: #b8a07a;
+  --crimson: #a04d3c;
+  --cold: #9fb6dc;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #030306; color: var(--cream); overflow: hidden; }
+body { font-family: 'IM Fell English', Georgia, serif; -webkit-tap-highlight-color: transparent; }
+button, a { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 0.35em; margin: 0 0.08em; }
+
+/* ── Title screen ── */
+#start {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 40%, #1c1610 0%, var(--ink) 72%);
+  overflow-y: auto;
+}
+#start h1 { font-family: 'Cinzel Decorative', Georgia, serif; font-weight: 400; color: var(--gold); font-size: clamp(2rem, 7vw, 3.4rem); margin: 0; letter-spacing: 0.05em; }
+#start .floor { font-family: 'Cinzel', serif; letter-spacing: 0.25em; text-transform: uppercase; font-size: 0.8rem; color: var(--cream-dim); margin: -0.5rem 0 0; }
+#start p { max-width: 36rem; line-height: 1.55; margin: 0; font-size: 1.08rem; }
+#start .how { font-size: 0.95rem; color: var(--cream-dim); }
+#start .note { font-size: 0.88rem; color: var(--cream-dim); }
+.start-buttons { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+.big {
+  font-family: 'Cinzel', serif; letter-spacing: 0.06em; font-size: 1.02rem;
+  padding: 0.6em 1.3em; cursor: pointer;
+  color: var(--cream); background: linear-gradient(180deg, rgba(122,59,46,0.6), rgba(61,42,26,0.8));
+  border: 1px solid var(--gold-dim); border-radius: 3px;
+}
+.big:hover, .big:focus-visible { border-color: var(--gold); outline: none; box-shadow: 0 0 18px rgba(201,169,110,0.3); }
+#start .back { color: var(--cream-dim); font-size: 0.9rem; }
+#start .error { color: #e0a090; }
+
+/* ── The view and the HUD ── */
+#game { position: fixed; inset: 0; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+#hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 12px max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, rgba(3,3,6,0.8), rgba(3,3,6,0));
+  pointer-events: none;
+}
+#hud-top > * { pointer-events: auto; }
+#room-name { font-family: 'Cinzel', serif; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
+#room-name.show { animation: room-in 1.2s ease; }
+@keyframes room-in { from { opacity: 0; letter-spacing: 0.3em; } to { opacity: 1; } }
+#dread { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.dread-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+#dread-pips { display: flex; gap: 3px; }
+#dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
+#dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
+#dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
+#dread.jolt { animation: jolt 0.4s; }
+@keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+.hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hud-right button, .hud-right a {
+  font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.05em; text-decoration: none;
+  padding: 0.4em 0.75em; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+}
+.hud-right button:hover, .hud-right a:hover, .hud-right button:focus-visible, .hud-right a:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
+
+#room-card {
+  position: absolute; top: max(78px, calc(env(safe-area-inset-top) + 66px)); left: max(14px, env(safe-area-inset-left));
+  width: min(380px, calc(100vw - 28px));
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  padding: 12px 16px;
+}
+#room-card.show { animation: card-in 0.5s ease; }
+@keyframes card-in { from { opacity: 0; transform: translateY(-6px); } }
+#room-card h2 { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin: 0 1.6em 0.35em 0; font-weight: 600; }
+#room-card p { margin: 0; line-height: 1.45; font-size: 0.98rem; }
+#room-card-close, .overlay .close { position: absolute; top: 4px; right: 6px; background: none; border: none; font-size: 1.3rem; color: var(--cream-dim); cursor: pointer; padding: 4px 8px; }
+
+#log {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(150px, calc(env(safe-area-inset-bottom) + 140px));
+  width: min(640px, calc(100vw - 28px));
+  display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center;
+  pointer-events: none;
+}
+#log p { margin: 0; padding: 3px 10px; font-size: 1rem; line-height: 1.35; background: rgba(3,3,6,0.6); border-radius: 3px; text-shadow: 0 0 6px #000; transition: opacity 2s; }
+#log p.scare { color: #d6e0ff; font-style: italic; }
+#log p.gain { color: var(--gold); }
+#log p.note { color: var(--cream-dim); }
+#log p.old { opacity: 0; }
+
+#prompt {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(104px, calc(env(safe-area-inset-bottom) + 96px));
+  font-size: 1.02rem; padding: 0.35em 1em; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 999px;
+}
+#prompt::after { content: ' · Space'; color: var(--cream-dim); font-size: 0.85em; }
+@media (pointer: coarse) { #prompt::after { content: ''; } }
+
+#pad {
+  position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: repeat(3, 44px) 60px; grid-template-rows: 44px 44px; gap: 5px;
+}
+#pad button {
+  font-size: 1.05rem; cursor: pointer;
+  background: rgba(18,16,13,0.75); border: 1px solid rgba(138,110,66,0.7); border-radius: 4px;
+  touch-action: manipulation;
+}
+#pad button:active { background: rgba(201,169,110,0.25); }
+#pad .use { grid-column: 4; grid-row: 1 / span 2; font-family: 'Cinzel', serif; font-size: 0.85rem; }
+@media (pointer: fine) { #pad { opacity: 0.55; transform: scale(0.85); transform-origin: bottom right; } #pad:hover { opacity: 1; } }
+@media (pointer: coarse) { #pad { grid-template-columns: repeat(3, 56px) 70px; grid-template-rows: 56px 56px; } }
+
+/* ── Dialogue ── */
+#dialog {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(680px, calc(100vw - 24px));
+  max-height: 70vh; overflow-y: auto;
+  background: rgba(14,12,10,0.95); border: 1px solid var(--gold-dim); border-radius: 3px;
+  padding: 16px 20px 14px; box-shadow: 0 10px 40px #000;
+  z-index: 5;
+}
+#dialog-speaker { font-family: 'Cinzel', serif; color: var(--gold); margin: 0 0 0.4em; font-size: 0.95rem; letter-spacing: 0.06em; }
+#dialog-text { margin: 0 0 0.9em; font-size: 1.1rem; line-height: 1.5; }
+#dialog-choices, .ouija-choices { display: flex; flex-direction: column; gap: 6px; }
+#dialog-choices button, .ouija-choices button {
+  text-align: left; font-size: 1.02rem; padding: 0.45em 0.7em; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.5); border-radius: 3px;
+  display: flex; gap: 0.6em; align-items: baseline;
+}
+#dialog-choices button:hover, #dialog-choices button:focus-visible, .ouija-choices button:hover, .ouija-choices button:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
+.key { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 0.4em; flex: none; }
+
+/* ── Journal and map ── */
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3,3,6,0.7); padding: 16px; z-index: 6; }
+.sheet { position: relative; width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: #17130f; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 18px 22px; }
+.sheet h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.05rem; font-weight: 600; margin: 0.2em 0 0.6em; }
+#memento-slots { list-style: none; padding: 0; margin: 0 0 1.2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+#memento-slots li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed rgba(138,110,66,0.45); border-radius: 3px; color: var(--cream-dim); }
+#memento-slots li.have { border-style: solid; border-color: var(--gold); color: var(--cream); background: rgba(201,169,110,0.08); }
+#memento-slots .glyph { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--gold); }
+#clue-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 0.5em; line-height: 1.45; }
+#clue-list .none { list-style: none; margin-left: -1.1em; color: var(--cream-dim); }
+.map-sheet { width: min(760px, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
+.map-frame { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+
+/* ── The spirit board ── */
+#ouija { position: absolute; inset: 0; z-index: 7; background: rgba(3,2,4,0.85); display: flex; align-items: center; justify-content: center; padding: 12px; overflow-y: auto; }
+.ouija-board { width: min(820px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.ouija-board svg { width: 100%; height: auto; max-height: 52vh; filter: drop-shadow(0 0 30px rgba(150,110,255,0.35)); }
+.ob-letter, .ob-word { font-family: 'Cinzel Decorative', Georgia, serif; fill: #3a2412; text-anchor: middle; dominant-baseline: middle; transition: fill 0.3s; }
+.ob-letter { font-size: 40px; }
+.ob-word { font-size: 34px; }
+.ob-letter.lit, .ob-word.lit { fill: #7a2ac0; }
+.ouija-spelled { min-height: 1.5em; margin: 0; text-align: center; font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); }
+.ouija-text { min-height: 1.4em; margin: 0; text-align: center; font-style: italic; color: var(--cream-dim); }
+
+/* ── The harpsichord ── */
+#keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
+.keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.keys-text { margin: 0; font-size: 1.1rem; font-style: italic; }
+.keyboard { display: flex; gap: 4px; width: 100%; height: 150px; }
+.keyboard .key { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; cursor: pointer; border-radius: 0 0 5px 5px; border: 1px solid #3a2a14; background: linear-gradient(180deg, #d8c89a, #b8a678); color: #3a2a14; font-family: 'Cinzel', serif; font-size: 0.85rem; transition: background 0.15s, box-shadow 0.15s; }
+.keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
+.keyboard .key.pressed { background: #a8946a; }
+.keyboard .key.hint { box-shadow: inset 0 0 0 3px rgba(120,170,255,0.75), 0 0 14px rgba(120,170,255,0.5); }
+.keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+
+#flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }
+
+@media (max-width: 640px) {
+  #room-card { top: max(112px, calc(env(safe-area-inset-top) + 100px)); padding: 10px 14px; }
+  #room-card p { font-size: 0.92rem; }
+  #log { bottom: max(196px, calc(env(safe-area-inset-bottom) + 186px)); }
+  #prompt { bottom: max(146px, calc(env(safe-area-inset-bottom) + 136px)); }
+  #pad { left: 50%; right: auto; transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #room-name.show, #room-card.show, #dread.jolt { animation: none; }
+}

@@ -17,8 +17,9 @@ docs/            The published site — this is what GitHub Pages serves
   npc/             NPC portraits (NPCS / WM_PORTRAITS)
   monsters/        monster, boss and familiar art
   audio/           background music and location ambience tracks
-  explore/         floor plans for the explorable 3D places
-  vendor/          three-explore.min.js, a trimmed three.js for the 3D places
+  explore/         the Crooked House's floor plan
+  vendor/          three-explore.min.js, a trimmed three.js for the game
+  crooked-house.html  the Crooked House game; generated, like index.html
 
 src/              Source files that get combined into docs/index.html
   template.html    HTML skeleton
@@ -29,7 +30,6 @@ src/              Source files that get combined into docs/index.html
     lighting.js      map layers, night lighting, light mode, hover reveal;
                      drops to a lighter quality on slow devices (remembered)
     ambient.js       sparks rising from the lights and drifting wisps at night
-    explore.js       the explorable 3D places (the Crooked House)
     map.js           hotspots, zoom & pan, switching maps
     panels.js        lore / species / NPC panels and lore images
     unlocks.js       character-name recognition and group unlocks
@@ -41,7 +41,7 @@ src/              Source files that get combined into docs/index.html
     hotspots.json        map hotspot shapes + settlement light positions
     map-previews.json    tiny blurred copies of the two maps, shown while the
                          real ones download (made by optimize_assets.py)
-    explore.json         the 3D places: walls, rooms, things to inspect, lights
+    explore.json         the Crooked House: walls, rooms, things to inspect, lights
 
 source-assets/    Large working files, not part of the published site
   MAP_Druskenvald_Sources.xcf        GIMP source — the main map's paths/vectors
@@ -52,6 +52,9 @@ source-assets/    Large working files, not part of the published site
 
 build.js          Combines src/* into docs/index.html — run after any edit
                    under src/: `node build.js`
+src/game/          The Crooked House game (see below), built into
+                   docs/crooked-house.html by build.js
+build-three.js     Rebuilds docs/vendor/three-explore.min.js (see below)
 extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
                    whenever the map's lights/outlines are edited in GIMP:
                    `python extract_xcf.py` (dry run) or `--apply` to write
@@ -117,40 +120,53 @@ extract_xcf.py     Syncs src/data/hotspots.json from source-assets/*.xcf
 - **Locked teasers:** `WM_TEASERS` holds the rumour (`text` and `source`)
   shown on each locked location.
 
-## Exploring the Crooked House in 3D
+## The Crooked House (the game)
 
-The Crooked House's first floor can be walked through in 3D: the floor plan
-becomes the ground, its walls are raised around it, and the visitor carries
-a lantern through the dark rooms while a storm rages outside. Entering a
-room shows its description; sparkles mark things to inspect. It's the same
-for every group.
+`docs/crooked-house.html` is a small first-person adventure through the
+Crooked House's first floor, in the style of old grid-based dungeon
+crawlers: step from square to square, turn in quarter turns, and get
+through the house's hauntings by choices and wits. There's no combat:
+scares add **Dread**, and when it fills your nerve breaks and you flee to
+the porch (nothing is lost). It's the same for every group, and progress
+is kept in the player's browser.
+
+What's in it so far: the séance (the spirit board's questions fill the
+journal), Petunia and her teacup (speak of her children, which the foyer's
+portraits name), the music room's cursed waltz (play Patrini's tune back on
+the harpsichord for the black ivory key), the Crooked Man in the hall, No
+Escape on the porch steps, the map and the journal. The peacock, the oven
+and the feast are teasers for the next chapter; the stairs don't go up yet.
 
 - **The way in:** put `{{explore:crooked_house|Enter the Crooked House}}` in
-  any lore text, e.g. Wickermoor Village's panel. It becomes a button. (The
-  text after `|` is optional; it defaults to "The Crooked House".)
-- **Controls:** click or tap the floor to walk there (WASD/arrows also walk),
-  drag to turn the view (or Q/E), scroll or pinch to zoom, and click a
-  sparkle or press Enter near one to inspect it. "Rooms" walks to a room.
-  Escape, Back, or "Leave the house" returns to the panel.
-- **What's where:** `src/data/explore.json`, in the floor image's pixel
-  coordinates (x right, y down). `walls` are centrelines (a gap between two
-  wall lines is a doorway), `walkable` are the areas you can walk in, and
-  `rooms`, `pois` (things to inspect) and `lights` are what they sound like.
-  Room and point-of-interest texts describe what anyone walking in would
-  see, not the GM's notes. The build checks that every point of interest
-  names a real room.
+  any lore text, e.g. Wickermoor Village's panel. It becomes a link to the
+  game page (the text after `|` is optional).
+- **Controls:** WASD or the arrow keys to walk, Q/E or ←/→ to turn, Space to
+  look at or use what's in front of you, M for the map, J for the journal.
+  On a phone, the on-screen buttons.
+- **Where things are:**
+  - `src/game/js/` — the game, joined in the order of `GAME_FILES` in
+    build.js: `core.js` (the grid), `art.js` (all the placeholder art),
+    `audio.js`, `world.js` (the 3D house, furniture placement in `SCENERY`),
+    `ui.js`, `story.js` (every scene, the séance questions, mementos and
+    clues), `main.js` (movement and the loop). `src/game/template.html` and
+    `game.css` are the page.
+  - `src/data/explore.json` — the house itself, in the floor plan's pixels
+    (x right, y down): `walls` are centrelines (a gap between two wall lines
+    is a doorway), `walkable` the areas you can walk in, `grid` the square
+    size and offset, plus `rooms`, `pois` (their descriptions are what the
+    game shows when you look at something) and `lights`. The game works out
+    its grid of squares from the walls, so moving a wall here moves it in
+    the game.
+- **Replacing the placeholder art:** every texture and figure is drawn by
+  one function in `art.js` (`SPRITES` for the upright figures and furniture,
+  `wallTexture`, `floorTexture` and so on). To use a real drawing, put the
+  image in `docs/explore/` and have that function load it instead
+  (`new THREE.TextureLoader().load('explore/your-image.png')`), keeping
+  transparent backgrounds for figures.
 - **three.js:** `docs/vendor/three-explore.min.js` holds only the parts of
-  three.js (r187) that `explore.js` uses, and is fetched only when someone
-  opens the house. If `explore.js` starts using another part, the build says
-  which is missing. Rebuild it from a scratch folder:
-
-  ```
-  npm install three@0.187.0 esbuild
-  echo "export { ...names the build listed, plus the existing ones... } from 'three';" > entry.js
-  npx esbuild entry.js --bundle --minify --format=esm --legal-comments=none --outfile=three-explore.min.js
-  ```
-
-  then copy `three-explore.min.js` into `docs/vendor/`.
+  three.js the game uses. If the game starts using another part, `node
+  build.js` says which is missing; run `node build-three.js` to rebuild it,
+  then `node build.js`.
 
 ## Adding art or music
 

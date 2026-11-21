@@ -56,7 +56,6 @@ const SCRIPT_FILES = [
   'router.js',
   'index.js',
   'codex.js',
-  'explore.js',
   'main.js',
 ];
 
@@ -105,9 +104,9 @@ function escHtml(str) {
 const SHORTHAND_RE = /\{\{(npc|species|creature|explore):([^}|]+)(?:\|([^}]*))?\}\}/g;
 const SHORTHAND_TABLES = { npc: 'NPCS', species: 'SPECIES', creature: 'BESTIARY', explore: 'EXPLORE_PLACES' };
 
-// {{explore:id|text}} is a button that opens the 3D view of a place in
-// src/data/explore.json (see src/js/explore.js); its text defaults to the
-// place's title.
+// {{explore:id|text}} is a link to the game page for a place in
+// src/data/explore.json (`page`, e.g. crooked-house.html); its text
+// defaults to the place's title.
 function expandShorthand(data, errors, explorePlaces = {}) {
   const tables = { npc: data.NPCS || {}, species: data.SPECIES || {}, creature: data.BESTIARY || {}, explore: explorePlaces };
   return mapStrings(data, (str, where) => str.replace(SHORTHAND_RE, (match, kind, rawId, rawText) => {
@@ -118,7 +117,7 @@ function expandShorthand(data, errors, explorePlaces = {}) {
       return match;
     }
     if (kind === 'explore') {
-      return `<button type="button" class="explore-link" data-explore="${escHtml(id)}">${rawText !== undefined ? rawText : escHtml(entry.title)}</button>`;
+      return `<a class="explore-link" href="${escHtml(entry.page)}">${rawText !== undefined ? rawText : escHtml(entry.title)}</a>`;
     }
     const text = rawText !== undefined ? rawText : entry.name;
     return `<strong class="${kind}-link" data-${kind}="${escHtml(id)}" role="button" tabindex="0">${text}</strong>`;
@@ -312,10 +311,10 @@ function mapPreviewCss(warnings) {
 // Checks src/data/explore.json: the floor plan exists, every point of
 // interest and scripted event names a real room or point, and each floor's
 // starting spot is somewhere walkable. Also that the trimmed three.js build
-// (docs/vendor/three-explore.min.js) exports everything explore.js uses —
-// if explore.js starts using another part of three.js, rebuild the vendor
+// (docs/vendor/three-explore.min.js) exports everything the game uses —
+// if the game starts using another part of three.js, rebuild the vendor
 // file as the README describes.
-function validateExplore(places, errors, warnings, appJs) {
+function validateExplore(places, errors, warnings, gameJs) {
   const inPoly = (x, y, pts) => {
     let inside = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -344,7 +343,7 @@ function validateExplore(places, errors, warnings, appJs) {
   if (!fs.existsSync(vendor)) { errors.push('docs/vendor/three-explore.min.js is missing — see the README'); return; }
   const exportsBlock = (fs.readFileSync(vendor, 'utf8').match(/export\s*\{([^}]*)\}\s*;?\s*$/) || [])[1] || '';
   const exported = new Set(exportsBlock.split(',').map(e => e.trim().split(/\s+as\s+/).pop()));
-  const used = new Set([...appJs.matchAll(/\bTHREE\.([A-Z][A-Za-z0-9]*)/g)].map(m => m[1]));
+  const used = new Set([...gameJs.matchAll(/\bTHREE\.([A-Z][A-Za-z0-9]*)/g)].map(m => m[1]));
   const missing = [...used].filter(n => !exported.has(n));
   if (missing.length) errors.push(`docs/vendor/three-explore.min.js doesn't export ${missing.join(', ')} — rebuild it (see the README)`);
 }
@@ -376,7 +375,8 @@ function build() {
   const errors = [...expandErrors, ...result.errors];
 
   const previewCss = mapPreviewCss(result.warnings);
-  validateExplore(explore.EXPLORE_PLACES || {}, errors, result.warnings, appJs);
+  const gameJs = readGameScript();
+  validateExplore(explore.EXPLORE_PLACES || {}, errors, result.warnings, gameJs);
   result.warnings.forEach(w => console.warn(`warning: ${w}`));
   errors.forEach(e => console.error(`error: ${e}`));
   if (REPORT) printReport(descriptions, hotspots, result);
@@ -409,6 +409,39 @@ function build() {
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, output);
   console.log(`Built ${path.relative(ROOT, OUTPUT_FILE)} (${output.length} bytes)`);
+  buildGame(explore, gameJs);
+}
+
+// ─── The Crooked House game (docs/crooked-house.html) ───────────────────
+// Its own page, built the same way from src/game/: template.html, game.css
+// and the scripts in GAME_FILES (joined in this order into one module
+// script), after the house data from src/data/explore.json.
+const GAME_FILES = ['core.js', 'art.js', 'audio.js', 'world.js', 'ui.js', 'story.js', 'main.js'];
+const GAME_OUTPUT = path.join(DOCS_DIR, 'crooked-house.html');
+
+function readGameScript() {
+  const dir = path.join(SRC_DIR, 'game', 'js');
+  const unlisted = fs.readdirSync(dir).filter(f => f.endsWith('.js') && !GAME_FILES.includes(f));
+  if (unlisted.length) {
+    console.error(`error: src/game/js/ has files not listed in GAME_FILES (build.js): ${unlisted.join(', ')}`);
+    process.exit(1);
+  }
+  return GAME_FILES
+    .map(f => `// ─── src/game/js/${f} ${'─'.repeat(Math.max(3, 52 - f.length))}\n${readFile('game/js/' + f).trim()}`)
+    .join('\n\n');
+}
+
+function buildGame(explore, gameJs) {
+  const script = [
+    '// DATA — generated from src/data/explore.json; edit that, not this.',
+    toConstDeclarations(explore, true),
+    gameJs,
+  ].join('\n\n');
+  const output = readFile('game/template.html')
+    .split('/*__STYLES__*/').join(readFile('game/game.css').trim())
+    .split('/*__GAME_SCRIPT__*/').join(script);
+  fs.writeFileSync(GAME_OUTPUT, output);
+  console.log(`Built ${path.relative(ROOT, GAME_OUTPUT)} (${output.length} bytes)`);
 }
 
 const hashArg = process.argv.indexOf('--hash');

@@ -8,6 +8,8 @@
 //     "missing image" warning,
 //   - a Chronicle beat with no text, or a Chronicle that doesn't match the
 //     group's timeline.
+// It also starts the Crooked House game (docs/crooked-house.html) and takes
+// a step, to catch anything that stops it loading.
 //
 //   node build.js && node tests/smoke.js
 //
@@ -116,6 +118,36 @@ function walkGroup() {
       if (!fs.existsSync(path.join(DOCS, decodeURIComponent(src)))) failures.push(`group ${group}: missing file ${src}`);
     });
     console.log(`group ${group} (${name}): checked ${media.length} images/tracks, ${problems.length} problem(s)`);
+    await page.close();
+  }
+
+  // The Crooked House game: starts, takes a step, opens the journal and
+  // the map, all without errors.
+  {
+    const page = await browser.newPage();
+    page.on('pageerror', e => failures.push(`game: script error: ${e.message}`));
+    page.on('console', m => { if (m.type() === 'error') failures.push(`game: console error: ${m.text()}`); });
+    page.on('response', r => { if (r.status() >= 400) failures.push(`game: ${r.status()} ${decodeURIComponent(r.url().slice(base.length))}`); });
+    await page.goto(base + 'crooked-house.html');
+    await page.click('#btn-new');
+    await page.waitForTimeout(1500);
+    const drew = await page.evaluate(() => !!window.crookedHouse && !document.getElementById('game').hidden);
+    if (!drew) {
+      const noGl = await page.evaluate(() => !document.getElementById('start-error').hidden);
+      if (!noGl) failures.push('game: did not start');
+      else console.log('game: this browser has no WebGL; checked the start screen only');
+    } else {
+      const before = await page.evaluate(() => crookedHouse.game.cy);
+      await page.keyboard.press('w');
+      await page.waitForTimeout(600);
+      const after = await page.evaluate(() => crookedHouse.game.cy);
+      if (after !== before - 1) failures.push(`game: stepping forward from the porch went from row ${before} to ${after}`);
+      await page.keyboard.press('j'); await page.waitForTimeout(200);
+      if (await page.evaluate(() => document.getElementById('journal').hidden)) failures.push('game: the journal did not open');
+      await page.keyboard.press('Escape'); await page.keyboard.press('m'); await page.waitForTimeout(400);
+      if (await page.evaluate(() => document.getElementById('map').hidden)) failures.push('game: the map did not open');
+      console.log('game: started, walked, opened the journal and the map');
+    }
     await page.close();
   }
 

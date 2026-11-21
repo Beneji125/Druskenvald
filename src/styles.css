@@ -1539,8 +1539,9 @@
     }
   }
 
-  /* ─── EXPLORABLE 3D PLACES (js/explore.js) ─────────────────── */
-  /* The button {{explore:id}} becomes inside lore text. */
+  /* ─── THE CROOKED HOUSE LINK ────────────────────────────────── */
+  /* What {{explore:id}} becomes inside lore text: a link to the game
+     page (docs/crooked-house.html, built from src/game/). */
   .explore-link {
     display: inline-flex; align-items: center; gap: 0.5em;
     margin: 0.6em 0;
@@ -1551,137 +1552,12 @@
     border: 1px solid var(--gold-dim);
     border-radius: 3px;
     cursor: pointer;
+    text-decoration: none;
     box-shadow: 0 0 18px rgba(201,169,110,0.12);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .explore-link::before { content: '🏚'; }
   .explore-link:hover, .explore-link:focus-visible { border-color: var(--gold); box-shadow: 0 0 22px rgba(201,169,110,0.3); }
-
-  /* Nothing behind the 3D view needs to move. */
-  body.exploring .ambient-layer { display: none; }
-
-  .explore {
-    position: fixed; inset: 0; z-index: 3000;
-    background: #050407;
-    color: var(--cream);
-    overflow: hidden;
-    outline: none;
-    touch-action: none;
-    user-select: none; -webkit-user-select: none;
-  }
-  .explore-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
-  .explore-top {
-    position: absolute; top: 0; left: 0; right: 0;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 12px 16px;
-    background: linear-gradient(180deg, rgba(5,4,7,0.85), rgba(5,4,7,0));
-    pointer-events: none;
-  }
-  .explore-top > * { pointer-events: auto; }
-  .explore-top-right { display: flex; gap: 8px; }
-  .explore-heading { display: flex; flex-direction: column; align-items: center; text-align: center; pointer-events: none; }
-  .explore-place { font-family: 'Cinzel Decorative', serif; font-size: 1.15rem; color: var(--gold); letter-spacing: 0.06em; }
-  .explore-floor { font-family: 'Cinzel', serif; font-size: 0.72rem; color: var(--cream-dim); letter-spacing: 0.2em; text-transform: uppercase; }
-  .explore-btn {
-    font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.05em;
-    color: var(--cream);
-    background: rgba(18,16,13,0.8);
-    border: 1px solid var(--gold-dim);
-    border-radius: 3px;
-    padding: 0.45em 0.8em;
-    cursor: pointer;
-  }
-  .explore-btn:hover, .explore-btn:focus-visible { border-color: var(--gold); color: var(--gold); }
-  .explore-rooms {
-    position: absolute; top: 56px; right: 16px;
-    display: flex; flex-direction: column;
-    min-width: 200px;
-    background: rgba(18,16,13,0.94);
-    border: 1px solid var(--gold-dim);
-    border-radius: 3px;
-    padding: 4px 0;
-  }
-  .explore-rooms[hidden] { display: none; }
-  .explore-room-link {
-    font-family: 'IM Fell English', serif; font-size: 1rem; text-align: left;
-    color: var(--cream); background: none; border: none;
-    padding: 0.45em 1em; cursor: pointer;
-  }
-  .explore-room-link:hover, .explore-room-link:focus-visible { background: rgba(201,169,110,0.12); color: var(--gold); }
-  .explore-banner {
-    position: absolute; top: 74px; left: 50%; transform: translateX(-50%);
-    max-width: min(640px, calc(100vw - 32px));
-    font-family: 'Cinzel', serif; font-size: 1.05rem; text-align: center; letter-spacing: 0.08em;
-    color: var(--gold);
-    text-shadow: 0 0 12px #000, 0 0 4px #000;
-    opacity: 0;
-    pointer-events: none;
-  }
-  .explore-banner.show { animation: explore-banner 2.6s ease forwards; }
-  @keyframes explore-banner { 0% { opacity: 0; } 15%, 75% { opacity: 1; } 100% { opacity: 0; } }
-  .explore-prompt {
-    position: absolute;
-    transform: translate(-50%, -150%);
-    font-family: 'IM Fell English', serif; font-size: 0.95rem; white-space: nowrap;
-    color: var(--cream);
-    background: rgba(18,16,13,0.82);
-    border: 1px solid var(--gold-dim);
-    border-radius: 999px;
-    padding: 0.25em 0.85em;
-    cursor: pointer;
-  }
-  .explore-prompt[hidden] { display: none; }
-  .explore-card {
-    position: absolute; left: 16px; bottom: 16px;
-    width: min(420px, calc(100vw - 32px));
-    max-height: 45vh; overflow-y: auto;
-    background: rgba(18,16,13,0.9);
-    border: 1px solid var(--gold-dim);
-    border-radius: 3px;
-    padding: 14px 18px 12px;
-    box-shadow: 0 6px 30px rgba(0,0,0,0.7);
-  }
-  .explore-card[hidden] { display: none; }
-  .explore-card.show { animation: explore-card-in 0.35s ease; }
-  @keyframes explore-card-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .explore-card-title { font-family: 'Cinzel', serif; font-size: 1.05rem; font-weight: 600; color: var(--gold); margin: 0 1.6em 0.4em 0; }
-  .explore-card-text { font-family: 'IM Fell English', serif; font-size: 1.02rem; line-height: 1.5; margin: 0; }
-  .explore-card-close {
-    position: absolute; top: 6px; right: 8px;
-    font-size: 1.3rem; line-height: 1;
-    color: var(--cream-dim); background: none; border: none; cursor: pointer;
-    padding: 4px 6px;
-  }
-  .explore-card-close:hover, .explore-card-close:focus-visible { color: var(--gold); }
-  .explore-help {
-    position: absolute; right: 16px; bottom: 16px;
-    max-width: min(360px, calc(100vw - 32px));
-    font-family: 'IM Fell English', serif; font-size: 0.85rem; text-align: right;
-    color: var(--cream-dim);
-    text-shadow: 0 0 6px #000;
-    pointer-events: none;
-    transition: opacity 1.5s;
-  }
-  .explore-help.faded { opacity: 0; }
-  .explore-loading {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-    font-family: 'Cinzel', serif; letter-spacing: 0.1em; text-align: center;
-    color: var(--cream-dim);
-    background: #050407;
-    transition: opacity 0.8s;
-  }
-  .explore-loading span { animation: explore-pulse 1.6s ease-in-out infinite; }
-  .explore-loading.failed span { animation: none; color: var(--cream); }
-  .explore-loading.done { opacity: 0; pointer-events: none; }
-  @keyframes explore-pulse { 50% { opacity: 0.45; } }
-  @media (max-width: 640px) {
-    .explore-top { padding: 10px 12px; }
-    .explore-heading { display: none; }
-    .explore-card { left: 12px; right: 12px; bottom: 12px; width: auto; }
-    .explore-help { left: 12px; right: 12px; bottom: auto; top: 58px; text-align: center; max-width: none; }
-  }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {

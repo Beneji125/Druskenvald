@@ -1,0 +1,2486 @@
+<!DOCTYPE html>
+<!-- docs/crooked-house.html is generated from this by build.js: edit this,
+     src/game/game.css and src/game/js/*.js, then run `node build.js`. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Crooked House — Druskenvald</title>
+<meta name="description" content="Walk the Crooked House by lantern light: find the mementos, speak with the dead, and try not to lose your nerve.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' font-size='90'><text y='.9em'>🏚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+/* The Crooked House: the site's own palette and type (see src/styles.css),
+   on a page that is almost all darkness. */
+:root {
+  --ink: #0d0a07;
+  --panel: rgba(18, 16, 13, 0.92);
+  --gold: #c9a96e;
+  --gold-dim: #8a6e42;
+  --cream: #e8d5a3;
+  --cream-dim: #b8a07a;
+  --crimson: #a04d3c;
+  --cold: #9fb6dc;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #030306; color: var(--cream); overflow: hidden; }
+body { font-family: 'IM Fell English', Georgia, serif; -webkit-tap-highlight-color: transparent; }
+button, a { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 0.35em; margin: 0 0.08em; }
+
+/* ── Title screen ── */
+#start {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 40%, #1c1610 0%, var(--ink) 72%);
+  overflow-y: auto;
+}
+#start h1 { font-family: 'Cinzel Decorative', Georgia, serif; font-weight: 400; color: var(--gold); font-size: clamp(2rem, 7vw, 3.4rem); margin: 0; letter-spacing: 0.05em; }
+#start .floor { font-family: 'Cinzel', serif; letter-spacing: 0.25em; text-transform: uppercase; font-size: 0.8rem; color: var(--cream-dim); margin: -0.5rem 0 0; }
+#start p { max-width: 36rem; line-height: 1.55; margin: 0; font-size: 1.08rem; }
+#start .how { font-size: 0.95rem; color: var(--cream-dim); }
+#start .note { font-size: 0.88rem; color: var(--cream-dim); }
+.start-buttons { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+.big {
+  font-family: 'Cinzel', serif; letter-spacing: 0.06em; font-size: 1.02rem;
+  padding: 0.6em 1.3em; cursor: pointer;
+  color: var(--cream); background: linear-gradient(180deg, rgba(122,59,46,0.6), rgba(61,42,26,0.8));
+  border: 1px solid var(--gold-dim); border-radius: 3px;
+}
+.big:hover, .big:focus-visible { border-color: var(--gold); outline: none; box-shadow: 0 0 18px rgba(201,169,110,0.3); }
+#start .back { color: var(--cream-dim); font-size: 0.9rem; }
+#start .error { color: #e0a090; }
+
+/* ── The view and the HUD ── */
+#game { position: fixed; inset: 0; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+#hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 12px max(14px, env(safe-area-inset-left));
+  background: linear-gradient(180deg, rgba(3,3,6,0.8), rgba(3,3,6,0));
+  pointer-events: none;
+}
+#hud-top > * { pointer-events: auto; }
+#room-name { font-family: 'Cinzel', serif; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
+#room-name.show { animation: room-in 1.2s ease; }
+@keyframes room-in { from { opacity: 0; letter-spacing: 0.3em; } to { opacity: 1; } }
+#dread { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.dread-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+#dread-pips { display: flex; gap: 3px; }
+#dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
+#dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
+#dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
+#dread.jolt { animation: jolt 0.4s; }
+@keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+.hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hud-right button, .hud-right a {
+  font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.05em; text-decoration: none;
+  padding: 0.4em 0.75em; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+}
+.hud-right button:hover, .hud-right a:hover, .hud-right button:focus-visible, .hud-right a:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
+
+#room-card {
+  position: absolute; top: max(78px, calc(env(safe-area-inset-top) + 66px)); left: max(14px, env(safe-area-inset-left));
+  width: min(380px, calc(100vw - 28px));
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  padding: 12px 16px;
+}
+#room-card.show { animation: card-in 0.5s ease; }
+@keyframes card-in { from { opacity: 0; transform: translateY(-6px); } }
+#room-card h2 { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin: 0 1.6em 0.35em 0; font-weight: 600; }
+#room-card p { margin: 0; line-height: 1.45; font-size: 0.98rem; }
+#room-card-close, .overlay .close { position: absolute; top: 4px; right: 6px; background: none; border: none; font-size: 1.3rem; color: var(--cream-dim); cursor: pointer; padding: 4px 8px; }
+
+#log {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(150px, calc(env(safe-area-inset-bottom) + 140px));
+  width: min(640px, calc(100vw - 28px));
+  display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center;
+  pointer-events: none;
+}
+#log p { margin: 0; padding: 3px 10px; font-size: 1rem; line-height: 1.35; background: rgba(3,3,6,0.6); border-radius: 3px; text-shadow: 0 0 6px #000; transition: opacity 2s; }
+#log p.scare { color: #d6e0ff; font-style: italic; }
+#log p.gain { color: var(--gold); }
+#log p.note { color: var(--cream-dim); }
+#log p.old { opacity: 0; }
+
+#prompt {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(104px, calc(env(safe-area-inset-bottom) + 96px));
+  font-size: 1.02rem; padding: 0.35em 1em; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 999px;
+}
+#prompt::after { content: ' · Space'; color: var(--cream-dim); font-size: 0.85em; }
+@media (pointer: coarse) { #prompt::after { content: ''; } }
+
+#pad {
+  position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: repeat(3, 44px) 60px; grid-template-rows: 44px 44px; gap: 5px;
+}
+#pad button {
+  font-size: 1.05rem; cursor: pointer;
+  background: rgba(18,16,13,0.75); border: 1px solid rgba(138,110,66,0.7); border-radius: 4px;
+  touch-action: manipulation;
+}
+#pad button:active { background: rgba(201,169,110,0.25); }
+#pad .use { grid-column: 4; grid-row: 1 / span 2; font-family: 'Cinzel', serif; font-size: 0.85rem; }
+@media (pointer: fine) { #pad { opacity: 0.55; transform: scale(0.85); transform-origin: bottom right; } #pad:hover { opacity: 1; } }
+@media (pointer: coarse) { #pad { grid-template-columns: repeat(3, 56px) 70px; grid-template-rows: 56px 56px; } }
+
+/* ── Dialogue ── */
+#dialog {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(680px, calc(100vw - 24px));
+  max-height: 70vh; overflow-y: auto;
+  background: rgba(14,12,10,0.95); border: 1px solid var(--gold-dim); border-radius: 3px;
+  padding: 16px 20px 14px; box-shadow: 0 10px 40px #000;
+  z-index: 5;
+}
+#dialog-speaker { font-family: 'Cinzel', serif; color: var(--gold); margin: 0 0 0.4em; font-size: 0.95rem; letter-spacing: 0.06em; }
+#dialog-text { margin: 0 0 0.9em; font-size: 1.1rem; line-height: 1.5; }
+#dialog-choices, .ouija-choices { display: flex; flex-direction: column; gap: 6px; }
+#dialog-choices button, .ouija-choices button {
+  text-align: left; font-size: 1.02rem; padding: 0.45em 0.7em; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.5); border-radius: 3px;
+  display: flex; gap: 0.6em; align-items: baseline;
+}
+#dialog-choices button:hover, #dialog-choices button:focus-visible, .ouija-choices button:hover, .ouija-choices button:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
+.key { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 0.4em; flex: none; }
+
+/* ── Journal and map ── */
+.overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3,3,6,0.7); padding: 16px; z-index: 6; }
+.sheet { position: relative; width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: #17130f; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 18px 22px; }
+.sheet h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.05rem; font-weight: 600; margin: 0.2em 0 0.6em; }
+#memento-slots { list-style: none; padding: 0; margin: 0 0 1.2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+#memento-slots li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed rgba(138,110,66,0.45); border-radius: 3px; color: var(--cream-dim); }
+#memento-slots li.have { border-style: solid; border-color: var(--gold); color: var(--cream); background: rgba(201,169,110,0.08); }
+#memento-slots .glyph { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--gold); }
+#clue-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 0.5em; line-height: 1.45; }
+#clue-list .none { list-style: none; margin-left: -1.1em; color: var(--cream-dim); }
+.map-sheet { width: min(760px, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
+.map-frame { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+
+/* ── The spirit board ── */
+#ouija { position: absolute; inset: 0; z-index: 7; background: rgba(3,2,4,0.85); display: flex; align-items: center; justify-content: center; padding: 12px; overflow-y: auto; }
+.ouija-board { width: min(820px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.ouija-board svg { width: 100%; height: auto; max-height: 52vh; filter: drop-shadow(0 0 30px rgba(150,110,255,0.35)); }
+.ob-letter, .ob-word { font-family: 'Cinzel Decorative', Georgia, serif; fill: #3a2412; text-anchor: middle; dominant-baseline: middle; transition: fill 0.3s; }
+.ob-letter { font-size: 40px; }
+.ob-word { font-size: 34px; }
+.ob-letter.lit, .ob-word.lit { fill: #7a2ac0; }
+.ouija-spelled { min-height: 1.5em; margin: 0; text-align: center; font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); }
+.ouija-text { min-height: 1.4em; margin: 0; text-align: center; font-style: italic; color: var(--cream-dim); }
+
+/* ── The harpsichord ── */
+#keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
+.keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.keys-text { margin: 0; font-size: 1.1rem; font-style: italic; }
+.keyboard { display: flex; gap: 4px; width: 100%; height: 150px; }
+.keyboard .key { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; cursor: pointer; border-radius: 0 0 5px 5px; border: 1px solid #3a2a14; background: linear-gradient(180deg, #d8c89a, #b8a678); color: #3a2a14; font-family: 'Cinzel', serif; font-size: 0.85rem; transition: background 0.15s, box-shadow 0.15s; }
+.keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
+.keyboard .key.pressed { background: #a8946a; }
+.keyboard .key.hint { box-shadow: inset 0 0 0 3px rgba(120,170,255,0.75), 0 0 14px rgba(120,170,255,0.5); }
+.keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+
+#flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }
+
+@media (max-width: 640px) {
+  #room-card { top: max(112px, calc(env(safe-area-inset-top) + 100px)); padding: 10px 14px; }
+  #room-card p { font-size: 0.92rem; }
+  #log { bottom: max(196px, calc(env(safe-area-inset-bottom) + 186px)); }
+  #prompt { bottom: max(146px, calc(env(safe-area-inset-bottom) + 136px)); }
+  #pad { left: 50%; right: auto; transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #room-name.show, #room-card.show, #dread.jolt { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<section id="start">
+  <h1>The Crooked House</h1>
+  <p class="floor">First Floor</p>
+  <p>The storm drove you up the hill, and the front door opened before you knocked. Somewhere in this house are six mementos that open the way to the attic, and whatever waits up there.</p>
+  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
+  <div class="start-buttons">
+    <button type="button" id="btn-continue" class="big">Continue</button>
+    <button type="button" id="btn-new" class="big">Start again</button>
+  </div>
+  <p class="note">Turn your sound on for the storm. Your progress is kept in this browser.</p>
+  <p class="note error" id="start-error" hidden>Your browser couldn’t draw the house in 3D: WebGL is turned off or not available. Try another browser, or turn on hardware acceleration in this one’s settings.</p>
+  <a class="back" href="index.html#wickermoor/wm_village">↩ Back to the map of Wickermoor</a>
+</section>
+
+<section id="game" hidden>
+  <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
+
+  <div id="hud-top">
+    <div class="hud-left">
+      <div id="room-name"></div>
+      <div id="dread" role="meter" aria-label="Dread" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+        <span class="dread-label">Dread</span><span id="dread-pips"></span>
+      </div>
+    </div>
+    <div class="hud-right">
+      <button type="button" id="btn-map" title="Map (M)">Map</button>
+      <button type="button" id="btn-journal" title="Journal (J)">Journal</button>
+      <button type="button" id="btn-sound" aria-pressed="true">🔊</button>
+      <a id="btn-leave" href="index.html#wickermoor/wm_village" title="Back to the map of Wickermoor">Leave</a>
+    </div>
+  </div>
+
+  <div id="room-card" hidden>
+    <button type="button" id="room-card-close" aria-label="Close">×</button>
+    <h2 id="room-card-title"></h2>
+    <p id="room-card-text"></p>
+  </div>
+
+  <div id="log" aria-live="polite"></div>
+  <button type="button" id="prompt" hidden></button>
+
+  <div id="pad" aria-label="Movement">
+    <button type="button" data-cmd="left" aria-label="Turn left">↶</button>
+    <button type="button" data-cmd="forward" aria-label="Step forward">▲</button>
+    <button type="button" data-cmd="right" aria-label="Turn right">↷</button>
+    <button type="button" data-cmd="strafeLeft" aria-label="Step left">◀</button>
+    <button type="button" data-cmd="back" aria-label="Step back">▼</button>
+    <button type="button" data-cmd="strafeRight" aria-label="Step right">▶</button>
+    <button type="button" data-cmd="use" class="use" aria-label="Look or use">Use</button>
+  </div>
+
+  <div id="dialog" hidden role="dialog" aria-modal="true">
+    <p id="dialog-speaker"></p>
+    <p id="dialog-text"></p>
+    <div id="dialog-choices"></div>
+  </div>
+
+  <div id="journal" class="overlay" hidden role="dialog" aria-label="Journal">
+    <div class="sheet">
+      <button type="button" class="close" aria-label="Close">×</button>
+      <h2>Mementos</h2>
+      <ul id="memento-slots"></ul>
+      <h2>What you’ve learned</h2>
+      <ul id="clue-list"></ul>
+    </div>
+  </div>
+
+  <div id="map" class="overlay" hidden role="dialog" aria-label="Map">
+    <div class="sheet map-sheet">
+      <button type="button" class="close" aria-label="Close">×</button>
+      <h2>The First Floor</h2>
+      <div class="map-frame"><canvas id="map-canvas"></canvas></div>
+    </div>
+  </div>
+
+  <div id="ouija" hidden role="dialog" aria-label="The spirit board"></div>
+  <div id="keys" hidden role="dialog" aria-label="The harpsichord"></div>
+  <div id="flash" aria-hidden="true"></div>
+</section>
+
+<script type="module">
+import * as THREE from './vendor/three-explore.min.js';
+// DATA — generated from src/data/explore.json; edit that, not this.
+
+const EXPLORE_PLACES = {"crooked_house":{"title":"The Crooked House","page":"crooked-house.html","floors":[{"id":"first","name":"First Floor","image":"explore/Crooked_House_First_Floor.jpg","width":1313,"height":1500,"wallHeight":70,"grid":{"cell":56,"x":10,"y":0},"start":{"x":575,"y":1140,"facing":0},"returnTo":{"x":575,"y":1140},"walls":[{"note":"conservatory and parlour west wall, gallery turret","outer":true,"points":[[310,112],[288,128],[281,180],[281,260],[282,400],[283,497],[284,600],[283,742],[235,745],[195,765],[165,800],[152,845],[150,885],[110,885],[98,905],[100,975],[148,982],[165,1005],[195,1030],[250,1052],[320,1056],[375,1048],[409,1012]]},{"note":"conservatory glass roof edge","glass":true,"points":[[695,108],[600,118],[450,115],[310,112]]},{"note":"conservatory east wall, up to the door into the kitchen","outer":true,"points":[[695,108],[700,150],[690,215],[689,272]]},{"note":"freestanding wall between conservatory and kitchen","points":[[687,340],[686,508]]},{"note":"kitchen north and east walls","outer":true,"points":[[690,218],[870,226],[1050,232],[1040,370],[1032,500]]},{"note":"kitchen / dining room","points":[[748,505],[1032,505]]},{"note":"dining room east wall, step out, music room east and south walls","outer":true,"points":[[1032,500],[1030,782],[1065,782],[1063,1065],[748,1068]]},{"note":"dining room / music room","points":[[745,797],[1030,784]]},{"note":"parlour north wall, west of the door from the conservatory","points":[[283,497],[365,497]]},{"note":"parlour north wall east of that door, and its jog round the head of the hallway","points":[[445,497],[612,500],[612,557],[682,568]]},{"note":"parlour south-west corner (fireplace) and foyer north wall up to its door","points":[[283,742],[328,772],[345,795],[420,797]]},{"note":"foyer north wall east of the door to the parlour","points":[[495,797],[682,797]]},{"note":"foyer west wall above the gallery door","points":[[409,797],[410,868]]},{"note":"foyer west wall below the gallery door","outer":true,"points":[[411,947],[409,1012],[412,1105],[545,1105]]},{"note":"foyer south wall east of the front door, and the end of the hallway","outer":true,"points":[[605,1105],[680,1108],[748,1110],[748,1068]]},{"note":"hallway west wall, north of the parlour door","points":[[682,568],[683,680]]},{"note":"hallway west wall between the parlour and foyer doors","points":[[683,760],[678,850],[673,992]]},{"note":"hallway west wall south of the foyer door","points":[[676,1067],[680,1108]]},{"note":"hallway east wall, north of the dining room door","points":[[746,505],[745,617]]},{"note":"hallway east wall between the dining and music room doors","points":[[744,697],[744,932]]},{"note":"hallway east wall south of the music room door","points":[[745,1010],[748,1068]]}],"windows":[{"x":283,"y":560},{"x":284,"y":640},{"x":1045,"y":300},{"x":1031,"y":560},{"x":1031,"y":668},{"x":1064,"y":880},{"x":714,"y":1109}],"walkable":[{"note":"the house","points":[[310,112],[450,115],[600,118],[695,108],[700,150],[690,215],[870,226],[1050,232],[1040,370],[1032,500],[1030,782],[1065,782],[1063,1065],[748,1068],[748,1110],[680,1108],[605,1105],[412,1105],[409,1012],[375,1048],[320,1056],[250,1052],[195,1030],[165,1005],[148,982],[100,975],[98,905],[110,885],[150,885],[152,845],[165,800],[195,765],[235,745],[283,742],[284,600],[283,497],[282,400],[281,260],[281,180],[288,128]]},{"note":"the porch","points":[[160,1000],[195,1165],[305,1205],[470,1172],[705,1172],[960,1190],[985,1125],[1125,1122],[1128,722],[1035,722],[1035,790],[1063,790],[1063,1070],[748,1112],[412,1108],[410,1015],[375,1050],[320,1058],[250,1055],[195,1033],[165,1007]]},{"note":"the front steps","points":[[480,1165],[705,1165],[705,1240],[480,1240]]},{"note":"the front doorway, joining the porch to the foyer","points":[[540,1085],[610,1085],[610,1125],[540,1125]]}],"noEscape":{"points":[[480,1182],[705,1182],[705,1240],[480,1240]],"text":"Thunder cracks overhead and lightning strikes the path. When your eyes clear, you are standing on the porch again."},"rooms":[{"id":"porch","name":"The Porch","area":"H1","points":[[160,1000],[195,1165],[305,1205],[470,1172],[480,1240],[705,1240],[705,1172],[960,1190],[985,1125],[1125,1122],[1128,722],[1035,722],[1035,790],[1063,790],[1063,1070],[748,1112],[412,1108],[410,1015],[375,1050],[320,1058],[250,1055],[195,1033],[165,1007]],"text":"A sagging wooden porch wraps around the front of the house. The storm never lets up out here: rain comes in sideways, thunder shakes the boards, and the front door stands open as if it has been expecting you."},{"id":"foyer","name":"The Foyer","area":"H2","points":[[409,797],[682,797],[680,1108],[412,1105]],"text":"It must have been grand once. Now a crooked chandelier sways overhead, a staircase twists up the wall towards a balcony lost in darkness, and every inch of wall is crowded with portraits whose frightened eyes seem to follow you."},{"id":"parlor","name":"The Parlour","area":"H3","points":[[283,497],[612,500],[612,557],[682,568],[682,797],[345,795],[283,742]],"text":"Chairs with rotting upholstery ring a round table beside a cobwebbed fireplace. On the table lies a beautifully made spirit board, its little heart-shaped planchette engraved with the initials A.D."},{"id":"gallery","name":"The Gallery","area":"H4","points":[[283,742],[345,795],[409,797],[409,1012],[375,1048],[320,1056],[250,1052],[195,1030],[165,1005],[148,982],[100,975],[98,905],[110,885],[150,885],[152,845],[165,800],[195,765],[235,745]],"text":"A round room at the foot of the turret. Landscapes and stern marble busts line the curving wall, their name plates long since worn away. In the alcove at the far end stands a huge marble peacock with one red stone for an eye."},{"id":"music","name":"The Music Room","area":"H5","points":[[745,797],[1030,784],[1065,782],[1063,1065],[748,1068]],"text":"Decaying instruments surround a blackened wooden dance floor. A tall oval mirror, split by one long crack, bends the room into something not quite right, and at the far end a harpsichord waits with its lid propped open like a coffin."},{"id":"dining","name":"The Dining Room","area":"H6","points":[[748,505],[1032,505],[1030,784],[745,797]],"text":"Dust lies thick on every chair and cabinet, but not on the table. That is spotless, and laid with a feast: roasts, fish and fowl on gleaming silver, gravy, sweets. It smells wonderful. It should not be here."},{"id":"kitchen","name":"The Kitchen","area":"H7","points":[[690,218],[1050,232],[1032,505],[748,505],[686,508],[689,272]],"text":"Ruin. A heavy shelf has torn loose from the wall and crushed the table beneath it, and the floor is a litter of broken crockery and rusted knives. In the corner squats a great brick oven, its iron door locked shut."},{"id":"conservatory","name":"The Conservatory","area":"H8","glassRoof":true,"points":[[288,128],[310,112],[695,108],[700,150],[690,215],[689,272],[687,340],[686,500],[612,500],[283,497],[281,180]],"text":"Rain hammers on the glass. Dead vines and withered shrubs choke the room, all but one tree in the middle, green and heavy with fruit as if nothing here had ever died. A stone bench faces it, as though someone still comes to sit."},{"id":"hallway","name":"The Hallway","points":[[612,500],[686,508],[748,505],[748,1110],[680,1108],[682,568],[612,557]],"text":"A narrow passage runs the length of the house, its floor tilted just enough to make every step feel wrong. Doors open off it on both sides."}],"pois":[{"id":"front_door","room":"porch","x":575,"y":1112,"name":"The front door","text":"Heavy, old and open. It creaked open by itself when you reached it, the way a mouth opens."},{"id":"chandelier","room":"foyer","x":535,"y":950,"name":"The chandelier","text":"It hangs crooked and sways gently though there is no draught at all. Its candles burn with a cold, pale light."},{"id":"portraits","room":"foyer","x":432,"y":985,"name":"The portraits","text":"Families, generation after generation, every one painted with wide and frightened eyes. Most of the name plates are worn away. A few are not: the Lockwoods, whose patriarch wears a familiar crooked grin; the Druskenvalds, Phillip weeping beneath a black crown; and one newer than the rest that looks unsettlingly like you, smiling with no teeth."},{"id":"staircase","room":"foyer","x":628,"y":880,"name":"The staircase","text":"It twists unnaturally along the wall up to a balcony on the floor above. The upper floor isn't open to explore yet."},{"id":"spirit_board","room":"parlor","x":505,"y":630,"name":"The spirit board","text":"Adela Druskenvald's spirit board, finely carved, with YES, NO, HELLO and GOODBYE set around the letters and numbers. Rest a hand on the planchette and it feels faintly warm, as if someone else's hand had only just left it."},{"id":"fireplace","room":"parlor","x":362,"y":752,"name":"The fireplace","text":"Cold, black and thick with cobwebs. Yet now and then a single ember seems to glow deep in the ashes."},{"id":"peacock","room":"gallery","x":120,"y":930,"name":"The peacock","text":"A larger-than-life albino peacock carved from weathered marble, its tail fanned across the alcove. One eye socket is empty. The other holds a dull red bloodstone."},{"id":"landscapes","room":"gallery","x":205,"y":800,"name":"The landscapes","text":"Feverish, dreamlike paintings of hills and woods, all by the same hand. Look at any of them for long enough and you become sure something in it is looking back."},{"id":"harpsichord","room":"music","x":960,"y":845,"name":"The harpsichord","text":"Its lid is propped open like a coffin and its rusted wires stretch across it like old, dry tendons. The yellowed keys are tangled in cobwebs."},{"id":"mirror","room":"music","x":845,"y":812,"name":"The cracked mirror","text":"One long, jagged crack runs through the glass, and the room on either side of it doesn't quite agree with itself: stretched, warped, crooked."},{"id":"dance_floor","room":"music","x":850,"y":930,"name":"The dance floor","text":"Old boards, blackened and splintered, worn smooth in a ring by a great many dancing feet."},{"id":"feast","room":"dining","x":865,"y":650,"name":"The feast","text":"Roast boar, poultry, fish, sautéed vegetables, rich gravy and trays of sweets, every dish perfect and steaming. The smell is intoxicating. Underneath it is something else, faint and sour."},{"id":"oven","room":"kitchen","x":965,"y":445,"name":"The oven","text":"A hulking brick oven with an iron door, sealed by a thick, rusted lock. The bricks are warm to the touch."},{"id":"collapsed_shelf","room":"kitchen","x":870,"y":268,"name":"The collapsed shelf","text":"It ripped whole chunks of plaster out of the wall when it fell, and flattened the table beneath it."},{"id":"tree","room":"conservatory","x":490,"y":300,"name":"The bergamot tree","text":"A bergamot tree, green and thriving, its branches heavy with fruit in a room where everything else has died."},{"id":"bench","room":"conservatory","x":520,"y":478,"name":"The bench","text":"A mossy stone bench facing the tree. Petunia Lockwood used to sit here with her tea, and the stone still feels as though somebody has only just stood up."}],"lights":[{"id":"chandelier","x":535,"y":950,"h":95,"color":"#d9ceff","intensity":1,"distance":330,"flicker":0.08,"shadow":true},{"id":"fireplace","x":358,"y":752,"h":14,"color":"#ff7a30","intensity":0.55,"distance":230,"flicker":0.35,"shadow":true},{"id":"oven","x":958,"y":452,"h":18,"color":"#ff4518","intensity":0.5,"distance":220,"flicker":0.25,"shadow":true},{"id":"spirit_board","x":505,"y":630,"h":22,"color":"#c39bff","intensity":0.35,"distance":150,"flicker":0.15},{"id":"tree","x":490,"y":300,"h":45,"color":"#a8e38f","intensity":0.3,"distance":190,"flicker":0.05},{"id":"feast","x":865,"y":650,"h":35,"color":"#ffbf6b","intensity":0.35,"distance":170,"flicker":0.2}],"events":[{"id":"crooked_man","after":"spirit_board","room":"hallway","text":"“I cut them down, one by one!”"}]}]}};
+
+// ─── src/game/js/core.js ─────────────────────────────────────────────
+// The Crooked House — a small first-person adventure through the house's
+// first floor, in the spirit of old grid-based dungeon crawlers: step from
+// square to square, turn in quarter turns, and solve the house's hauntings
+// by choices and wits (there is no combat).
+//
+// build.js joins src/game/js/*.js, in the order listed in GAME_FILES, into
+// one <script type="module"> in docs/crooked-house.html, after the house
+// data (EXPLORE_PLACES, from src/data/explore.json) and an import of the
+// trimmed three.js build as THREE.
+//
+// This file: small helpers, and the grid the whole game moves on. The grid
+// is worked out from the walls traced in explore.json — nothing about it
+// is drawn by hand — so a change to a wall there changes the game too.
+
+const PLACE = EXPLORE_PLACES.crooked_house;
+const FLOOR = PLACE.floors[0];
+const CELL = FLOOR.grid.cell;          // one square, in floor-plan pixels (~5 ft)
+const WALL_H = 112;                    // ~10 ft ceilings
+const EYE_H = 60;
+const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];   // N, E, S, W (y grows south)
+const DIR_NAMES = ['north', 'east', 'south', 'west'];
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const clamp01 = v => clamp(v, 0, 1);
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// localStorage can throw (private windows, blocked site data): fall back to
+// memory so the game still works, it just won't remember.
+const store = (() => {
+  const mem = {};
+  return {
+    get(k) { try { return localStorage.getItem(k); } catch { return k in mem ? mem[k] : null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { mem[k] = String(v); } },
+    remove(k) { try { localStorage.removeItem(k); } catch { delete mem[k]; } },
+  };
+})();
+
+// mulberry32: a small seeded generator, so placeholder art and particles
+// come out the same every visit.
+function seededRandom(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pointInPoly(x, y, pts) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function segmentsCross(a, b, c, d) {
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b);
+}
+
+// ─── The grid ─────────────────────────────────────────────────────────
+// A square is walkable if its centre is in one of the floor's walkable
+// areas. Two neighbouring squares are separated by a wall if the line
+// between their centres crosses a traced wall; a gap in the traced walls
+// is a doorway. Edges out of the walkable area are the house's outer wall,
+// or — from the porch — its railing.
+
+const GRID = (() => {
+  const ox = FLOOR.grid.x, oy = FLOOR.grid.y;
+  const cols = Math.ceil((FLOOR.width - ox) / CELL), rows = Math.ceil((FLOOR.height - oy) / CELL);
+  const segs = [];
+  FLOOR.walls.forEach(w => { for (let i = 0; i < w.points.length - 1; i++) segs.push([w.points[i], w.points[i + 1]]); });
+  const centre = (cx, cy) => [ox + (cx + 0.5) * CELL, oy + (cy + 0.5) * CELL];
+  const roomAt = (x, y) =>
+    FLOOR.rooms.find(r => r.id !== 'hallway' && r.id !== 'porch' && pointInPoly(x, y, r.points))
+    || FLOOR.rooms.find(r => pointInPoly(x, y, r.points)) || null;
+  const cells = [];
+  for (let cy = 0; cy < rows; cy++) {
+    for (let cx = 0; cx < cols; cx++) {
+      const [x, y] = centre(cx, cy);
+      const walk = FLOOR.walkable.some(a => pointInPoly(x, y, a.points));
+      const room = walk ? roomAt(x, y) : null;
+      cells.push({ cx, cy, x, y, walk, room: room ? room.id : null, noEscape: walk && FLOOR.noEscape && pointInPoly(x, y, FLOOR.noEscape.points) });
+    }
+  }
+  const at = (cx, cy) => (cx < 0 || cy < 0 || cx >= cols || cy >= rows) ? null : cells[cy * cols + cx];
+  // What lies across each of a square's four edges: 'open', 'door',
+  // 'wall' or 'rail'.
+  cells.forEach(c => {
+    c.edges = DIRS.map(([dx, dy]) => {
+      if (!c.walk) return 'none';
+      const n = at(c.cx + dx, c.cy + dy);
+      if (!n || !n.walk) return (c.room === 'porch' || !c.room) ? 'rail' : 'wall';
+      const a = [c.x, c.y], b = [n.x, n.y];
+      if (segs.some(([p, q]) => segmentsCross(a, b, p, q))) return 'wall';
+      return n.room !== c.room ? 'door' : 'open';
+    });
+  });
+  // The front steps lead down into the storm: open on their far side
+  // (that's where No Escape catches you) rather than railed off.
+  cells.forEach(c => { if (c.noEscape) c.edges = c.edges.map(e => (e === 'rail' ? 'open' : e)); });
+  const cellAtPx = (x, y) => at(Math.floor((x - ox) / CELL), Math.floor((y - oy) / CELL));
+  return { cols, rows, cells, at, centre, cellAtPx, ox, oy, segs };
+})();
+
+function canStep(c, dir) {
+  if (!c) return false;
+  const e = c.edges[dir];
+  if (e === 'wall' || e === 'rail' || e === 'none') return false;
+  const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  return !!(n && n.walk && !n.blocked);   // `blocked`: big furniture (world.js)
+}
+
+function roomById(id) { return FLOOR.rooms.find(r => r.id === id) || null; }
+
+// ─── src/game/js/art.js ──────────────────────────────────────────────
+// Placeholder art, all drawn in code on canvases: wallpapers and floors for
+// each room, and ink-style figures and furniture. Every piece is made by one
+// function below, so a real drawing can replace any of them later: load an
+// image instead and return it from the same function (see the README).
+
+const ART_INK = '#120c08';
+
+function artCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return [c, c.getContext('2d')];
+}
+
+function artTexture(canvas, { repeat = false, srgb = true } = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; }
+  t.anisotropy = 4;
+  return t;
+}
+
+function artGrime(ctx, w, h, rand, amount = 1) {
+  for (let i = 0; i < 260 * amount; i++) {
+    const v = rand() < 0.5 ? 0 : 255;
+    ctx.fillStyle = `rgba(${v},${v},${v},${(rand() * 0.05).toFixed(3)})`;
+    ctx.fillRect(rand() * w, rand() * h, 1 + rand() * 12, 1 + rand() * 12);
+  }
+  for (let i = 0; i < 18 * amount; i++) {
+    ctx.fillStyle = `rgba(10,6,4,${(0.05 + rand() * 0.1).toFixed(3)})`;
+    ctx.fillRect(rand() * w, rand() * h * 0.4, 1 + rand() * 2, 30 + rand() * h);
+  }
+}
+
+// ─── Walls ────────────────────────────────────────────────────────────
+// One square's worth of wall, floor (bottom of the canvas) to ceiling:
+// wallpaper above a panelled dado, a skirting board and a cornice. Each
+// room has its own paper; some get pictures hung on it.
+
+const ROOM_WALLS = {
+  parlor:       { paper: '#4a2b2b', motif: '#6b3d38', dado: '#2b1a12', pattern: 'damask' },
+  foyer:        { paper: '#1f2b23', motif: '#2d3d31', dado: '#22170f', pattern: 'stripe', pictures: 'portrait' },
+  gallery:      { paper: '#4b4741', motif: '#57524a', dado: '#2d241b', pattern: 'plain', pictures: 'landscape' },
+  music:        { paper: '#1f2836', motif: '#2b3850', dado: '#1c1510', pattern: 'stripe' },
+  dining:       { paper: '#4a3a1e', motif: '#5e4a26', dado: '#2a1c10', pattern: 'damask' },
+  kitchen:      { paper: '#5b574c', motif: '#6a6658', dado: '#4a4a44', pattern: 'tile' },
+  hallway:      { paper: '#2d2016', motif: '#3a2a1c', dado: '#1f150d', pattern: 'panel' },
+  conservatory: { paper: '#2f3a35', motif: '#3c4a42', dado: '#2b2a24', pattern: 'plain' },
+  porch:        { paper: '#3b352e', motif: '#2d2822', dado: '#2b241d', pattern: 'boards' },
+};
+
+function wallTexture(roomId, variant = 0) {
+  const spec = ROOM_WALLS[roomId] || ROOM_WALLS.hallway;
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(roomId.length * 97 + variant * 13);
+  ctx.fillStyle = spec.paper;
+  ctx.fillRect(0, 0, 128, 256);
+  ctx.fillStyle = spec.motif;
+  if (spec.pattern === 'damask') {
+    for (let y = 18; y < 170; y += 38) for (let x = (y / 38) % 2 ? 0 : 32; x < 140; x += 64) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, 9, 14, 0, 0, Math.PI * 2);
+      ctx.moveTo(x, y - 20); ctx.lineTo(x + 6, y); ctx.lineTo(x, y + 20); ctx.lineTo(x - 6, y); ctx.closePath();
+      ctx.fill();
+    }
+  } else if (spec.pattern === 'stripe') {
+    for (let x = 0; x < 128; x += 16) ctx.fillRect(x, 0, 6, 170);
+  } else if (spec.pattern === 'tile') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    for (let y = 90; y < 170; y += 16) for (let x = 0; x < 128; x += 16) ctx.strokeRect(x + ((y / 16) % 2) * 8, y, 16, 16);
+  } else if (spec.pattern === 'panel' || spec.pattern === 'boards') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 2;
+    if (spec.pattern === 'panel') { ctx.strokeRect(14, 20, 100, 70); ctx.strokeRect(14, 100, 100, 66); }
+    else for (let y = 0; y < 256; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y + 2); ctx.stroke(); }
+  }
+  // Pictures on the wall.
+  if (spec.pictures && rand() < 0.85) {
+    const pw = 44 + rand() * 20, ph = spec.pictures === 'portrait' ? 60 + rand() * 14 : 38 + rand() * 10;
+    const px = 64 - pw / 2 + (rand() - 0.5) * 16, py = 40 + rand() * 30;
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+    ctx.rotate((rand() - 0.5) * 0.12);        // every frame hangs a little crooked
+    ctx.translate(-pw / 2, -ph / 2);
+    ctx.fillStyle = '#6b5428'; ctx.fillRect(-5, -5, pw + 10, ph + 10);
+    ctx.fillStyle = '#3d2e14'; ctx.fillRect(-2, -2, pw + 4, ph + 4);
+    if (spec.pictures === 'portrait') {
+      ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, pw, ph);
+      ctx.fillStyle = '#8a7a60';
+      ctx.beginPath(); ctx.ellipse(pw / 2, ph * 0.38, pw * 0.17, ph * 0.17, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2a2018';
+      ctx.beginPath(); ctx.ellipse(pw / 2, ph, pw * 0.38, ph * 0.38, 0, Math.PI, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0a0806';                                      // wide, frightened eyes
+      ctx.beginPath(); ctx.arc(pw / 2 - 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.arc(pw / 2 + 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const sky = ctx.createLinearGradient(0, 0, 0, ph);
+      sky.addColorStop(0, '#3a3c48'); sky.addColorStop(1, '#5a4f3a');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, pw, ph);
+      ctx.fillStyle = '#2a2a22';
+      ctx.beginPath(); ctx.moveTo(0, ph * 0.7);
+      for (let x = 0; x <= pw; x += 6) ctx.lineTo(x, ph * (0.55 + rand() * 0.2));
+      ctx.lineTo(pw, ph); ctx.lineTo(0, ph); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // Dado, skirting, cornice.
+  ctx.fillStyle = spec.dado; ctx.fillRect(0, 170, 128, 86);
+  ctx.fillStyle = 'rgba(255,230,190,0.06)'; ctx.fillRect(0, 168, 128, 4);
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2;
+  ctx.strokeRect(10, 182, 108, 54);
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 242, 128, 14);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 0, 128, 8);
+  artGrime(ctx, 128, 256, rand);
+  // Damp creeping down from the ceiling.
+  const damp = ctx.createLinearGradient(0, 0, 0, 90);
+  damp.addColorStop(0, 'rgba(8,6,4,0.45)'); damp.addColorStop(1, 'rgba(8,6,4,0)');
+  ctx.fillStyle = damp; ctx.fillRect(0, 0, 128, 90);
+  return artTexture(c);
+}
+
+// The outside of the house, seen from the porch: grey weatherboards.
+function exteriorTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(5);
+  ctx.fillStyle = '#34302b'; ctx.fillRect(0, 0, 128, 256);
+  for (let y = 0; y < 256; y += 12) {
+    ctx.fillStyle = `rgba(0,0,0,${0.25 + rand() * 0.2})`; ctx.fillRect(0, y, 128, 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)'; ctx.fillRect(0, y + 2, 128, 2);
+  }
+  artGrime(ctx, 128, 256, rand, 1.5);
+  return artTexture(c);
+}
+
+// A window: frame and dark rain-streaked panes on a transparent canvas, plus
+// a matching mask of just the panes, which lightning makes glow.
+function windowTextures() {
+  const [c, ctx] = artCanvas(128, 256);
+  const [m, mctx] = artCanvas(128, 256);
+  const rand = seededRandom(9);
+  const x0 = 22, y0 = 52, w = 84, h = 120;
+  ctx.fillStyle = '#2a1d12'; ctx.fillRect(x0 - 8, y0 - 8, w + 16, h + 16);
+  ctx.fillStyle = '#0c1118'; ctx.fillRect(x0, y0, w, h);
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, 128, 256);
+  mctx.fillStyle = '#fff'; mctx.fillRect(x0, y0, w, h);
+  ctx.strokeStyle = 'rgba(160,180,210,0.25)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 40; i++) { const x = x0 + rand() * w, y = y0 + rand() * h; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1, y + 6 + rand() * 14); ctx.stroke(); }
+  ctx.fillStyle = '#2a1d12';
+  ctx.fillRect(x0 + w / 2 - 3, y0, 6, h);
+  for (let k = 1; k < 3; k++) ctx.fillRect(x0, y0 + h * k / 3 - 3, w, 6);
+  mctx.fillStyle = '#000';
+  mctx.fillRect(x0 + w / 2 - 3, y0, 6, h);
+  for (let k = 1; k < 3; k++) mctx.fillRect(x0, y0 + h * k / 3 - 3, w, 6);
+  ctx.fillStyle = '#3a2a1a'; ctx.fillRect(x0 - 12, y0 + h + 6, w + 24, 8);   // sill
+  return { map: artTexture(c), glow: artTexture(m, { srgb: false }) };
+}
+
+// ─── Floors and ceilings ──────────────────────────────────────────────
+// Each tiles every two squares, in floor-plan coordinates, so it runs on
+// unbroken from square to square.
+
+function floorTexture(roomId) {
+  const [c, ctx] = artCanvas(256, 256);
+  const rand = seededRandom(roomId.length * 31 + 7);
+  const tiles = (a, b, n = 8) => {
+    const s = 256 / n;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      ctx.fillStyle = (x + y) % 2 ? a : b;
+      ctx.fillRect(x * s, y * s, s, s);
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    for (let i = 0; i < 14; i++) { ctx.beginPath(); let x = rand() * 256, y = rand() * 256; ctx.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rand() - 0.5) * 40; y += (rand() - 0.5) * 40; ctx.lineTo(x, y); } ctx.stroke(); }
+  };
+  const boards = (base, w = 32) => {
+    ctx.fillStyle = base; ctx.fillRect(0, 0, 256, 256);
+    for (let x = 0; x < 256; x += w) {
+      ctx.fillStyle = `rgba(0,0,0,${(rand() * 0.25).toFixed(2)})`; ctx.fillRect(x, 0, w, 256);
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x, 0, 2, 256);
+      const joint = rand() * 256; ctx.fillRect(x, joint, w, 2);
+      for (let k = 0; k < 6; k++) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(x + 4 + rand() * (w - 8), rand() * 256, 1, 20 + rand() * 60); }
+    }
+  };
+  if (roomId === 'foyer') tiles('#4b4440', '#2a2522');
+  else if (roomId === 'conservatory') tiles('#55534a', '#3a3a33');
+  else if (roomId === 'kitchen') {
+    ctx.fillStyle = '#3f3a33'; ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
+    for (let y = 0; y < 256; y += 42) for (let x = -20; x < 256; x += 60) ctx.strokeRect(x + ((y / 42) % 2) * 30 + rand() * 6, y + rand() * 4, 56, 40);
+    for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(${170 + rand() * 60},${150 + rand() * 50},120,0.5)`; ctx.fillRect(rand() * 256, rand() * 256, 3 + rand() * 6, 2 + rand() * 4); } // broken crockery
+  }
+  else if (roomId === 'porch') boards('#2b231c', 24);
+  else if (roomId === 'music') boards('#2c2018');
+  else if (roomId === 'gallery') tiles('#4a463f', '#433f39', 4);
+  else boards(roomId === 'dining' ? '#3a2818' : '#33241a');
+  artGrime(ctx, 256, 256, rand, 1.2);
+  return artTexture(c, { repeat: true });
+}
+
+// The blackened ring of the music room's dance floor, laid over its boards.
+function danceFloorTexture() {
+  const [c, ctx] = artCanvas(256, 256);
+  const g = ctx.createRadialGradient(128, 128, 20, 128, 128, 128);
+  g.addColorStop(0, 'rgba(8,5,3,0.35)'); g.addColorStop(0.75, 'rgba(8,5,3,0.75)'); g.addColorStop(1, 'rgba(8,5,3,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,90,60,0.25)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(128, 128, 92, 0, Math.PI * 2); ctx.stroke();
+  return artTexture(c);
+}
+
+function ceilingTexture(kind) {
+  const [c, ctx] = artCanvas(256, 256);
+  const rand = seededRandom(kind.length * 11);
+  if (kind === 'glass') {
+    ctx.fillStyle = '#0a1016'; ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#1e1a16';
+    for (let x = 0; x < 256; x += 64) ctx.fillRect(x, 0, 6, 256);
+    for (let y = 0; y < 256; y += 64) ctx.fillRect(0, y, 256, 6);
+    return artTexture(c, { repeat: true });
+  }
+  ctx.fillStyle = kind === 'porch' ? '#1d1712' : '#25201b'; ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = '#140f0b';
+  for (let x = 0; x < 256; x += 128) ctx.fillRect(x, 0, 22, 256);
+  artGrime(ctx, 256, 256, rand, 2);
+  return artTexture(c, { repeat: true });
+}
+
+// ─── Upright figures and furniture (sprites) ──────────────────────────
+// Drawn on a canvas whose bottom edge is the floor. Each entry gives the
+// canvas size and its size in the world.
+
+function inkSprite(w, h, draw) {
+  const [c, ctx] = artCanvas(w, h);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.strokeStyle = ART_INK; ctx.lineWidth = 3;
+  draw(ctx, w, h);
+  return artTexture(c);
+}
+
+const SPRITES = {
+  chair: { size: [26, 48], draw: () => inkSprite(64, 128, (ctx) => {
+    ctx.fillStyle = '#4a2a1c';
+    ctx.beginPath(); ctx.moveTo(14, 128); ctx.lineTo(16, 70); ctx.lineTo(12, 12); ctx.quadraticCurveTo(32, 0, 52, 12); ctx.lineTo(48, 70); ctx.lineTo(50, 128);
+    ctx.lineTo(44, 128); ctx.lineTo(42, 84); ctx.lineTo(22, 84); ctx.lineTo(20, 128); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6b2e2a'; ctx.fillRect(18, 20, 28, 46); ctx.strokeRect(18, 20, 28, 46);
+    ctx.fillStyle = '#5a2620'; ctx.fillRect(10, 70, 44, 14); ctx.strokeRect(10, 70, 44, 14);
+  }) },
+  sofa: { size: [70, 40], draw: () => inkSprite(192, 110, (ctx) => {
+    ctx.fillStyle = '#4b3a5c';
+    ctx.beginPath(); ctx.roundRect(14, 14, 164, 60, 18); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(4, 46, 184, 46, 14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#3a2c48'; ctx.fillRect(10, 90, 172, 10); ctx.strokeRect(10, 90, 172, 10);
+    ctx.fillStyle = ART_INK; ctx.fillRect(16, 100, 8, 10); ctx.fillRect(168, 100, 8, 10);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.moveTo(96, 50); ctx.lineTo(96, 88); ctx.stroke();
+  }) },
+  chandelier: { size: [60, 40], lift: 72, unlit: true, draw: () => inkSprite(160, 140, (ctx) => {
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(80, 0); ctx.lineTo(80, 60); ctx.stroke();
+    ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(80, 84, 64, 14, 0.06, 0, Math.PI * 2); ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      const x = 20 + i * 24, y = 82 - Math.sin(i / 5 * Math.PI) * 6;
+      ctx.beginPath(); ctx.moveTo(80, 60); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = '#d8cfb8'; ctx.fillRect(x - 3, y - 18, 6, 16);
+      const g = ctx.createRadialGradient(x, y - 24, 0, x, y - 24, 12);
+      g.addColorStop(0, 'rgba(235,225,255,1)'); g.addColorStop(1, 'rgba(200,180,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 12, 0, Math.PI * 2); ctx.fill();
+    }
+  }) },
+  tree: { size: [150, 150], draw: () => inkSprite(256, 256, (ctx) => {
+    const rand = seededRandom(3);
+    ctx.fillStyle = '#2a1c12'; ctx.beginPath(); ctx.moveTo(112, 256); ctx.quadraticCurveTo(120, 170, 104, 120); ctx.lineTo(146, 120); ctx.quadraticCurveTo(134, 180, 146, 256); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for (let i = 0; i < 70; i++) {
+      const a = rand() * Math.PI * 2, r = rand() * 92;
+      ctx.fillStyle = `rgb(${30 + rand() * 30},${80 + rand() * 60},${40 + rand() * 30})`;
+      ctx.beginPath(); ctx.ellipse(128 + Math.cos(a) * r, 96 + Math.sin(a) * r * 0.75, 16, 9, a, 0, Math.PI * 2); ctx.fill();
+    }
+    for (let i = 0; i < 22; i++) {
+      const a = rand() * Math.PI * 2, r = 20 + rand() * 70;
+      ctx.fillStyle = '#d9a48a'; ctx.beginPath(); ctx.arc(128 + Math.cos(a) * r, 100 + Math.sin(a) * r * 0.7, 6, 0, Math.PI * 2); ctx.fill(); ctx.lineWidth = 1.5; ctx.stroke();
+    }
+  }) },
+  shrub: { size: [60, 60], draw: () => inkSprite(128, 128, (ctx) => {
+    const rand = seededRandom(8);
+    ctx.strokeStyle = '#3a3028'; ctx.lineWidth = 2;
+    const branch = (x, y, a, l, d) => { if (d > 4) return; const x2 = x + Math.cos(a) * l, y2 = y + Math.sin(a) * l; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke(); branch(x2, y2, a - 0.4 - rand() * 0.3, l * 0.72, d + 1); branch(x2, y2, a + 0.4 + rand() * 0.3, l * 0.72, d + 1); };
+    branch(64, 128, -Math.PI / 2, 38, 0);
+  }) },
+  bust: { size: [22, 28], lift: 46, draw: () => inkSprite(96, 122, (ctx) => {
+    // A stern marble head and shoulders: blank eyes, a heavy brow, shading
+    // down one side.
+    const g = ctx.createLinearGradient(10, 0, 86, 0);
+    g.addColorStop(0, '#d6d0c2'); g.addColorStop(1, '#8a8476');
+    ctx.fillStyle = g; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(8, 122); ctx.quadraticCurveTo(10, 84, 48, 80); ctx.quadraticCurveTo(86, 84, 88, 122); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(38, 82); ctx.lineTo(40, 64); ctx.lineTo(56, 64); ctx.lineTo(58, 82); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(30, 40); ctx.quadraticCurveTo(30, 6, 50, 6); ctx.quadraticCurveTo(68, 6, 66, 40); ctx.quadraticCurveTo(64, 66, 48, 68); ctx.quadraticCurveTo(32, 66, 30, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(40,36,30,0.55)';
+    ctx.fillRect(34, 30, 28, 4);                                  // the brow's shadow
+    ctx.beginPath(); ctx.moveTo(48, 34); ctx.lineTo(45, 50); ctx.lineTo(50, 50); ctx.closePath(); ctx.fill();   // nose
+    ctx.fillStyle = '#121212'; ctx.fillRect(40, 94, 16, 8);       // a worn name plate
+  }) },
+  peacock: { size: [110, 110], draw: () => inkSprite(256, 256, (ctx) => {
+    ctx.fillStyle = '#cfc8b8';
+    for (let i = 0; i < 13; i++) {
+      const a = Math.PI * (1.05 + i * 0.07);
+      ctx.beginPath(); ctx.moveTo(128, 170); ctx.lineTo(128 + Math.cos(a) * 118, 170 + Math.sin(a) * 118); ctx.lineTo(128 + Math.cos(a + 0.06) * 112, 170 + Math.sin(a + 0.06) * 112); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#9b9584'; ctx.beginPath(); ctx.arc(128 + Math.cos(a + 0.03) * 98, 170 + Math.sin(a + 0.03) * 98, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#cfc8b8';
+    }
+    ctx.fillStyle = '#dcd6c8';
+    ctx.beginPath(); ctx.ellipse(128, 200, 30, 44, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(118, 168); ctx.quadraticCurveTo(108, 120, 126, 100); ctx.quadraticCurveTo(140, 96, 138, 110); ctx.quadraticCurveTo(130, 130, 138, 168); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#a3201a'; ctx.beginPath(); ctx.arc(131, 106, 3.2, 0, Math.PI * 2); ctx.fill();  // the bloodstone eye
+    ctx.fillStyle = '#6a6458'; ctx.fillRect(96, 236, 64, 20); ctx.strokeRect(96, 236, 64, 20);
+  }) },
+  harp: { size: [36, 64], draw: () => inkSprite(96, 170, (ctx) => {
+    ctx.strokeStyle = '#8a6a30'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(20, 165); ctx.lineTo(20, 20); ctx.quadraticCurveTo(70, 0, 80, 60); ctx.lineTo(70, 165); ctx.stroke();
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(220,200,160,0.6)';
+    for (let x = 26; x < 70; x += 6) { ctx.beginPath(); ctx.moveTo(x, 30 + (x - 26) * 0.4); ctx.lineTo(x, 160); ctx.stroke(); }
+  }) },
+  barrel: { size: [34, 40], draw: () => inkSprite(96, 112, (ctx) => {
+    ctx.fillStyle = '#4a3220'; ctx.beginPath(); ctx.ellipse(48, 56, 40, 54, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; [20, 56, 92].forEach(y => { ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(86, y); ctx.stroke(); });
+  }) },
+  // ─── People and things that move ───
+  petunia: { size: [46, 74], ghost: true, draw: () => inkSprite(128, 206, (ctx) => {
+    ctx.fillStyle = 'rgba(16,14,20,0.92)';
+    ctx.beginPath(); ctx.moveTo(40, 64); ctx.quadraticCurveTo(26, 120, 18, 206); ctx.lineTo(110, 206); ctx.quadraticCurveTo(100, 120, 88, 64); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d9dde6'; ctx.beginPath(); ctx.ellipse(64, 40, 17, 22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#4a4e5c'; ctx.beginPath(); ctx.ellipse(57, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.ellipse(71, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.fill();   // downcast eyes
+    ctx.strokeStyle = '#8a8e9a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(59, 53); ctx.quadraticCurveTo(64, 51, 69, 53); ctx.stroke();
+    ctx.fillStyle = '#2a2a33'; ctx.beginPath(); ctx.ellipse(64, 26, 20, 14, 0, Math.PI, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3f8a52'; ctx.fillRect(48, 60, 32, 6);                       // the green ribbon
+    ctx.fillStyle = '#e8ecf2'; ctx.beginPath(); ctx.ellipse(64, 112, 12, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(54, 104, 20, 10);  // the teacup
+    ctx.fillStyle = '#c8ccd6'; ctx.beginPath(); ctx.arc(50, 116, 7, 0, Math.PI * 2); ctx.arc(78, 116, 7, 0, Math.PI * 2); ctx.fill();
+  }) },
+  crookedMan: { size: [58, 116], draw: () => {
+    const [c, ctx] = artCanvas(128, 256);
+    ctx.shadowColor = 'rgba(170,195,255,0.95)'; ctx.shadowBlur = 10; ctx.fillStyle = '#050304';
+    ctx.beginPath(); ctx.ellipse(70, 34, 13, 17, 0.35, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(52, 22); ctx.lineTo(90, 14); ctx.lineTo(84, 0); ctx.lineTo(62, 6); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(56, 48); ctx.quadraticCurveTo(40, 120, 46, 200); ctx.lineTo(34, 252); ctx.lineTo(58, 252); ctx.lineTo(64, 206); ctx.lineTo(74, 252); ctx.lineTo(96, 252); ctx.lineTo(84, 196); ctx.quadraticCurveTo(94, 120, 82, 50); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.strokeStyle = '#050304';
+    ctx.beginPath(); ctx.moveTo(80, 60); ctx.lineTo(108, 118); ctx.lineTo(112, 150); ctx.stroke();
+    ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(112, 150); ctx.lineTo(96, 40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(96, 40); ctx.lineTo(122, 30); ctx.lineTo(120, 64); ctx.closePath(); ctx.fill();
+    ctx.shadowColor = 'rgba(255,240,200,1)'; ctx.fillStyle = '#f2e6c4';
+    ctx.beginPath(); ctx.arc(74, 34, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(81, 31, 2, 0, Math.PI * 2); ctx.fill();
+    return artTexture(c);
+  } },
+  weasel: { size: [30, 16], draw: () => inkSprite(128, 64, (ctx) => {
+    ctx.fillStyle = '#3a2618';
+    ctx.beginPath(); ctx.moveTo(6, 50); ctx.quadraticCurveTo(30, 30, 70, 34); ctx.quadraticCurveTo(100, 26, 118, 38); ctx.lineTo(122, 44); ctx.quadraticCurveTo(100, 50, 76, 52); ctx.quadraticCurveTo(40, 58, 6, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
+    ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.arc(108, 36, 2.5, 0, Math.PI * 2); ctx.fill();
+  }) },
+  patrini: { size: [44, 90], ghost: true, draw: () => {
+    const [c, ctx] = artCanvas(128, 256);
+    ctx.shadowColor = 'rgba(120,180,255,1)'; ctx.shadowBlur = 16; ctx.fillStyle = 'rgba(110,160,235,0.55)';
+    ctx.beginPath(); ctx.ellipse(64, 46, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(40, 72); ctx.quadraticCurveTo(30, 160, 44, 256); ctx.lineTo(84, 256); ctx.quadraticCurveTo(98, 160, 88, 72); ctx.closePath(); ctx.fill();
+    return artTexture(c);
+  } },
+};
+
+const spriteTextureCache = {};
+function spriteTexture(kind) {
+  if (!spriteTextureCache[kind]) spriteTextureCache[kind] = SPRITES[kind].draw();
+  return spriteTextureCache[kind];
+}
+
+// ─── Faces of furniture (for boxes) ───────────────────────────────────
+
+function woodTexture(base = '#3b2616') {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(base.length + base.charCodeAt(2));
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 40; i++) { ctx.fillStyle = `rgba(0,0,0,${(rand() * 0.18).toFixed(2)})`; ctx.fillRect(0, rand() * 128, 128, 1 + rand() * 2); }
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3; ctx.strokeRect(1, 1, 126, 126);
+  return artTexture(c);
+}
+
+function brickTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(12);
+  ctx.fillStyle = '#1c120c'; ctx.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 12) for (let x = -12; x < 128; x += 26) {
+    ctx.fillStyle = `rgb(${90 + rand() * 40},${40 + rand() * 20},${30 + rand() * 15})`;
+    ctx.fillRect(x + ((y / 12) % 2) * 13, y + 1, 24, 10);
+  }
+  return artTexture(c);
+}
+
+// The oven's front: brick, with a black iron door and its heavy lock.
+function ovenFrontTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  ctx.drawImage(brickTexture().image, 0, 0);
+  ctx.fillStyle = '#121212'; ctx.beginPath(); ctx.roundRect(30, 40, 68, 54, 8); ctx.fill();
+  ctx.strokeStyle = '#2c2c2c'; ctx.lineWidth = 4; ctx.stroke();
+  ctx.fillStyle = '#6a4a22'; ctx.fillRect(60, 60, 10, 14); ctx.strokeStyle = '#3a2a12'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(65, 60, 5, Math.PI, Math.PI * 2); ctx.stroke();
+  return artTexture(c);
+}
+
+// The fireplace: a stone surround around a black hearth. The hearth glows
+// through `glow`, brighter while the fire is lit.
+function fireplaceTextures() {
+  const [c, ctx] = artCanvas(128, 128);
+  const [m, mctx] = artCanvas(128, 128);
+  ctx.fillStyle = '#6a6256'; ctx.fillRect(0, 10, 128, 118);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; for (let y = 10; y < 128; y += 16) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y); ctx.stroke(); }
+  ctx.fillStyle = '#4a3a2a'; ctx.fillRect(0, 0, 128, 14);
+  ctx.fillStyle = '#080605'; ctx.beginPath(); ctx.moveTo(28, 128); ctx.lineTo(28, 60); ctx.quadraticCurveTo(64, 36, 100, 60); ctx.lineTo(100, 128); ctx.closePath(); ctx.fill();
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, 128, 128);
+  const g = mctx.createRadialGradient(64, 118, 2, 64, 110, 44);
+  g.addColorStop(0, '#fff'); g.addColorStop(0.5, '#a64'); g.addColorStop(1, '#000');
+  mctx.fillStyle = g; mctx.fillRect(28, 60, 72, 68);
+  return { map: artTexture(c), glow: artTexture(m) };
+}
+
+// The spirit board, seen from above on the parlour table.
+function spiritBoardTexture() {
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.fillStyle = '#c9b48c'; ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.fillStyle = '#3a2412'; ctx.font = 'bold 18px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((ch, i) => {
+    const a = Math.PI * (1.08 + i / 25 * 0.84) + (i > 12 ? 0.0 : 0);
+    ctx.fillText(ch, 128 + Math.cos(a) * 94, 140 + Math.sin(a) * 94);
+  });
+  ctx.font = 'bold 16px Georgia, serif';
+  ctx.fillText('YES', 70, 70); ctx.fillText('NO', 190, 70); ctx.fillText('GOODBYE', 128, 220);
+  ctx.fillText('1 2 3 4 5 6 7 8 9 0', 128, 185);
+  return artTexture(c);
+}
+
+// The long dining table's cloth, laid for the feast.
+function feastTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(21);
+  ctx.fillStyle = '#d8d2c2'; ctx.fillRect(0, 0, 128, 256);
+  for (let i = 0; i < 8; i++) { const x = i % 2 ? 98 : 30, y = 30 + Math.floor(i / 2) * 60; ctx.fillStyle = '#f2efe6'; ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#999'; ctx.stroke(); }
+  ctx.fillStyle = '#a0a4a8'; ctx.beginPath(); ctx.ellipse(64, 128, 26, 40, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8a4a1c'; ctx.beginPath(); ctx.ellipse(64, 128, 18, 30, 0, 0, Math.PI * 2); ctx.fill();          // the roast
+  for (let i = 0; i < 14; i++) { ctx.fillStyle = ['#8a1a1a', '#3a6a2a', '#c9a040', '#6a2a5a'][i % 4]; ctx.beginPath(); ctx.arc(20 + rand() * 88, 10 + rand() * 236, 4 + rand() * 4, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c);
+}
+
+// Harpsichord: lacquered case with yellowed keys along its front.
+function harpsichordFrontTexture() {
+  const [c, ctx] = artCanvas(256, 64);
+  ctx.fillStyle = '#2a1a10'; ctx.fillRect(0, 0, 256, 64);
+  ctx.fillStyle = '#d8c89a'; ctx.fillRect(10, 8, 236, 26);
+  ctx.fillStyle = '#111';
+  for (let x = 10; x < 246; x += 11) { ctx.fillRect(x, 8, 1, 26); if ((x / 11) % 7 !== 2 && (x / 11) % 7 !== 6) ctx.fillRect(x + 7, 8, 5, 15); }
+  return artTexture(c);
+}
+
+// A mirror on the music room wall: oval, with its long crack.
+function mirrorTexture() {
+  const [c, ctx] = artCanvas(128, 160);
+  ctx.fillStyle = '#5a4420'; ctx.beginPath(); ctx.ellipse(64, 80, 58, 76, 0, 0, Math.PI * 2); ctx.fill();
+  const g = ctx.createLinearGradient(0, 0, 128, 160);
+  g.addColorStop(0, '#3a4450'); g.addColorStop(1, '#1a1e24');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(64, 80, 48, 66, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(230,240,255,0.7)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(52, 66); ctx.lineTo(46, 90); ctx.lineTo(78, 120); ctx.lineTo(90, 146); ctx.stroke();
+  return artTexture(c);
+}
+
+// ─── src/game/js/audio.js ────────────────────────────────────────────
+// Sound, all made in the browser with Web Audio: rain, thunder, a plucked
+// harpsichord (the music room's cursed waltz and Patrini's tune), and a low
+// drone under the séance. Nothing to download.
+
+const SOUND_KEY = 'crooked_house_sound';
+const NOTE = { C: 261.63, D: 293.66, E: 329.63, F: 349.23, G: 392.0, A: 440.0, B: 493.88, c: 523.25 };
+
+const sound = {
+  ctx: null, master: null, noise: null, on: store.get(SOUND_KEY) !== 'off',
+  discordTimer: null, drone: null,
+
+  // Must be called from a click or key press (browsers only allow sound
+  // to start from one).
+  start() {
+    if (this.ctx) return;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    try { this.ctx = new Ctx(); } catch { return; }
+    const ctx = this.ctx;
+    this.master = ctx.createGain();
+    this.master.gain.value = this.on ? 0.7 : 0;
+    this.master.connect(ctx.destination);
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const ch = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < ch.length; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; ch[i] = w * 0.6 + last * 3; }
+    this.noise = buf;
+    const rain = ctx.createBufferSource();
+    rain.buffer = buf; rain.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 0.4;
+    this.rainGain = ctx.createGain(); this.rainGain.gain.value = 0.12;
+    rain.connect(f).connect(this.rainGain).connect(this.master);
+    rain.start();
+  },
+
+  setOn(on) {
+    this.on = on;
+    store.set(SOUND_KEY, on ? 'on' : 'off');
+    if (!this.ctx) return;
+    if (on && this.ctx.state === 'suspended') this.ctx.resume();
+    this.master.gain.setTargetAtTime(on ? 0.7 : 0, this.ctx.currentTime, 0.3);
+  },
+
+  // Indoors the rain is muffled; on the porch it's loud.
+  setOutdoors(outdoors) {
+    if (this.rainGain) this.rainGain.gain.setTargetAtTime(outdoors ? 0.3 : 0.1, this.ctx.currentTime, 0.6);
+  },
+
+  thunder(strength = 1) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const src = ctx.createBufferSource(); src.buffer = this.noise;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(260 + strength * 500, t); lp.frequency.exponentialRampToValueAtTime(70, t + 2.5);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.9 * strength, t + 0.06);
+    g.gain.exponentialRampToValueAtTime(0.25 * strength, t + 0.7);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 3.4);
+    src.connect(lp).connect(g).connect(this.master);
+    src.start(t, Math.random()); src.stop(t + 3.6);
+  },
+
+  // A plucked string: bright attack, quick decay — close enough to a
+  // harpsichord for a haunted house.
+  pluck(freq, when = 0, dur = 0.9, vol = 0.22, detune = 0) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime + when;
+    const o = ctx.createOscillator(), o2 = ctx.createOscillator();
+    o.type = 'sawtooth'; o2.type = 'square';
+    o.frequency.value = freq; o2.frequency.value = freq * 2;
+    o.detune.value = detune; o2.detune.value = detune + 4;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(4200, t); lp.frequency.exponentialRampToValueAtTime(900, t + dur);
+    const g = ctx.createGain(), g2 = ctx.createGain();
+    g2.gain.value = 0.25;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); o2.connect(g2).connect(lp); lp.connect(g).connect(this.master);
+    o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  },
+
+  // The cursed waltz: a lurching three-beat figure, out of tune and
+  // getting worse, until something stops it.
+  startDiscord() {
+    if (!this.ctx || this.discordTimer) return;
+    let beat = 0;
+    const roots = [NOTE.C / 2, NOTE.F / 2, NOTE.G / 2, NOTE.E / 2];
+    this.discordTimer = setInterval(() => {
+      const root = roots[Math.floor(beat / 3) % roots.length];
+      const sour = 30 + Math.min(70, beat * 2);
+      if (beat % 3 === 0) this.pluck(root, 0, 1.2, 0.26, -sour);
+      else { this.pluck(root * 2.52, 0, 0.5, 0.12, sour); this.pluck(root * 3.0, 0.01, 0.5, 0.1, -sour / 2); }
+      beat++;
+    }, 330);
+  },
+  stopDiscord() { clearInterval(this.discordTimer); this.discordTimer = null; },
+
+  startDrone() {
+    if (!this.ctx || this.drone) return;
+    const ctx = this.ctx;
+    const g = ctx.createGain(); g.gain.value = 0.0001; g.connect(this.master);
+    const oscs = [55, 55.7, 82.4].map(f => { const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(g); o.start(); return o; });
+    g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 2);
+    this.drone = { g, oscs };
+  },
+  stopDrone() {
+    if (!this.drone) return;
+    const { g, oscs } = this.drone, t = this.ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    oscs.forEach(o => o.stop(t + 1.6));
+    this.drone = null;
+  },
+
+  // A soft scrape for the planchette moving across the board.
+  scrape() {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime;
+    const src = ctx.createBufferSource(); src.buffer = this.noise;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 2;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t, Math.random()); src.stop(t + 0.4);
+  },
+};
+
+// ─── src/game/js/world.js ────────────────────────────────────────────
+// Builds the 3D house from the grid: a wall on every walled edge (papered on
+// the room's side), floors and ceilings square by square, door frames,
+// the porch railing, windows that light up with the lightning, the
+// furniture, the house's own lights, and the storm outside.
+//
+// Every wall leans a little at the top and the camera never sits quite
+// level: there isn't a right angle anywhere in the Crooked House.
+
+// Furniture and fixtures, in floor-plan pixels. Sprite kinds are upright
+// pictures (art.js SPRITES); the rest are simple shapes. `block` keeps the
+// player out of the squares it covers: `r` is a radius around the centre,
+// `rect` is [width, depth].
+const SCENERY = [
+  // Parlour
+  { kind: 'roundTable', x: 505, y: 630, block: { r: 30 } },
+  ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ kind: 'chair', x: 505 + Math.cos(i * Math.PI / 4) * 74, y: 630 + Math.sin(i * Math.PI / 4) * 74 })),
+  { kind: 'fireplace', x: 340, y: 742, wall: 3 },
+  { kind: 'sofa', x: 312, y: 590 },
+  // Foyer
+  { kind: 'chandelier', x: 535, y: 950 },
+  { kind: 'stairs', x: 640, y: 845, block: { rect: [60, 110] } },
+  // Gallery
+  ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y })),
+  { kind: 'peacock', x: 152, y: 930, block: { r: 20 } },
+  // Music room
+  { kind: 'harpsichord', x: 965, y: 845, block: { r: 30 } },
+  { kind: 'mirror', x: 845, y: 802, wall: 0 },
+  { kind: 'sofa', x: 790, y: 880 },
+  { kind: 'sofa', x: 960, y: 1035 },
+  { kind: 'harp', x: 880, y: 1035 },
+  { kind: 'danceFloor', x: 850, y: 925 },
+  // Dining room
+  { kind: 'diningTable', x: 865, y: 650, block: { rect: [80, 180] } },
+  ...[[810, 590], [810, 650], [810, 710], [920, 590], [920, 650], [920, 710], [865, 545], [865, 755]].map(([x, y]) => ({ kind: 'chair', x, y })),
+  { kind: 'sideboard', x: 990, y: 650 },
+  // Kitchen
+  { kind: 'oven', x: 975, y: 440, block: { r: 30 } },
+  { kind: 'fallenShelf', x: 880, y: 262, block: { r: 30 } },
+  { kind: 'barrel', x: 724, y: 252 },
+  // Conservatory
+  { kind: 'tree', x: 490, y: 300, block: { r: 40 } },
+  { kind: 'bench', x: 520, y: 480, rot: 0 },
+  { kind: 'bench', x: 350, y: 300, rot: Math.PI / 2 },
+  { kind: 'shrub', x: 330, y: 440 }, { kind: 'shrub', x: 650, y: 230 }, { kind: 'shrub', x: 330, y: 160 }, { kind: 'shrub', x: 640, y: 160 },
+];
+
+let world = null;
+
+function buildWorld(renderer, quality) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x030306);
+  scene.fog = new THREE.FogExp2(0x030306, 0.0042);
+  const camera = new THREE.PerspectiveCamera(72, 1, 2, 3000);
+  const flash = { value: 0 };
+  const w = { scene, camera, flash, sprites: [], fixedLights: [], windowMats: [], hearthMats: [], disposables: [] };
+  world = w;
+
+  // ── Walls ──
+  const wallMats = {};
+  const wallMat = key => wallMats[key] || (wallMats[key] = new THREE.MeshStandardMaterial({
+    map: key === 'exterior' ? exteriorTexture() : wallTexture(key), roughness: 0.95, metalness: 0 }));
+  const quads = {};
+  const pushQuad = (key, a, b, inset, h0, h1, lean = true) => {
+    // a→b along the floor; the face is pushed `inset` towards the room.
+    const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
+    const nx = dz / len, nz = -dx / len;           // points into the room
+    const A = [a[0] + nx * inset, a[1] + nz * inset], B = [b[0] + nx * inset, b[1] + nz * inset];
+    const top = p => { const l = lean ? wallLean(p[0], p[1]) : [0, 0]; return [p[0] + l[0], h1, p[1] + l[1]]; };
+    const q = quads[key] || (quads[key] = { pos: [], uv: [] });
+    const p0 = [A[0], h0, A[1]], p1 = [B[0], h0, B[1]], p2 = top(B), p3 = top(A);
+    // Wound so the front faces the room.
+    q.pos.push(...p0, ...p2, ...p1, ...p0, ...p3, ...p2);
+    const v0 = h0 / WALL_H, v1 = h1 / WALL_H;
+    q.uv.push(1, v0, 0, v1, 0, v0, 1, v0, 1, v1, 0, v1);
+  };
+  const corners = c => {
+    const h = CELL / 2;
+    return [[c.x - h, c.y - h], [c.x + h, c.y - h], [c.x + h, c.y + h], [c.x - h, c.y + h]]; // NW NE SE SW
+  };
+  // The edge on side `dir`, ordered so the room is on its left (faces in).
+  const edgeOf = (c, dir) => { const k = corners(c); return [[k[1], k[0]], [k[2], k[1]], [k[3], k[2]], [k[0], k[3]]][dir]; };
+
+  GRID.cells.forEach(c => {
+    if (!c.walk) return;
+    c.edges.forEach((e, dir) => {
+      if (e !== 'wall') return;
+      const [a, b] = edgeOf(c, dir);
+      const key = c.room === 'porch' ? 'exterior' : (c.room || 'hallway');
+      pushQuad(key, a, b, 3.5, 0, WALL_H);
+    });
+  });
+  Object.entries(quads).forEach(([key, q]) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(q.pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(q.uv, 2));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, wallMat(key));
+    mesh.castShadow = mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+
+  // ── Floors and ceilings ──
+  const floorMats = {}, ceilMats = {};
+  const floorQuads = {}, ceilQuads = {};
+  GRID.cells.forEach(c => {
+    if (!c.walk) return;
+    const room = c.room || 'porch';
+    const k = corners(c);
+    const fq = floorQuads[room] || (floorQuads[room] = []);
+    fq.push(k);
+    if (!c.noEscape) {
+      const ck = room === 'conservatory' ? 'glass' : room === 'porch' ? 'porch' : 'plaster';
+      (ceilQuads[ck] || (ceilQuads[ck] = [])).push(k);
+    }
+  });
+  const flatGeo = (list, y, down) => {
+    const pos = [], uv = [];
+    list.forEach(k => {
+      const pts = k.map(([x, z]) => [x, y, z]);
+      const order = down ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2];
+      order.forEach(i => { pos.push(...pts[i]); uv.push(pts[i][0] / (CELL * 2), -pts[i][2] / (CELL * 2)); });
+    });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.computeVertexNormals();
+    return g;
+  };
+  Object.entries(floorQuads).forEach(([room, list]) => {
+    const m = floorMats[room] || (floorMats[room] = new THREE.MeshStandardMaterial({ map: floorTexture(room), roughness: 0.9, metalness: 0 }));
+    const mesh = new THREE.Mesh(flatGeo(list, 0, false), m);
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+  });
+  Object.entries(ceilQuads).forEach(([kind, list]) => {
+    const m = ceilMats[kind] || (ceilMats[kind] = new THREE.MeshStandardMaterial({ map: ceilingTexture(kind), roughness: 1, metalness: 0,
+      emissive: kind === 'glass' ? 0x9fb4d8 : 0x000000, emissiveIntensity: 0 }));
+    if (kind === 'glass') w.windowMats.push(m);
+    scene.add(new THREE.Mesh(flatGeo(list, WALL_H, true), m));
+  });
+
+  // ── Door frames and the porch railing ──
+  const frameMat = new THREE.MeshStandardMaterial({ map: woodTexture('#3a2414'), roughness: 0.8 });
+  const railMat = new THREE.MeshStandardMaterial({ map: woodTexture('#2e2620'), roughness: 0.9 });
+  const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
+    m.position.set(x, y, z); m.rotation.y = rotY;
+    m.castShadow = m.receiveShadow = true;
+    scene.add(m);
+    return m;
+  };
+  GRID.cells.forEach(c => {
+    if (!c.walk) return;
+    c.edges.forEach((e, dir) => {
+      const [a, b] = edgeOf(c, dir);
+      const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+      const along = dir % 2 === 0 ? 0 : Math.PI / 2;
+      if (e === 'door' && (dir === 1 || dir === 2)) {
+        // Posts at either side of the opening and a lintel over it: the
+        // opening is a little narrower than the square, like a real door.
+        const off = CELL / 2 - 5;
+        const ux = dir % 2 === 0 ? 1 : 0, uz = dir % 2 === 0 ? 0 : 1;
+        box(10, WALL_H, 12, frameMat, mx - ux * off, WALL_H / 2, mz - uz * off, along);
+        box(10, WALL_H, 12, frameMat, mx + ux * off, WALL_H / 2, mz + uz * off, along);
+        box(CELL, WALL_H - 92, 12, frameMat, mx, (WALL_H + 92) / 2, mz, along);
+      } else if (e === 'rail') {
+        box(CELL, 4, 5, railMat, mx, 40, mz, along);
+        box(CELL, 3, 4, railMat, mx, 20, mz, along);
+        box(5, 44, 5, railMat, a[0], 22, a[1]);
+      }
+    });
+  });
+
+  // ── Windows ──
+  const win = windowTextures();
+  const winMat = new THREE.MeshStandardMaterial({ map: win.map, transparent: true, alphaTest: 0.05, emissive: 0xaec4ee, emissiveMap: win.glow, emissiveIntensity: 0.05, roughness: 0.4 });
+  w.windowMats.push(winMat);
+  FLOOR.windows.forEach(wp => {
+    let best = null, bestD = 70;
+    GRID.cells.forEach(c => {
+      if (!c.walk || c.room === 'porch') return;
+      c.edges.forEach((e, dir) => {
+        if (e !== 'wall') return;
+        const [a, b] = edgeOf(c, dir);
+        const d = Math.hypot((a[0] + b[0]) / 2 - wp.x, (a[1] + b[1]) / 2 - wp.y);
+        if (d < bestD) { bestD = d; best = [a, b]; }
+      });
+    });
+    if (!best) return;
+    const [a, b] = best;
+    const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
+    const nx = dz / len, nz = -dx / len;
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(CELL, WALL_H), winMat);
+    plane.position.set((a[0] + b[0]) / 2 + nx * 4.5, WALL_H / 2, (a[1] + b[1]) / 2 + nz * 4.5);
+    plane.rotation.y = Math.atan2(nx, nz);
+    scene.add(plane);
+  });
+
+  // ── Furniture ──
+  GRID.cells.forEach(c => { c.blocked = false; });
+  SCENERY.forEach(p => {
+    addScenery(w, p, box);
+    if (p.block) {
+      GRID.cells.forEach(c => {
+        if (!c.walk) return;
+        const inR = p.block.r !== undefined && Math.hypot(c.x - p.x, c.y - p.y) < p.block.r + CELL / 2;
+        const inRect = p.block.rect && Math.abs(c.x - p.x) < p.block.rect[0] / 2 && Math.abs(c.y - p.y) < p.block.rect[1] / 2;
+        if (inR || inRect) c.blocked = true;
+      });
+    }
+  });
+
+  // ── Outside: dark ground, dead trees, the storm ──
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshStandardMaterial({ color: 0x0b0d0a, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(FLOOR.width / 2, -0.5, FLOOR.height / 2);
+  scene.add(ground);
+  const treeRand = seededRandom(44);
+  for (let i = 0; i < 14; i++) {
+    const a = treeRand() * Math.PI * 2, r = 820 + treeRand() * 500;
+    const s = addSprite(scene, 'shrub', FLOOR.width / 2 + Math.cos(a) * r, FLOOR.height / 2 + Math.sin(a) * r);
+    s.scale.setScalar(6.5);
+  }
+
+  // ── Light ──
+  const ambient = new THREE.HemisphereLight(0x4a5670, 0x0a0806, 0.32);
+  scene.add(ambient);
+  w.ambient = ambient;
+  const lantern = new THREE.PointLight(0xffc48a, 230, 520, 1.1);
+  lantern.castShadow = true;
+  lantern.shadow.mapSize.set(quality === 'low' ? 256 : 512, quality === 'low' ? 256 : 512);
+  lantern.shadow.camera.near = 2; lantern.shadow.camera.far = 460; lantern.shadow.bias = -0.003;
+  scene.add(lantern);
+  w.lantern = lantern;
+  FLOOR.lights.forEach((l, i) => {
+    const light = new THREE.PointLight(l.color, 0, l.distance * 1.2, 1.5);
+    light.position.set(l.x, l.h * WALL_H / 70, l.y);
+    light.userData = { id: l.id, base: l.intensity * 1500, flicker: l.flicker || 0, phase: i * 1.7, boost: 1 };
+    if (l.shadow && quality !== 'low') {
+      light.castShadow = true;
+      light.shadow.mapSize.set(256, 256);
+      light.shadow.camera.near = 2; light.shadow.camera.far = l.distance * 1.2; light.shadow.bias = -0.004;
+      light.shadow.autoUpdate = false; light.shadow.needsUpdate = true;
+    }
+    scene.add(light);
+    w.fixedLights.push(light);
+  });
+  const lightning = new THREE.DirectionalLight(0xc8d4ff, 0);
+  lightning.position.set(FLOOR.width * 0.3, 900, FLOOR.height * 1.3);
+  lightning.target.position.set(FLOOR.width / 2, 0, FLOOR.height / 2);
+  scene.add(lightning, lightning.target);
+  w.lightning = lightning;
+
+  w.rain = buildRain(quality === 'low' ? 500 : 1300);
+  scene.add(w.rain);
+  return w;
+}
+
+// Leaning tops: depends only on position, so joined walls lean together.
+function wallLean(x, z) {
+  return [Math.sin(x * 0.013 + z * 0.007) * 5 + Math.sin(z * 0.031) * 2, Math.cos(z * 0.011 - x * 0.005) * 5 + Math.sin(x * 0.027) * 2];
+}
+
+function addScenery(w, p, box) {
+  const { scene } = w;
+  if (SPRITES[p.kind]) {
+    w.sprites.push(addSprite(scene, p.kind, p.x, p.y));
+    return;
+  }
+  const wood = c => new THREE.MeshStandardMaterial({ map: woodTexture(c), roughness: 0.75 });
+  switch (p.kind) {
+    case 'roundTable': {
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 4, 32), [wood('#3a2212'), new THREE.MeshStandardMaterial({ map: spiritBoardTexture(), roughness: 0.6, emissive: 0x9a70ff, emissiveIntensity: 0.12 }), wood('#3a2212')]);
+      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
+      w.boardMat = top.material[1];
+      box(10, 36, 10, wood('#2a180c'), p.x, 18, p.y);
+      break;
+    }
+    case 'diningTable': {
+      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 }), wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
+      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
+      [[-34, -84], [34, -84], [-34, 84], [34, 84]].forEach(([dx, dz]) => box(6, 36, 6, wood('#2a180c'), p.x + dx, 18, p.y + dz));
+      break;
+    }
+    case 'sideboard': box(30, 44, 120, wood('#33200f'), p.x, 22, p.y); break;
+    case 'bench': box(80, 18, 24, new THREE.MeshStandardMaterial({ color: 0x4a4e44, roughness: 1 }), p.x, 9, p.y, p.rot || 0); break;
+    case 'oven': {
+      const mats = [brickTexture(), brickTexture(), brickTexture(), brickTexture(), ovenFrontTexture(), brickTexture()].map(t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, emissive: 0x501008, emissiveIntensity: 0.15 }));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(64, 70, 56), mats);
+      m.position.set(p.x, 35, p.y); m.rotation.y = -Math.PI * 0.75;   // door towards the room m.castShadow = m.receiveShadow = true; scene.add(m);
+      w.ovenMats = mats;
+      break;
+    }
+    case 'fallenShelf': {
+      const m = box(110, 14, 34, wood('#3b2816'), p.x, 30, p.y);
+      m.rotation.z = 0.42; m.rotation.y = 0.2;
+      box(70, 6, 46, wood('#2e1d10'), p.x + 20, 18, p.y + 6).rotation.z = -0.25;
+      break;
+    }
+    case 'harpsichord': {
+      const caseMat = wood('#24160c');
+      const front = new THREE.MeshStandardMaterial({ map: harpsichordFrontTexture(), roughness: 0.6 });
+      const m = new THREE.Mesh(new THREE.BoxGeometry(110, 30, 50), [caseMat, caseMat, caseMat, caseMat, caseMat, front]);
+      m.position.set(p.x, 44, p.y); m.rotation.y = Math.PI * 0.82; m.castShadow = m.receiveShadow = true; scene.add(m);
+      const lid = box(110, 3, 50, caseMat, p.x, 74, p.y, Math.PI * 0.82);
+      lid.rotateX(-0.75); lid.position.y = 78;
+      [[-46, -18], [46, -18], [-46, 18], [46, 18]].forEach(([dx, dz]) => {
+        const a = Math.PI * 0.82, rx = dx * Math.cos(a) + dz * Math.sin(a), rz = -dx * Math.sin(a) + dz * Math.cos(a);
+        box(5, 30, 5, caseMat, p.x + rx, 15, p.y + rz);
+      });
+      break;
+    }
+    case 'bustOnPedestal': {
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 46, 12), new THREE.MeshStandardMaterial({ color: 0x5a544a, roughness: 0.9 }));
+      ped.position.set(p.x, 23, p.y); ped.castShadow = ped.receiveShadow = true; scene.add(ped);
+      w.sprites.push(addSprite(scene, 'bust', p.x, p.y));
+      break;
+    }
+    case 'stairs': {
+      // A quarter-turn of steps climbing the foyer's north-east corner.
+      const mat = wood('#3a2616');
+      for (let i = 0; i < 9; i++) {
+        const a = Math.PI * (1 - i / 16);
+        box(26, 8 + i * 10, 40, mat, p.x + 20 + Math.cos(a) * 34, (8 + i * 10) / 2, p.y + 40 - Math.sin(a) * 60 - i * 6, -a);
+      }
+      break;
+    }
+    case 'fireplace': {
+      const t = fireplaceTextures();
+      const mat = new THREE.MeshStandardMaterial({ map: t.map, emissive: 0xff7a30, emissiveMap: t.glow, emissiveIntensity: 0.25, roughness: 0.9 });
+      w.hearthMats.push(mat);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(70, 64, 20), [mat, mat, mat, mat, mat, mat]);
+      m.position.set(p.x, 32, p.y); m.rotation.y = Math.PI * 0.25; m.castShadow = m.receiveShadow = true; scene.add(m);
+      break;
+    }
+    case 'mirror': {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(48, 62), new THREE.MeshStandardMaterial({ map: mirrorTexture(), transparent: true, alphaTest: 0.05, roughness: 0.2, metalness: 0.5 }));
+      const c = GRID.cellAtPx(p.x, p.y);
+      m.position.set(p.x, 62, c.y - CELL / 2 + 4.5);   // flat on the square's north wall
+      scene.add(m);
+      w.mirror = m;
+      break;
+    }
+    case 'danceFloor': {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(170, 150), new THREE.MeshStandardMaterial({ map: danceFloorTexture(), transparent: true, depthWrite: false, roughness: 1 }));
+      m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.4, p.y); m.receiveShadow = true;
+      scene.add(m);
+      break;
+    }
+  }
+}
+
+// An upright cut-out that turns to face you (main.js turns every one in
+// `billboards` each frame). Furniture and statues are lit by your lantern
+// like everything else; ghosts and candle flames give their own light.
+const billboards = [];
+function addSprite(scene, kind, x, y) {
+  const spec = SPRITES[kind];
+  const geo = new THREE.PlaneGeometry(spec.size[0], spec.size[1]);
+  geo.translate(0, spec.size[1] / 2, 0);   // stand on the floor
+  const mat = (spec.ghost || spec.unlit)
+    ? new THREE.MeshBasicMaterial({ map: spriteTexture(kind), transparent: true, depthWrite: !spec.ghost, alphaTest: spec.ghost ? 0 : 0.1, fog: true })
+    : new THREE.MeshStandardMaterial({ map: spriteTexture(kind), transparent: true, alphaTest: 0.1, roughness: 0.9, metalness: 0 });
+  mat.side = THREE.DoubleSide;
+  const s = new THREE.Mesh(geo, mat);
+  s.position.set(x, spec.lift || 0, y);
+  s.userData.kind = kind;
+  scene.add(s);
+  billboards.push(s);
+  return s;
+}
+
+// Rain: streaks in a box that follows the camera, kept out from under the
+// roof (the house and the porch; the front steps are open to the sky).
+function buildRain(count) {
+  const [c, ctx] = artCanvas(256, Math.round(256 * FLOOR.height / FLOOR.width));
+  const s = 256 / FLOOR.width;
+  ctx.scale(s, s);
+  ctx.fillStyle = '#fff';
+  FLOOR.walkable.filter(a => !/steps/.test(a.note || '')).forEach(a => {
+    ctx.beginPath(); a.points.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
+  });
+  const roof = new THREE.CanvasTexture(c);
+  const seeds = new Float32Array(count * 2 * 4), tips = new Float32Array(count * 2);
+  const rand = seededRandom(77);
+  for (let i = 0; i < count; i++) { const v = [rand(), rand(), rand(), rand()]; for (let k = 0; k < 2; k++) { seeds.set(v, (i * 2 + k) * 4); tips[i * 2 + k] = k; } }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 2 * 3), 3));
+  geo.setAttribute('seed', new THREE.BufferAttribute(seeds, 4));
+  geo.setAttribute('tip', new THREE.BufferAttribute(tips, 1));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false,
+    uniforms: { time: { value: 0 }, center: { value: new THREE.Vector3() }, flash: { value: 0 }, roof: { value: roof }, size: { value: new THREE.Vector2(FLOOR.width, FLOOR.height) } },
+    vertexShader: `
+      attribute vec4 seed; attribute float tip;
+      uniform float time; uniform vec3 center; uniform float flash; uniform sampler2D roof; uniform vec2 size;
+      varying float vAlpha;
+      void main() {
+        const float span = 700.0, fall = 260.0;
+        float y = fall * (1.0 - fract(time * (420.0 + seed.w * 160.0) / fall + seed.z));
+        vec2 xz = center.xz + (fract((seed.xy * span - center.xz) / span + 0.5) - 0.5) * span;
+        xz.x += y * 0.18 + tip * 3.0;
+        y += tip * 16.0;
+        vec2 uv = vec2(xz.x / size.x, 1.0 - xz.y / size.y);
+        float r = (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) ? texture2D(roof, uv).r : 0.0;
+        vAlpha = (1.0 - step(0.5, r)) * (0.22 + flash * 0.5) * (0.35 + 0.65 * tip);
+        gl_Position = projectionMatrix * viewMatrix * vec4(xz.x, y, xz.y, 1.0);
+      }`,
+    fragmentShader: `varying float vAlpha; void main() { gl_FragColor = vec4(0.72, 0.8, 0.92, vAlpha); }`,
+  });
+  const rain = new THREE.LineSegments(geo, mat);
+  rain.frustumCulled = false;
+  return rain;
+}
+
+// ─── src/game/js/ui.js ───────────────────────────────────────────────
+// What's drawn over the 3D view: the message log, the prompt for whatever
+// you're facing, dialogue with choices, the Dread meter, and the journal
+// and map overlays. (The séance board and the harpsichord have their own
+// overlays, in story.js.)
+
+const $ = id => document.getElementById(id);
+const DREAD_MAX = 10;
+
+const ui = {
+  overlay: null,   // the open overlay's id, if any: blocks movement
+
+  log(text, kind = '') {
+    const log = $('log');
+    const p = document.createElement('p');
+    p.textContent = text;
+    if (kind) p.className = kind;
+    log.appendChild(p);
+    while (log.children.length > 4) log.firstChild.remove();
+    setTimeout(() => p.classList.add('old'), 9000);
+  },
+
+  setPrompt(thing) {
+    const el = $('prompt');
+    if (!thing) { el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = `${thing.verb || 'Look at'} ${thing.name.replace(/^The /, 'the ')}`;
+  },
+
+  setRoom(name) {
+    const el = $('room-name');
+    if (el.textContent === name) return;
+    el.textContent = name;
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  },
+
+  setDread(value) {
+    const pips = $('dread-pips');
+    if (pips.children.length !== DREAD_MAX) {
+      pips.innerHTML = '';
+      for (let i = 0; i < DREAD_MAX; i++) pips.appendChild(document.createElement('span'));
+    }
+    [...pips.children].forEach((s, i) => s.classList.toggle('on', i < value));
+    $('dread').classList.toggle('high', value >= 7);
+    $('dread').setAttribute('aria-valuenow', String(value));
+  },
+
+  flash(colour = '#fff', ms = 500) {
+    const f = $('flash');
+    f.style.background = colour;
+    f.style.transition = 'none'; f.style.opacity = '0.85';
+    requestAnimationFrame(() => { f.style.transition = `opacity ${ms}ms ease-out`; f.style.opacity = '0'; });
+  },
+
+  // Dialogue: shows text (and who's speaking) with numbered choices, and
+  // resolves with the chosen id. With no choices, a single "Continue".
+  say(speaker, text, choices = [{ id: 'ok', text: 'Continue' }]) {
+    return new Promise(resolve => {
+      const box = $('dialog');
+      $('dialog-speaker').textContent = speaker || '';
+      $('dialog-speaker').hidden = !speaker;
+      $('dialog-text').textContent = text;
+      const list = $('dialog-choices');
+      list.innerHTML = '';
+      choices.forEach((c, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = `<span class="key">${i + 1}</span>`;
+        b.appendChild(document.createTextNode(c.text));
+        b.addEventListener('click', () => done(c.id));
+        list.appendChild(b);
+      });
+      const onKey = e => {
+        const n = Number(e.key);
+        if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); }
+        else if (choices.length === 1 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); done(choices[0].id); }
+      };
+      const done = id => {
+        document.removeEventListener('keydown', onKey, true);
+        box.hidden = true;
+        ui.overlay = null;
+        resolve(id);
+      };
+      // Wait a moment before listening, so the key that opened the
+      // dialogue doesn't also answer it.
+      setTimeout(() => document.addEventListener('keydown', onKey, true), 150);
+      box.hidden = false;
+      ui.overlay = 'dialog';
+      list.querySelector('button')?.focus({ preventScroll: true });
+    });
+  },
+
+  open(id) {
+    ['journal', 'map'].forEach(o => { if (o !== id) $(o).hidden = true; });
+    $(id).hidden = false;
+    ui.overlay = id;
+    if (id === 'journal') ui.drawJournal();
+    if (id === 'map') ui.drawMap();
+    $(id).querySelector('.close')?.focus({ preventScroll: true });
+  },
+  close() {
+    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; }
+  },
+  toggle(id) { if (ui.overlay === id) ui.close(); else if (!ui.overlay) ui.open(id); },
+
+  drawJournal() {
+    const slots = $('memento-slots');
+    slots.innerHTML = '';
+    const known = game.clues.has('mementos');
+    MEMENTOS.forEach(m => {
+      const have = game.mementos.has(m.id);
+      const li = document.createElement('li');
+      li.className = have ? 'have' : '';
+      li.innerHTML = `<span class="glyph">${have ? m.glyph : '?'}</span><span class="label"></span>`;
+      li.querySelector('.label').textContent = have ? m.name : known ? `${m.hint}` : 'Unknown';
+      slots.appendChild(li);
+    });
+    const clues = $('clue-list');
+    clues.innerHTML = '';
+    const list = CLUES.filter(c => game.clues.has(c.id));
+    if (!list.length) clues.innerHTML = '<li class="none">Nothing yet. Look around; ask questions.</li>';
+    list.forEach(c => { const li = document.createElement('li'); li.textContent = c.text; clues.appendChild(li); });
+  },
+
+  // The map: the floor plan, hidden except where you've been (and what you
+  // could see from there), with an arrow for where you stand.
+  drawMap() {
+    const canvas = $('map-canvas');
+    const img = ui.mapImage;
+    if (!img || !img.complete) { img?.addEventListener('load', () => ui.drawMap(), { once: true }); return; }
+    const box = canvas.parentElement.getBoundingClientRect();
+    const scale = Math.min(box.width / FLOOR.width, box.height / FLOOR.height);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(FLOOR.width * scale * dpr); canvas.height = Math.round(FLOOR.height * scale * dpr);
+    canvas.style.width = `${FLOOR.width * scale}px`; canvas.style.height = `${FLOOR.height * scale}px`;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    ctx.drawImage(img, 0, 0, FLOOR.width, FLOOR.height);
+    const fog = document.createElement('canvas');
+    fog.width = canvas.width; fog.height = canvas.height;
+    const f = fog.getContext('2d');
+    f.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    f.fillStyle = '#07060a'; f.fillRect(0, 0, FLOOR.width, FLOOR.height);
+    f.globalCompositeOperation = 'destination-out';
+    f.filter = `blur(${Math.round(10 * scale * dpr)}px)`;
+    game.seen.forEach(k => {
+      const [cx, cy] = k.split(',').map(Number);
+      f.fillRect(GRID.ox + cx * CELL - 6, GRID.oy + cy * CELL - 6, CELL + 12, CELL + 12);
+    });
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(fog, 0, 0);
+    ctx.setTransform(scale * dpr, 0, 0, scale * dpr, 0, 0);
+    const c = GRID.at(game.cx, game.cy);
+    ctx.save();
+    ctx.translate(c.x, c.y); ctx.rotate(game.dir * Math.PI / 2);
+    ctx.fillStyle = '#f0c870'; ctx.strokeStyle = '#000'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, -22); ctx.lineTo(15, 16); ctx.lineTo(0, 8); ctx.lineTo(-15, 16); ctx.closePath();
+    ctx.stroke(); ctx.fill();
+    ctx.restore();
+  },
+};
+
+// ─── src/game/js/story.js ────────────────────────────────────────────
+// What happens in the house: the things you can look at and use, the
+// séance, Petunia and her teacup, the music room's cursed waltz, the
+// Crooked Man, the storm on the porch, Dread, mementos, clues and saving.
+//
+// There's no fighting. The house wins by frightening you: every scare adds
+// Dread, and when it's full your nerve breaks and you flee to the porch
+// (nothing is lost; Dread settles back down). You win by paying attention:
+// what you learn in one room opens the way in another.
+
+const SAVE_KEY = 'crooked_house_save_v1';
+
+const MEMENTOS = [
+  { id: 'gem',  glyph: '◆', name: 'A red bloodstone',          hint: 'A gem' },
+  { id: 'key',  glyph: '♪', name: 'A black ivory key',         hint: 'A key' },
+  { id: 'cup',  glyph: '☕', name: "Petunia's porcelain teacup", hint: 'A cup' },
+  { id: 'doll', glyph: '✦', name: 'A doll',                    hint: 'A doll' },
+  { id: 'bear', glyph: '✦', name: 'A bear',                    hint: 'A bear' },
+  { id: 'pin',  glyph: '✦', name: 'A pin',                     hint: 'A pin' },
+];
+
+const CLUES = [
+  { id: 'lockwoods', text: 'A portrait in the foyer names the Lockwoods: Eustace, his wife Petunia, their daughter Sally, their infant son Arthur, and Petunia’s mother Keziah. Beside them, their servants Joseph and Gail Patrini and their son Francis.' },
+  { id: 'patrini',   text: 'The spirit speaking through the board is Joseph Patrini, the Lockwoods’ servant.' },
+  { id: 'upstairs',  text: 'Phillip and Adela Druskenvald are here, upstairs.' },
+  { id: 'eustace',   text: 'Patrini was murdered, by Eustace Lockwood.' },
+  { id: 'attic',     text: 'A hag is behind all of this. She is in the attic.' },
+  { id: 'mementos',  text: 'Six mementos open the way to the attic: a gem, a key, a cup, a doll, a bear and a pin. They are on every floor.' },
+  { id: 'son',       text: 'Patrini’s last words: “Find my son. He lives.”' },
+];
+
+// Things you can look at or use, and where they are (floor-plan pixels).
+// Names and descriptions come from the points of interest in explore.json
+// unless given here; `run` is the script for using it.
+const THINGS = [
+  { id: 'petunia', name: 'Petunia Lockwood', x: 520, y: 470, verb: 'Speak to', run: () => petuniaScene(), when: () => !game.flags.petuniaGone },
+  { id: 'spirit_board', verb: 'Use', run: () => seance() },
+  { id: 'harpsichord', verb: 'Play', run: () => harpsichordScene() },
+  { id: 'portraits', verb: 'Study', run: () => portraitsScene() },
+  { id: 'peacock', verb: 'Examine', run: () => peacockScene() },
+  { id: 'oven', verb: 'Examine', run: () => ovenScene() },
+  { id: 'feast', verb: 'Examine', run: () => feastScene() },
+  { id: 'staircase', verb: 'Climb', run: () => stairsScene() },
+  { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes' },
+  { id: 'mirror' }, { id: 'collapsed_shelf' }, { id: 'tree' },
+  { id: 'bench', when: () => game.flags.petuniaGone },
+].map(t => {
+  const poi = FLOOR.pois.find(p => p.id === t.id) || {};
+  return { x: poi.x, y: poi.y, name: poi.name, text: poi.text, ...t };
+});
+
+const game = {
+  cx: 0, cy: 0, dir: 0, dread: 0,
+  mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
+  busy: false,       // a scene is playing: no walking
+  curse: false,      // the waltz is playing
+};
+
+// ─── Saving ───────────────────────────────────────────────────────────
+
+function newGame() {
+  const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false });
+  store.remove(SAVE_KEY);
+}
+
+function saveGame() {
+  store.set(SAVE_KEY, JSON.stringify({
+    v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
+    mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
+  }));
+}
+
+function loadGame() {
+  try {
+    const s = JSON.parse(store.get(SAVE_KEY));
+    if (!s || s.v !== 1 || !GRID.at(s.cx, s.cy)?.walk) return false;
+    Object.assign(game, { cx: s.cx, cy: s.cy, dir: s.dir, dread: s.dread, mementos: new Set(s.mementos), clues: new Set(s.clues), flags: s.flags || {}, seen: new Set(s.seen), roomsSeen: new Set(s.roomsSeen), curse: false });
+    return true;
+  } catch { return false; }
+}
+
+function hasSave() { return !!store.get(SAVE_KEY); }
+
+// ─── Dread, mementos, clues ───────────────────────────────────────────
+
+function addDread(n) {
+  game.dread = clamp(game.dread + n, 0, DREAD_MAX);
+  ui.setDread(game.dread);
+  if (n > 0) { $('dread').classList.remove('jolt'); void $('dread').offsetWidth; $('dread').classList.add('jolt'); }
+  if (game.dread >= DREAD_MAX && !game.flags.breaking) nerveBreaks();
+}
+
+async function nerveBreaks() {
+  game.flags.breaking = true;
+  if (game.curse) endCurse(true);
+  ui.flash('#000', 1600);
+  await ui.say('', 'It is too much. You run — blindly, through doors and dark hallways, the house howling at your back — and stop only when cold rain hits your face. You are on the porch. The front door stands open, waiting.');
+  const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
+  teleport(c.cx, c.cy, 0);
+  game.dread = 4; ui.setDread(4);
+  delete game.flags.breaking;
+  saveGame();
+}
+
+function giveMemento(id) {
+  game.mementos.add(id);
+  const m = MEMENTOS.find(x => x.id === id);
+  ui.log(`Memento found: ${m.name}. (${game.mementos.size} of 6)`, 'gain');
+  sound.pluck(NOTE.E * 2, 0, 1.4, 0.12); sound.pluck(NOTE.A * 2, 0.15, 1.6, 0.1);
+  if (game.mementos.has('cup') && game.mementos.has('key') && !game.flags.toldNext) {
+    game.flags.toldNext = true;
+    setTimeout(() => ui.log('Two mementos are yours. The rest are deeper in the house: the gallery, the kitchen and the floor above open in a later chapter.', 'note'), 2500);
+  }
+  saveGame();
+}
+
+function addClue(id) {
+  if (game.clues.has(id)) return;
+  game.clues.add(id);
+  ui.log('Added to your journal.', 'note');
+  saveGame();
+}
+
+// ─── Moving into a square ─────────────────────────────────────────────
+// Called after every step (and teleport). Marks what you can now see on
+// the map, announces rooms, and sets off whatever waits in that square.
+
+function enteredCell(prev) {
+  const c = GRID.at(game.cx, game.cy);
+  markSeen(c);
+  const room = roomById(c.room);
+  const prevRoom = prev ? prev.room : null;
+  if (room && c.room !== prevRoom) {
+    ui.setRoom(room.name);
+    sound.setOutdoors(c.room === 'porch');
+    if (!game.roomsSeen.has(c.room)) {
+      game.roomsSeen.add(c.room);
+      showRoomCard(room);
+    } else hideRoomCard();
+  }
+  if (game.curse && c.room !== 'music') endCurse(false);
+  if (c.noEscape) return noEscape();
+  if (c.room === 'music' && isDanceFloor(c) && !game.flags.musicSolved && !game.curse) startCurse();
+  if (c.room === 'hallway' && game.flags.seanceDone && !game.flags.crookedManSeen) crookedMan();
+  saveGame();
+}
+
+// You can see the square you're in and, through open edges, its
+// neighbours: those are revealed on the map.
+function markSeen(c) {
+  game.seen.add(`${c.cx},${c.cy}`);
+  c.edges.forEach((e, d) => {
+    if (e === 'open' || e === 'door') game.seen.add(`${c.cx + DIRS[d][0]},${c.cy + DIRS[d][1]}`);
+  });
+}
+
+function showRoomCard(room) {
+  $('room-card-title').textContent = room.name;
+  $('room-card-text').textContent = room.text;
+  const card = $('room-card');
+  card.hidden = false;
+  card.classList.remove('show'); void card.offsetWidth; card.classList.add('show');
+  clearTimeout(showRoomCard.timer);
+  showRoomCard.timer = setTimeout(hideRoomCard, 16000);
+}
+function hideRoomCard() { $('room-card').hidden = true; }
+
+// What you could use right now: the nearest thing to a point just ahead of
+// you, within about a square, and not on the far side of a wall. (Things
+// sit where they are on the floor plan, not on the grid, so a harpsichord
+// can be ahead of you and a little to one side.)
+function thingAtHand() {
+  const here = GRID.at(game.cx, game.cy);
+  const fx = here.x + DIRS[game.dir][0] * CELL * 0.75, fy = here.y + DIRS[game.dir][1] * CELL * 0.75;
+  let best = null, bestD = CELL * 1.05;
+  for (const t of THINGS) {
+    if (t.when && !t.when()) continue;
+    const d = Math.hypot(t.x - fx, t.y - fy);
+    if (d >= bestD) continue;
+    if (GRID.segs.some(([a, b]) => segmentsCross([here.x, here.y], [t.x, t.y], a, b))) continue;
+    best = t; bestD = d;
+  }
+  return best;
+}
+
+async function useThing(t) {
+  if (game.busy) return;
+  game.busy = true;
+  try {
+    if (t.run) await t.run();
+    else await ui.say(t.name, t.text);
+  } finally {
+    game.busy = false;
+  }
+}
+
+// ─── The porch: No Escape ─────────────────────────────────────────────
+
+async function noEscape() {
+  strike(1.4);
+  ui.flash('#dfe6ff', 700);
+  const c = GRID.cellAtPx(FLOOR.returnTo.x, FLOOR.returnTo.y);
+  teleport(c.cx, c.cy, 0);
+  addDread(1);
+  ui.log(FLOOR.noEscape.text, 'scare');
+}
+
+// ─── The foyer ────────────────────────────────────────────────────────
+
+async function portraitsScene() {
+  const t = THINGS.find(x => x.id === 'portraits');
+  await ui.say(t.name, t.text);
+  addClue('lockwoods');
+}
+
+async function stairsScene() {
+  await ui.say('The staircase', 'You set a foot on the first step, and the whole staircase groans and shifts, twisting away from you up into the dark. The floor above is not ready for you. Not yet.');
+}
+
+// ─── The parlour: the séance ──────────────────────────────────────────
+
+const SEANCE_QUESTIONS = [
+  { id: 'who',       q: 'Who are you?',                    a: 'PATRINI', clue: 'patrini' },
+  { id: 'here',      q: 'Are Phillip and Adela here?',     a: 'YES' },
+  { id: 'where',     q: 'Where are they?',                 a: 'UPSTAIRS', after: 'here', clue: 'upstairs' },
+  { id: 'died',      q: 'How did you die?',                a: 'MURDER' },
+  { id: 'killer',    q: 'Who killed you?',                 a: 'EUSTACE LOCKWOOD', after: 'died', clue: 'eustace' },
+  { id: 'blame',     q: 'Who is responsible for all this?', a: 'HAG' },
+  { id: 'hag',       q: 'Where is the hag?',               a: 'ATTIC', after: 'blame', clue: 'attic' },
+  { id: 'attic',     q: 'How do we reach the attic?',      a: '6 MEMENTOS', after: 'hag' },
+  { id: 'mementos',  q: 'What are the mementos?',          a: 'GEM KEY CUP DOLL BEAR PIN', after: 'attic', clue: 'mementos' },
+  { id: 'where_mem', q: 'Where are they?',                 a: 'EVERY FLOOR', after: 'mementos' },
+];
+
+async function seance() {
+  if (game.flags.seanceDone) {
+    await ui.say('The spirit board', 'You rest your fingers on the planchette. The board is cold, and nothing answers. Whoever spoke through it has said all they will.');
+    return;
+  }
+  const go = await ui.say('The spirit board', 'Adela Druskenvald’s spirit board lies ready on the table, the little heart-shaped planchette at its centre. A séance needs a question to begin: is anyone there?', [
+    { id: 'yes', text: 'Rest your fingers on the planchette and ask' }, { id: 'no', text: 'Leave it alone' }]);
+  if (go !== 'yes') return;
+
+  const board = openOuija();
+  sound.startDrone();
+  setHearth(true);
+  board.say('A fire bursts into life in the cold hearth. Under your fingers, the planchette begins to move.');
+  await board.spell('HELLO');
+  const asked = new Set();
+  let anger = 0;
+  for (;;) {
+    const open = SEANCE_QUESTIONS.filter(q => !asked.has(q.id) && (!q.after || asked.has(q.after)));
+    const pick = await board.choose([...open.map(q => ({ id: q.id, text: q.q })), { id: 'bye', text: 'Thank the spirit and say goodbye' }]);
+    if (pick === 'bye') break;
+    const q = SEANCE_QUESTIONS.find(x => x.id === pick);
+    asked.add(q.id);
+    board.say(`“${q.q}”`);
+    // Spirits don't like being questioned: now and then the board turns
+    // on you, and it gets worse each time.
+    if (Math.random() < 0.15) {
+      anger++;
+      await board.thrash();
+      board.say('The planchette tears itself out from under your fingers and spins wildly. Something cold presses on the back of your neck.');
+      addDread(anger);
+      if (game.flags.breaking) { closeOuija(board); return; }
+    }
+    await board.spell(q.a);
+    if (q.clue) addClue(q.clue);
+  }
+  if (asked.has('mementos')) {
+    board.say('The planchette drags itself slowly across the board, as if the spirit were spending the last of its strength.');
+    await board.spell('FIND MY SON HE LIVES');
+    addClue('son');
+  }
+  await board.spell('GOODBYE');
+  board.say('The fire in the hearth goes out with a hiss, and the room is plunged into a darker dark than before.');
+  setHearth(false);
+  sound.stopDrone();
+  game.flags.seanceDone = true;
+  saveGame();
+  await sleep(2200);
+  closeOuija(board);
+}
+
+function setHearth(lit) {
+  world.fixedLights.forEach(l => { if (l.userData.id === 'fireplace') l.userData.boost = lit ? 4 : 1; });
+  world.hearthMats.forEach(m => { m.emissiveIntensity = lit ? 1.6 : 0.25; });
+  if (world.boardMat) world.boardMat.emissiveIntensity = lit ? 0.5 : 0.12;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// The board: letters in two arcs, numbers beneath, YES / HELLO / NO across
+// the top and GOODBYE at the foot; the planchette glides to each letter
+// in turn and the answer builds up underneath.
+function openOuija() {
+  const root = $('ouija');
+  const W = 1000, H = 620;
+  const pos = {};
+  const top = 'ABCDEFGHIJKLM'.split(''), bottom = 'NOPQRSTUVWXYZ'.split('');
+  top.forEach((ch, i) => { const a = Math.PI * (1.18 + i / 12 * 0.64); pos[ch] = [500 + Math.cos(a) * 400, 470 + Math.sin(a) * 300]; });
+  bottom.forEach((ch, i) => { const a = Math.PI * (1.22 + i / 12 * 0.56); pos[ch] = [500 + Math.cos(a) * 300, 520 + Math.sin(a) * 210]; });
+  '1234567890'.split('').forEach((ch, i) => { pos[ch] = [275 + i * 50, 445]; });
+  pos.YES = [130, 90]; pos.NO = [870, 90]; pos.HELLO = [500, 70]; pos.GOODBYE = [500, 540];
+  const letters = [...top, ...bottom, ...'1234567890'.split('')]
+    .map(ch => `<text x="${pos[ch][0].toFixed(0)}" y="${pos[ch][1].toFixed(0)}" class="ob-letter" data-ch="${ch}">${ch}</text>`).join('');
+  root.innerHTML = `
+    <div class="ouija-board">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="The spirit board">
+        <defs><radialGradient id="ob-bg" cx="50%" cy="45%" r="70%"><stop offset="0%" stop-color="#d8c393"/><stop offset="100%" stop-color="#8a6a3c"/></radialGradient></defs>
+        <rect x="10" y="10" width="${W - 20}" height="${H - 20}" rx="40" fill="url(#ob-bg)" stroke="#3a2412" stroke-width="10"/>
+        <text x="130" y="100" class="ob-word" data-ch="YES">YES</text>
+        <text x="500" y="80" class="ob-word" data-ch="HELLO">HELLO</text>
+        <text x="870" y="100" class="ob-word" data-ch="NO">NO</text>
+        <text x="500" y="560" class="ob-word" data-ch="GOODBYE">GOODBYE</text>
+        ${letters}
+        <g class="ob-planchette" transform="translate(500 300)">
+          <path d="M0 52 C -60 10 -54 -46 -18 -48 C -6 -48 0 -40 0 -34 C 0 -40 6 -48 18 -48 C 54 -46 60 10 0 52 Z" fill="rgba(30,18,10,0.82)" stroke="#e8d5a3" stroke-width="3"/>
+          <circle cx="0" cy="-8" r="17" fill="rgba(232,213,163,0.18)" stroke="#e8d5a3" stroke-width="2"/>
+        </g>
+      </svg>
+      <p class="ouija-spelled" aria-live="polite"></p>
+      <p class="ouija-text" aria-live="polite"></p>
+      <div class="ouija-choices"></div>
+    </div>`;
+  root.hidden = false;
+  ui.overlay = 'ouija';
+  const pl = root.querySelector('.ob-planchette');
+  const spelled = root.querySelector('.ouija-spelled');
+  let at = [500, 300];
+  const moveTo = (to, ms) => new Promise(res => {
+    const from = at.slice(), t0 = performance.now();
+    const tick = now => {
+      const k = Math.min(1, (now - t0) / ms), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      const wob = Math.sin(now / 90) * 3 * (1 - k);
+      at = [lerp(from[0], to[0], e) + wob, lerp(from[1], to[1], e)];
+      // The lens over the letter: offset so the letter shows through it.
+      pl.setAttribute('transform', `translate(${at[0].toFixed(1)} ${(at[1] + 8).toFixed(1)}) rotate(${(wob * 2).toFixed(1)})`);
+      if (k < 1) requestAnimationFrame(tick); else res();
+    };
+    requestAnimationFrame(tick);
+  });
+  const glow = ch => {
+    const el = root.querySelector(`[data-ch="${ch}"]`);
+    if (!el) return;
+    el.classList.add('lit'); setTimeout(() => el.classList.remove('lit'), 700);
+  };
+  return {
+    root,
+    say(text) { root.querySelector('.ouija-text').textContent = text; },
+    async spell(answer) {
+      spelled.textContent = '';
+      const words = ['YES', 'NO', 'HELLO', 'GOODBYE'];
+      if (words.includes(answer)) {
+        sound.scrape();
+        await moveTo(pos[answer], 1100); glow(answer); spelled.textContent = answer;
+        await sleep(900);
+        return;
+      }
+      for (const ch of answer) {
+        if (ch === ' ') { spelled.textContent += ' '; await sleep(350); continue; }
+        sound.scrape();
+        await moveTo(pos[ch], 620);
+        glow(ch);
+        spelled.textContent += ch;
+        await sleep(260);
+      }
+      await sleep(900);
+    },
+    async thrash() {
+      for (let i = 0; i < 6; i++) { sound.scrape(); await moveTo([150 + Math.random() * 700, 120 + Math.random() * 380], 140); }
+      ui.flash('#9fb6ff', 300);
+    },
+    choose(choices) {
+      return new Promise(resolve => {
+        const box = root.querySelector('.ouija-choices');
+        box.innerHTML = '';
+        choices.forEach((c, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.innerHTML = `<span class="key">${i + 1}</span>`;
+          b.appendChild(document.createTextNode(c.text));
+          b.addEventListener('click', () => done(c.id));
+          box.appendChild(b);
+        });
+        const onKey = e => { const n = Number(e.key); if (n >= 1 && n <= choices.length) { e.preventDefault(); done(choices[n - 1].id); } };
+        const done = id => { document.removeEventListener('keydown', onKey, true); box.innerHTML = ''; resolve(id); };
+        document.addEventListener('keydown', onKey, true);
+        box.querySelector('button')?.focus({ preventScroll: true });
+      });
+    },
+  };
+}
+
+function closeOuija() {
+  $('ouija').hidden = true;
+  $('ouija').innerHTML = '';
+  if (ui.overlay === 'ouija') ui.overlay = null;
+  sound.stopDrone();
+}
+
+// ─── The conservatory: Petunia ────────────────────────────────────────
+
+async function petuniaScene() {
+  const angered = game.flags.petuniaAngered;
+  let text = game.flags.petuniaMet
+    ? (angered ? 'Petunia sits as before, gazing at the tree, but her shoulders are rigid now. She knows you are there.' : 'Petunia sits on the bench, the teacup in her lap, lost in thought.')
+    : 'A pale woman in a black mourning gown sits on the bench, gazing at the tree. She holds a white porcelain teacup in both hands, and a faded green ribbon is tied around her throat. She doesn’t seem to notice you.';
+  game.flags.petuniaMet = true;
+  const said = new Set();
+  let speaker = '';
+  for (;;) {
+    const choices = [];
+    if (!said.has('greet')) choices.push({ id: 'greet', text: '“Good evening.”' });
+    if (said.has('greet') && !said.has('tree')) choices.push({ id: 'tree', text: 'Ask about the tree' });
+    if (said.has('greet') && !said.has('cup')) choices.push({ id: 'cup', text: 'Ask for her teacup' });
+    if (said.has('greet') && game.clues.has('lockwoods')) choices.push({ id: 'children', text: 'Speak of Sally and Arthur' });
+    choices.push({ id: 'snatch', text: 'Snatch the teacup from her hands' });
+    choices.push({ id: 'leave', text: 'Leave her be' });
+    const pick = await ui.say(speaker, text, choices);
+    said.add(pick);
+    if (pick === 'leave') return;
+    speaker = 'Petunia Lockwood';
+    if (pick === 'greet') {
+      text = angered
+        ? '“You again.” She doesn’t turn her head. “Mind your manners in my house, or don’t come into it.” Then, more softly, as if the moment had already slipped away: “Will you take some tea?”'
+        : '“Oh! I didn’t hear you come in. You’ll forgive me, I was miles away.” She smiles without looking up. “Will you take some tea? The bergamot is lovely this time of year.”';
+    } else if (pick === 'tree') {
+      text = '“I planted it the spring we came. Eustace laughed, said nothing would ever grow in Wickermoor soil. But it did. Everything grew, that first summer.” Her smile falters. “Is it still summer?”';
+    } else if (pick === 'cup') {
+      text = '“My cup? Oh, no, dear. I couldn’t. It was my mother’s, and her mother’s before that.” She turns it slowly in her hands, and stops, listening, as though for children’s voices somewhere in the house.';
+    } else if (pick === 'children') {
+      speaker = '';
+      await ui.say('Petunia Lockwood', '“Sally? Arthur?” The cup trembles in her hands. “Where are they? I’ve sat here so long, and they never come down for tea. Sally always comes down for tea.”');
+      await ui.say('', 'She looks at you for the first time. Her eyes are very dark. “Find them. Please. Take it, take my cup, only find my children.” She presses the teacup into your hands. It is ice cold.');
+      game.flags.petuniaGone = true;
+      fadeSprite('petunia');
+      await ui.say('', 'When you look up, the bench is empty. Only the tree is there, green and heavy with fruit, and a faint smell of bergamot.');
+      giveMemento('cup');
+      return;
+    } else if (pick === 'snatch') {
+      ui.flash('#cfe0ff', 900);
+      sound.thunder(0.6);
+      await ui.say('', 'You reach for the cup. Petunia’s head snaps round, and the green ribbon at her throat slips a finger’s width. The air turns to ice. She rises, and the scream that tears out of her is not a sound a living woman could make —');
+      game.flags.petuniaAngered = true;
+      stepBack();
+      addDread(4);
+      ui.log('You stagger back. She is on the bench again, as if nothing had happened. She will not forget.', 'scare');
+      return;
+    }
+  }
+}
+
+// ─── The music room: the cursed waltz ─────────────────────────────────
+
+const DANCE = { x: 850, y: 925, rx: 95, ry: 85 };
+const PATRINI_TUNE = ['E', 'G', 'A', 'G', 'E', 'D'];
+
+function isDanceFloor(c) { return ((c.x - DANCE.x) / DANCE.rx) ** 2 + ((c.y - DANCE.y) / DANCE.ry) ** 2 <= 1; }
+
+function startCurse() {
+  game.curse = true;
+  game.curseStart = performance.now();
+  sound.startDiscord();
+  world.weasels.forEach(s => { s.visible = true; });
+  ui.log('The harpsichord crashes into a lurching, discordant waltz. In the cracked mirror the room is full of dancers.', 'scare');
+  setTimeout(() => { if (game.curse) ui.log('“Vessla Browntooth will sacrifice your souls!” chitter the weasels pouring from the walls, all in one voice.', 'scare'); }, 2600);
+  addDread(1);
+}
+
+function endCurse(quiet) {
+  game.curse = false;
+  sound.stopDiscord();
+  world.weasels.forEach(s => { s.visible = false; });
+  if (!quiet) ui.log('The music fades behind you, though your feet still want to dance.', 'note');
+}
+
+async function harpsichordScene() {
+  if (game.flags.musicSolved) {
+    await ui.say('The harpsichord', 'Silent now. There is a gap in the keys where the black ivory one used to be.');
+    return;
+  }
+  if (!game.curse) {
+    await ui.say('The harpsichord', 'You touch a key. The harpsichord answers with a crash of discord, and the whole room begins to turn.');
+    startCurse();
+  }
+  const guided = game.clues.has('patrini');
+  await ui.say('', guided
+    ? 'Only another tune can drown out the waltz. As you sit, a cold blue hand settles over yours: Patrini, the old servant from the spirit board, guiding your fingers.'
+    : 'Only another tune can drown out the waltz. Listen to the melody that rises faintly under the noise, and play it back.');
+  const ok = await melodyPuzzle(guided);
+  if (!ok) { ui.log('You pull away from the keys. The waltz plays on.', 'note'); return; }
+  endCurse(true);
+  showPatrini();
+  ui.log('The waltz breaks off. In the silence a shimmering blue figure sits at the harpsichord and plays, slow and sad.', 'note');
+  PATRINI_TUNE.concat(PATRINI_TUNE).forEach((n, i) => sound.pluck(NOTE[n], i * 0.6, 1.2, 0.18));
+  await ui.say('Joseph Patrini', 'He sings, very softly, of a kitchen fire that never went out, of children’s feet on the stairs, of a house that was warm once. The song ends before it should, as though he can’t remember the rest.');
+  await ui.say('', 'The figure fades. With a soft crack, a single black ivory key springs loose and clatters to the floor.');
+  game.flags.musicSolved = true;
+  giveMemento('key');
+}
+
+// The keyboard: the tune plays with its keys lit, then you play it back.
+// With Patrini's help, the next key glows faintly under your hand.
+function melodyPuzzle(guided) {
+  return new Promise(resolve => {
+    const root = $('keys');
+    const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    root.innerHTML = `<div class="keys-panel"><p class="keys-text">Listen…</p><div class="keyboard">${notes.map((n, i) => `<button type="button" class="key" data-note="${n}"><span>${i + 1}</span></button>`).join('')}</div><button type="button" class="keys-leave">Step away</button></div>`;
+    root.hidden = false;
+    ui.overlay = 'keys';
+    const text = root.querySelector('.keys-text');
+    const keyEl = n => root.querySelector(`[data-note="${n}"]`);
+    let pos = 0, listening = false;
+    const light = (n, ms = 380, cls = 'lit') => { const el = keyEl(n); el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); };
+    const hint = () => { root.querySelectorAll('.key').forEach(k => k.classList.remove('hint')); if (guided && listening) keyEl(PATRINI_TUNE[pos]).classList.add('hint'); };
+    const playTune = async () => {
+      listening = false; hint();
+      text.textContent = 'Listen…';
+      await sleep(500);
+      for (const n of PATRINI_TUNE) { sound.pluck(NOTE[n], 0, 0.9, 0.2); light(n, 420); await sleep(guided ? 650 : 480); }
+      text.textContent = 'Now play it back.';
+      pos = 0; listening = true; hint();
+    };
+    const press = n => {
+      if (!listening) return;
+      sound.pluck(NOTE[n], 0, 0.9, 0.22);
+      light(n, 250, 'pressed');
+      if (n === PATRINI_TUNE[pos]) {
+        pos++;
+        if (pos === PATRINI_TUNE.length) { listening = false; setTimeout(() => finish(true), 600); }
+        hint();
+      } else {
+        listening = false;
+        sound.pluck(NOTE.C / 4, 0, 1.4, 0.3, -60); sound.pluck(NOTE.F / 4 * 1.06, 0, 1.4, 0.25);
+        text.textContent = 'The waltz swells and swallows your note.';
+        addDread(1);
+        if (game.flags.breaking) { finish(false); return; }
+        setTimeout(playTune, 1400);
+      }
+    };
+    const onKey = e => { const i = Number(e.key) - 1; if (i >= 0 && i < notes.length) { e.preventDefault(); press(notes[i]); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } };
+    const finish = ok => { document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; resolve(ok); };
+    root.querySelectorAll('.key').forEach(k => k.addEventListener('click', () => press(k.dataset.note)));
+    root.querySelector('.keys-leave').addEventListener('click', () => finish(false));
+    document.addEventListener('keydown', onKey, true);
+    playTune();
+  });
+}
+
+function showPatrini() {
+  const s = world.patrini;
+  s.visible = true; s.material.opacity = 0;
+  const t0 = performance.now();
+  const tick = now => {
+    const k = (now - t0) / 1000;
+    s.material.opacity = k < 1 ? k : k < 7 ? 1 : Math.max(0, 1 - (k - 7));
+    if (k < 8) requestAnimationFrame(tick); else s.visible = false;
+  };
+  requestAnimationFrame(tick);
+}
+
+// ─── Teasers for rooms the next chapter opens up ──────────────────────
+
+async function peacockScene() {
+  const t = THINGS.find(x => x.id === 'peacock');
+  const pick = await ui.say(t.name, t.text, [{ id: 'pry', text: 'Try to pry out the bloodstone' }, { id: 'leave', text: 'Leave it' }]);
+  if (pick !== 'pry') return;
+  await ui.say('', 'The instant your fingers touch the stone, marble grinds against marble. The peacock’s head turns, slowly, towards you, and its great tail begins to rise. You snatch your hand back, and it settles. But it is watching you now.');
+  addDread(2);
+}
+
+async function ovenScene() {
+  const t = THINGS.find(x => x.id === 'oven');
+  if (!game.flags.ovenHeard) {
+    game.flags.ovenHeard = true;
+    await ui.say(t.name, t.text);
+    await ui.say('', 'Then the greasy stench of burning fills the kitchen. Black smoke curls from around the iron door, and from inside comes pounding, and muffled screaming.');
+    addDread(1);
+  }
+  const pick = await ui.say(t.name, 'The screaming goes on behind the iron door.', [{ id: 'lock', text: 'Look closely at the lock' }, { id: 'open', text: 'Force the door open' }, { id: 'leave', text: 'Back away' }]);
+  if (pick === 'lock') {
+    await ui.say('', 'Scratched into the rust, almost too faint to see, a small sigil glows like a coal. Whatever is behind this door, the lock was made to be opened.');
+  } else if (pick === 'open') {
+    ui.flash('#ff8a40', 800);
+    await ui.say('', 'You wrench at the lock and the iron door bursts open in a roar of heat. Shrieking, burning shapes reach for you, and then are gone. The oven is cold. Your eyebrows are not.');
+    addDread(2);
+  }
+}
+
+async function feastScene() {
+  const t = THINGS.find(x => x.id === 'feast');
+  const pick = await ui.say(t.name, t.text, [{ id: 'eat', text: 'Take something from the table' }, { id: 'leave', text: 'Leave it' }]);
+  if (pick !== 'eat') return;
+  await ui.say('', 'You lift a little cake from a silver tray. It is warm, and it moves. You drop it, and it crawls back onto its plate.');
+  addDread(1);
+}
+
+// ─── The hallway: the Crooked Man ─────────────────────────────────────
+
+function crookedMan() {
+  game.flags.crookedManSeen = true;
+  // A few squares ahead along the hall, in whichever direction you face
+  // (or behind you, if there's no hall ahead).
+  const along = d => { let c = GRID.at(game.cx, game.cy), n = 0; while (n < 3 && canStep(c, d)) { c = GRID.at(c.cx + DIRS[d][0], c.cy + DIRS[d][1]); n++; } return n >= 2 ? c : null; };
+  const spot = along(game.dir) || along((game.dir + 2) % 4);
+  if (!spot) return;
+  const s = world.crookedMan;
+  s.position.set(spot.x, 0, spot.y);
+  s.visible = true; s.material.opacity = 0;
+  strike(1);
+  const t0 = performance.now();
+  const tick = now => {
+    const k = (now - t0) / 1000;
+    s.material.opacity = k < 0.4 ? k / 0.4 : k < 2.4 ? 1 : Math.max(0, 1 - (k - 2.4) / 0.8);
+    if (k < 3.3) requestAnimationFrame(tick); else s.visible = false;
+  };
+  requestAnimationFrame(tick);
+  ui.log('A tall, crooked figure stands in the hall with an axe raised. “I cut them down, one by one!” He swings — and is gone.', 'scare');
+  addDread(1);
+}
+
+function fadeSprite(kind) {
+  const s = world.sprites.find(x => x.userData.kind === kind);
+  if (!s) return;
+  const t0 = performance.now();
+  const tick = now => { const k = (now - t0) / 1500; s.material.opacity = Math.max(0, 1 - k); if (k < 1) requestAnimationFrame(tick); else s.visible = false; };
+  requestAnimationFrame(tick);
+}
+
+// ─── src/game/js/main.js ─────────────────────────────────────────────
+// The game loop: the renderer, walking and turning (one square, one
+// quarter-turn at a time, eased so it doesn't jump), the lantern, the
+// storm, and the controls — keyboard, the on-screen pad, and the buttons.
+
+const STEP_MS = 230, TURN_MS = 190;
+let renderer = null;
+const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
+const queued = [];
+let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+
+function quality() {
+  const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+  return (mem && mem <= 2) || (cores && cores <= 2) ? 'low' : 'high';
+}
+
+function startGame(fresh) {
+  if (fresh || !loadGame()) newGame();
+  sound.start();
+  $('start').hidden = true;
+  $('game').hidden = false;
+  if (!renderer) {
+    const q = quality();
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: $('view'), antialias: q !== 'low', powerPreference: 'high-performance' });
+    } catch (err) {
+      console.warn(err);
+      $('game').hidden = true;
+      $('start').hidden = false;
+      $('start-error').hidden = false;
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, q === 'low' ? 1 : 1.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    buildWorld(renderer, q);
+    addCharacters();
+    ui.mapImage = new Image();
+    ui.mapImage.src = FLOOR.image;
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(loop);
+  }
+  world.sprites.find(s => s.userData.kind === 'petunia').visible = !game.flags.petuniaGone;
+  yaw = -game.dir * Math.PI / 2;
+  motion.from = motion.to = null;
+  ui.setDread(game.dread);
+  const c = GRID.at(game.cx, game.cy);
+  ui.setRoom(roomById(c.room)?.name || '');
+  game.roomsSeen.delete(c.room);
+  enteredCell(null);
+  $('view').focus({ preventScroll: true });
+}
+
+// The people (and weasels) of the house: sprites that come and go.
+function addCharacters() {
+  world.sprites.push(addSprite(world.scene, 'petunia', 520, 470));
+  world.weasels = [0, 1, 2, 3, 4].map(i => {
+    const s = addSprite(world.scene, 'weasel', DANCE.x, DANCE.y);
+    s.userData.orbit = { r: 40 + i * 14, speed: (i % 2 ? 1 : -1) * (1.4 + i * 0.25), phase: i * 1.3 };
+    s.visible = false;
+    return s;
+  });
+  world.patrini = addSprite(world.scene, 'patrini', 930, 875);
+  world.patrini.visible = false;
+  world.crookedMan = addSprite(world.scene, 'crookedMan', 0, 0);
+  world.crookedMan.visible = false;
+  [world.patrini, world.crookedMan].forEach(s => { s.material.transparent = true; s.material.depthWrite = false; s.material.alphaTest = 0; });
+}
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  world.camera.aspect = w / h;
+  world.camera.fov = w < h ? 82 : 72;
+  world.camera.updateProjectionMatrix();
+}
+
+// ─── Moving ───────────────────────────────────────────────────────────
+
+function busy() { return game.busy || !!ui.overlay || !!motion.to || game.flags.breaking; }
+
+function act(cmd) {
+  if (busy()) { if (queued.length < 1 && !game.busy && !ui.overlay) queued.push(cmd); return; }
+  if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
+  if (cmd === 'use') { const t = thingAtHand(); if (t) useThing(t); return; }
+  const rel = { forward: 0, strafeRight: 1, back: 2, strafeLeft: 3 }[cmd];
+  if (rel === undefined) return;
+  // On the cursed dance floor your feet don't always obey.
+  if (game.curse && Math.random() < 0.3) {
+    ui.log('You spin with the dancers.', 'scare');
+    return turn(Math.random() < 0.5 ? -1 : 1);
+  }
+  step((game.dir + rel) % 4);
+}
+
+function step(dir) {
+  const c = GRID.at(game.cx, game.cy);
+  if (!canStep(c, dir)) { motion.bump = performance.now(); return; }
+  const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  motion.from = c; motion.to = n; motion.t0 = performance.now(); motion.ms = STEP_MS;
+  motion.yawFrom = motion.yawTo = yaw;
+  game.cx = n.cx; game.cy = n.cy;
+}
+
+function turn(d) {
+  game.dir = (game.dir + d + 4) % 4;
+  motion.from = motion.to = GRID.at(game.cx, game.cy);
+  motion.t0 = performance.now(); motion.ms = TURN_MS;
+  motion.yawFrom = yaw; motion.yawTo = yaw - d * Math.PI / 2;
+  motion.turning = true;
+}
+
+function teleport(cx, cy, dir) {
+  const prev = GRID.at(game.cx, game.cy);
+  game.cx = cx; game.cy = cy; game.dir = dir;
+  yaw = -dir * Math.PI / 2;
+  motion.from = motion.to = null;
+  queued.length = 0;
+  enteredCell(prev);
+}
+
+function stepBack() {
+  const back = (game.dir + 2) % 4, c = GRID.at(game.cx, game.cy);
+  if (canStep(c, back)) teleport(c.cx + DIRS[back][0], c.cy + DIRS[back][1], game.dir);
+}
+
+function strike(strength = 1) {
+  strikes.push(clock, clock + 0.12 + Math.random() * 0.1);
+  if (Math.random() < 0.5) strikes.push(clock + 0.35 + Math.random() * 0.2);
+  setTimeout(() => sound.thunder(strength), 250 + Math.random() * 1000 * (1.3 - Math.min(1.2, strength)));
+}
+
+// ─── The loop ─────────────────────────────────────────────────────────
+
+let last = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  if (document.hidden || $('game').hidden) { last = now; return; }
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  clock += dt;
+
+  // Where the camera is: easing between squares and between headings.
+  let px, pz, bob = 0;
+  const here = GRID.at(game.cx, game.cy);
+  if (motion.to) {
+    const k = Math.min(1, (now - motion.t0) / motion.ms), e = 1 - (1 - k) ** 3;
+    px = lerp(motion.from.x, motion.to.x, e); pz = lerp(motion.from.y, motion.to.y, e);
+    yaw = lerp(motion.yawFrom, motion.yawTo, e);
+    if (!motion.turning) bob = Math.sin(k * Math.PI) * 3;
+    if (k >= 1) {
+      const from = motion.from, wasStep = !motion.turning;
+      motion.from = motion.to = null; motion.turning = false;
+      yaw = -game.dir * Math.PI / 2 + Math.round((yaw + game.dir * Math.PI / 2) / (Math.PI * 2)) * Math.PI * 2;
+      if (wasStep) enteredCell(from);
+      if (queued.length && !busy()) act(queued.shift());
+    }
+  } else { px = here.x; pz = here.y; }
+  // Bumping into a wall: a little lurch forward and back.
+  const bk = (now - motion.bump) / 200;
+  const bump = bk < 1 ? Math.sin(bk * Math.PI) * 6 : 0;
+  const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+  const cam = world.camera;
+  cam.position.set(px + fx * (bump - 10), EYE_H + bob, pz + fz * (bump - 10));
+  cam.rotation.order = 'YXZ';
+  cam.rotation.y = yaw;
+  // Never quite level, in a house with no right angles. The cursed waltz
+  // sets the room swaying.
+  const sway = game.curse ? Math.sin(clock * 2.1) * 0.06 : 0;
+  cam.rotation.z = Math.sin(clock * 0.37) * 0.018 + Math.sin(clock * 0.13) * 0.012 + sway;
+  cam.rotation.x = -0.04 + Math.sin(clock * 0.29) * 0.01 + (game.curse ? Math.sin(clock * 1.3) * 0.03 : 0);
+
+  // The lantern, held a little to the right and below the eye.
+  const rx = Math.cos(yaw), rz = -Math.sin(yaw);
+  world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
+  world.lantern.intensity = 300 * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
+  world.fixedLights.forEach(l => {
+    const u = l.userData;
+    l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
+  });
+
+  // The storm.
+  if (clock > nextStrike) { strike(0.4 + Math.random() * 0.6); nextStrike = clock + 8 + Math.random() * 12; }
+  strikes = strikes.filter(s => clock - s < 1.5);
+  let f = 0;
+  for (const s of strikes) if (clock >= s) f += Math.exp(-(clock - s) * 9);
+  f = Math.min(1.6, f);
+  world.lightning.intensity = f * (here.room === 'porch' ? 3 : 0.6);
+  world.ambient.intensity = 0.32 + f * (here.room === 'porch' || here.room === 'conservatory' ? 0.6 : 0.12);
+  world.windowMats.forEach(m => { m.emissiveIntensity = 0.05 + f * 1.4; });
+  world.rain.material.uniforms.time.value = clock;
+  world.rain.material.uniforms.flash.value = f;
+  world.rain.material.uniforms.center.value.set(cam.position.x, 0, cam.position.z);
+
+  // Weasels running rings round the dance floor while the waltz plays.
+  if (game.curse) world.weasels.forEach(s => {
+    const o = s.userData.orbit, a = clock * o.speed + o.phase;
+    s.position.set(DANCE.x + Math.cos(a) * o.r, 0, DANCE.y + Math.sin(a) * o.r * 0.8);
+  });
+  // The waltz wears on your nerves, but not while you're at the keys
+  // fighting it (or reading).
+  if (game.curse && (game.busy || ui.overlay)) game.curseStart = now;
+  else if (game.curse && now - game.curseStart > 3500) { game.curseStart = now; addDread(1); }
+
+  // Dread ebbs slowly when nothing is happening.
+  if (game.dread > 0 && !game.curse && !game.busy && clock - (game.dreadEbb || 0) > 30) { game.dreadEbb = clock; addDread(-1); }
+  else if (game.dread === 0 || game.curse || game.busy) game.dreadEbb = clock;
+
+  // Cut-outs turn to face you.
+  billboards.forEach(b => { b.rotation.y = yaw; });
+
+  // Hide anything you're standing inside of.
+  world.sprites.forEach(s => {
+    if (s.userData.kind === 'petunia' && game.flags.petuniaGone) return;
+    const d = Math.hypot(s.position.x - cam.position.x, s.position.z - cam.position.z);
+    s.material.opacity = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : (s.userData.kind === 'petunia' ? 0.92 : 1);
+  });
+
+  ui.setPrompt(busy() ? null : thingAtHand());
+  renderer.render(world.scene, cam);
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────
+
+const KEYMAP = {
+  w: 'forward', arrowup: 'forward', s: 'back', arrowdown: 'back',
+  a: 'strafeLeft', d: 'strafeRight', q: 'left', arrowleft: 'left', e: 'right', arrowright: 'right',
+  ' ': 'use', enter: 'use', f: 'use',
+};
+
+document.addEventListener('keydown', e => {
+  if ($('game').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
+  if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
+  if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
+  if (ui.overlay || game.busy) return;
+  if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
+  const cmd = KEYMAP[k];
+  if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
+});
+
+document.querySelectorAll('[data-cmd]').forEach(b => {
+  b.addEventListener('click', () => act(b.dataset.cmd));
+});
+$('prompt').addEventListener('click', () => act('use'));
+$('btn-map').addEventListener('click', () => ui.toggle('map'));
+$('btn-journal').addEventListener('click', () => ui.toggle('journal'));
+document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
+$('room-card-close').addEventListener('click', hideRoomCard);
+const soundBtn = $('btn-sound');
+const showSound = () => { soundBtn.textContent = sound.on ? '🔊' : '🔇'; soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.title = sound.on ? 'Sound on' : 'Sound off'; };
+soundBtn.addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
+showSound();
+
+$('btn-continue').hidden = !hasSave();
+$('btn-continue').addEventListener('click', () => startGame(false));
+$('btn-new').addEventListener('click', () => startGame(true));
+if (!hasSave()) $('btn-new').textContent = 'Enter the house';
+
+// A handle for testing and debugging from the browser console.
+window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world };
+</script>
+</body>
+</html>

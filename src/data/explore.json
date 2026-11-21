@@ -2,6 +2,7 @@
   "EXPLORE_PLACES": {
     "crooked_house": {
       "title": "The Crooked House",
+      "page": "crooked-house.html",
       "floors": [
         {
           "id": "first",
@@ -10,6 +11,7 @@
           "width": 1313,
           "height": 1500,
           "wallHeight": 70,
+          "grid": { "cell": 56, "x": 10, "y": 0 },
           "start": { "x": 575, "y": 1140, "facing": 0 },
           "returnTo": { "x": 575, "y": 1140 },
           "walls": [
