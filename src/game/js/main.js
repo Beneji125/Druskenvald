@@ -293,12 +293,27 @@ function loop(now) {
     s.material.opacity = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : (s.userData.kind === 'petunia' ? 0.92 : 1);
   });
 
+  // Music for where you are and how you feel.
+  sound.setTheme(musicFor(here));
+  sound.duck(game.curse ? 0 : ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0 : 1);
+
   if (busy()) ui.setPrompt(null);
   else {
     const door = doorAhead(), t = thingAtHand();
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
   }
   renderer.render(world.scene, cam);
+}
+
+// High Dread brings in the tense theme, which holds until you've calmed
+// down a good way (so it doesn't flicker on and off at the threshold).
+let dreadTheme = false;
+function musicFor(here) {
+  if (game.dread >= 7) dreadTheme = true;
+  else if (game.dread <= 4) dreadTheme = false;
+  if (dreadTheme) return 'dread';
+  if (here.room === 'music' && game.flags.musicSolved) return 'harpsichord';
+  return 'house';
 }
 
 // ─── Controls ─────────────────────────────────────────────────────────
@@ -333,6 +348,10 @@ const soundBtn = $('btn-sound');
 const showSound = () => { soundBtn.textContent = sound.on ? '🔊' : '🔇'; soundBtn.setAttribute('aria-pressed', String(sound.on)); soundBtn.title = sound.on ? 'Sound on' : 'Sound off'; };
 soundBtn.addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
 showSound();
+const musicBtn = $('btn-music');
+const showMusic = () => { musicBtn.classList.toggle('off', !sound.musicOn); musicBtn.setAttribute('aria-pressed', String(sound.musicOn)); musicBtn.title = sound.musicOn ? 'Music on' : 'Music off'; };
+musicBtn.addEventListener('click', () => { sound.setMusicOn(!sound.musicOn); showMusic(); });
+showMusic();
 
 $('btn-continue').hidden = !hasSave();
 $('btn-continue').addEventListener('click', () => startGame(false));
@@ -340,4 +359,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

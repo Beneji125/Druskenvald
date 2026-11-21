@@ -338,9 +338,31 @@ function addScenery(w, p, box) {
   const wood = c => new THREE.MeshStandardMaterial({ map: woodTexture(c), roughness: 0.75 });
   switch (p.kind) {
     case 'roundTable': {
-      const top = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 4, 32), [wood('#3a2212'), new THREE.MeshStandardMaterial({ map: spiritBoardTexture(), roughness: 0.6, emissive: 0x9a70ff, emissiveIntensity: 0.12 }), wood('#3a2212')]);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 4, 32), wood('#3a2212'));
       top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
-      w.boardMat = top.material[1];
+      // The spirit board and its planchette, lying on the table: the same
+      // artwork the séance uses. The board faces whoever sits on the
+      // fireplace side.
+      const lay = (src, wd, dp, y, glow) => {
+        const img = new Image();
+        const tex = new THREE.CanvasTexture(img);
+        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+        img.onload = () => { tex.needsUpdate = true; };
+        img.src = src;
+        const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.2, roughness: 0.6, emissive: glow ? 0x9a70ff : 0x000000, emissiveMap: glow ? tex : null, emissiveIntensity: glow ? 0.12 : 0 });
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), mat);
+        m.rotation.x = -Math.PI / 2;
+        m.receiveShadow = true;
+        scene.add(m);
+        return m;
+      };
+      const board = lay('explore/Ouija_Board.webp', 34, 34 * 2000 / 1539, 40.1, true);
+      board.position.set(p.x, 40.1, p.y);
+      board.rotation.z = Math.PI * 0.75;
+      w.boardMat = board.material;
+      const pl = lay('explore/Planchette.webp', 7, 7 * 1078 / 621, 40.3, false);
+      pl.position.set(p.x + 3, 40.3, p.y - 2);
+      pl.rotation.z = Math.PI * 0.6;
       box(10, 36, 10, wood('#2a180c'), p.x, 18, p.y);
       break;
     }

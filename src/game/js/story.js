@@ -139,7 +139,7 @@ function enteredCell(prev) {
   const prevRoom = prev ? prev.room : null;
   if (room && c.room !== prevRoom) {
     ui.setRoom(room.name);
-    sound.setOutdoors(c.room === 'porch');
+    sound.setPlace(c.room === 'porch' ? 'out' : c.room === 'conservatory' ? 'glass' : 'in');
     if (!game.roomsSeen.has(c.room)) {
       game.roomsSeen.add(c.room);
       showRoomCard(room);
@@ -298,68 +298,72 @@ function setHearth(lit) {
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// The board: letters in two arcs, numbers beneath, YES / HELLO / NO across
-// the top and GOODBYE at the foot; the planchette glides to each letter
-// in turn and the answer builds up underneath.
+// The spirit board, from the official artwork (explore/Ouija_Board.webp):
+// the alphabet in a ring around the horned face, YES / GOODBYE / NO across
+// the top, the numbers along the foot. OUIJA_SPOTS are each one's centre in
+// the artwork's pixels; the planchette (explore/Planchette.webp) glides so
+// its window sits over each in turn, and the answer builds up beside it.
+const OUIJA_W = 1539, OUIJA_H = 2000;
+const OUIJA_SPOTS = { W: [325, 650], X: [450, 565], Y: [545, 535], Z: [645, 500], A: [760, 480], B: [875, 495], C: [1010, 535], D: [1115, 615], E: [1180, 705], F: [1270, 790], G: [1295, 930], H: [1285, 1085], I: [1235, 1255], J: [1180, 1355], K: [1115, 1400], L: [1055, 1460], M: [935, 1500], N: [795, 1525], O: [655, 1490], P: [535, 1470], Q: [420, 1405], R: [335, 1300], S: [265, 1205], T: [245, 1060], U: [240, 900], V: [290, 770], "1": [232, 1720], "2": [345, 1720], "3": [467, 1720], "4": [590, 1720], "5": [705, 1720], "6": [825, 1720], "7": [934, 1720], "8": [1039, 1720], "9": [1161, 1720], "0": [1285, 1720], "YES": [262, 248], "GOODBYE": [773, 295], "NO": [1251, 237] };
+const OUIJA_WORDS = ['YES', 'NO', 'GOODBYE'];
+// Where the window's centre is in the planchette picture (fractions), and
+// how wide the planchette is against the board.
+const PLANCHETTE = { lensX: 0.5, lensY: 0.243, width: 0.2 };
+
 function openOuija() {
   const root = $('ouija');
-  const W = 1000, H = 620;
-  const pos = {};
-  const top = 'ABCDEFGHIJKLM'.split(''), bottom = 'NOPQRSTUVWXYZ'.split('');
-  top.forEach((ch, i) => { const a = Math.PI * (1.18 + i / 12 * 0.64); pos[ch] = [500 + Math.cos(a) * 400, 470 + Math.sin(a) * 300]; });
-  bottom.forEach((ch, i) => { const a = Math.PI * (1.22 + i / 12 * 0.56); pos[ch] = [500 + Math.cos(a) * 300, 520 + Math.sin(a) * 210]; });
-  '1234567890'.split('').forEach((ch, i) => { pos[ch] = [275 + i * 50, 445]; });
-  pos.YES = [130, 90]; pos.NO = [870, 90]; pos.HELLO = [500, 70]; pos.GOODBYE = [500, 540];
-  const letters = [...top, ...bottom, ...'1234567890'.split('')]
-    .map(ch => `<text x="${pos[ch][0].toFixed(0)}" y="${pos[ch][1].toFixed(0)}" class="ob-letter" data-ch="${ch}">${ch}</text>`).join('');
   root.innerHTML = `
     <div class="ouija-board">
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="The spirit board">
-        <defs><radialGradient id="ob-bg" cx="50%" cy="45%" r="70%"><stop offset="0%" stop-color="#d8c393"/><stop offset="100%" stop-color="#8a6a3c"/></radialGradient></defs>
-        <rect x="10" y="10" width="${W - 20}" height="${H - 20}" rx="40" fill="url(#ob-bg)" stroke="#3a2412" stroke-width="10"/>
-        <text x="130" y="100" class="ob-word" data-ch="YES">YES</text>
-        <text x="500" y="80" class="ob-word" data-ch="HELLO">HELLO</text>
-        <text x="870" y="100" class="ob-word" data-ch="NO">NO</text>
-        <text x="500" y="560" class="ob-word" data-ch="GOODBYE">GOODBYE</text>
-        ${letters}
-        <g class="ob-planchette" transform="translate(500 300)">
-          <path d="M0 52 C -60 10 -54 -46 -18 -48 C -6 -48 0 -40 0 -34 C 0 -40 6 -48 18 -48 C 54 -46 60 10 0 52 Z" fill="rgba(30,18,10,0.82)" stroke="#e8d5a3" stroke-width="3"/>
-          <circle cx="0" cy="-8" r="17" fill="rgba(232,213,163,0.18)" stroke="#e8d5a3" stroke-width="2"/>
-        </g>
-      </svg>
-      <p class="ouija-spelled" aria-live="polite"></p>
-      <p class="ouija-text" aria-live="polite"></p>
-      <div class="ouija-choices"></div>
+      <div class="ob-stage">
+        <img class="ob-board" src="explore/Ouija_Board.webp" alt="The spirit board: the alphabet in a ring around a horned, many-eyed face, with YES, GOODBYE and NO above and the numbers below">
+        <div class="ob-glow"></div>
+        <img class="ob-planchette" src="explore/Planchette.webp" alt="">
+      </div>
+      <div class="ob-side">
+        <p class="ouija-spelled" aria-live="polite"></p>
+        <p class="ouija-text" aria-live="polite"></p>
+        <div class="ouija-choices"></div>
+      </div>
     </div>`;
   root.hidden = false;
   ui.overlay = 'ouija';
   const pl = root.querySelector('.ob-planchette');
+  const glowEl = root.querySelector('.ob-glow');
+  pl.style.width = `${PLANCHETTE.width * 100}%`;
+  pl.style.transformOrigin = `${PLANCHETTE.lensX * 100}% ${PLANCHETTE.lensY * 100}%`;
   const spelled = root.querySelector('.ouija-spelled');
-  let at = [500, 300];
+  const place = (x, y, rot) => {
+    pl.style.left = `${(x / OUIJA_W * 100).toFixed(3)}%`;
+    pl.style.top = `${(y / OUIJA_H * 100).toFixed(3)}%`;
+    pl.style.transform = `translate(-${PLANCHETTE.lensX * 100}%, -${PLANCHETTE.lensY * 100}%) rotate(${rot.toFixed(1)}deg)`;
+  };
+  let at = [770, 1000];
+  place(at[0], at[1], 0);
+  const pos = OUIJA_SPOTS;
   const moveTo = (to, ms) => new Promise(res => {
     const from = at.slice(), t0 = performance.now();
     const tick = now => {
       const k = Math.min(1, (now - t0) / ms), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-      const wob = Math.sin(now / 90) * 3 * (1 - k);
+      const wob = Math.sin(now / 90) * 6 * (1 - k);
       at = [lerp(from[0], to[0], e) + wob, lerp(from[1], to[1], e)];
-      // The lens over the letter: offset so the letter shows through it.
-      pl.setAttribute('transform', `translate(${at[0].toFixed(1)} ${(at[1] + 8).toFixed(1)}) rotate(${(wob * 2).toFixed(1)})`);
+      place(at[0], at[1], wob * 0.8 + (at[0] - 770) / 60);
       if (k < 1) requestAnimationFrame(tick); else res();
     };
     requestAnimationFrame(tick);
   });
+  // A pulse of light in the window as it settles on a letter.
   const glow = ch => {
-    const el = root.querySelector(`[data-ch="${ch}"]`);
-    if (!el) return;
-    el.classList.add('lit'); setTimeout(() => el.classList.remove('lit'), 700);
+    const [x, y] = pos[ch];
+    glowEl.style.left = `${(x / OUIJA_W * 100).toFixed(3)}%`;
+    glowEl.style.top = `${(y / OUIJA_H * 100).toFixed(3)}%`;
+    glowEl.classList.remove('lit'); void glowEl.offsetWidth; glowEl.classList.add('lit');
   };
   return {
     root,
     say(text) { root.querySelector('.ouija-text').textContent = text; },
     async spell(answer) {
       spelled.textContent = '';
-      const words = ['YES', 'NO', 'HELLO', 'GOODBYE'];
-      if (words.includes(answer)) {
+      if (OUIJA_WORDS.includes(answer)) {
         sound.scrape();
         await moveTo(pos[answer], 1100); glow(answer); spelled.textContent = answer;
         await sleep(900);
@@ -368,6 +372,8 @@ function openOuija() {
       for (const ch of answer) {
         if (ch === ' ') { spelled.textContent += ' '; await sleep(350); continue; }
         sound.scrape();
+        // The same letter twice: lift away a little and come back down.
+        if (Math.hypot(at[0] - pos[ch][0], at[1] - pos[ch][1]) < 30) await moveTo([pos[ch][0] + 70, pos[ch][1] + 50], 260);
         await moveTo(pos[ch], 620);
         glow(ch);
         spelled.textContent += ch;
@@ -376,7 +382,7 @@ function openOuija() {
       await sleep(900);
     },
     async thrash() {
-      for (let i = 0; i < 6; i++) { sound.scrape(); await moveTo([150 + Math.random() * 700, 120 + Math.random() * 380], 140); }
+      for (let i = 0; i < 6; i++) { sound.scrape(); await moveTo([250 + Math.random() * 1040, 350 + Math.random() * 1400], 140); }
       ui.flash('#9fb6ff', 300);
     },
     choose(choices) {

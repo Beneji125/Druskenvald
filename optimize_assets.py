@@ -278,7 +278,11 @@ def main():
                 out = tmp / "out.mp3"
                 encode_mp3(path, out)
                 old_size, new_size = path.stat().st_size, out.stat().st_size
-                if new_size >= old_size:
+                # Only worth it for a real saving. (A track that's already
+                # been through here can still come out above
+                # MP3_MAX_BITRATE; re-encoding it again would lose quality
+                # each run for nothing, and replace its true master.)
+                if new_size > old_size * (1 - MIN_SAVING / 3):
                     continue
                 print(f"audio {rel}: {human(old_size)} -> {human(new_size)}")
                 before += old_size

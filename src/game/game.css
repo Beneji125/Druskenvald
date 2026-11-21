@@ -42,6 +42,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .big:hover, .big:focus-visible { border-color: var(--gold); outline: none; box-shadow: 0 0 18px rgba(201,169,110,0.3); }
 #start .back { color: var(--cream-dim); font-size: 0.9rem; }
 #start .error { color: #e0a090; }
+#start .credits { font-size: 0.78rem; opacity: 0.75; }
+#btn-music.off { text-decoration: line-through; opacity: 0.6; }
 
 /* ── The view and the HUD ── */
 #game { position: fixed; inset: 0; }
@@ -156,15 +158,27 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .map-frame { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 
 /* ── The spirit board ── */
-#ouija { position: absolute; inset: 0; z-index: 7; background: rgba(3,2,4,0.85); display: flex; align-items: center; justify-content: center; padding: 12px; overflow-y: auto; }
-.ouija-board { width: min(820px, 100%); display: flex; flex-direction: column; gap: 10px; }
-.ouija-board svg { width: 100%; height: auto; max-height: 52vh; filter: drop-shadow(0 0 30px rgba(150,110,255,0.35)); }
-.ob-letter, .ob-word { font-family: 'Cinzel Decorative', Georgia, serif; fill: #3a2412; text-anchor: middle; dominant-baseline: middle; transition: fill 0.3s; }
-.ob-letter { font-size: 40px; }
-.ob-word { font-size: 34px; }
-.ob-letter.lit, .ob-word.lit { fill: #7a2ac0; }
-.ouija-spelled { min-height: 1.5em; margin: 0; text-align: center; font-family: 'Cinzel', serif; font-size: 1.5rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); }
-.ouija-text { min-height: 1.4em; margin: 0; text-align: center; font-style: italic; color: var(--cream-dim); }
+/* The board artwork with the planchette laid over it; text and choices
+   beside it on a wide screen, beneath it on a narrow one. */
+#ouija { position: absolute; inset: 0; z-index: 7; background: radial-gradient(ellipse at 40% 50%, rgba(40,20,60,0.75), rgba(3,2,4,0.94) 70%); display: flex; align-items: center; justify-content: center; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); overflow-y: auto; }
+.ouija-board { display: flex; align-items: center; gap: 28px; max-width: 100%; }
+.ob-stage { position: relative; flex: none; aspect-ratio: 1539 / 2000; height: min(90vh, calc((100vw - 460px) * 1.3)); filter: drop-shadow(0 0 34px rgba(150,110,255,0.3)) drop-shadow(0 10px 30px #000); }
+.ob-board { position: absolute; inset: 0; width: 100%; height: 100%; display: block; user-select: none; -webkit-user-drag: none; }
+.ob-planchette { position: absolute; height: auto; pointer-events: none; filter: drop-shadow(4px 10px 8px rgba(0,0,0,0.6)); will-change: left, top, transform; }
+.ob-glow { position: absolute; width: 11%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, rgba(200,160,255,0.85) 0%, rgba(150,100,255,0.35) 45%, rgba(120,80,255,0) 70%); mix-blend-mode: screen; }
+.ob-glow.lit { animation: ob-glow 0.9s ease-out; }
+@keyframes ob-glow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
+.ob-side { width: 400px; display: flex; flex-direction: column; gap: 12px; }
+.ouija-spelled { min-height: 1.5em; margin: 0; font-family: 'Cinzel', serif; font-size: 1.6rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); overflow-wrap: anywhere; }
+.ouija-text { min-height: 1.4em; margin: 0; font-style: italic; color: var(--cream-dim); line-height: 1.45; }
+@media (max-width: 820px), (max-aspect-ratio: 1/1) {
+  .ouija-board { flex-direction: column; gap: 12px; width: 100%; }
+  .ob-stage { height: auto; width: min(100%, calc(52vh * 0.7695)); }
+  .ob-side { width: min(560px, 100%); }
+  .ouija-spelled { text-align: center; font-size: 1.3rem; }
+  .ouija-text { text-align: center; }
+}
 
 /* ── The harpsichord ── */
 #keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }

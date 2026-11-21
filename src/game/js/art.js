@@ -435,22 +435,6 @@ function fireplaceTextures() {
   return { map: artTexture(c), glow: artTexture(m) };
 }
 
-// The spirit board, seen from above on the parlour table.
-function spiritBoardTexture() {
-  const [c, ctx] = artCanvas(256, 256);
-  ctx.fillStyle = '#c9b48c'; ctx.beginPath(); ctx.arc(128, 128, 124, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#5a3a20'; ctx.lineWidth = 6; ctx.stroke();
-  ctx.fillStyle = '#3a2412'; ctx.font = 'bold 18px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((ch, i) => {
-    const a = Math.PI * (1.08 + i / 25 * 0.84) + (i > 12 ? 0.0 : 0);
-    ctx.fillText(ch, 128 + Math.cos(a) * 94, 140 + Math.sin(a) * 94);
-  });
-  ctx.font = 'bold 16px Georgia, serif';
-  ctx.fillText('YES', 70, 70); ctx.fillText('NO', 190, 70); ctx.fillText('GOODBYE', 128, 220);
-  ctx.fillText('1 2 3 4 5 6 7 8 9 0', 128, 185);
-  return artTexture(c);
-}
-
 // The long dining table's cloth, laid for the feast.
 function feastTexture() {
   const [c, ctx] = artCanvas(128, 256);
