@@ -11,8 +11,8 @@ const MUSIC_VOLUME_KEY = 'crooked_house_music_volume';
 //   house   while you explore
 //   dread   when Dread runs high
 //   waltz   the music room's cursed waltz
-//   echoes  Patrini's song: from the moment the harpsichord puzzle is
-//           solved, and in the music room ever after
+//   echoes  Patrini's song: once, straight after the harpsichord puzzle is
+//           solved, and only until you leave the music room
 // A list with more than one track plays them in turn. `once` themes don't
 // loop: when the track ends, musicFor() decides what comes next.
 const MUSIC = {

@@ -165,11 +165,12 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   all the time, clearer on the porch and through the conservatory glass;
   *Silent Hours* while you explore; *These Splitting Walls* when Dread
   reaches 7 (until it falls back to 4); *The Harpsichord* as the music
-  room's cursed waltz; and *The Echoes* as Patrini's song, from the moment
-  the harpsichord puzzle is solved (it plays through wherever you go, and
-  again whenever you're back in the music room). Music drops away for the
-  séance. Credits are on the title screen (*Silent Hours* and *These
-  Splitting Walls*: The Blasting Company). The tracks are in
+  room's cursed waltz; and *The Echoes* (Puddles the Clown) as Patrini's
+  song, once, straight after the harpsichord puzzle is solved, stopping for
+  good when you leave the music room. Music drops away for the séance.
+  Credits are on the title screen (*Silent Hours* and *These Splitting
+  Walls*: The Blasting Company; *The Harpsichord* is deliberately not
+  credited). The tracks are in
   `docs/audio/crooked-house/` (masters in `source-assets/originals/`); the
   🔊 button opens Volume and Music sliders and Mute, kept between visits.
 - **The spirit board:** the séance uses the official board and planchette

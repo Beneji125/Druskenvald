@@ -241,7 +241,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
     <button type="button" id="btn-new" class="big">Start again</button>
   </div>
   <p class="note">Turn your sound on for the storm. Your progress is kept in this browser.</p>
-  <p class="note credits">Music: “Silent Hours” and “These Splitting Walls” by The Blasting Company · Storm: “Dark and Stormy” by Tabletop Audio (tabletopaudio.com)</p>
+  <p class="note credits">Music: “Silent Hours” and “These Splitting Walls” by The Blasting Company · “The Echoes” by Puddles the Clown · Storm: “Dark and Stormy” by Tabletop Audio (tabletopaudio.com)</p>
   <p class="note error" id="start-error" hidden>Your browser couldn’t draw the house in 3D: WebGL is turned off or not available. Try another browser, or turn on hardware acceleration in this one’s settings.</p>
   <a class="back" href="index.html#wickermoor/wm_village">↩ Back to the map of Wickermoor</a>
 </section>
@@ -963,8 +963,8 @@ const MUSIC_VOLUME_KEY = 'crooked_house_music_volume';
 //   house   while you explore
 //   dread   when Dread runs high
 //   waltz   the music room's cursed waltz
-//   echoes  Patrini's song: from the moment the harpsichord puzzle is
-//           solved, and in the music room ever after
+//   echoes  Patrini's song: once, straight after the harpsichord puzzle is
+//           solved, and only until you leave the music room
 // A list with more than one track plays them in turn. `once` themes don't
 // loop: when the track ends, musicFor() decides what comes next.
 const MUSIC = {
@@ -2399,8 +2399,8 @@ async function harpsichordScene() {
   endCurse(true);
   showPatrini();
   ui.log('The waltz breaks off. In the silence a shimmering blue figure sits at the harpsichord and plays, slow and sad.', 'note');
-  // Patrini's song: The Echoes, from the top, and it plays through wherever
-  // you go (see musicFor in main.js).
+  // Patrini's song: The Echoes, from the top, for as long as you stay in
+  // the music room (see musicFor in main.js).
   game.echoesPlaying = true;
   sound.setTheme('echoes', { fade: 1.5, restart: true });
   await ui.say('Joseph Patrini', 'He sings, very softly, of a kitchen fire that never went out, of children’s feet on the stairs, of a house that was warm once. The song ends before it should, as though he can’t remember the rest.');
@@ -2856,9 +2856,11 @@ function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
   if (game.curse) return 'waltz';
-  if (game.echoesPlaying) return 'echoes';      // Patrini's song plays through
+  // Patrini's song, straight after the puzzle: only while you stay in the
+  // music room. Leave, and it's over for good.
+  if (game.echoesPlaying && here.room !== 'music') game.echoesPlaying = false;
+  if (game.echoesPlaying) return 'echoes';
   if (dreadTheme) return 'dread';
-  if (here.room === 'music' && game.flags.musicSolved) return 'echoes';
   return 'house';
 }
 sound.onThemeEnded = name => { if (name === 'echoes') game.echoesPlaying = false; };

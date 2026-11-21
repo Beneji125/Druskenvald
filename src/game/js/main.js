@@ -315,9 +315,11 @@ function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
   if (game.curse) return 'waltz';
-  if (game.echoesPlaying) return 'echoes';      // Patrini's song plays through
+  // Patrini's song, straight after the puzzle: only while you stay in the
+  // music room. Leave, and it's over for good.
+  if (game.echoesPlaying && here.room !== 'music') game.echoesPlaying = false;
+  if (game.echoesPlaying) return 'echoes';
   if (dreadTheme) return 'dread';
-  if (here.room === 'music' && game.flags.musicSolved) return 'echoes';
   return 'house';
 }
 sound.onThemeEnded = name => { if (name === 'echoes') game.echoesPlaying = false; };

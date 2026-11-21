@@ -509,8 +509,8 @@ async function harpsichordScene() {
   endCurse(true);
   showPatrini();
   ui.log('The waltz breaks off. In the silence a shimmering blue figure sits at the harpsichord and plays, slow and sad.', 'note');
-  // Patrini's song: The Echoes, from the top, and it plays through wherever
-  // you go (see musicFor in main.js).
+  // Patrini's song: The Echoes, from the top, for as long as you stay in
+  // the music room (see musicFor in main.js).
   game.echoesPlaying = true;
   sound.setTheme('echoes', { fade: 1.5, restart: true });
   await ui.say('Joseph Patrini', 'He sings, very softly, of a kitchen fire that never went out, of children’s feet on the stairs, of a house that was warm once. The song ends before it should, as though he can’t remember the rest.');
