@@ -456,6 +456,7 @@ const DOORS = (() => {
       const n2 = c2 && GRID.at(c2.cx + DIRS[d][0], c2.cy + DIRS[d][1]);
       const double = !!(c2 && c2.walk && c2.edges[d] === 'door' && c2.room === c.room && n2 && n2.room === n.room);
       const door = { id: key(c, d), dir: d, cells: double ? [c, c2] : [c], rooms: [c.room, n.room], open: false };
+      door.swingInto = swingInto(door.rooms);
       door.cells.forEach(x => {
         byEdge.set(key(x, d), door);
         byEdge.set(key(GRID.at(x.cx + DIRS[d][0], x.cy + DIRS[d][1]), (d + 2) % 4), door);
@@ -465,6 +466,18 @@ const DOORS = (() => {
   });
   return { list, at: (c, d) => (c ? byEdge.get(key(c, d)) || null : null), byId: id => list.find(x => x.id === id) || null };
 })();
+
+// Which room a door swings into. Like real doors, each always opens the
+// same way: never into the hallway (it would block it) or out onto the
+// porch, and between two rooms into the larger one.
+function swingInto([a, b]) {
+  for (const away of ['hallway', 'porch']) {
+    if (a === away) return b;
+    if (b === away) return a;
+  }
+  const size = r => GRID.cells.filter(c => c.walk && c.room === r).length;
+  return size(a) >= size(b) ? a : b;
+}
 
 function canStep(c, dir) {
   if (!c) return false;
@@ -1350,8 +1363,9 @@ function buildWorld(renderer, quality) {
   doorTexBack.wrapS = THREE.RepeatWrapping; doorTexBack.repeat.x = -1; doorTexBack.offset.x = 1;
   const doorFront = new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.7 });
   const doorBack = new THREE.MeshStandardMaterial({ map: doorTexBack, roughness: 0.7 });
+  // (The same materials suit every leaf, either side of a double door:
+  // each leaf's own x runs from its hinge to its free edge.)
   const doorMats = [frameMat, frameMat, frameMat, frameMat, doorFront, doorBack];
-  const doorMatsMirror = [frameMat, frameMat, frameMat, frameMat, doorBack, doorFront];
   DOORS.list.forEach(door => {
     const c = door.cells[0], d = door.dir;
     const k = corners(c), L = CELL * door.cells.length;
@@ -1375,7 +1389,7 @@ function buildWorld(renderer, quality) {
       const lw = W / door.cells.length - 1;
       const geo = new THREE.BoxGeometry(lw, DOOR_H - 1, 3.5);
       geo.translate(lw / 2, (DOOR_H - 1) / 2, 0);
-      const leaf = new THREE.Mesh(geo, toward === 1 ? doorMats : doorMatsMirror);
+      const leaf = new THREE.Mesh(geo, doorMats);
       leaf.castShadow = leaf.receiveShadow = true;
       const pivot = new THREE.Group();
       const p = at(s);
@@ -1384,7 +1398,12 @@ function buildWorld(renderer, quality) {
       pivot.rotation.y = base;
       pivot.add(leaf);
       scene.add(pivot);
-      return { pivot, base, sign: 1 };
+      // Swing towards door.swingInto: whichever way round puts the open
+      // leaf on that room's side of the wall.
+      const into = door.swingInto === door.rooms[0] ? n : [-n[0], -n[1]];
+      const a = base + DOOR_SWING;
+      const sign = (Math.cos(a) * into[0] - Math.sin(a) * into[1]) > 0 ? 1 : -1;
+      return { pivot, base, sign };
     });
     w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u };
   });
@@ -2599,7 +2618,7 @@ function startGame(fresh) {
     d.open = game.doorsOpen.has(d.id);
     const v = world.doors[d.id];
     v.amount = v.target = d.open ? 1 : 0;
-    v.leaves.forEach(l => { l.sign = 1; l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
+    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
   });
   yaw = -game.dir * Math.PI / 2;
   motion.from = motion.to = null;
@@ -2678,16 +2697,10 @@ function doorAhead() {
   return c && c.edges[game.dir] === 'door' ? DOORS.at(c, game.dir) : null;
 }
 
-// Doors swing away from you: into the next room when you open them.
+// Each door always swings into the same room (DOORS' swingInto, in core.js).
 function swingDoor(door, open) {
   const v = world.doors[door.id];
   if (open) {
-    const mine = door.cells.some(c => c.cx === game.cx && c.cy === game.cy);
-    const pn = mine ? v.normal : [-v.normal[0], -v.normal[1]];    // points back at you
-    v.leaves.forEach(l => {
-      const a = l.base + DOOR_SWING;
-      l.sign = (Math.cos(a) * pn[0] - Math.sin(a) * pn[1]) < 0 ? 1 : -1;
-    });
     game.doorsOpen.add(door.id);
   } else {
     game.doorsOpen.delete(door.id);

@@ -136,8 +136,9 @@ function buildWorld(renderer, quality) {
   doorTexBack.wrapS = THREE.RepeatWrapping; doorTexBack.repeat.x = -1; doorTexBack.offset.x = 1;
   const doorFront = new THREE.MeshStandardMaterial({ map: doorTex, roughness: 0.7 });
   const doorBack = new THREE.MeshStandardMaterial({ map: doorTexBack, roughness: 0.7 });
+  // (The same materials suit every leaf, either side of a double door:
+  // each leaf's own x runs from its hinge to its free edge.)
   const doorMats = [frameMat, frameMat, frameMat, frameMat, doorFront, doorBack];
-  const doorMatsMirror = [frameMat, frameMat, frameMat, frameMat, doorBack, doorFront];
   DOORS.list.forEach(door => {
     const c = door.cells[0], d = door.dir;
     const k = corners(c), L = CELL * door.cells.length;
@@ -161,7 +162,7 @@ function buildWorld(renderer, quality) {
       const lw = W / door.cells.length - 1;
       const geo = new THREE.BoxGeometry(lw, DOOR_H - 1, 3.5);
       geo.translate(lw / 2, (DOOR_H - 1) / 2, 0);
-      const leaf = new THREE.Mesh(geo, toward === 1 ? doorMats : doorMatsMirror);
+      const leaf = new THREE.Mesh(geo, doorMats);
       leaf.castShadow = leaf.receiveShadow = true;
       const pivot = new THREE.Group();
       const p = at(s);
@@ -170,7 +171,12 @@ function buildWorld(renderer, quality) {
       pivot.rotation.y = base;
       pivot.add(leaf);
       scene.add(pivot);
-      return { pivot, base, sign: 1 };
+      // Swing towards door.swingInto: whichever way round puts the open
+      // leaf on that room's side of the wall.
+      const into = door.swingInto === door.rooms[0] ? n : [-n[0], -n[1]];
+      const a = base + DOOR_SWING;
+      const sign = (Math.cos(a) * into[0] - Math.sin(a) * into[1]) > 0 ? 1 : -1;
+      return { pivot, base, sign };
     });
     w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u };
   });

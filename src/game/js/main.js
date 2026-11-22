@@ -58,7 +58,7 @@ function startGame(fresh) {
     d.open = game.doorsOpen.has(d.id);
     const v = world.doors[d.id];
     v.amount = v.target = d.open ? 1 : 0;
-    v.leaves.forEach(l => { l.sign = 1; l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
+    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * v.amount * DOOR_SWING; });
   });
   yaw = -game.dir * Math.PI / 2;
   motion.from = motion.to = null;
@@ -137,16 +137,10 @@ function doorAhead() {
   return c && c.edges[game.dir] === 'door' ? DOORS.at(c, game.dir) : null;
 }
 
-// Doors swing away from you: into the next room when you open them.
+// Each door always swings into the same room (DOORS' swingInto, in core.js).
 function swingDoor(door, open) {
   const v = world.doors[door.id];
   if (open) {
-    const mine = door.cells.some(c => c.cx === game.cx && c.cy === game.cy);
-    const pn = mine ? v.normal : [-v.normal[0], -v.normal[1]];    // points back at you
-    v.leaves.forEach(l => {
-      const a = l.base + DOOR_SWING;
-      l.sign = (Math.cos(a) * pn[0] - Math.sin(a) * pn[1]) < 0 ? 1 : -1;
-    });
     game.doorsOpen.add(door.id);
   } else {
     game.doorsOpen.delete(door.id);

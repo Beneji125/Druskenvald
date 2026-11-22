@@ -145,7 +145,10 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   On a phone, the on-screen buttons. Doors start closed (except the front
   door): walk into one or press Space to open it, Space again to close it.
   Every doorway on the plan gets a door automatically (`DOORS` in
-  `core.js`); two doorways side by side become a double door.
+  `core.js`); two doorways side by side become a double door. Each door
+  always swings the same way: into the room rather than the hallway, into
+  the house from the porch, and otherwise into the larger room
+  (`swingInto`).
 - **Where things are:**
   - `src/game/js/` — the game, joined in the order of `GAME_FILES` in
     build.js: `core.js` (the grid), `art.js` (all the placeholder art),

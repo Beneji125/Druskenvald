@@ -127,6 +127,7 @@ const DOORS = (() => {
       const n2 = c2 && GRID.at(c2.cx + DIRS[d][0], c2.cy + DIRS[d][1]);
       const double = !!(c2 && c2.walk && c2.edges[d] === 'door' && c2.room === c.room && n2 && n2.room === n.room);
       const door = { id: key(c, d), dir: d, cells: double ? [c, c2] : [c], rooms: [c.room, n.room], open: false };
+      door.swingInto = swingInto(door.rooms);
       door.cells.forEach(x => {
         byEdge.set(key(x, d), door);
         byEdge.set(key(GRID.at(x.cx + DIRS[d][0], x.cy + DIRS[d][1]), (d + 2) % 4), door);
@@ -136,6 +137,18 @@ const DOORS = (() => {
   });
   return { list, at: (c, d) => (c ? byEdge.get(key(c, d)) || null : null), byId: id => list.find(x => x.id === id) || null };
 })();
+
+// Which room a door swings into. Like real doors, each always opens the
+// same way: never into the hallway (it would block it) or out onto the
+// porch, and between two rooms into the larger one.
+function swingInto([a, b]) {
+  for (const away of ['hallway', 'porch']) {
+    if (a === away) return b;
+    if (b === away) return a;
+  }
+  const size = r => GRID.cells.filter(c => c.walk && c.room === r).length;
+  return size(a) >= size(b) ? a : b;
+}
 
 function canStep(c, dir) {
   if (!c) return false;
