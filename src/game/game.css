@@ -316,3 +316,29 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 @media (prefers-reduced-motion: reduce) {
   #room-name.show, #room-card.show, #dread.jolt { animation: none; }
 }
+
+/* The arrival (arrival.js): letterboxed, no HUD but the sound and Leave
+   buttons, narration along the bottom, and a Skip button. */
+#game.arriving .hud-left, #game.arriving #btn-map, #game.arriving #btn-journal,
+#game.arriving #pad, #game.arriving #inventory, #game.arriving #log, #game.arriving #prompt, #game.arriving #room-card { display: none !important; }
+#game.arriving::before, #game.arriving::after { content: ''; position: absolute; left: 0; right: 0; height: 7vh; background: #000; pointer-events: none; z-index: 1; }
+#game.arriving::before { top: 0; }
+#game.arriving::after { bottom: 0; }
+#game.arriving #hud-top { z-index: 3; }
+#arrival-cap {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: calc(7vh + 18px); width: min(680px, calc(100vw - 32px));
+  margin: 0; padding: 10px 18px; text-align: center; cursor: pointer;
+  font-size: 1.12rem; line-height: 1.5; font-style: italic; color: var(--cream);
+  background: rgba(6,5,8,0.72); border-radius: 3px; text-shadow: 0 0 6px #000;
+  opacity: 0; transition: opacity 0.6s; z-index: 3;
+}
+#arrival-cap.show { opacity: 1; }
+#btn-skip {
+  position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: calc(7vh + 18px); z-index: 12;
+  font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 0.05em; padding: 0.4em 0.9em; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+}
+@media (max-width: 640px) {
+  #arrival-cap { font-size: 1rem; bottom: calc(7vh + 64px); }
+}

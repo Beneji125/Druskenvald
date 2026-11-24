@@ -89,6 +89,7 @@ function buildWorld(renderer, quality) {
   const wallMat = key => wallMats[key] || (wallMats[key] = new THREE.MeshStandardMaterial({
     map: key === 'exterior' ? exteriorTexture() : key === 'top' ? null : wallTexture(key),
     color: key === 'top' ? 0x2a221b : 0xffffff, roughness: 0.95, metalness: 0 }));
+  w.wallMats = wallMats;
   const faces = {};
   // One flat quad, wound so its front faces `normal`.
   const quad = (key, pts, normal, uvs) => {
@@ -325,11 +326,14 @@ function buildWorld(renderer, quality) {
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshStandardMaterial({ color: 0x0b0d0a, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(FLOOR.width / 2, -0.5, FLOOR.height / 2);
   scene.add(ground);
+  w.ground = ground;
   const treeRand = seededRandom(44);
+  w.trees = [];
   for (let i = 0; i < 14; i++) {
     const a = treeRand() * Math.PI * 2, r = 820 + treeRand() * 500;
     const s = addSprite(scene, 'shrub', FLOOR.width / 2 + Math.cos(a) * r, FLOOR.height / 2 + Math.sin(a) * r);
     s.scale.setScalar(6.5);
+    w.trees.push(s);
   }
 
   // ── Light ──

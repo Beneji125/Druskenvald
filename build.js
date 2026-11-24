@@ -416,7 +416,7 @@ function build() {
 // Its own page, built the same way from src/game/: template.html, game.css
 // and the scripts in GAME_FILES (joined in this order into one module
 // script), after the house data from src/data/explore.json.
-const GAME_FILES = ['core.js', 'art.js', 'audio.js', 'world.js', 'ui.js', 'story.js', 'items.js', 'dread.js', 'jasper.js', 'encounter.js', 'rooms.js', 'flashback.js', 'rhythm.js', 'main.js'];
+const GAME_FILES = ['core.js', 'art.js', 'audio.js', 'world.js', 'ui.js', 'story.js', 'items.js', 'dread.js', 'jasper.js', 'encounter.js', 'rooms.js', 'flashback.js', 'rhythm.js', 'arrival.js', 'main.js'];
 const GAME_OUTPUT = path.join(DOCS_DIR, 'crooked-house.html');
 
 function readGameScript() {
@@ -437,6 +437,15 @@ function buildGame(explore, gameJs) {
     toConstDeclarations(explore, true),
     gameJs,
   ].join('\n\n');
+  // The files share one module scope: two top-level things with the same
+  // name would stop the whole game loading.
+  const seen = new Map();
+  for (const f of GAME_FILES) {
+    for (const m of fs.readFileSync(path.join(SRC_DIR, 'game', 'js', f), 'utf8').matchAll(/^(?:async\s+)?(?:function\s*\*?\s*|const\s+|let\s+|var\s+|class\s+)([A-Za-z_$][\w$]*)/gm)) {
+      if (seen.has(m[1])) { console.error(`error: ${m[1]} is declared twice at the top level of the game (${seen.get(m[1])} and ${f})`); process.exit(1); }
+      seen.set(m[1], f);
+    }
+  }
   // Catch a syntax error here rather than as a blank page in the browser.
   try { new Function(script); } catch (err) {
     console.error(`error: the Crooked House game script doesn't parse: ${err.message}\n  (check src/game/js/ with: node --check src/game/js/<file>.js)`);

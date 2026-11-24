@@ -176,10 +176,38 @@ const sound = {
     else this.setPlace(this.place);
   },
 
+
+  // Before the storm (the arrival, arrival.js): no rain yet, just a
+  // breeze over the hill.
+  setCalm(on) {
+    this.calm = on;
+    if (!this.stormGain) return;
+    if (on) this.stormGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05);
+    else this.setPlace(this.place);
+    if (on && !this.breeze) {
+      const ctx = this.ctx;
+      const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.7;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.13;
+      const depth = ctx.createGain(); depth.gain.value = 180;
+      lfo.connect(depth).connect(bp.frequency);
+      const g = ctx.createGain(); g.gain.value = 0.0001;
+      g.gain.setTargetAtTime(0.06, ctx.currentTime, 1);
+      src.connect(bp).connect(g).connect(this.master);
+      src.start(); lfo.start();
+      this.breeze = { src, lfo, g };
+    } else if (!on && this.breeze) {
+      const { src, lfo, g } = this.breeze, t = this.ctx.currentTime;
+      g.gain.setTargetAtTime(0.0001, t, 0.8);
+      src.stop(t + 4); lfo.stop(t + 4);
+      this.breeze = null;
+    }
+  },
+
   // 'out', 'glass' or 'in': see STORM_PLACES.
   setPlace(place) {
     this.place = place;
-    if (!this.stormFilter || this.past) return;
+    if (!this.stormFilter || this.past || this.calm) return;
     const p = STORM_PLACES[place] || STORM_PLACES.in, t = this.ctx.currentTime;
     this.stormFilter.frequency.setTargetAtTime(p.cutoff, t, 0.5);
     this.stormGain.gain.setTargetAtTime(p.gain, t, 0.5);

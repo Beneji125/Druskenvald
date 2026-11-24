@@ -613,3 +613,185 @@ function itemIcon(id) {
   }
   return (itemIconCache[id] = c.toDataURL());
 }
+
+// ─── The arrival (arrival.js): the estate at dusk ─────────────────────
+
+Object.assign(SPRITES, {
+  // Walter Jenkin: tall, bearded, in a flat cap and a work coat.
+  walter: { size: [30, 66], draw: () => inkSprite(96, 212, (ctx) => {
+    ctx.fillStyle = '#3a3a2c'; ctx.fillRect(34, 150, 11, 60); ctx.fillRect(51, 150, 11, 60);              // trousers
+    ctx.fillStyle = '#5a4530'; ctx.beginPath(); ctx.moveTo(26, 62); ctx.lineTo(70, 62); ctx.lineTo(74, 160); ctx.lineTo(22, 160); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#d8b48e'; ctx.beginPath(); ctx.ellipse(48, 38, 14, 17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#8a5a3a'; ctx.beginPath(); ctx.moveTo(35, 42); ctx.quadraticCurveTo(48, 70, 61, 42); ctx.closePath(); ctx.fill();   // beard
+    ctx.fillStyle = '#4a4436'; ctx.beginPath(); ctx.ellipse(48, 24, 17, 8, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.fillRect(40, 22, 26, 5);   // cap
+    ctx.fillStyle = '#d8b48e'; ctx.beginPath(); ctx.ellipse(78, 60, 6, 8, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();   // a raised hand
+    ctx.lineWidth = 8; ctx.strokeStyle = '#5a4530'; ctx.beginPath(); ctx.moveTo(68, 70); ctx.lineTo(77, 66); ctx.stroke();
+  }) },
+  // Gilly Jenkin: a long skirt, a shawl, her hair up.
+  gilly: { size: [28, 58], draw: () => inkSprite(96, 200, (ctx) => {
+    ctx.fillStyle = '#4a5a6a'; ctx.beginPath(); ctx.moveTo(34, 84); ctx.quadraticCurveTo(20, 150, 16, 198); ctx.lineTo(80, 198); ctx.quadraticCurveTo(76, 150, 62, 84); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#8a4a3a'; ctx.beginPath(); ctx.moveTo(24, 62); ctx.lineTo(72, 62); ctx.lineTo(62, 108); ctx.lineTo(34, 108); ctx.closePath(); ctx.fill(); ctx.stroke();   // shawl
+    ctx.fillStyle = '#e0bc98'; ctx.beginPath(); ctx.ellipse(48, 40, 13, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6a3a22'; ctx.beginPath(); ctx.ellipse(48, 28, 15, 9, 0, Math.PI, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(48, 16, 7, 0, Math.PI * 2); ctx.fill();
+  }) },
+  // Dani: ten years old, plaits, a pinafore.
+  dani: { size: [20, 40], draw: () => inkSprite(80, 160, (ctx) => {
+    ctx.fillStyle = '#6a3048'; ctx.beginPath(); ctx.moveTo(28, 70); ctx.lineTo(52, 70); ctx.lineTo(62, 128); ctx.lineTo(18, 128); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e8e0d0'; ctx.fillRect(30, 80, 20, 40);
+    ctx.fillStyle = '#3a2a22'; ctx.fillRect(28, 128, 8, 30); ctx.fillRect(44, 128, 8, 30);
+    ctx.fillStyle = '#e4c0a0'; ctx.beginPath(); ctx.ellipse(40, 48, 13, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#a86a32'; ctx.beginPath(); ctx.ellipse(40, 38, 14, 8, 0, Math.PI, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 5; ctx.strokeStyle = '#a86a32'; ctx.beginPath(); ctx.moveTo(27, 42); ctx.lineTo(22, 70); ctx.moveTo(53, 42); ctx.lineTo(58, 70); ctx.stroke();
+    ctx.fillStyle = '#1a120b'; ctx.beginPath(); ctx.arc(35, 48, 1.8, 0, Math.PI * 2); ctx.arc(45, 48, 1.8, 0, Math.PI * 2); ctx.fill();
+  }) },
+  // Shuck: a red-furred dog that never leaves Dani's side.
+  shuck: { size: [36, 26], draw: () => inkSprite(140, 100, (ctx) => {
+    ctx.fillStyle = '#9a3a1a';
+    ctx.beginPath(); ctx.ellipse(66, 52, 40, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    [36, 50, 82, 96].forEach(x => { ctx.fillRect(x - 4, 60, 8, 38); ctx.strokeRect(x - 4, 60, 8, 38); });
+    ctx.beginPath(); ctx.moveTo(104, 44); ctx.lineTo(126, 26); ctx.lineTo(136, 34); ctx.lineTo(118, 52); ctx.closePath(); ctx.fill(); ctx.stroke();   // head
+    ctx.beginPath(); ctx.moveTo(120, 28); ctx.lineTo(118, 12); ctx.lineTo(128, 24); ctx.fill(); ctx.stroke();   // ear
+    ctx.lineWidth = 6; ctx.strokeStyle = '#9a3a1a'; ctx.beginPath(); ctx.moveTo(28, 46); ctx.quadraticCurveTo(10, 40, 8, 22); ctx.stroke();   // tail
+  }) },
+  // The grey cat, Wisp.
+  wisp: { size: [20, 18], draw: () => inkSprite(96, 86, (ctx) => {
+    ctx.fillStyle = '#7a7a80';
+    ctx.beginPath(); ctx.ellipse(44, 56, 26, 16, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    [26, 36, 54, 62].forEach(x => { ctx.fillRect(x - 3, 62, 6, 22); });
+    ctx.beginPath(); ctx.arc(70, 34, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(60, 26); ctx.lineTo(60, 12); ctx.lineTo(68, 22); ctx.moveTo(80, 26); ctx.lineTo(82, 12); ctx.lineTo(74, 22); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 5; ctx.strokeStyle = '#7a7a80'; ctx.beginPath(); ctx.moveTo(20, 50); ctx.quadraticCurveTo(4, 30, 14, 8); ctx.stroke();
+    ctx.fillStyle = '#d8f070'; ctx.beginPath(); ctx.ellipse(65, 33, 3, 2, 0, 0, Math.PI * 2); ctx.ellipse(76, 33, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+  }) },
+  // The Crooked Man as he greets you on the porch: no axe, a bent-top hat,
+  // one long arm up in a wave, and that grin.
+  crookedHost: { size: [58, 116], draw: () => {
+    const [c, ctx] = artCanvas(128, 256);
+    ctx.shadowColor = 'rgba(170,195,255,0.9)'; ctx.shadowBlur = 10; ctx.fillStyle = '#050304';
+    ctx.beginPath(); ctx.ellipse(66, 40, 13, 17, 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(46, 30); ctx.lineTo(86, 22); ctx.lineTo(70, 2); ctx.lineTo(54, 10); ctx.closePath(); ctx.fill();   // the bent-top hat
+    ctx.beginPath(); ctx.moveTo(42, 32); ctx.lineTo(92, 22); ctx.lineTo(92, 27); ctx.lineTo(42, 37); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(52, 56); ctx.quadraticCurveTo(38, 120, 46, 200); ctx.lineTo(30, 252); ctx.lineTo(54, 252); ctx.lineTo(62, 206); ctx.lineTo(76, 252); ctx.lineTo(100, 252); ctx.lineTo(84, 196); ctx.quadraticCurveTo(92, 120, 80, 56); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.strokeStyle = '#050304';
+    ctx.beginPath(); ctx.moveTo(80, 64); ctx.lineTo(104, 44); ctx.lineTo(112, 8); ctx.stroke();       // the waving arm, bent wrong
+    ctx.beginPath(); ctx.moveTo(52, 66); ctx.lineTo(30, 120); ctx.lineTo(36, 160); ctx.stroke();
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(112, 8); ctx.lineTo(104, 0); ctx.moveTo(112, 8); ctx.lineTo(120, 2); ctx.moveTo(112, 8); ctx.lineTo(124, 10); ctx.stroke();
+    ctx.shadowColor = 'rgba(255,240,180,1)'; ctx.shadowBlur = 6;
+    ctx.fillStyle = '#e8d890'; ctx.beginPath(); ctx.moveTo(56, 44); ctx.quadraticCurveTo(70, 62, 82, 38); ctx.quadraticCurveTo(70, 50, 56, 44); ctx.fill();   // the grin
+    ctx.strokeStyle = '#6a5a20'; ctx.lineWidth = 1; for (let x = 60; x < 80; x += 3.5) { ctx.beginPath(); ctx.moveTo(x, 44 + (x - 56) * 0.1); ctx.lineTo(x + 0.6, 52 - Math.abs(x - 69) * 0.3); ctx.stroke(); }
+    return artTexture(c);
+  } },
+  flowers: { size: [44, 16], draw: () => inkSprite(176, 64, (ctx) => {
+    const rand = seededRandom(21);
+    ctx.fillStyle = '#2e5a2a'; for (let i = 0; i < 26; i++) { ctx.beginPath(); ctx.ellipse(10 + rand() * 156, 44 + rand() * 18, 6, 14, rand() - 0.5, 0, Math.PI * 2); ctx.fill(); }
+    for (let i = 0; i < 30; i++) {
+      ctx.fillStyle = ['#e85a6a', '#f0d060', '#e890c0', '#f4f0e8', '#b070d8'][i % 5];
+      const x = 10 + rand() * 156, y = 12 + rand() * 34;
+      for (let p = 0; p < 5; p++) { const a = p * 1.256; ctx.beginPath(); ctx.arc(x + Math.cos(a) * 4, y + Math.sin(a) * 4, 3.4, 0, Math.PI * 2); ctx.fill(); }
+      ctx.fillStyle = '#5a3a10'; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+    }
+  }) },
+  weeds: { size: [48, 30], draw: () => inkSprite(176, 110, (ctx) => {
+    const rand = seededRandom(22);
+    ctx.strokeStyle = '#2a2a1a'; ctx.lineWidth = 3;
+    for (let i = 0; i < 22; i++) {
+      const x = 8 + rand() * 160, h = 40 + rand() * 66, lean = (rand() - 0.5) * 30;
+      ctx.beginPath(); ctx.moveTo(x, 110); ctx.quadraticCurveTo(x + lean * 0.3, 110 - h / 2, x + lean, 110 - h); ctx.stroke();
+      if (i % 3 === 0) { ctx.fillStyle = '#4a2a4a'; ctx.beginPath(); ctx.arc(x + lean, 106 - h, 6, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#2a2a1a'; ctx.beginPath(); ctx.ellipse(x + lean, 112 - h, 5, 6, 0, 0, Math.PI * 2); ctx.fill(); }
+      else { ctx.beginPath(); ctx.moveTo(x + lean * 0.5, 110 - h * 0.5); ctx.lineTo(x + lean * 0.5 + 12, 100 - h * 0.5); ctx.moveTo(x + lean * 0.5, 104 - h * 0.6); ctx.lineTo(x + lean * 0.5 - 12, 96 - h * 0.6); ctx.stroke(); }
+    }
+  }) },
+});
+
+// The house's skin, from tidy to crooked: pale painted weatherboards that
+// rot spreads across as `rot` goes from 0 to 1 (redrawn as it does).
+function houseSkin(canvas, rot) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const rand = seededRandom(31);
+  const mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * rot));
+  const [r, g, b] = mix([196, 186, 166], [52, 48, 43]);
+  ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(0, 0, W, H);
+  for (let y = 0; y < H; y += 12) {
+    ctx.fillStyle = `rgba(0,0,0,${0.12 + rot * 0.18 + rand() * 0.1})`; ctx.fillRect(0, y, W, 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(0, y + 2, W, 2);
+  }
+  // Mould and rot: stains running down from the eaves and the sills,
+  // and damp creeping up from below, each appearing in its own moment.
+  for (let i = 0; i < 46; i++) {
+    const at = rand() * 0.75, x = rand() * W, y = rand() * H, wide = 3 + rand() * 12, long = 20 + rand() * 90, kind = rand();
+    const k = Math.max(0, Math.min(1, (rot - at) / 0.25));
+    if (!k) continue;
+    if (kind < 0.6) {
+      const grad = ctx.createLinearGradient(0, y, 0, y + long * k);
+      grad.addColorStop(0, kind < 0.3 ? 'rgba(26,36,18,0.6)' : 'rgba(20,14,10,0.6)');
+      grad.addColorStop(1, 'rgba(20,20,10,0)');
+      ctx.fillStyle = grad; ctx.fillRect(x, y, wide, long * k);
+    } else {
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, wide * 3 * k);
+      grad.addColorStop(0, 'rgba(34,46,24,0.45)'); grad.addColorStop(1, 'rgba(30,40,20,0)');
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.ellipse(x, y, wide * 3 * k, wide * 1.6 * k, 0, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  if (rot > 0) { ctx.fillStyle = `rgba(16,20,10,${(rot * 0.35).toFixed(3)})`; ctx.fillRect(0, H * 0.8, W, H * 0.2); }
+  if (rot > 0.5) artGrime(ctx, W, H, seededRandom(5), (rot - 0.5) * 3);
+}
+
+function slateTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(17);
+  ctx.fillStyle = '#2a2a30'; ctx.fillRect(0, 0, 128, 128);
+  for (let y = 0; y < 128; y += 16) for (let x = (y / 16 % 2) * 8; x < 128; x += 16) {
+    const v = 34 + rand() * 18;
+    ctx.fillStyle = `rgb(${v},${v},${v + 6})`; ctx.fillRect(x + 1, y + 1, 14, 14);
+  }
+  return artTexture(c, { repeat: true });
+}
+
+function grassTexture() {
+  const [c, ctx] = artCanvas(256, 256);
+  const rand = seededRandom(23);
+  ctx.fillStyle = '#3a4a2a'; ctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++) {
+    const v = rand();
+    ctx.fillStyle = v < 0.4 ? 'rgba(80,100,50,0.5)' : v < 0.8 ? 'rgba(30,40,20,0.5)' : 'rgba(110,100,60,0.4)';
+    ctx.fillRect(rand() * 256, rand() * 256, 1 + rand() * 2, 2 + rand() * 5);
+  }
+  return artTexture(c, { repeat: true });
+}
+
+function gravelTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(24);
+  ctx.fillStyle = '#6a6052'; ctx.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 900; i++) { const v = 60 + rand() * 80; ctx.fillStyle = `rgb(${v},${v * 0.92},${v * 0.8})`; ctx.fillRect(rand() * 128, rand() * 128, 1 + rand() * 3, 1 + rand() * 3); }
+  return artTexture(c, { repeat: true });
+}
+
+function barnTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(25);
+  ctx.fillStyle = '#6a2a1e'; ctx.fillRect(0, 0, 128, 128);
+  for (let x = 0; x < 128; x += 10) { ctx.fillStyle = `rgba(0,0,0,${0.2 + rand() * 0.2})`; ctx.fillRect(x, 0, 2, 128); }
+  artGrime(ctx, 128, 128, rand, 0.6);
+  return artTexture(c, { repeat: true });
+}
+
+// The sky at dusk, top to bottom: night coming in overhead, the last of
+// the light at the horizon.
+function duskSkyTexture() {
+  const [c, ctx] = artCanvas(8, 512);
+  const g = ctx.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0, '#0e0e24'); g.addColorStop(0.3, '#2c2850'); g.addColorStop(0.44, '#6a4a74');
+  g.addColorStop(0.5, '#c46a6a'); g.addColorStop(0.54, '#e89a6a'); g.addColorStop(0.6, '#5a3a48'); g.addColorStop(1, '#141018');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 8, 512);
+  return artTexture(c);
+}
+
+function lampGlowTexture() {
+  const [c, ctx] = artCanvas(32, 32);
+  const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  g.addColorStop(0, 'rgba(255,230,170,1)'); g.addColorStop(0.3, 'rgba(255,190,110,0.6)'); g.addColorStop(1, 'rgba(255,160,80,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 32, 32);
+  return artTexture(c);
+}

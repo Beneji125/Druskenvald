@@ -150,6 +150,7 @@ const ui = {
       const done = id => {
         if (answered) return;      // a double click answers once
         answered = true;
+        ui.cancelSay = null;
         document.removeEventListener('keydown', onKey, true);
         box.hidden = true;
         ui.overlay = null;
@@ -164,6 +165,8 @@ const ui = {
       setTimeout(() => { if (!answered) document.addEventListener('keydown', onKey, true); }, 150);
       box.hidden = false;
       ui.overlay = 'dialog';
+      // Closes it unanswered (resolving with null): for skipping a scene.
+      ui.cancelSay = () => done(null);
       list.querySelector('button')?.focus({ preventScroll: true });
     });
   },

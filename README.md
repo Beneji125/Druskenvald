@@ -154,7 +154,9 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
     build.js: `core.js` (the grid), `art.js` (all the placeholder art),
     `audio.js`, `world.js` (the 3D house, furniture placement in `SCENERY`),
     `ui.js`, `story.js` (every scene, the séance questions, mementos and
-    clues), `main.js` (movement and the loop). `src/game/template.html` and
+    clues), and the rest described below, then `main.js` (movement and the
+    loop). They share one scope, so build.js stops if two files declare the
+    same top-level name. `src/game/template.html` and
     `game.css` are the page.
   - `src/data/explore.json` — the house itself, in the floor plan's pixels
     (x right, y down): `walls` are centrelines (a gap between two wall lines
@@ -214,6 +216,17 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   soul (Crookedness). When your nerve breaks he steals something you carry,
   mementos included; his nest under the foyer stairs (visible only when
   you're terrified, until you've found it) has everything he took.
+- **The arrival** (`arrival.js`): a new game opens outside at dusk, at the
+  estate's gate (the book's "Meet the Jenkins" and "There Was a Crooked
+  Man"): the village lamps below, the Jenkins (Walter, Gilly, Dani and
+  Shuck) on their way to town, Wisp the grey cat, then the manor twisting
+  into the Crooked House as you walk up, the Crooked Man's welcome and
+  chat on the porch, and the storm. Skip it with the Skip button or Esc;
+  click the narration (or Space) to move it on. It's never shown for a
+  saved game. The grounds it builds (hillside, pond, barns, fence and gate,
+  the house's upper storeys, roof and turret, the porch roof and garden)
+  stay for every game, twisted, out in the dark beyond the porch; `bend()`
+  is how the house twists, `ARRIVAL` where everything stands.
 - **Flashbacks** (`flashback.js`): freeing a ghost plays their last
   minutes, in the house as it was seventy years ago (warm, sepia, every door
   open, no storm, the family alive). You can walk and look within the

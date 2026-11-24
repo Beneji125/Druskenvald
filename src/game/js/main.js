@@ -49,6 +49,7 @@ function startGame(fresh) {
     buildWorld(renderer, q);
     moodColor = new THREE.Color(ROOM_MOOD.porch.sky);
     addCharacters();
+    buildGrounds();
     ui.mapImage = new Image();
     ui.mapImage.src = FLOOR.image;
     window.addEventListener('resize', resize);
@@ -75,6 +76,8 @@ function startGame(fresh) {
   game.roomsSeen.delete(c.room);
   enteredCell(null);
   $('view').focus({ preventScroll: true });
+  // A new game starts outside, at the gate (arrival.js).
+  if (fresh) runArrival();
 }
 
 // The people (and weasels) of the house: sprites that come and go.
@@ -235,6 +238,14 @@ function loop(now) {
   last = now;
   clock += dt;
 
+  // The arrival (arrival.js) has the camera to itself.
+  if (arrival.active) {
+    tickArrival(now, dt);
+    tickDoors(now);
+    renderer.render(world.scene, world.camera);
+    return;
+  }
+
   // Where the camera is: easing between squares and between headings.
   let px, pz, bob = 0;
   const here = GRID.at(game.cx, game.cy);
@@ -317,18 +328,7 @@ function loop(now) {
   else if (game.curse && now - game.curseStart > 9000) { game.curseStart = now; addDread(1); }
 
 
-  // Doors swinging.
-  Object.values(world.doors).forEach(v => {
-    if (v.amount === v.target) return;
-    // By the clock, not by frames, so a slow device can't stall a door.
-    const k = Math.min(1, (now - v.t0) / (DOOR_MS * Math.abs(v.target - v.from)));
-    v.amount = k >= 1 ? v.target : lerp(v.from, v.target, k);
-    const e = v.amount * v.amount * (3 - 2 * v.amount);
-    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * e * DOOR_SWING; });
-    // The house's own lights cast their shadows once; redo them now a
-    // door has moved.
-    if (v.amount === v.target) world.fixedLights.forEach(f => { if (f.castShadow) f.shadow.needsUpdate = true; });
-  });
+  tickDoors(now);
 
   updateGlints(now, dt);
   // The portraits' curse: once your Dread reaches 6, the boogles come.
@@ -373,6 +373,21 @@ function loop(now) {
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
   }
   renderer.render(world.scene, cam);
+}
+
+// Doors swinging.
+function tickDoors(now) {
+  Object.values(world.doors).forEach(v => {
+    if (v.amount === v.target) return;
+    // By the clock, not by frames, so a slow device can't stall a door.
+    const k = Math.min(1, (now - v.t0) / (DOOR_MS * Math.abs(v.target - v.from)));
+    v.amount = k >= 1 ? v.target : lerp(v.from, v.target, k);
+    const e = v.amount * v.amount * (3 - 2 * v.amount);
+    v.leaves.forEach(l => { l.pivot.rotation.y = l.base + l.sign * e * DOOR_SWING; });
+    // The house's own lights cast their shadows once; redo them now a
+    // door has moved.
+    if (v.amount === v.target) world.fixedLights.forEach(f => { if (f.castShadow) f.shadow.needsUpdate = true; });
+  });
 }
 
 // Glints near you pulse softly; the one you're facing shines brighter, and
@@ -444,6 +459,13 @@ document.addEventListener('keydown', e => {
   if ($('game').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.toLowerCase();
   if (k === 'escape' && !soundPanel.hidden) { e.preventDefault(); toggleSoundPanel(false); $('btn-sound').focus(); return; }
+  // The arrival: Esc skips it; Space or Enter moves the narration on.
+  if (arrival.active) {
+    if (e.target.closest && e.target.closest('input, button')) return;
+    if (k === 'escape') { e.preventDefault(); skipArrival(); }
+    else if ((k === ' ' || k === 'enter') && !ui.overlay) { e.preventDefault(); [...arrival.wakers].forEach(w => w()); }
+    return;
+  }
   if (e.target.closest && e.target.closest('input')) return;     // a slider's arrow keys move the slider
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
@@ -468,6 +490,8 @@ document.querySelectorAll('[data-cmd]').forEach(b => {
   b.addEventListener('click', e => act(b.dataset.cmd, e.timeStamp));
 });
 $('prompt').addEventListener('click', () => act('use'));
+$('btn-skip').addEventListener('click', () => skipArrival());
+$('arrival-cap').addEventListener('click', () => [...arrival.wakers].forEach(w => w()));
 $('btn-map').addEventListener('click', () => ui.toggle('map'));
 $('btn-lantern').addEventListener('click', () => { if (!ui.overlay && !game.busy) toggleLantern(); });
 $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
@@ -511,4 +535,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

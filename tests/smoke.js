@@ -121,8 +121,8 @@ function walkGroup() {
     await page.close();
   }
 
-  // The Crooked House game: starts, takes a step, opens the journal and
-  // the map, all without errors.
+  // The Crooked House game: starts, skips the arrival, takes a step, opens
+  // the journal and the map, all without errors.
   {
     const page = await browser.newPage();
     page.on('pageerror', e => failures.push(`game: script error: ${e.message}`));
@@ -137,6 +137,12 @@ function walkGroup() {
       if (!noGl) failures.push('game: did not start');
       else console.log('game: this browser has no WebGL; checked the start screen only');
     } else {
+      // A new game opens with the arrival at the gate: check it's running,
+      // then skip it.
+      if (!(await page.evaluate(() => crookedHouse.arrival.active))) failures.push('game: the arrival did not start');
+      await page.click('#btn-skip');
+      await page.waitForTimeout(1200);
+      if (await page.evaluate(() => crookedHouse.arrival.active)) failures.push('game: skipping the arrival did not end it');
       const before = await page.evaluate(() => crookedHouse.game.cy);
       await page.keyboard.press('w');
       await page.waitForTimeout(600);
@@ -146,7 +152,7 @@ function walkGroup() {
       if (await page.evaluate(() => document.getElementById('journal').hidden)) failures.push('game: the journal did not open');
       await page.keyboard.press('Escape'); await page.keyboard.press('m'); await page.waitForTimeout(400);
       if (await page.evaluate(() => document.getElementById('map').hidden)) failures.push('game: the map did not open');
-      console.log('game: started, walked, opened the journal and the map');
+      console.log('game: started, skipped the arrival, walked, opened the journal and the map');
     }
     await page.close();
   }
