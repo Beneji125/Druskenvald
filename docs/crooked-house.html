@@ -98,6 +98,15 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
 #oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
 @keyframes oil-low { to { opacity: 0.4; } }
+/* The waltz's beat: a ring that closes on each beat; flashes on a step in
+   time, shakes on a stumble. */
+#beat { position: absolute; left: 50%; top: max(64px, calc(env(safe-area-inset-top) + 54px)); width: 64px; height: 64px; transform: translateX(-50%); pointer-events: none; }
+#beat::before { content: ''; position: absolute; inset: 22px; border-radius: 50%; background: rgba(240,200,112,0.85); box-shadow: 0 0 14px rgba(240,200,112,0.8); }
+#beat span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(240,200,112,0.8); transform: scale(calc(1 - var(--p, 0) * 0.62)); opacity: calc(0.3 + var(--p, 0) * 0.7); }
+#beat.hit::before { animation: beat-hit 0.3s; }
+#beat.miss { animation: beat-miss 0.3s; }
+@keyframes beat-hit { 50% { transform: scale(1.6); background: #fff2c8; } }
+@keyframes beat-miss { 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
 #dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
@@ -212,6 +221,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #memento-slots { list-style: none; padding: 0; margin: 0 0 1.2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 #memento-slots li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed rgba(138,110,66,0.45); border-radius: 3px; color: var(--cream-dim); }
 #memento-slots li.have { border-style: solid; border-color: var(--gold); color: var(--cream); background: rgba(201,169,110,0.08); }
+#memento-slots li.tainted { border-color: #a04030; color: #e0a090; background: rgba(160,50,40,0.12); }
+#memento-slots li.tainted .glyph { color: #c04838; }
 #memento-slots .glyph { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--gold); }
 #clue-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 0.5em; line-height: 1.45; }
 #clue-list .none { list-style: none; margin-left: -1.1em; color: var(--cream-dim); }
@@ -273,6 +284,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .keys-text { margin: 0; font-size: 1.1rem; font-style: italic; }
 .keyboard { display: flex; gap: 4px; width: 100%; height: 150px; }
+.keyboard .key b { display: block; font-size: 1.1rem; color: #5a2a10; }
 .keyboard .key { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; cursor: pointer; border-radius: 0 0 5px 5px; border: 1px solid #3a2a14; background: linear-gradient(180deg, #d8c89a, #b8a678); color: #3a2a14; font-family: 'Cinzel', serif; font-size: 0.85rem; transition: background 0.15s, box-shadow 0.15s; }
 .keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
 .keyboard .key.pressed { background: #a8946a; }
@@ -328,6 +340,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 <section id="game" hidden>
   <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
   <div id="dread-veil" aria-hidden="true"></div>
+  <div id="beat" hidden aria-hidden="true"><span></span></div>
 
   <div id="hud-top">
     <div class="hud-left">
@@ -2347,7 +2360,7 @@ const ui = {
     MEMENTOS.forEach(m => {
       const have = game.mementos.has(m.id);
       const li = document.createElement('li');
-      li.className = have ? 'have' : '';
+      li.className = have ? (game.tainted.includes(m.id) ? 'have tainted' : 'have') : '';
       li.innerHTML = `<span class="glyph">${have ? m.glyph : '?'}</span><span class="label"></span>`;
       li.querySelector('.label').textContent = have ? m.name : known ? `${m.hint}` : 'Unknown';
       slots.appendChild(li);
@@ -2468,7 +2481,8 @@ const game = {
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
   oil: 1, lanternLow: false,
-  stolen: [],        // what Jasper has taken (see jasper.js)
+  stolen: [],
+  tainted: [],       // mementos taken from destroyed ghosts        // what Jasper has taken (see jasper.js)
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -2477,7 +2491,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [] });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [], tainted: [] });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -2489,7 +2503,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
-    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen,
+    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen, tainted: game.tainted,
   }));
 }
 
@@ -2506,6 +2520,7 @@ function loadGame() {
     game.oil = s.oil ?? 1;
     game.lanternLow = !!s.lanternLow;
     game.stolen = s.stolen || [];
+    game.tainted = s.tainted || [];
     return true;
   } catch { return false; }
 }
@@ -2978,7 +2993,7 @@ function startCurse() {
   // The Harpsichord crashes in at once (musicFor plays it while the
   // curse lasts).
   sound.setTheme('waltz', { fade: 0.25, restart: true });
-  world.weasels.forEach(s => { s.visible = true; });
+  startRhythm();
   ui.log('The harpsichord crashes into a lurching, discordant waltz. In the cracked mirror the room is full of dancers.', 'scare');
   setTimeout(() => { if (game.curse) ui.log('“Vessla Browntooth will sacrifice your souls!” chitter the weasels pouring from the walls, all in one voice.', 'scare'); }, 2600);
   addDread(1);
@@ -2986,7 +3001,7 @@ function startCurse() {
 
 function endCurse(quiet) {
   game.curse = false;
-  world.weasels.forEach(s => { s.visible = false; });
+  stopRhythm();
   if (!quiet) ui.log('The music fades behind you, though your feet still want to dance.', 'note');
 }
 
@@ -2999,11 +3014,14 @@ async function harpsichordScene() {
     await ui.say('The harpsichord', 'You touch a key. The harpsichord answers with a crash of discord, and the whole room begins to turn.');
     startCurse();
   }
-  const guided = game.clues.has('patrini');
+  // Three ways to know the tune: Patrini guiding your hands (after the
+  // séance), reading it from his reunited sheet music, or by ear.
+  const guided = game.clues.has('patrini'), sheet = hasItem('music_full');
   await ui.say('', guided
     ? 'Only another tune can drown out the waltz. As you sit, a cold blue hand settles over yours: Patrini, the old servant from the spirit board, guiding your fingers.'
-    : 'Only another tune can drown out the waltz. Listen to the melody that rises faintly under the noise, and play it back.');
-  const ok = await melodyPuzzle(guided);
+    : sheet ? 'Only another tune can drown out the waltz. You prop Patrini’s sheet music on the stand, and read the notes as best you can.'
+    : 'Only another tune can drown out the waltz. Somewhere under the noise a different melody rises, faint and brief. Listen hard, and play it back.');
+  const ok = await melodyPuzzle(guided ? 'guided' : sheet ? 'sheet' : 'ear');
   if (!ok) { ui.log('You pull away from the keys. The waltz plays on.', 'note'); return; }
   endCurse(true);
   showPatrini();
@@ -3019,13 +3037,17 @@ async function harpsichordScene() {
   await runFlashback('patrini');
 }
 
-// The keyboard: the tune plays with its keys lit, then you play it back.
-// With Patrini's help, the next key glows faintly under your hand.
-function melodyPuzzle(guided) {
+// The keyboard: play Patrini's tune to drown out the waltz.
+//   guided  the tune plays slowly with its keys lit, then the next key
+//           glows faintly under your hand as you play it back
+//   sheet   the notes are written out for you, and the keys are lettered
+//   ear     the tune plays once, quickly, and you play it back
+function melodyPuzzle(mode) {
+  const guided = mode === 'guided';
   return new Promise(resolve => {
     const root = $('keys');
     const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    root.innerHTML = `<div class="keys-panel"><p class="keys-text">Listen…</p><div class="keyboard">${notes.map((n, i) => `<button type="button" class="key" data-note="${n}"><span>${i + 1}</span></button>`).join('')}</div><button type="button" class="keys-leave">Step away</button></div>`;
+    root.innerHTML = `<div class="keys-panel"><p class="keys-text">Listen…</p><div class="keyboard">${notes.map((n, i) => `<button type="button" class="key" data-note="${n}"><span>${mode === 'sheet' ? `<b>${n}</b>` : ''}${i + 1}</span></button>`).join('')}</div><button type="button" class="keys-leave">Step away</button></div>`;
     root.hidden = false;
     ui.overlay = 'keys';
     const text = root.querySelector('.keys-text');
@@ -3035,9 +3057,10 @@ function melodyPuzzle(guided) {
     const hint = () => { root.querySelectorAll('.key').forEach(k => k.classList.remove('hint')); if (guided && listening) keyEl(PATRINI_TUNE[pos]).classList.add('hint'); };
     const playTune = async () => {
       listening = false; hint();
+      if (mode === 'sheet') { text.textContent = `From the page: ${PATRINI_TUNE.join(' · ')}`; pos = 0; listening = true; return; }
       text.textContent = 'Listen…';
       await sleep(500);
-      for (const n of PATRINI_TUNE) { sound.pluck(NOTE[n], 0, 0.9, 0.2); light(n, 420); await sleep(guided ? 650 : 480); }
+      for (const n of PATRINI_TUNE) { sound.pluck(NOTE[n], 0, 0.9, 0.2); light(n, mode === 'ear' ? 260 : 420); await sleep(guided ? 650 : 380); }
       text.textContent = 'Now play it back.';
       pos = 0; listening = true; hint();
     };
@@ -3226,6 +3249,7 @@ const USES = [
   { item: 'doll', on: 'petunia', run: () => petuniaScene('doll') },
   { item: 'bear', on: 'petunia', run: () => petuniaScene('bear') },
   { item: 'knife', on: 'mirror', run: () => takeShard() },
+  { item: 'hatchet', on: 'harpsichord', run: () => smashHarpsichord() },
   { item: 'hatchet', on: 'mirror', text: 'One swing would bring the whole mirror down, and every dancer in it with it. Not like that.' },
   { item: 'flour', on: 'oven', run: () => dustTheLock() },
   { item: 'matches', on: 'oven', text: 'Fire is the last thing this oven needs.' },
@@ -4409,6 +4433,169 @@ const FLASHBACKS = {
   },
 };
 
+// ─── src/game/js/rhythm.js ───────────────────────────────────────────
+// The cursed waltz: while The Harpsichord plays, the music room's floor
+// belongs to the dance. You can only move in time: each step or turn has
+// to land on a beat (one move a beat), or you stumble and your nerve
+// frays. The weasels pouring from the walls move on the beat too: if one
+// lands on you it bites; land on one, in time, and you stomp it flat (the
+// dark way through). To end the dance, reach the harpsichord and play a
+// different song.
+//
+// The beat comes from the track itself (measured: 108 beats a minute,
+// first beat at 0.50 s), read from the audio as it plays, so the floor
+// and the music never drift apart. With the sound off, the same beat is
+// kept by the clock.
+
+const WALTZ = { period: 60 / 108, offset: 0.50 };
+const BEAT_WINDOW = { normal: 0.14, easy: 0.22 };   // seconds either side of a beat
+const rhythm = { started: 0, lastBeat: -1, usedBeat: -99, stumbles: 0, weasels: [], stomped: 0, tickBeat: -1, biteBeat: -99 };
+
+// Seconds into the waltz.
+function waltzTime() {
+  const t = sound.tracks && sound.tracks[MUSIC.waltz[0]];
+  if (t && !t.el.paused && sound.on && t.el.currentTime > 0) return t.el.currentTime;
+  return (performance.now() - rhythm.started) / 1000 + WALTZ.offset;
+}
+
+// The beat at a moment (performance.now() time; default now). Moves are
+// judged by when the key was pressed, not when the game got to it.
+function beatNow(at) {
+  const lag = at ? Math.max(0, performance.now() - at) / 1000 : 0;
+  const x = (waltzTime() - lag - WALTZ.offset) / WALTZ.period;
+  const index = Math.round(x);
+  return { index, off: Math.abs(x - index) * WALTZ.period, phase: x - Math.floor(x) };
+}
+
+function inRhythm() { return game.curse && GRID.at(game.cx, game.cy).room === 'music'; }
+
+// Called by act() for every move or turn while the waltz plays. Returns
+// true if the move may go ahead.
+function onBeat(at) {
+  const b = beatNow(at);
+  const win = easyMode() ? BEAT_WINDOW.easy : BEAT_WINDOW.normal;
+  if (b.off <= win && b.index !== rhythm.usedBeat) { rhythm.usedBeat = b.index; pulseBeat(true); return true; }
+  rhythm.stumbles++;
+  pulseBeat(false);
+  sound.hit();
+  ui.log(b.index === rhythm.usedBeat ? 'Too quick: one step to a beat.' : 'You stumble out of time.', 'scare');
+  if (rhythm.stumbles % 2 === 0) addDread(1);
+  return false;
+}
+
+function startRhythm() {
+  rhythm.started = performance.now();
+  rhythm.usedBeat = -99; rhythm.stumbles = 0; rhythm.tickBeat = -1;
+  // Weasels come out of the walls at the room's edges.
+  const cells = GRID.cells.filter(c => c.walk && !c.blocked && c.room === 'music' && c.edges.some(e => e === 'wall'));
+  const n = easyMode() ? 3 : 5;
+  rhythm.weasels = world.weasels.slice(0, n).map((s, i) => {
+    const c = cells[(i * 7 + 3) % cells.length];
+    s.visible = true; s.position.set(c.x, 0, c.y);
+    return { s, c, alive: true };
+  });
+  $('beat').hidden = false;
+}
+
+function stopRhythm() {
+  rhythm.weasels.forEach(w => { w.s.visible = false; });
+  rhythm.weasels = [];
+  $('beat').hidden = true;
+}
+
+// Every frame while the waltz plays: weasels move on each new beat, and
+// glide between squares.
+function tickRhythm(dt) {
+  if (!game.curse) return;
+  const b = beatNow();
+  const ring = $('beat');
+  ring.style.setProperty('--p', b.phase.toFixed(3));
+  if (b.index !== rhythm.tickBeat && b.phase < 0.5) {
+    rhythm.tickBeat = b.index;
+    // The weasels move every other beat: the waltz's one and three.
+    if (b.index % 2 === 0 && !game.busy && !ui.overlay && GRID.at(game.cx, game.cy).room === 'music') weaselsStep();
+  }
+  rhythm.weasels.forEach(w => {
+    if (!w.alive) return;
+    w.s.position.x += (w.c.x - w.s.position.x) * Math.min(1, dt * 14);
+    w.s.position.z += (w.c.y - w.s.position.z) * Math.min(1, dt * 14);
+  });
+}
+
+// Each weasel takes a step: towards you when you're near, otherwise along
+// the room; any that lands on you bites and is thrown off.
+function weaselsStep() {
+  const me = GRID.at(game.cx, game.cy);
+  rhythm.weasels.forEach((w, i) => {
+    if (!w.alive) return;
+    const near = Math.abs(w.c.cx - me.cx) + Math.abs(w.c.cy - me.cy) <= 3;
+    const dirs = [0, 1, 2, 3].filter(d => {
+      const e = w.c.edges[d];
+      if (e !== 'open') return false;
+      const n = GRID.at(w.c.cx + DIRS[d][0], w.c.cy + DIRS[d][1]);
+      return n && n.walk && !n.blocked && n.room === 'music' && !rhythm.weasels.some(o => o !== w && o.alive && o.c === n);
+    });
+    if (!dirs.length) return;
+    let d;
+    const chase = easyMode() ? 3 : 2;
+    if (near && (i + rhythm.tickBeat / 2) % chase === 0) {
+      dirs.sort((a, b2) => dist(w.c, a, me) - dist(w.c, b2, me));
+      d = dirs[0];
+    } else d = dirs[(rhythm.tickBeat * 7 + i * 3) % dirs.length];
+    const to = GRID.at(w.c.cx + DIRS[d][0], w.c.cy + DIRS[d][1]);
+    // Right after a bite they keep their distance for a few beats.
+    if (to === me && rhythm.tickBeat - rhythm.biteBeat < 6) return;
+    w.c = to;
+    if (w.c === me) {
+      rhythm.biteBeat = rhythm.tickBeat;
+      sound.hit();
+      ui.flash('#5a1a10', 250);
+      ui.log('A weasel sinks its teeth into your ankle.', 'scare');
+      addDread(1);
+      // thrown back where it came from, and a square further if it can
+      let back = GRID.at(w.c.cx - DIRS[d][0], w.c.cy - DIRS[d][1]);
+      const further = back && GRID.at(back.cx - DIRS[d][0], back.cy - DIRS[d][1]);
+      if (further && further.walk && !further.blocked && further.room === 'music' && back.edges[(d + 2) % 4] === 'open') back = further;
+      if (back) w.c = back;
+    }
+  });
+}
+function dist(c, d, me) { const x = c.cx + DIRS[d][0], y = c.cy + DIRS[d][1]; return Math.abs(x - me.cx) + Math.abs(y - me.cy); }
+
+// You stepped onto a weasel's square, in time: it's crushed. The dark way.
+function stompAt(c) {
+  const w = rhythm.weasels.find(x => x.alive && x.c === c);
+  if (!w) return;
+  w.alive = false; w.s.visible = false;
+  rhythm.stomped++;
+  sound.hit();
+  ui.log('Something crunches under your heel, and squeals, and is still.', 'scare');
+  if (!game.flags.stompedWeasel) { game.flags.stompedWeasel = true; game.crooked = (game.crooked || 0) + 1; }
+}
+
+function pulseBeat(ok) {
+  const ring = $('beat');
+  ring.classList.remove('hit', 'miss'); void ring.offsetWidth;
+  ring.classList.add(ok ? 'hit' : 'miss');
+}
+
+// ─── The dark way to end it: the hatchet ──────────────────────────────
+
+async function smashHarpsichord() {
+  if (game.flags.musicSolved) { await ui.say('The harpsichord', 'There’s nothing left in it to break.'); return; }
+  const pick = await ui.say('The harpsichord', 'The hatchet is heavy in your hand. One blow, and the music would stop.', [{ id: 'yes', text: 'Bring it down', dark: true }, { id: 'no', text: 'Lower it' }]);
+  if (pick !== 'yes') return;
+  ui.flash('#5a0a08', 900);
+  sound.thunder(1);
+  await ui.say('', 'The hatchet bites into the lid, and the waltz turns into a scream: not the instrument’s, a man’s. You swing again, and again, until the strings are snapped and the keys are kindling and the scream has stopped. In the silence, a single black ivory key rolls out of the wreckage and comes to rest against your foot.');
+  if (game.curse) endCurse(true);
+  game.flags.musicSolved = 'killed';
+  game.crooked = (game.crooked || 0) + 1;
+  (game.tainted = game.tainted || []).push('key');
+  giveMemento('key');
+  await runFlashback('patrini', { corrupt: true });
+}
+
 // ─── src/game/js/main.js ─────────────────────────────────────────────
 // The game loop: the renderer, walking and turning (one square, one
 // quarter-turn at a time, eased so it doesn't jump), the lantern, the
@@ -4534,16 +4721,20 @@ function resize() {
 function doorsMoving() { return Object.values(world.doors).some(v => v.amount !== v.target); }
 function busy() { return game.busy || !!ui.overlay || !!motion.to || doorsMoving() || game.flags.breaking; }
 
-function act(cmd) {
+// `at`: when the key or button was pressed (event.timeStamp), for the waltz.
+function act(cmd, at) {
   if (performance.now() < inputLockUntil) return;
   if (game.busy || ui.overlay || game.flags.breaking) return;
   if (busy()) {
     // Mid-step: remember one more move, but only near the end of this
     // one, so tapping fast doesn't pile up moves that run on afterwards.
     const k = motion.to ? (performance.now() - motion.t0) / motion.ms : 1;
-    if (k > 0.45 && queued.length < 1 && cmd !== 'use') queued.push(cmd);
+    // (Not in the waltz: there every move needs its own beat.)
+    if (k > 0.45 && queued.length < 1 && cmd !== 'use' && !inRhythm()) queued.push(cmd);
     return;
   }
+  // On the cursed dance floor, every move has to land on a beat.
+  if (cmd !== 'use' && inRhythm() && !onBeat(at)) return;
   if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
   const door = doorAhead();
   if (cmd === 'use') {
@@ -4567,10 +4758,6 @@ function act(cmd) {
   // Walking into a closed door opens it.
   if (rel === 0 && door && !door.open) return swingDoor(door, true);
   // On the cursed dance floor your feet don't always obey.
-  if (game.curse && Math.random() < 0.3) {
-    ui.log('You spin with the dancers.', 'scare');
-    return turn(Math.random() < 0.5 ? -1 : 1);
-  }
   step((game.dir + rel) % 4);
 }
 
@@ -4601,6 +4788,7 @@ function step(dir) {
   const c = GRID.at(game.cx, game.cy);
   if (!canStep(c, dir)) { motion.bump = performance.now(); return; }
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  if (game.curse) stompAt(n);        // a weasel in the way, crushed (the dark way)
   motion.from = c; motion.to = n; motion.t0 = performance.now(); motion.ms = STEP_MS;
   motion.yawFrom = motion.yawTo = yaw;
   game.cx = n.cx; game.cy = n.cy;
@@ -4718,15 +4906,12 @@ function loop(now) {
   world.rain.material.uniforms.flash.value = f;
   world.rain.material.uniforms.center.value.set(cam.position.x, 0, cam.position.z);
 
-  // Weasels running rings round the dance floor while the waltz plays.
-  if (game.curse) world.weasels.forEach(s => {
-    const o = s.userData.orbit, a = clock * o.speed + o.phase;
-    s.position.set(DANCE.x + Math.cos(a) * o.r, 0, DANCE.y + Math.sin(a) * o.r * 0.8);
-  });
+  // The waltz: weasels move on the beat (rhythm.js).
+  tickRhythm(dt);
   // The waltz wears on your nerves, but not while you're at the keys
   // fighting it (or reading).
   if (game.curse && (game.busy || ui.overlay)) game.curseStart = now;
-  else if (game.curse && now - game.curseStart > 3500) { game.curseStart = now; addDread(1); }
+  else if (game.curse && now - game.curseStart > 9000) { game.curseStart = now; addDread(1); }
 
 
   // Doors swinging.
@@ -4867,11 +5052,11 @@ document.addEventListener('keydown', e => {
   if (k === 'x' && ui.selected) { e.preventDefault(); examineItem(ui.selected); return; }
   if (k === 'escape' && ui.selected) { e.preventDefault(); ui.select(null); return; }
   const cmd = KEYMAP[k];
-  if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
+  if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd, e.timeStamp); }
 });
 
 document.querySelectorAll('[data-cmd]').forEach(b => {
-  b.addEventListener('click', () => act(b.dataset.cmd));
+  b.addEventListener('click', e => act(b.dataset.cmd, e.timeStamp));
 });
 $('prompt').addEventListener('click', () => act('use'));
 $('btn-map').addEventListener('click', () => ui.toggle('map'));
@@ -4917,7 +5102,7 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
 </script>
 </body>
 </html>

@@ -188,7 +188,7 @@ const ui = {
     MEMENTOS.forEach(m => {
       const have = game.mementos.has(m.id);
       const li = document.createElement('li');
-      li.className = have ? 'have' : '';
+      li.className = have ? (game.tainted.includes(m.id) ? 'have tainted' : 'have') : '';
       li.innerHTML = `<span class="glyph">${have ? m.glyph : '?'}</span><span class="label"></span>`;
       li.querySelector('.label').textContent = have ? m.name : known ? `${m.hint}` : 'Unknown';
       slots.appendChild(li);

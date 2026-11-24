@@ -222,6 +222,15 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   `FLASHBACKS`, and each leaves a clue for upstairs: Petunia's (where
   Sally's doll and Arthur's bear are) and Joseph Patrini's (where Gail hid,
   with her hairpin).
+- **The music room** (`rhythm.js`): stepping onto the dance floor starts
+  the cursed waltz (The Harpsichord). While it plays you can only move in
+  time: each step or turn must land on a beat (one per beat; the beat is
+  read from the track, 108 a minute), or you stumble and Dread rises.
+  Weasels move on every other beat and bite; landing on one in time stomps
+  it (the dark way). At the harpsichord, play Patrini's tune to end it: with
+  his hand guiding yours (after the séance), from his sheet music (both
+  halves), or by ear. Or smash the harpsichord with the hatchet: the key
+  comes out tainted, and his memory plays through Eustace's eyes.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

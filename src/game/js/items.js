@@ -77,6 +77,7 @@ const USES = [
   { item: 'doll', on: 'petunia', run: () => petuniaScene('doll') },
   { item: 'bear', on: 'petunia', run: () => petuniaScene('bear') },
   { item: 'knife', on: 'mirror', run: () => takeShard() },
+  { item: 'hatchet', on: 'harpsichord', run: () => smashHarpsichord() },
   { item: 'hatchet', on: 'mirror', text: 'One swing would bring the whole mirror down, and every dancer in it with it. Not like that.' },
   { item: 'flour', on: 'oven', run: () => dustTheLock() },
   { item: 'matches', on: 'oven', text: 'Fire is the last thing this oven needs.' },

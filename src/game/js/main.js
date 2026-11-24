@@ -122,16 +122,20 @@ function resize() {
 function doorsMoving() { return Object.values(world.doors).some(v => v.amount !== v.target); }
 function busy() { return game.busy || !!ui.overlay || !!motion.to || doorsMoving() || game.flags.breaking; }
 
-function act(cmd) {
+// `at`: when the key or button was pressed (event.timeStamp), for the waltz.
+function act(cmd, at) {
   if (performance.now() < inputLockUntil) return;
   if (game.busy || ui.overlay || game.flags.breaking) return;
   if (busy()) {
     // Mid-step: remember one more move, but only near the end of this
     // one, so tapping fast doesn't pile up moves that run on afterwards.
     const k = motion.to ? (performance.now() - motion.t0) / motion.ms : 1;
-    if (k > 0.45 && queued.length < 1 && cmd !== 'use') queued.push(cmd);
+    // (Not in the waltz: there every move needs its own beat.)
+    if (k > 0.45 && queued.length < 1 && cmd !== 'use' && !inRhythm()) queued.push(cmd);
     return;
   }
+  // On the cursed dance floor, every move has to land on a beat.
+  if (cmd !== 'use' && inRhythm() && !onBeat(at)) return;
   if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
   const door = doorAhead();
   if (cmd === 'use') {
@@ -155,10 +159,6 @@ function act(cmd) {
   // Walking into a closed door opens it.
   if (rel === 0 && door && !door.open) return swingDoor(door, true);
   // On the cursed dance floor your feet don't always obey.
-  if (game.curse && Math.random() < 0.3) {
-    ui.log('You spin with the dancers.', 'scare');
-    return turn(Math.random() < 0.5 ? -1 : 1);
-  }
   step((game.dir + rel) % 4);
 }
 
@@ -189,6 +189,7 @@ function step(dir) {
   const c = GRID.at(game.cx, game.cy);
   if (!canStep(c, dir)) { motion.bump = performance.now(); return; }
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  if (game.curse) stompAt(n);        // a weasel in the way, crushed (the dark way)
   motion.from = c; motion.to = n; motion.t0 = performance.now(); motion.ms = STEP_MS;
   motion.yawFrom = motion.yawTo = yaw;
   game.cx = n.cx; game.cy = n.cy;
@@ -306,15 +307,12 @@ function loop(now) {
   world.rain.material.uniforms.flash.value = f;
   world.rain.material.uniforms.center.value.set(cam.position.x, 0, cam.position.z);
 
-  // Weasels running rings round the dance floor while the waltz plays.
-  if (game.curse) world.weasels.forEach(s => {
-    const o = s.userData.orbit, a = clock * o.speed + o.phase;
-    s.position.set(DANCE.x + Math.cos(a) * o.r, 0, DANCE.y + Math.sin(a) * o.r * 0.8);
-  });
+  // The waltz: weasels move on the beat (rhythm.js).
+  tickRhythm(dt);
   // The waltz wears on your nerves, but not while you're at the keys
   // fighting it (or reading).
   if (game.curse && (game.busy || ui.overlay)) game.curseStart = now;
-  else if (game.curse && now - game.curseStart > 3500) { game.curseStart = now; addDread(1); }
+  else if (game.curse && now - game.curseStart > 9000) { game.curseStart = now; addDread(1); }
 
 
   // Doors swinging.
@@ -455,11 +453,11 @@ document.addEventListener('keydown', e => {
   if (k === 'x' && ui.selected) { e.preventDefault(); examineItem(ui.selected); return; }
   if (k === 'escape' && ui.selected) { e.preventDefault(); ui.select(null); return; }
   const cmd = KEYMAP[k];
-  if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
+  if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd, e.timeStamp); }
 });
 
 document.querySelectorAll('[data-cmd]').forEach(b => {
-  b.addEventListener('click', () => act(b.dataset.cmd));
+  b.addEventListener('click', e => act(b.dataset.cmd, e.timeStamp));
 });
 $('prompt').addEventListener('click', () => act('use'));
 $('btn-map').addEventListener('click', () => ui.toggle('map'));
@@ -505,4 +503,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

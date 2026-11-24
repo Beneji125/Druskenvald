@@ -68,7 +68,8 @@ const game = {
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
   oil: 1, lanternLow: false,
-  stolen: [],        // what Jasper has taken (see jasper.js)
+  stolen: [],
+  tainted: [],       // mementos taken from destroyed ghosts        // what Jasper has taken (see jasper.js)
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -77,7 +78,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [] });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [], tainted: [] });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -89,7 +90,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
-    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen,
+    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen, tainted: game.tainted,
   }));
 }
 
@@ -106,6 +107,7 @@ function loadGame() {
     game.oil = s.oil ?? 1;
     game.lanternLow = !!s.lanternLow;
     game.stolen = s.stolen || [];
+    game.tainted = s.tainted || [];
     return true;
   } catch { return false; }
 }
@@ -578,7 +580,7 @@ function startCurse() {
   // The Harpsichord crashes in at once (musicFor plays it while the
   // curse lasts).
   sound.setTheme('waltz', { fade: 0.25, restart: true });
-  world.weasels.forEach(s => { s.visible = true; });
+  startRhythm();
   ui.log('The harpsichord crashes into a lurching, discordant waltz. In the cracked mirror the room is full of dancers.', 'scare');
   setTimeout(() => { if (game.curse) ui.log('“Vessla Browntooth will sacrifice your souls!” chitter the weasels pouring from the walls, all in one voice.', 'scare'); }, 2600);
   addDread(1);
@@ -586,7 +588,7 @@ function startCurse() {
 
 function endCurse(quiet) {
   game.curse = false;
-  world.weasels.forEach(s => { s.visible = false; });
+  stopRhythm();
   if (!quiet) ui.log('The music fades behind you, though your feet still want to dance.', 'note');
 }
 
@@ -599,11 +601,14 @@ async function harpsichordScene() {
     await ui.say('The harpsichord', 'You touch a key. The harpsichord answers with a crash of discord, and the whole room begins to turn.');
     startCurse();
   }
-  const guided = game.clues.has('patrini');
+  // Three ways to know the tune: Patrini guiding your hands (after the
+  // séance), reading it from his reunited sheet music, or by ear.
+  const guided = game.clues.has('patrini'), sheet = hasItem('music_full');
   await ui.say('', guided
     ? 'Only another tune can drown out the waltz. As you sit, a cold blue hand settles over yours: Patrini, the old servant from the spirit board, guiding your fingers.'
-    : 'Only another tune can drown out the waltz. Listen to the melody that rises faintly under the noise, and play it back.');
-  const ok = await melodyPuzzle(guided);
+    : sheet ? 'Only another tune can drown out the waltz. You prop Patrini’s sheet music on the stand, and read the notes as best you can.'
+    : 'Only another tune can drown out the waltz. Somewhere under the noise a different melody rises, faint and brief. Listen hard, and play it back.');
+  const ok = await melodyPuzzle(guided ? 'guided' : sheet ? 'sheet' : 'ear');
   if (!ok) { ui.log('You pull away from the keys. The waltz plays on.', 'note'); return; }
   endCurse(true);
   showPatrini();
@@ -619,13 +624,17 @@ async function harpsichordScene() {
   await runFlashback('patrini');
 }
 
-// The keyboard: the tune plays with its keys lit, then you play it back.
-// With Patrini's help, the next key glows faintly under your hand.
-function melodyPuzzle(guided) {
+// The keyboard: play Patrini's tune to drown out the waltz.
+//   guided  the tune plays slowly with its keys lit, then the next key
+//           glows faintly under your hand as you play it back
+//   sheet   the notes are written out for you, and the keys are lettered
+//   ear     the tune plays once, quickly, and you play it back
+function melodyPuzzle(mode) {
+  const guided = mode === 'guided';
   return new Promise(resolve => {
     const root = $('keys');
     const notes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-    root.innerHTML = `<div class="keys-panel"><p class="keys-text">Listen…</p><div class="keyboard">${notes.map((n, i) => `<button type="button" class="key" data-note="${n}"><span>${i + 1}</span></button>`).join('')}</div><button type="button" class="keys-leave">Step away</button></div>`;
+    root.innerHTML = `<div class="keys-panel"><p class="keys-text">Listen…</p><div class="keyboard">${notes.map((n, i) => `<button type="button" class="key" data-note="${n}"><span>${mode === 'sheet' ? `<b>${n}</b>` : ''}${i + 1}</span></button>`).join('')}</div><button type="button" class="keys-leave">Step away</button></div>`;
     root.hidden = false;
     ui.overlay = 'keys';
     const text = root.querySelector('.keys-text');
@@ -635,9 +644,10 @@ function melodyPuzzle(guided) {
     const hint = () => { root.querySelectorAll('.key').forEach(k => k.classList.remove('hint')); if (guided && listening) keyEl(PATRINI_TUNE[pos]).classList.add('hint'); };
     const playTune = async () => {
       listening = false; hint();
+      if (mode === 'sheet') { text.textContent = `From the page: ${PATRINI_TUNE.join(' · ')}`; pos = 0; listening = true; return; }
       text.textContent = 'Listen…';
       await sleep(500);
-      for (const n of PATRINI_TUNE) { sound.pluck(NOTE[n], 0, 0.9, 0.2); light(n, 420); await sleep(guided ? 650 : 480); }
+      for (const n of PATRINI_TUNE) { sound.pluck(NOTE[n], 0, 0.9, 0.2); light(n, mode === 'ear' ? 260 : 420); await sleep(guided ? 650 : 380); }
       text.textContent = 'Now play it back.';
       pos = 0; listening = true; hint();
     };
