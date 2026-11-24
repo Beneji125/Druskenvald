@@ -180,6 +180,13 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   art (`docs/explore/Ouija_Board.webp`, `Planchette.webp`). `OUIJA_SPOTS`
   in `story.js` is where each letter, number and word sits in the board
   picture, in its pixels; if the board art changes, those need re-measuring.
+- **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
+  (a colour and a level), easing in as you walk between rooms; `LANTERN`
+  sets the lantern you carry.
+- **What you can use:** anything in `THINGS` (`story.js`) shows a soft glint
+  when you're near (its height is in `THING_HEIGHTS`), brighter when you're
+  facing it and faint once you've looked at it; a closed door you face
+  glints at its handle.
 - **Replacing the placeholder art:** every texture and figure is drawn by
   one function in `art.js` (`SPRITES` for the upright figures and furniture,
   `wallTexture`, `floorTexture` and so on). To use a real drawing, put the

@@ -7,6 +7,7 @@ let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
 let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+let moodLevel = 1, moodColor = null, snapMood = true, realDt = 0;
 const DOOR_SWING = 1.75, DOOR_MS = 550;   // how far doors swing open (radians), and how fast
 
 // After a dialogue, an overlay or a scene ends, input is ignored for a
@@ -46,6 +47,7 @@ function startGame(fresh) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     buildWorld(renderer, q);
+    moodColor = new THREE.Color(ROOM_MOOD.porch.sky);
     addCharacters();
     ui.mapImage = new Image();
     ui.mapImage.src = FLOOR.image;
@@ -81,6 +83,18 @@ function addCharacters() {
   });
   world.patrini = addSprite(world.scene, 'patrini', 930, 875);
   world.patrini.visible = false;
+  // Glints: one per thing you can look at or use, and one that marks the
+  // handle of a closed door you're facing.
+  const glintMat = () => new THREE.MeshBasicMaterial({ map: glintTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const glintTex = glintTexture();
+  world.glints = THINGS.map(t => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), glintMat());
+    m.position.set(t.x, t.h, t.y); m.userData.thing = t; m.userData.phase = (t.x * 7 + t.y * 13) % 6.28;
+    world.scene.add(m);
+    return m;
+  });
+  world.doorGlint = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), glintMat());
+  world.scene.add(world.doorGlint);
   world.crookedMan = addSprite(world.scene, 'crookedMan', 0, 0);
   world.crookedMan.visible = false;
   [world.patrini, world.crookedMan].forEach(s => { s.material.transparent = true; s.material.depthWrite = false; s.material.alphaTest = 0; });
@@ -175,6 +189,7 @@ function teleport(cx, cy, dir) {
   yaw = -dir * Math.PI / 2;
   motion.from = motion.to = null;
   queued.length = 0;
+  snapMood = true;
   enteredCell(prev);
 }
 
@@ -195,7 +210,8 @@ let last = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
   if (document.hidden || $('game').hidden) { last = now; return; }
-  const dt = Math.min(0.05, (now - last) / 1000);
+  realDt = (now - last) / 1000;
+  const dt = Math.min(0.05, realDt);
   last = now;
   clock += dt;
 
@@ -232,7 +248,7 @@ function loop(now) {
   // The lantern, held a little to the right and below the eye.
   const rx = Math.cos(yaw), rz = -Math.sin(yaw);
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
-  world.lantern.intensity = 300 * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
+  world.lantern.intensity = LANTERN.intensity * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
@@ -245,7 +261,18 @@ function loop(now) {
   for (const s of strikes) if (clock >= s) f += Math.exp(-(clock - s) * 9);
   f = Math.min(1.6, f);
   world.lightning.intensity = f * (here.room === 'porch' ? 3 : 0.6);
-  world.ambient.intensity = 0.32 + f * (here.room === 'porch' || here.room === 'conservatory' ? 0.6 : 0.12);
+  // The room's own light, easing in as you pass between rooms, plus the
+  // lightning where the storm can reach.
+  const mood = ROOM_MOOD[here.room] || ROOM_MOOD.hallway;
+  // (Real seconds, not the capped frame time, so a slow device still
+  // catches up; teleports snap straight to the new room's light.)
+  const ease = snapMood ? 1 : 1 - Math.exp(-Math.min(1, realDt) * 1.5);
+  snapMood = false;
+  moodLevel += (mood.level - moodLevel) * ease;
+  moodColor.lerp(new THREE.Color(mood.sky), ease);
+  world.ambient.color.copy(moodColor);
+  world.ambient.groundColor.copy(moodColor).multiplyScalar(0.55);   // so walls get it too
+  world.ambient.intensity = moodLevel + f * (here.room === 'porch' || here.room === 'conservatory' ? 1.2 : 0.25);
   world.windowMats.forEach(m => { m.emissiveIntensity = 0.05 + f * 1.4; });
   world.rain.material.uniforms.time.value = clock;
   world.rain.material.uniforms.flash.value = f;
@@ -278,6 +305,8 @@ function loop(now) {
     if (v.amount === v.target) world.fixedLights.forEach(f => { if (f.castShadow) f.shadow.needsUpdate = true; });
   });
 
+  updateGlints(now, dt);
+
   // Cut-outs turn to face you.
   billboards.forEach(b => { b.rotation.y = yaw; });
 
@@ -300,6 +329,45 @@ function loop(now) {
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
   }
   renderer.render(world.scene, cam);
+}
+
+// Glints near you pulse softly; the one you're facing shines brighter, and
+// one you've already looked at stays faint. Each sits just in front of its
+// thing (towards you), so the thing itself can't hide it, while walls and
+// closed doors still do.
+const GLINT_RANGE = CELL * 5;
+function updateGlints(now, dt) {
+  const cam = world.camera, quiet = busy();
+  const faced = quiet ? null : thingAtHand();
+  const k = Math.min(1, dt * 8);
+  world.glints.forEach(g => {
+    const t = g.userData.thing;
+    const d = Math.hypot(t.x - cam.position.x, t.y - cam.position.z);
+    let target = 0;
+    if (!quiet && d < GLINT_RANGE && (!t.when || t.when())) {
+      const seen = game.flags.examined && game.flags.examined[t.id];
+      const pulse = 0.75 + 0.25 * Math.sin(now / 520 + g.userData.phase);
+      target = (t === faced ? 1 : seen ? 0.22 : 0.6 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
+    }
+    g.material.opacity += (target - g.material.opacity) * k;
+    g.visible = g.material.opacity > 0.01;
+    if (!g.visible) return;
+    const s = t === faced ? 1.5 + 0.1 * Math.sin(now / 180) : 1;
+    g.scale.setScalar(s);
+    const len = Math.max(1, d), pull = Math.min(16, d * 0.4);
+    g.position.set(t.x + (cam.position.x - t.x) / len * pull, t.h, t.y + (cam.position.z - t.y) / len * pull);
+    g.rotation.y = yaw;
+  });
+  // The handle of the closed door in front of you.
+  const door = quiet ? null : doorAhead();
+  const dg = world.doorGlint;
+  if (door && !door.open) {
+    const [hx, hz] = world.doors[door.id].handle, [dx, dy] = DIRS[game.dir];
+    dg.position.set(hx - dx * (WALL_T / 2 + 3), 46, hz - dy * (WALL_T / 2 + 3));   // on your side of it
+    dg.rotation.y = yaw;
+    dg.material.opacity += (0.8 + 0.2 * Math.sin(now / 200) - dg.material.opacity) * k;
+  } else dg.material.opacity += (0 - dg.material.opacity) * k;
+  dg.visible = dg.material.opacity > 0.01;
 }
 
 // High Dread brings in the tense theme, which holds until you've calmed

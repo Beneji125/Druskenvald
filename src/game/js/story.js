@@ -28,6 +28,13 @@ const CLUES = [
   { id: 'son',       text: 'Patrini’s last words: “Find my son. He lives.”' },
 ];
 
+// How high each thing's glint hangs (world units; the ceiling is WALL_H).
+const THING_HEIGHTS = {
+  petunia: 70, spirit_board: 46, harpsichord: 66, portraits: 80, peacock: 95, oven: 62, feast: 48,
+  staircase: 60, front_door: 72, chandelier: 92, fireplace: 50, landscapes: 80, mirror: 70,
+  collapsed_shelf: 45, tree: 95, bench: 30,
+};
+
 // Things you can look at or use, and where they are (floor-plan pixels).
 // Names and descriptions come from the points of interest in explore.json
 // unless given here; `run` is the script for using it.
@@ -45,7 +52,7 @@ const THINGS = [
   { id: 'bench', when: () => game.flags.petuniaGone },
 ].map(t => {
   const poi = FLOOR.pois.find(p => p.id === t.id) || {};
-  return { x: poi.x, y: poi.y, name: poi.name, text: poi.text, ...t };
+  return { x: poi.x, y: poi.y, name: poi.name, text: poi.text, h: THING_HEIGHTS[t.id] ?? 50, ...t };
 });
 
 const game = {
@@ -193,6 +200,7 @@ function thingAtHand() {
 async function useThing(t) {
   if (game.busy) return;
   game.busy = true;
+  (game.flags.examined = game.flags.examined || {})[t.id] = true;   // its glint dims from now on
   try {
     if (t.run) await t.run();
     else await ui.say(t.name, t.text);

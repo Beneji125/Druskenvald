@@ -409,6 +409,20 @@ function doorTexture() {
   return artTexture(c);
 }
 
+// A glint: a soft four-pointed star, marking something you can look at
+// or use.
+function glintTexture() {
+  const [c, ctx] = artCanvas(64, 64);
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 20);
+  g.addColorStop(0, 'rgba(255,244,214,1)'); g.addColorStop(0.35, 'rgba(255,214,150,0.45)'); g.addColorStop(1, 'rgba(255,200,120,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+  ctx.fillStyle = 'rgba(255,238,200,0.95)';
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) { const r = i % 2 ? 2.5 : 30, a = i * Math.PI / 4; ctx.lineTo(32 + Math.sin(a) * r, 32 - Math.cos(a) * r); }
+  ctx.closePath(); ctx.fill();
+  return artTexture(c);
+}
+
 // The oven's front: brick, with a black iron door and its heavy lock.
 function ovenFrontTexture() {
   const [c, ctx] = artCanvas(128, 128);

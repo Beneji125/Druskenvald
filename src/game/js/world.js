@@ -46,6 +46,23 @@ const SCENERY = [
 
 let world = null;
 
+// Each room's own base light: what you can make out beyond the lantern.
+// `sky` tints what faces up and out, `level` is how much of it there is.
+// It eases from one room's to the next as you walk (main.js).
+const ROOM_MOOD = {
+  porch:        { sky: 0x6c7a9c, level: 4.2 },   // storm light
+  foyer:        { sky: 0x8a8cc8, level: 4.2 },   // the chandelier's cold glow
+  parlor:       { sky: 0xb8644a, level: 3.6 },   // old firelight in the wallpaper
+  gallery:      { sky: 0xaaa290, level: 3.6 },   // pale marble
+  music:        { sky: 0x6a7ab8, level: 3.8 },   // moonlit blue
+  dining:       { sky: 0xc08e50, level: 3.6 },   // the feast's warm glow
+  kitchen:      { sky: 0xa85a38, level: 3.4 },   // embers behind the oven door
+  conservatory: { sky: 0x7c9aa8, level: 4.4 },   // grey rain through the glass
+  hallway:      { sky: 0x8a6a4c, level: 2.4 },   // the darkest place in the house
+};
+// The lantern: warm, carried low; gentle up close, reaching far.
+const LANTERN = { color: 0xffcc9c, intensity: 60, distance: 600, decay: 0.7 };
+
 function buildWorld(renderer, quality) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x030306);
@@ -178,7 +195,10 @@ function buildWorld(renderer, quality) {
       const sign = (Math.cos(a) * into[0] - Math.sin(a) * into[1]) > 0 ? 1 : -1;
       return { pivot, base, sign };
     });
-    w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u };
+    // Where the handle is: at the free edge of a single door, between the
+    // leaves of a double one.
+    const handle = at(door.cells.length === 1 ? o1 - 5 : L / 2);
+    w.doors[door.id] = { door, leaves, amount: 0, target: 0, normal: n, line: a, u, handle };
   });
 
   Object.entries(faces).forEach(([key, f]) => {
@@ -297,10 +317,10 @@ function buildWorld(renderer, quality) {
   }
 
   // ── Light ──
-  const ambient = new THREE.HemisphereLight(0x4a5670, 0x0a0806, 0.32);
+  const ambient = new THREE.HemisphereLight(0x4a5670, 0x120c08, 0.32);
   scene.add(ambient);
   w.ambient = ambient;
-  const lantern = new THREE.PointLight(0xffc48a, 230, 520, 1.1);
+  const lantern = new THREE.PointLight(LANTERN.color, LANTERN.intensity, LANTERN.distance, LANTERN.decay);
   lantern.castShadow = true;
   lantern.shadow.mapSize.set(quality === 'low' ? 256 : 512, quality === 'low' ? 256 : 512);
   lantern.shadow.camera.near = 2; lantern.shadow.camera.far = 460; lantern.shadow.bias = -0.003;
