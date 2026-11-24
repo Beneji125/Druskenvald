@@ -66,6 +66,7 @@ const game = {
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
   oil: 1, lanternLow: false,
+  stolen: [],        // what Jasper has taken (see jasper.js)
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -74,7 +75,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [] });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -85,7 +86,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
-    oil: game.oil, lanternLow: game.lanternLow,
+    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen,
   }));
 }
 
@@ -101,6 +102,7 @@ function loadGame() {
     game.crooked = s.crooked || 0;
     game.oil = s.oil ?? 1;
     game.lanternLow = !!s.lanternLow;
+    game.stolen = s.stolen || [];
     return true;
   } catch { return false; }
 }
@@ -125,7 +127,9 @@ async function nerveBreaks() {
   game.flags.breaking = true;
   if (game.curse) endCurse(true);
   ui.flash('#000', 1600);
-  await ui.say('', 'It is too much. You run — blindly, through doors and dark hallways, the house howling at your back — and stop only when cold rain hits your face. You are on the porch. The front door stands open, waiting.');
+  const lost = jasperSteal();
+  await ui.say('', 'It is too much. You run — blindly, through doors and dark hallways, the house howling at your back — and stop only when cold rain hits your face. You are on the porch. The front door stands open, waiting.'
+    + (lost ? ` Somewhere along the way something small, with hot breath and clever little hands, tugged at you. ${lost.charAt(0).toUpperCase() + lost.slice(1)} is gone. From inside the walls comes a thin, chittering laugh.` : ''));
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
   teleport(c.cx, c.cy, 0);
   game.dread = 4; ui.setDread(4);

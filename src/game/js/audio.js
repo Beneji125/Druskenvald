@@ -282,6 +282,19 @@ const sound = {
     src.start(t, Math.random()); src.stop(t + dur + 0.05);
   },
 
+  // Jasper: a quick skitter of claws on boards.
+  scurry() {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    for (let i = 0; i < 7; i++) {
+      const t = t0 + i * 0.045 + Math.random() * 0.02;
+      const src = this.ctx.createBufferSource(); src.buffer = this.noise;
+      const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      src.connect(hp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.04);
+    }
+  },
+
   // Hit in an encounter: a dull, cold thump.
   hit() {
     if (!this.ctx) return;

@@ -133,6 +133,7 @@ const ui = {
         b.type = 'button';
         b.innerHTML = `<span class="key">${i + 1}</span>`;
         b.appendChild(document.createTextNode(c.text));
+        if (c.dark) b.classList.add('dark');
         b.addEventListener('click', () => done(c.id));
         list.appendChild(b);
       });

@@ -201,6 +201,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.5); border-radius: 3px;
   display: flex; gap: 0.6em; align-items: baseline;
 }
+#dialog-choices button.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
 #dialog-choices button:hover, #dialog-choices button:focus-visible, .ouija-choices button:hover, .ouija-choices button:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
 .key { font-family: 'Cinzel', serif; font-size: 0.75rem; color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 3px; padding: 0 0.4em; flex: none; }
 
@@ -929,6 +930,28 @@ const SPRITES = {
     ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
     ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.arc(108, 36, 2.5, 0, Math.PI * 2); ctx.fill();
   }) },
+  // Filthy Jasper: a grey, greasy weasel sitting up, with a man's pink
+  // hands, clutching a tooth.
+  jasper: { size: [32, 40], draw: () => inkSprite(96, 120, (ctx) => {
+    ctx.fillStyle = '#5a5248';
+    ctx.beginPath(); ctx.moveTo(30, 118); ctx.quadraticCurveTo(14, 70, 38, 44); ctx.quadraticCurveTo(48, 36, 58, 44); ctx.quadraticCurveTo(80, 70, 66, 118); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(66, 112); ctx.quadraticCurveTo(92, 108, 88, 84); ctx.lineWidth = 6; ctx.stroke(); ctx.lineWidth = 3;   // tail
+    ctx.beginPath(); ctx.ellipse(48, 30, 16, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(36, 22); ctx.lineTo(34, 10); ctx.lineTo(42, 18); ctx.moveTo(60, 22); ctx.lineTo(62, 10); ctx.lineTo(54, 18); ctx.fill(); ctx.stroke();   // ears
+    ctx.beginPath(); ctx.moveTo(48, 36); ctx.lineTo(48, 46); ctx.stroke();   // snout
+    ctx.fillStyle = '#f0c060'; ctx.beginPath(); ctx.arc(41, 28, 2.6, 0, Math.PI * 2); ctx.arc(55, 28, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8a8a0';                                                  // the hands
+    ctx.beginPath(); ctx.ellipse(38, 70, 7, 5, 0.4, 0, Math.PI * 2); ctx.ellipse(58, 70, 7, 5, -0.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2; [34, 38, 42].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x - 1, 80); ctx.stroke(); }); [54, 58, 62].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x + 1, 80); ctx.stroke(); });
+    ctx.fillStyle = '#ece4cc'; ctx.beginPath(); ctx.moveTo(44, 62); ctx.lineTo(52, 62); ctx.lineTo(50, 72); ctx.lineTo(46, 72); ctx.closePath(); ctx.fill(); ctx.stroke();   // the tooth
+  }) },
+  // His nest: rags and paper, and teeth packed in like seeds.
+  nest: { size: [46, 16], draw: () => inkSprite(160, 56, (ctx) => {
+    const rand = seededRandom(13);
+    ctx.fillStyle = '#3a3026'; ctx.beginPath(); ctx.ellipse(80, 40, 74, 16, 0, Math.PI, Math.PI * 2); ctx.lineTo(154, 52); ctx.lineTo(6, 52); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for (let i = 0; i < 26; i++) { ctx.fillStyle = ['#5a4a3a', '#7a6a50', '#4a3a40'][i % 3]; ctx.fillRect(10 + rand() * 140, 26 + rand() * 22, 8 + rand() * 14, 3 + rand() * 4); }
+    ctx.fillStyle = '#ece4cc'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(16 + rand() * 128, 30 + rand() * 20, 1.8, 0, Math.PI * 2); ctx.fill(); }
+  }) },
   patrini: { size: [44, 90], ghost: true, draw: () => {
     const [c, ctx] = artCanvas(128, 256);
     ctx.shadowColor = 'rgba(120,180,255,1)'; ctx.shadowBlur = 16; ctx.fillStyle = 'rgba(110,160,235,0.55)';
@@ -1453,6 +1476,19 @@ const sound = {
     if (pan) { pan.pan.value = Math.random() < 0.5 ? -0.8 : 0.8; node = node.connect(pan); }
     node.connect(this.master);
     src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+
+  // Jasper: a quick skitter of claws on boards.
+  scurry() {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    for (let i = 0; i < 7; i++) {
+      const t = t0 + i * 0.045 + Math.random() * 0.02;
+      const src = this.ctx.createBufferSource(); src.buffer = this.noise;
+      const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      src.connect(hp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.04);
+    }
   },
 
   // Hit in an encounter: a dull, cold thump.
@@ -2233,6 +2269,7 @@ const ui = {
         b.type = 'button';
         b.innerHTML = `<span class="key">${i + 1}</span>`;
         b.appendChild(document.createTextNode(c.text));
+        if (c.dark) b.classList.add('dark');
         b.addEventListener('click', () => done(c.id));
         list.appendChild(b);
       });
@@ -2406,6 +2443,7 @@ const game = {
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
   oil: 1, lanternLow: false,
+  stolen: [],        // what Jasper has taken (see jasper.js)
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -2414,7 +2452,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false, stolen: [] });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -2425,7 +2463,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
-    oil: game.oil, lanternLow: game.lanternLow,
+    oil: game.oil, lanternLow: game.lanternLow, stolen: game.stolen,
   }));
 }
 
@@ -2441,6 +2479,7 @@ function loadGame() {
     game.crooked = s.crooked || 0;
     game.oil = s.oil ?? 1;
     game.lanternLow = !!s.lanternLow;
+    game.stolen = s.stolen || [];
     return true;
   } catch { return false; }
 }
@@ -2465,7 +2504,9 @@ async function nerveBreaks() {
   game.flags.breaking = true;
   if (game.curse) endCurse(true);
   ui.flash('#000', 1600);
-  await ui.say('', 'It is too much. You run — blindly, through doors and dark hallways, the house howling at your back — and stop only when cold rain hits your face. You are on the porch. The front door stands open, waiting.');
+  const lost = jasperSteal();
+  await ui.say('', 'It is too much. You run — blindly, through doors and dark hallways, the house howling at your back — and stop only when cold rain hits your face. You are on the porch. The front door stands open, waiting.'
+    + (lost ? ` Somewhere along the way something small, with hot breath and clever little hands, tugged at you. ${lost.charAt(0).toUpperCase() + lost.slice(1)} is gone. From inside the walls comes a thin, chittering laugh.` : ''));
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
   teleport(c.cx, c.cy, 0);
   game.dread = 4; ui.setDread(4);
@@ -3450,6 +3491,210 @@ function thingText(t) {
   return t.text;
 }
 
+// ─── src/game/js/jasper.js ───────────────────────────────────────────
+// Filthy Jasper: Vessla Browntooth's familiar, weasel-like but with a
+// man's hands, collector of teeth. He is how Dread follows you around.
+//
+//   Uneasy (4+)     glimpsed now and then, off to one side, gone when you
+//                   turn to look.
+//   Terrified (7+)  he waits for you in the room, and will talk. He trades
+//                   in teeth: stolen things back, a hint, or his "help"
+//                   (your fear, taken away, for a little of your soul:
+//                   Crookedness).
+//   Breaking        when your nerve breaks, he steals something you carry
+//                   (a memento too) and hides it in his nest.
+//   His nest        under the foyer stairs, only there for frightened
+//                   eyes until you've found it once. Everything he stole
+//                   is there.
+//
+// He grows fond of you as you grow crooked, which is worse.
+
+const JASPER_PRICES = { item: 2, memento: 3, hint: 1 };
+const NEST = { id: 'nest', name: 'Jasper’s nest', x: 668, y: 960, h: 18, verb: 'Search' };
+const jasper = { mode: 'hidden', until: 0, nextGlimpse: 12, cell: null, yawAt: 0, room: null };
+
+// Things to say, worst to best: he speaks to you more warmly the more
+// crooked you've become.
+function jasperVoice() {
+  const c = game.crooked || 0;
+  return c >= 3 ? 'friend' : c >= 1 ? 'admiring' : 'sneering';
+}
+
+// ─── In the world ─────────────────────────────────────────────────────
+
+// Called every frame by the main loop.
+function tickJasper(dt, here, now) {
+  const s = world.jasper;
+  const quiet = !game.busy && !ui.overlay && !game.curse && !game.inEncounter && !game.flags.breaking && here.room !== 'porch';
+  const band = dreadBand();
+  // Terrified: he's here, waiting, a square or two away.
+  if (quiet && (band === 'terrified')) {
+    if (jasper.mode !== 'present' || jasper.room !== here.room) {
+      const c = jasperSpot(1, 2, 0) || jasperSpot(1, 1, 1);
+      if (c) { place(s, c, 16); jasper.mode = 'present'; jasper.room = here.room; sound.scurry(); }
+    }
+  } else if (jasper.mode === 'present') hide(s);
+  // Uneasy: a glimpse at the edge of sight, now and then.
+  if (jasper.mode === 'glimpse') {
+    const turned = Math.abs(yawDelta(yaw, jasper.yawAt)) > 0.25;
+    if (now > jasper.until || turned || !quiet) hide(s);
+  } else if (jasper.mode === 'hidden' && quiet && band === 'uneasy') {
+    jasper.nextGlimpse -= dt;
+    if (jasper.nextGlimpse <= 0) {
+      jasper.nextGlimpse = 18 + Math.random() * 22;
+      const c = jasperSpot(2, 3, 1);
+      if (c) { place(s, c); jasper.mode = 'glimpse'; jasper.until = now + 900; jasper.yawAt = yaw; sound.scurry(); }
+    }
+  }
+  if (s.visible) s.position.y = Math.abs(Math.sin(now / 140)) * 1.5;   // twitching
+  // His nest: there when you're terrified, or once you know where it is.
+  world.nest.visible = thingAvailable(NEST_THING);
+}
+
+// `back`: how far past the square's middle (away from you) he sits, so
+// that close up he's still in view.
+function place(s, c, back = 0) {
+  jasper.cell = c;
+  const jitter = back ? 6 : (CELL / 2 - 10), [fx, fy] = DIRS[game.dir];
+  s.position.set(c.x + fx * back + (Math.random() - 0.5) * jitter, 0, c.y + fy * back + (Math.random() - 0.5) * jitter);
+  JASPER_THING.x = s.position.x; JASPER_THING.y = s.position.z;
+  s.visible = true;
+}
+function hide(s) { s.visible = false; jasper.mode = 'hidden'; jasper.cell = null; }
+function yawDelta(a, b) { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; }
+
+// A walkable square `min`–`max` steps away that you can see from where you
+// stand: straight ahead (side = 0), or ahead and off to one side (side = 1,
+// for a glimpse at the edge of your view).
+function jasperSpot(min, max, side) {
+  const here = GRID.at(game.cx, game.cy);
+  const [fx, fy] = DIRS[game.dir], [rx, ry] = DIRS[(game.dir + 1) % 4];
+  const options = [];
+  for (let d = min; d <= max; d++) {
+    const offs = side ? [-1, 1].map(k => k * Math.ceil(d / 2)) : [0];   // waiting for you: straight ahead
+    offs.forEach(o => {
+      const c = GRID.at(here.cx + fx * d + rx * o, here.cy + fy * d + ry * o);
+      if (!c || !c.walk || c.blocked || c.room !== here.room) return;
+      if (GRID.segs.some(([a, b]) => segmentsCross([here.x, here.y], [c.x, c.y], a, b))) return;
+      options.push(c);
+    });
+  }
+  return options.length ? options[Math.floor(Math.random() * options.length)] : null;
+}
+
+// ─── Talking ──────────────────────────────────────────────────────────
+
+const JASPER_THING = { id: 'jasper', name: 'Filthy Jasper', verb: 'Speak to', x: 0, y: 0, h: 22,
+  when: () => jasper.mode === 'present', run: () => jasperTalk() };
+const NEST_THING = { ...NEST, when: () => game.flags.nestFound || game.dread >= 7, run: () => searchNest() };
+THINGS.push(JASPER_THING, NEST_THING);
+
+async function jasperTalk() {
+  const v = jasperVoice();
+  const greet = {
+    sneering: 'A weaselly thing, grey and greasy, crouches on the floor and looks up at you with small wet eyes. Its hands are a man’s hands, pink and long-fingered. One of them is turning a tooth over and over. “Ooh,” it says. “Frightened, are we? Frightened is when we can talk. Jasper is Jasper. What does the little master want?”',
+    admiring: 'Jasper sits up on his haunches when he sees you, and something like respect comes into his wet little eyes. “There’s the one,” he says. “The one who does what needs doing. Jasper has been watching. What does the master want?”',
+    friend: 'Jasper scurries to your feet, delighted, and rubs his pink hands together. “Friend! Friend has come back! Jasper knew. Jasper always knows. The house likes you very much now. What shall we do, friend?”',
+  }[v];
+  let text = greet;
+  for (;;) {
+    const choices = [];
+    if (game.stolen.length) choices.push({ id: 'back', text: `“Give me back what you took.” (${game.stolen.length} thing${game.stolen.length > 1 ? 's' : ''})` });
+    choices.push({ id: 'hint', text: `“Tell me something useful.” (${JASPER_PRICES.hint} tooth)` });
+    choices.push({ id: 'want', text: '“What do you want with teeth?”' });
+    choices.push({ id: 'help', text: '“Make the fear stop.”' });
+    choices.push({ id: 'leave', text: 'Back away' });
+    const pick = await ui.say('Filthy Jasper', text, choices);
+    if (pick === 'leave') return;
+    if (pick === 'want') text = '“Teeth are where the soul holds on, when it’s frightened.” He clicks the tooth against his own. “Grit your teeth, they say. Clench your jaw. Mistress likes them. Mistress makes things with them.” He giggles. “You have lovely teeth.”';
+    if (pick === 'hint') {
+      if (game.teeth < JASPER_PRICES.hint) { text = '“A tooth for a secret. That’s fair. That’s the price.” He holds out his little pink palm, empty. “No tooth, no secret.”'; continue; }
+      addTeeth(-JASPER_PRICES.hint);
+      text = `He snatches the tooth and pops it somewhere inside his fur. “${jasperHint()}”`;
+    }
+    if (pick === 'back') text = await jasperReturn();
+    if (pick === 'help') {
+      const yes = await ui.say('Filthy Jasper', '“Jasper can take it away. All of it. The shaking, the cold, the eyes in the walls. Just give Jasper a little something.” He taps his own chest, where a heart would be. “A little bit. You won’t miss it.”', [{ id: 'yes', text: 'Let him', dark: true }, { id: 'no', text: '“No.”' }]);
+      if (yes !== 'yes') { text = '“No? No.” He shrugs his narrow shoulders. “Later, then. Jasper will ask again later.”'; continue; }
+      game.crooked = (game.crooked || 0) + 1;
+      await ui.say('', 'He lays one small pink hand flat against your chest. There is a feeling like a thread being pulled out of a seam, slowly, from somewhere deep inside you. Then it’s done, and you’re not afraid any more. You’re not much of anything any more.');
+      addDread(-DREAD_MAX);
+      hide(world.jasper);
+      saveGame();
+      return;
+    }
+  }
+}
+
+async function jasperReturn() {
+  const lines = [];
+  for (const id of [...game.stolen]) {
+    const memento = MEMENTOS.find(m => m.id === id);
+    const price = memento ? JASPER_PRICES.memento : JASPER_PRICES.item;
+    const name = ownedName(id);
+    if (game.teeth < price) { lines.push(`“${name.charAt(0).toUpperCase() + name.slice(1)}? That’s ${price} teeth, that is.”`); continue; }
+    addTeeth(-price);
+    restoreStolen(id);
+    lines.push(`He counts ${price} teeth out of your hand and drops ${name} into it.`);
+  }
+  return lines.join(' ') + (game.stolen.length ? ' “Find more teeth, little master. Or find where Jasper keeps things.” He winks.' : ' “All square,” he says. “For now.”');
+}
+
+function jasperHint() {
+  const f = game.flags, m = game.mementos;
+  if (!game.clues.has('lockwoods')) return 'The pictures in the front hall have names on them. Names are useful. Names make the dead turn round.';
+  if (!f.petuniaFreed && !f.petuniaGone) return f.petuniaTea ? 'Mother has her tea. Now she wants her little ones. Say their names to her.' : 'Mother is so cold. She’d like her tea. Hot, mind, from her own tree, and the fire in the parlour is the only one that burns.';
+  if (!f.feastDone) return 'The dinner wants a guest with manners. Sit. Say grace. Praise the cook. Or burn it, burn it! Jasper likes it when they burn.';
+  if (!f.musicSolved) return 'The music room wants a different song. The old servant knows one. Ask him, at the board in the parlour, and he’ll help your hands.';
+  if (!m.has('gem')) return 'The white bird in the round room. Don’t look in its eye. Let it look in its own, with a bit of a broken mirror.';
+  return 'Upstairs, upstairs. Not yet. The stairs aren’t ready for you. Soon.';
+}
+
+// ─── Stealing and the nest ────────────────────────────────────────────
+
+// "your carving knife", "the black ivory key", "Petunia’s porcelain teacup".
+function ownedName(id) {
+  const m = MEMENTOS.find(x => x.id === id);
+  if (m) return /^A /.test(m.name) ? 'the ' + m.name.slice(2) : m.name;
+  return 'your ' + ITEMS[id].name.toLowerCase();
+}
+
+// When your nerve breaks: one thing you carry, gone. Returns its name.
+function jasperSteal() {
+  const pool = [...game.items.filter(id => id !== 'kettle_hot'), ...game.mementos];
+  if (!pool.length) return null;
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  if (game.mementos.has(id)) game.mementos.delete(id);
+  else takeItem(id);
+  game.stolen.push(id);
+  ui.drawInventory();
+  saveGame();
+  return ownedName(id);
+}
+
+function restoreStolen(id) {
+  game.stolen = game.stolen.filter(x => x !== id);
+  if (MEMENTOS.some(m => m.id === id)) game.mementos.add(id);
+  else giveItem(id, { quiet: true });
+  saveGame();
+}
+
+async function searchNest() {
+  const first = !game.flags.nestFound;
+  game.flags.nestFound = true;
+  if (!game.stolen.length) {
+    await ui.say(NEST.name, first
+      ? 'Under the stairs, in the dark, a nest: rags, hair, chewed paper, and teeth. Hundreds of teeth, packed in like seeds. Something has been living here a long time. You prise a couple of loose teeth from the edge.'
+      : 'The nest. Rags and teeth, and the warm, musky smell of something that has only just left. Nothing of yours is here.');
+    if (first) addTeeth(2);
+    saveGame();
+    return;
+  }
+  const names = game.stolen.map(ownedName);
+  await ui.say(NEST.name, `${first ? 'Under the stairs, in the dark, a nest: rags, hair, chewed paper, and teeth, packed in like seeds. ' : ''}Tucked deep in among the teeth, still warm from being slept on: ${names.join(', ')}. You take ${names.length > 1 ? 'them' : 'it'} back. From somewhere in the walls comes an outraged chittering.`);
+  [...game.stolen].forEach(restoreStolen);
+}
+
 // ─── src/game/js/encounter.js ────────────────────────────────────────
 // Encounters: when a haunting turns on you. There is no fighting back.
 // The house throws its fear at you, and you weave a small lantern flame
@@ -4015,6 +4260,10 @@ function addCharacters() {
   });
   world.doorGlint = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), glintMat());
   world.scene.add(world.doorGlint);
+  world.jasper = addSprite(world.scene, 'jasper', 0, 0);
+  world.jasper.visible = false;
+  world.nest = addSprite(world.scene, 'nest', NEST.x, NEST.y);
+  world.nest.visible = false;
   world.crookedMan = addSprite(world.scene, 'crookedMan', 0, 0);
   world.crookedMan.visible = false;
   [world.patrini, world.crookedMan].forEach(s => { s.material.transparent = true; s.material.depthWrite = false; s.material.alphaTest = 0; });
@@ -4232,6 +4481,7 @@ function loop(now) {
   });
 
   updateGlints(now, dt);
+  tickJasper(dt, here, now);
   world.decals.forEach(m => {
     const target = thingAvailable(m.userData.thing) ? 1 : 0;
     m.material.opacity += (target - m.material.opacity) * Math.min(1, dt * 2);
@@ -4403,7 +4653,7 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
 </script>
 </body>
 </html>

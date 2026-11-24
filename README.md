@@ -207,6 +207,13 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   calm down by the lit parlour fire, by drinking tea, and by freeing ghosts.
   A thing can be `minDread` (only there when frightened enough) or have a
   `dreadText`; the hallway's scratches and the cracked mirror are examples.
+- **Filthy Jasper** (`jasper.js`), the hag's weasel-familiar: glimpsed at
+  the edge of your view when you're uneasy; waiting in the room, ready to
+  talk, when you're terrified. He trades in teeth (stolen things back, a
+  hint for 1 tooth) and offers to "take the fear away" for a bit of your
+  soul (Crookedness). When your nerve breaks he steals something you carry,
+  mementos included; his nest under the foyer stairs (visible only when
+  you're terrified, until you've found it) has everything he took.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

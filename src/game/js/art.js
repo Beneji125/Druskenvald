@@ -351,6 +351,28 @@ const SPRITES = {
     ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
     ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.arc(108, 36, 2.5, 0, Math.PI * 2); ctx.fill();
   }) },
+  // Filthy Jasper: a grey, greasy weasel sitting up, with a man's pink
+  // hands, clutching a tooth.
+  jasper: { size: [32, 40], draw: () => inkSprite(96, 120, (ctx) => {
+    ctx.fillStyle = '#5a5248';
+    ctx.beginPath(); ctx.moveTo(30, 118); ctx.quadraticCurveTo(14, 70, 38, 44); ctx.quadraticCurveTo(48, 36, 58, 44); ctx.quadraticCurveTo(80, 70, 66, 118); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(66, 112); ctx.quadraticCurveTo(92, 108, 88, 84); ctx.lineWidth = 6; ctx.stroke(); ctx.lineWidth = 3;   // tail
+    ctx.beginPath(); ctx.ellipse(48, 30, 16, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(36, 22); ctx.lineTo(34, 10); ctx.lineTo(42, 18); ctx.moveTo(60, 22); ctx.lineTo(62, 10); ctx.lineTo(54, 18); ctx.fill(); ctx.stroke();   // ears
+    ctx.beginPath(); ctx.moveTo(48, 36); ctx.lineTo(48, 46); ctx.stroke();   // snout
+    ctx.fillStyle = '#f0c060'; ctx.beginPath(); ctx.arc(41, 28, 2.6, 0, Math.PI * 2); ctx.arc(55, 28, 2.6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8a8a0';                                                  // the hands
+    ctx.beginPath(); ctx.ellipse(38, 70, 7, 5, 0.4, 0, Math.PI * 2); ctx.ellipse(58, 70, 7, 5, -0.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 2; [34, 38, 42].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x - 1, 80); ctx.stroke(); }); [54, 58, 62].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x + 1, 80); ctx.stroke(); });
+    ctx.fillStyle = '#ece4cc'; ctx.beginPath(); ctx.moveTo(44, 62); ctx.lineTo(52, 62); ctx.lineTo(50, 72); ctx.lineTo(46, 72); ctx.closePath(); ctx.fill(); ctx.stroke();   // the tooth
+  }) },
+  // His nest: rags and paper, and teeth packed in like seeds.
+  nest: { size: [46, 16], draw: () => inkSprite(160, 56, (ctx) => {
+    const rand = seededRandom(13);
+    ctx.fillStyle = '#3a3026'; ctx.beginPath(); ctx.ellipse(80, 40, 74, 16, 0, Math.PI, Math.PI * 2); ctx.lineTo(154, 52); ctx.lineTo(6, 52); ctx.closePath(); ctx.fill(); ctx.stroke();
+    for (let i = 0; i < 26; i++) { ctx.fillStyle = ['#5a4a3a', '#7a6a50', '#4a3a40'][i % 3]; ctx.fillRect(10 + rand() * 140, 26 + rand() * 22, 8 + rand() * 14, 3 + rand() * 4); }
+    ctx.fillStyle = '#ece4cc'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(16 + rand() * 128, 30 + rand() * 20, 1.8, 0, Math.PI * 2); ctx.fill(); }
+  }) },
   patrini: { size: [44, 90], ghost: true, draw: () => {
     const [c, ctx] = artCanvas(128, 256);
     ctx.shadowColor = 'rgba(120,180,255,1)'; ctx.shadowBlur = 16; ctx.fillStyle = 'rgba(110,160,235,0.55)';

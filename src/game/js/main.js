@@ -100,6 +100,10 @@ function addCharacters() {
   });
   world.doorGlint = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), glintMat());
   world.scene.add(world.doorGlint);
+  world.jasper = addSprite(world.scene, 'jasper', 0, 0);
+  world.jasper.visible = false;
+  world.nest = addSprite(world.scene, 'nest', NEST.x, NEST.y);
+  world.nest.visible = false;
   world.crookedMan = addSprite(world.scene, 'crookedMan', 0, 0);
   world.crookedMan.visible = false;
   [world.patrini, world.crookedMan].forEach(s => { s.material.transparent = true; s.material.depthWrite = false; s.material.alphaTest = 0; });
@@ -317,6 +321,7 @@ function loop(now) {
   });
 
   updateGlints(now, dt);
+  tickJasper(dt, here, now);
   world.decals.forEach(m => {
     const target = thingAvailable(m.userData.thing) ? 1 : 0;
     m.material.opacity += (target - m.material.opacity) * Math.min(1, dt * 2);
@@ -488,4 +493,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
