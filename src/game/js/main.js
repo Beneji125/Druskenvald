@@ -65,6 +65,9 @@ function startGame(fresh) {
   yaw = -game.dir * Math.PI / 2;
   motion.from = motion.to = null;
   ui.setDread(game.dread);
+  ui.select(null);
+  ui.drawInventory();
+  setHearth(!!game.flags.hearthLit);
   const c = GRID.at(game.cx, game.cy);
   ui.setRoom(roomById(c.room)?.name || '');
   game.roomsSeen.delete(c.room);
@@ -126,8 +129,14 @@ function act(cmd) {
   if (cmd === 'left' || cmd === 'right') return turn(cmd === 'left' ? -1 : 1);
   const door = doorAhead();
   if (cmd === 'use') {
-    if (door && !door.open) return swingDoor(door, true);
     const t = thingAtHand();
+    // Holding an item: use it on whatever's in front of you.
+    if (ui.selected) {
+      if (t) return useThing(t, ui.selected);
+      ui.log(`There’s nothing here to use the ${ITEMS[ui.selected].name.toLowerCase()} on.`, 'note');
+      return ui.select(null);
+    }
+    if (door && !door.open) return swingDoor(door, true);
     if (t) return useThing(t);
     if (door && door.open) return swingDoor(door, false);
     return;
@@ -324,7 +333,10 @@ function loop(now) {
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
 
   if (busy()) ui.setPrompt(null);
-  else {
+  else if (ui.selected) {
+    const t = thingAtHand();
+    ui.setPrompt({ verb: `Use the ${ITEMS[ui.selected].name.toLowerCase()} on`, name: t ? t.name : 'nothing here' });
+  } else {
     const door = doorAhead(), t = thingAtHand();
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
   }
@@ -401,9 +413,18 @@ document.addEventListener('keydown', e => {
   if (e.target.closest && e.target.closest('input')) return;     // a slider's arrow keys move the slider
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
-  if (k === 'j' || k === 'i') { e.preventDefault(); ui.toggle('journal'); return; }
+  if (k === 'j') { e.preventDefault(); ui.toggle('journal'); return; }
   if (ui.overlay || game.busy || performance.now() < inputLockUntil) return;
   if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
+  // The inventory: 1–9 pick up an item (or, holding one, combine it with
+  // another), X examines what you're holding, Escape puts it down.
+  if (/^[1-9]$/.test(k)) {
+    const id = game.items[Number(k) - 1];
+    if (id) { e.preventDefault(); ui.pickSlot(id); }
+    return;
+  }
+  if (k === 'x' && ui.selected) { e.preventDefault(); examineItem(ui.selected); return; }
+  if (k === 'escape' && ui.selected) { e.preventDefault(); ui.select(null); return; }
   const cmd = KEYMAP[k];
   if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd); }
 });
@@ -416,6 +437,8 @@ $('btn-map').addEventListener('click', () => ui.toggle('map'));
 $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
 document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
 $('room-card-close').addEventListener('click', hideRoomCard);
+$('inv-examine').addEventListener('click', () => examineItem(ui.selected));
+$('inv-teeth-icon').src = itemIcon('tooth');
 const soundBtn = $('btn-sound');
 const showSound = () => {
   soundBtn.textContent = sound.on ? '🔊' : '🔇';
@@ -449,4 +472,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

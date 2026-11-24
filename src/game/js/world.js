@@ -37,6 +37,7 @@ const SCENERY = [
   { kind: 'oven', x: 975, y: 440, block: { r: 30 } },
   { kind: 'fallenShelf', x: 880, y: 262, block: { r: 30 } },
   { kind: 'barrel', x: 724, y: 252 },
+  { kind: 'chair', x: 470, y: 1135 },   // the porch's rocking chair
   // Conservatory
   { kind: 'tree', x: 490, y: 300, block: { r: 40 } },
   { kind: 'bench', x: 520, y: 480, rot: 0 },
@@ -293,6 +294,8 @@ function buildWorld(renderer, quality) {
 
   // ── Furniture ──
   GRID.cells.forEach(c => { c.blocked = false; });
+  // The pieces added for search spots (items.js), against their walls.
+  [...SEARCHES.filter(s => s.prop), PUMP].forEach(s => addScenery(w, { kind: s.prop, x: s.x, y: s.y, rot: s.wallDir % 2 ? Math.PI / 2 : 0 }, box));
   SCENERY.forEach(p => {
     addScenery(w, p, box);
     if (p.block) {
@@ -399,6 +402,55 @@ function addScenery(w, p, box) {
       break;
     }
     case 'sideboard': box(30, 44, 120, wood('#33200f'), p.x, 22, p.y); break;
+    // Search-spot furniture: each is drawn along its wall (`rot` turns it
+    // to an east or west wall).
+    case 'console': {
+      const m = wood('#3a2414');
+      box(48, 4, 18, m, p.x, 40, p.y, p.rot);
+      box(44, 10, 16, wood('#2e1c0e'), p.x, 33, p.y, p.rot);
+      const off = [[-20, -6], [20, -6], [-20, 6], [20, 6]];
+      off.forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, m, p.x + x, 15, p.y + z); });
+      break;
+    }
+    case 'umbrellas': {
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 26, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a3a, roughness: 0.8 }));
+      pot.position.set(p.x, 13, p.y); pot.castShadow = pot.receiveShadow = true; scene.add(pot);
+      [[-2, 0.15], [2, -0.1], [0, 0.3]].forEach(([dx, tilt]) => { const u = box(1.5, 44, 1.5, new THREE.MeshStandardMaterial({ color: 0x1a1612 }), p.x + dx, 30, p.y); u.rotation.z = tilt; });
+      break;
+    }
+    case 'woodbasket': box(30, 16, 20, new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 }), p.x, 8, p.y, p.rot); break;
+    case 'cupboard': {
+      box(46, 70, 22, wood('#3a2616'), p.x, 35, p.y, p.rot);
+      const [x, z] = turnXZ(0, 11.5, p.rot);
+      box(42, 2, 1, wood('#1e140a'), p.x + x, 36, p.y + z, p.rot);
+      break;
+    }
+    case 'pottingBench': {
+      box(50, 4, 22, wood('#4a3a28'), p.x, 30, p.y, p.rot);
+      [[-22, -8], [22, -8], [-22, 8], [22, 8]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, wood('#3a2a1a'), p.x + x, 15, p.y + z); });
+      [[-14, 0], [2, 3], [15, -2]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); const pot = new THREE.Mesh(new THREE.CylinderGeometry(5, 4, 8, 10), new THREE.MeshStandardMaterial({ color: 0x8a4a2a, roughness: 1 })); pot.position.set(p.x + x, 36, p.y + z); pot.castShadow = true; scene.add(pot); });
+      break;
+    }
+    case 'cabinet': {
+      box(36, 64, 18, wood('#2e1c0e'), p.x, 32, p.y, p.rot);
+      const [x, z] = turnXZ(0, 9.2, p.rot);
+      const glass = box(30, 40, 0.5, new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 }), p.x + x, 40, p.y + z, p.rot);
+      glass.castShadow = false;
+      break;
+    }
+    case 'musicStand': {
+      const brass = new THREE.MeshStandardMaterial({ color: 0x9a7a3a, roughness: 0.4, metalness: 0.7 });
+      box(2, 44, 2, brass, p.x, 22, p.y);
+      const desk = box(26, 18, 1.5, brass, p.x, 50, p.y, p.rot); desk.rotateX(-0.35);
+      break;
+    }
+    case 'pump': {
+      box(30, 20, 24, new THREE.MeshStandardMaterial({ color: 0x5a5650, roughness: 0.9 }), p.x, 30, p.y, p.rot);
+      const iron = new THREE.MeshStandardMaterial({ color: 0x2a2826, roughness: 0.5, metalness: 0.6 });
+      box(5, 30, 5, iron, p.x, 55, p.y);
+      const h = box(18, 2, 2, iron, p.x, 70, p.y, p.rot); h.rotation.z = 0.4;
+      break;
+    }
     case 'bench': box(80, 18, 24, new THREE.MeshStandardMaterial({ color: 0x4a4e44, roughness: 1 }), p.x, 9, p.y, p.rot || 0); break;
     case 'oven': {
       const mats = [brickTexture(), brickTexture(), brickTexture(), brickTexture(), ovenFrontTexture(), brickTexture()].map(t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, emissive: 0x501008, emissiveIntensity: 0.15 }));
@@ -470,6 +522,9 @@ function addScenery(w, p, box) {
 // `billboards` each frame). Furniture and statues are lit by your lantern
 // like everything else; ghosts and candle flames give their own light.
 const billboards = [];
+// Rotates a local (along-wall, out-of-wall) offset by `rot`.
+function turnXZ(a, b, rot = 0) { return [a * Math.cos(rot) + b * Math.sin(rot), -a * Math.sin(rot) + b * Math.cos(rot)]; }
+
 function addSprite(scene, kind, x, y) {
   const spec = SPRITES[kind];
   const geo = new THREE.PlaneGeometry(spec.size[0], spec.size[1]);

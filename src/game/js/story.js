@@ -48,7 +48,7 @@ const THINGS = [
   { id: 'feast', verb: 'Examine', run: () => feastScene() },
   { id: 'staircase', verb: 'Climb', run: () => stairsScene() },
   { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes' },
-  { id: 'mirror' }, { id: 'collapsed_shelf' }, { id: 'tree' },
+  { id: 'mirror' }, { id: 'tree', run: () => treeScene() },
   { id: 'bench', when: () => game.flags.petuniaGone },
 ].map(t => {
   const poi = FLOOR.pois.find(p => p.id === t.id) || {};
@@ -58,6 +58,7 @@ const THINGS = [
 const game = {
   cx: 0, cy: 0, dir: 0, dread: 0,
   mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
+  items: [], teeth: 0, searched: new Set(),
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -66,7 +67,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set() });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -76,6 +77,7 @@ function saveGame() {
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
+    items: game.items, teeth: game.teeth, searched: [...game.searched],
   }));
 }
 
@@ -85,6 +87,9 @@ function loadGame() {
     if (!s || s.v !== 1 || !GRID.at(s.cx, s.cy)?.walk) return false;
     Object.assign(game, { cx: s.cx, cy: s.cy, dir: s.dir, dread: s.dread, mementos: new Set(s.mementos), clues: new Set(s.clues), flags: s.flags || {}, seen: new Set(s.seen), roomsSeen: new Set(s.roomsSeen), curse: false });
     game.doorsOpen = s.doorsOpen ? new Set(s.doorsOpen.filter(id => DOORS.byId(id))) : frontDoorOpen();
+    game.items = (s.items || []).filter(id => ITEMS[id]);
+    game.teeth = s.teeth || 0;
+    game.searched = new Set(s.searched || []);
     return true;
   } catch { return false; }
 }
@@ -197,12 +202,14 @@ function thingAtHand() {
   return best;
 }
 
-async function useThing(t) {
+// Look at or use something, or (with `item`) use an item on it.
+async function useThing(t, item) {
   if (game.busy) return;
   game.busy = true;
-  (game.flags.examined = game.flags.examined || {})[t.id] = true;   // its glint dims from now on
+  if (!item) (game.flags.examined = game.flags.examined || {})[t.id] = true;   // its glint dims from now on
   try {
-    if (t.run) await t.run();
+    if (item) await useItemOn(item, t);
+    else if (t.run) await t.run();
     else await ui.say(t.name, t.text);
   } finally {
     game.busy = false;
@@ -291,6 +298,7 @@ async function seance() {
   await board.spell('GOODBYE');
   board.say('The fire in the hearth goes out with a hiss, and the room is plunged into a darker dark than before.');
   setHearth(false);
+  game.flags.hearthLit = false;
   sound.stopDrone();
   game.flags.seanceDone = true;
   saveGame();
@@ -424,12 +432,24 @@ function closeOuija() {
 
 // ─── The conservatory: Petunia ────────────────────────────────────────
 
-async function petuniaScene() {
-  const angered = game.flags.petuniaAngered;
-  let text = game.flags.petuniaMet
-    ? (angered ? 'Petunia sits as before, gazing at the tree, but her shoulders are rigid now. She knows you are there.' : 'Petunia sits on the bench, the teacup in her lap, lost in thought.')
+// Petunia gives up her cup when she's at peace: when she's been brought a
+// proper cup of tea (bergamot, from her own tree) and someone has spoken
+// her children's names to her (the foyer portraits give them), in either
+// order. Showing her Sally's doll and Arthur's bear (second floor) brings
+// her peace at once. Snatching the cup angers her.
+//
+// `offer` is set when an item was used on her: 'tea', 'doll' or 'bear'.
+async function petuniaScene(offer) {
+  const f = game.flags;
+  if (offer === 'tea') return petuniaTea();
+  if (offer === 'doll' || offer === 'bear') return petuniaToy(offer);
+  const angered = f.petuniaAngered;
+  let text = f.petuniaMet
+    ? (angered ? 'Petunia sits as before, gazing at the tree, but her shoulders are rigid now. She knows you are there.'
+       : f.petuniaTea ? 'Petunia sits with her cup cradled close, warm at last. She looks almost alive.'
+       : 'Petunia sits on the bench, the teacup in her lap, lost in thought.')
     : 'A pale woman in a black mourning gown sits on the bench, gazing at the tree. She holds a white porcelain teacup in both hands, and a faded green ribbon is tied around her throat. She doesn’t seem to notice you.';
-  game.flags.petuniaMet = true;
+  f.petuniaMet = true;
   const said = new Set();
   let speaker = '';
   for (;;) {
@@ -437,7 +457,7 @@ async function petuniaScene() {
     if (!said.has('greet')) choices.push({ id: 'greet', text: '“Good evening.”' });
     if (said.has('greet') && !said.has('tree')) choices.push({ id: 'tree', text: 'Ask about the tree' });
     if (said.has('greet') && !said.has('cup')) choices.push({ id: 'cup', text: 'Ask for her teacup' });
-    if (said.has('greet') && game.clues.has('lockwoods')) choices.push({ id: 'children', text: 'Speak of Sally and Arthur' });
+    if (said.has('greet') && game.clues.has('lockwoods') && !f.petuniaNamed) choices.push({ id: 'children', text: 'Speak of Sally and Arthur' });
     choices.push({ id: 'snatch', text: 'Snatch the teacup from her hands' });
     choices.push({ id: 'leave', text: 'Leave her be' });
     const pick = await ui.say(speaker, text, choices);
@@ -449,29 +469,73 @@ async function petuniaScene() {
         ? '“You again.” She doesn’t turn her head. “Mind your manners in my house, or don’t come into it.” Then, more softly, as if the moment had already slipped away: “Will you take some tea?”'
         : '“Oh! I didn’t hear you come in. You’ll forgive me, I was miles away.” She smiles without looking up. “Will you take some tea? The bergamot is lovely this time of year.”';
     } else if (pick === 'tree') {
-      text = '“I planted it the spring we came. Eustace laughed, said nothing would ever grow in Wickermoor soil. But it did. Everything grew, that first summer.” Her smile falters. “Is it still summer?”';
+      text = '“I planted it the spring we came. Eustace laughed, said nothing would ever grow in Wickermoor soil. But it did. Everything grew, that first summer.” Her smile falters. “I used to make the tea from it. I can’t remember the last time anyone made me a cup.”';
     } else if (pick === 'cup') {
-      text = '“My cup? Oh, no, dear. I couldn’t. It was my mother’s, and her mother’s before that.” She turns it slowly in her hands, and stops, listening, as though for children’s voices somewhere in the house.';
+      text = f.petuniaTea
+        ? '“My cup?” She holds it tighter. “It’s the only warm thing in the house. Sally gave me this cup, you know. Or was it… I can’t think of her name. Why can’t I think of her name?”'
+        : '“My cup? Oh, no, dear. I couldn’t. It was my mother’s, and her mother’s before that.” She turns it slowly in her hands. “It’s gone cold. Everything in this house has gone cold.”';
     } else if (pick === 'children') {
+      f.petuniaNamed = true;
       speaker = '';
       await ui.say('Petunia Lockwood', '“Sally? Arthur?” The cup trembles in her hands. “Where are they? I’ve sat here so long, and they never come down for tea. Sally always comes down for tea.”');
-      await ui.say('', 'She looks at you for the first time. Her eyes are very dark. “Find them. Please. Take it, take my cup, only find my children.” She presses the teacup into your hands. It is ice cold.');
-      game.flags.petuniaGone = true;
-      fadeSprite('petunia');
-      await ui.say('', 'When you look up, the bench is empty. Only the tree is there, green and heavy with fruit, and a faint smell of bergamot.');
-      giveMemento('cup');
+      if (f.petuniaTea) return petuniaAtPeace();
+      await ui.say('Petunia Lockwood', 'Her fingers tighten round the cold cup. “I would go and look for them, only I’m so cold. If I could just get warm…”');
+      saveGame();
       return;
     } else if (pick === 'snatch') {
       ui.flash('#cfe0ff', 900);
       sound.thunder(0.6);
       await ui.say('', 'You reach for the cup. Petunia’s head snaps round, and the green ribbon at her throat slips a finger’s width. The air turns to ice. She rises, and the scream that tears out of her is not a sound a living woman could make —');
-      game.flags.petuniaAngered = true;
+      f.petuniaAngered = true;
       stepBack();
       addDread(4);
       ui.log('You stagger back. She is on the bench again, as if nothing had happened. She will not forget.', 'scare');
       return;
     }
   }
+}
+
+async function petuniaTea() {
+  const f = game.flags;
+  f.petuniaMet = true;
+  swapItem('tea', 'kettle');      // the kettle is yours again, empty
+  f.petuniaTea = true;
+  await ui.say('', 'You pour the bergamot tea into her cup. Steam rises between her fingers. She looks down at it as if she has never seen such a thing, then lifts it, and drinks.');
+  await ui.say('Petunia Lockwood', '“Oh.” Colour comes into her face, faint as a blush on paper. “Oh, that’s lovely. That’s just how I make it.” She smiles, and then frowns, looking past you towards the house. “The children will want some. They’ll be down in a moment. They always come down for tea. Their names are… their names…”');
+  if (f.petuniaNamed) return petuniaAtPeace();
+  saveGame();
+}
+
+async function petuniaToy(which) {
+  const f = game.flags;
+  f.petuniaMet = true;
+  f[which === 'doll' ? 'petuniaSawDoll' : 'petuniaSawBear'] = true;
+  await ui.say('Petunia Lockwood', which === 'doll'
+    ? '“That’s Sally’s.” She reaches out, and stops just short of touching it. “She never goes anywhere without her. Where did you find her? Where is Sally?”'
+    : '“Arthur’s bear.” Her voice breaks. “He can’t sleep without it. He’ll be crying. Why isn’t he crying? I can always hear him crying.”');
+  if (f.petuniaSawDoll && f.petuniaSawBear) return petuniaAtPeace();
+  saveGame();
+}
+
+// Freed: she gives up her cup and fades. (Her flashback comes with the
+// flashback engine.)
+async function petuniaAtPeace() {
+  await ui.say('', 'She looks at you, and really sees you for the first time. Her eyes are very dark. “Find them. Please. Take it, take my cup, only find my children.” She presses the teacup into your hands. It is still warm.');
+  game.flags.petuniaGone = true;
+  game.flags.petuniaFreed = true;
+  fadeSprite('petunia');
+  await ui.say('', 'When you look up, the bench is empty. Only the tree is there, green and heavy with fruit, and a faint smell of bergamot.');
+  giveMemento('cup');
+  addDread(-3);
+}
+
+async function treeScene() {
+  const t = THINGS.find(x => x.id === 'tree');
+  if (hasItem('bergamot') || hasItem('tea')) { await ui.say(t.name, t.text); return; }
+  const pick = await ui.say(t.name, t.text, [{ id: 'pick', text: 'Pick a bergamot' }, { id: 'leave', text: 'Leave it' }]);
+  if (pick !== 'pick') return;
+  await ui.say('', 'The fruit comes away in your hand with a soft snap. It is warm, as if it had been sitting in the sun.');
+  giveItem('bergamot', { quiet: true });
 }
 
 // ─── The music room: the cursed waltz ─────────────────────────────────

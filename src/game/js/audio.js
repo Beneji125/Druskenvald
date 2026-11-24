@@ -247,6 +247,17 @@ const sound = {
     }
   },
 
+  // Picking something up: two soft wooden taps.
+  pickup() {
+    if (!this.ctx) return;
+    [0, 0.07].forEach((d, i) => {
+      const t = this.ctx.currentTime + d;
+      const o = this.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = i ? 660 : 440;
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.2);
+    });
+  },
+
   // A soft scrape for the planchette moving across the board.
   scrape() {
     if (!this.ctx) return;

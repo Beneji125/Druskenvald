@@ -180,6 +180,14 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   art (`docs/explore/Ouija_Board.webp`, `Planchette.webp`). `OUIJA_SPOTS`
   in `story.js` is where each letter, number and word sits in the board
   picture, in its pixels; if the board art changes, those need re-measuring.
+- **Items:** everything you can carry, search, combine and use is data in
+  `src/game/js/items.js`: `ITEMS` (names and examine texts), `SEARCHES`
+  (places to search and what each holds; an empty one gives a tooth, as in
+  the book), `COMBOS` and `USES` (an item used on a thing). Furniture for a
+  search spot is drawn by its `prop` and stands against the nearest wall
+  of its square. Item pictures are drawn by `itemIcon()` in `art.js`. In
+  the game: click an item or press 1–9 to pick it up, pick a second to
+  combine them, Space to use it on what you face, X to examine it.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

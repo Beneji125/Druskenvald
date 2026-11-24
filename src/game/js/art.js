@@ -482,3 +482,98 @@ function mirrorTexture() {
   ctx.beginPath(); ctx.moveTo(30, 30); ctx.lineTo(52, 66); ctx.lineTo(46, 90); ctx.lineTo(78, 120); ctx.lineTo(90, 146); ctx.stroke();
   return artTexture(c);
 }
+
+// ─── Item pictures (the inventory bar) ────────────────────────────────
+// One small ink drawing per item, 64×64, returned as an image URL. To use
+// real art for an item, return its file's path instead (e.g.
+// 'explore/items/kettle.png') for that id.
+
+const itemIconCache = {};
+function itemIcon(id) {
+  if (itemIconCache[id]) return itemIconCache[id];
+  const [c, ctx] = artCanvas(64, 64);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 2.5; ctx.strokeStyle = '#1a120b';
+  const shape = (fill, path) => { ctx.fillStyle = fill; ctx.beginPath(); path(); ctx.fill(); ctx.stroke(); };
+  const kettle = body => {
+    shape(body, () => { ctx.moveTo(14, 50); ctx.quadraticCurveTo(10, 26, 32, 24); ctx.quadraticCurveTo(54, 26, 50, 50); ctx.closePath(); });
+    shape(body, () => { ctx.moveTo(48, 36); ctx.lineTo(60, 26); ctx.lineTo(58, 32); ctx.lineTo(50, 42); ctx.closePath(); });
+    ctx.beginPath(); ctx.arc(32, 22, 13, Math.PI, 0); ctx.stroke();
+    shape('#5a3a1a', () => { ctx.ellipse(32, 24, 5, 2.5, 0, 0, Math.PI * 2); });
+  };
+  const steam = col => { ctx.strokeStyle = col; ctx.lineWidth = 2; [24, 32, 40].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 14); ctx.quadraticCurveTo(x - 4, 9, x, 4); ctx.stroke(); }); ctx.strokeStyle = '#1a120b'; ctx.lineWidth = 2.5; };
+  const page = (fill, x0, x1, torn) => {
+    shape(fill, () => { ctx.moveTo(x0, 8); ctx.lineTo(x1, 8); if (torn === 'right') { for (let y = 8; y <= 56; y += 6) ctx.lineTo(x1 + (y / 6 % 2 ? -3 : 2), y); } else ctx.lineTo(x1, 56); ctx.lineTo(x0, 56); if (torn === 'left') { for (let y = 56; y >= 8; y -= 6) ctx.lineTo(x0 + (y / 6 % 2 ? 3 : -2), y); } ctx.closePath(); });
+    ctx.lineWidth = 1; for (let y = 16; y < 52; y += 10) { ctx.beginPath(); ctx.moveTo(x0 + 3, y); ctx.lineTo(x1 - 3, y); ctx.stroke(); }
+    ctx.fillStyle = '#1a120b'; for (let x = x0 + 6; x < x1 - 4; x += 7) { ctx.beginPath(); ctx.ellipse(x, 14 + ((x * 7) % 30), 2.2, 1.6, -0.4, 0, Math.PI * 2); ctx.fill(); }
+    ctx.lineWidth = 2.5;
+  };
+  switch (id) {
+    case 'matches':
+      shape('#8a2a1a', () => ctx.rect(12, 22, 40, 24));
+      shape('#d8c49a', () => ctx.rect(16, 26, 32, 16));
+      [[20, 10], [28, 8], [36, 12]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, 24); ctx.lineTo(x + 4, y); ctx.stroke(); shape('#b02a1a', () => ctx.arc(x + 4, y, 3, 0, Math.PI * 2)); });
+      break;
+    case 'kettle': kettle('#b8743a'); break;
+    case 'kettle_water': kettle('#b8743a'); shape('#5a8ac0', () => { ctx.moveTo(32, 32); ctx.quadraticCurveTo(25, 44, 32, 46); ctx.quadraticCurveTo(39, 44, 32, 32); }); break;
+    case 'kettle_hot': kettle('#c8843a'); steam('#d8dce6'); break;
+    case 'tea': kettle('#c8843a'); steam('#d8dce6'); shape('#6a9a3a', () => ctx.ellipse(32, 40, 7, 5, 0, 0, Math.PI * 2)); break;
+    case 'bergamot':
+      shape('#8ab83a', () => ctx.ellipse(32, 36, 18, 17, 0, 0, Math.PI * 2));
+      shape('#3a6a2a', () => { ctx.moveTo(32, 20); ctx.quadraticCurveTo(44, 8, 52, 14); ctx.quadraticCurveTo(44, 22, 32, 20); });
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(25, 30, 5, 3, -0.5, 0, Math.PI * 2); ctx.fill();
+      break;
+    case 'flour':
+      shape('#d8ccb0', () => { ctx.moveTo(16, 56); ctx.lineTo(12, 22); ctx.quadraticCurveTo(32, 12, 52, 22); ctx.lineTo(48, 56); ctx.closePath(); });
+      ctx.beginPath(); ctx.moveTo(18, 22); ctx.quadraticCurveTo(32, 30, 46, 22); ctx.stroke();
+      ctx.fillStyle = '#7a6a50'; ctx.font = 'bold 12px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('FLOUR', 32, 44);
+      break;
+    case 'salt':
+      shape('#6a5a4a', () => { ctx.moveTo(14, 26); ctx.lineTo(18, 56); ctx.lineTo(46, 56); ctx.lineTo(50, 26); ctx.closePath(); });
+      shape('#eeeae0', () => ctx.ellipse(32, 26, 18, 6, 0, 0, Math.PI * 2));
+      break;
+    case 'knife':
+      shape('#a8aab0', () => { ctx.moveTo(10, 44); ctx.lineTo(40, 20); ctx.quadraticCurveTo(46, 18, 44, 24); ctx.lineTo(16, 48); ctx.closePath(); });
+      shape('#e8dcc0', () => { ctx.moveTo(40, 22); ctx.lineTo(54, 10); ctx.lineTo(58, 14); ctx.lineTo(44, 26); ctx.closePath(); });
+      break;
+    case 'hatchet':
+      shape('#5a3a1a', () => { ctx.moveTo(16, 56); ctx.lineTo(40, 12); ctx.lineTo(45, 15); ctx.lineTo(21, 58); ctx.closePath(); });
+      shape('#7a7a80', () => { ctx.moveTo(36, 8); ctx.lineTo(58, 16); ctx.quadraticCurveTo(56, 30, 48, 30); ctx.lineTo(34, 22); ctx.closePath(); });
+      break;
+    case 'oil':
+      shape('#7a7a6a', () => { ctx.moveTo(18, 56); ctx.lineTo(18, 26); ctx.lineTo(28, 18); ctx.lineTo(36, 18); ctx.lineTo(46, 26); ctx.lineTo(46, 56); ctx.closePath(); });
+      shape('#4a4a40', () => ctx.rect(28, 8, 8, 10));
+      shape('#c8a040', () => ctx.rect(22, 34, 20, 12));
+      break;
+    case 'shard':
+      shape('#9ab0c8', () => { ctx.moveTo(30, 4); ctx.lineTo(44, 20); ctx.lineTo(38, 60); ctx.lineTo(22, 34); ctx.closePath(); });
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.moveTo(32, 12); ctx.lineTo(36, 40); ctx.stroke();
+      break;
+    case 'music_a': page('#e8dcb8', 12, 40, 'right'); break;
+    case 'music_b': page('#c8a878', 24, 52, 'left'); ctx.fillStyle = 'rgba(40,20,8,0.5)'; ctx.fillRect(44, 8, 8, 48); break;
+    case 'music_full': page('#e8dcb8', 8, 56, null); ctx.strokeStyle = 'rgba(40,20,8,0.6)'; ctx.beginPath(); ctx.moveTo(32, 8); for (let y = 8; y <= 56; y += 6) ctx.lineTo(32 + (y / 6 % 2 ? -2 : 2), y); ctx.stroke(); break;
+    case 'ring':
+      ctx.lineWidth = 7; ctx.strokeStyle = '#1a120b'; ctx.beginPath(); ctx.ellipse(32, 34, 17, 13, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#d8a83a'; ctx.beginPath(); ctx.ellipse(32, 34, 17, 13, 0, 0, Math.PI * 2); ctx.stroke();
+      break;
+    case 'ribbon':
+      ctx.lineWidth = 8; ctx.strokeStyle = '#2a5a32'; ctx.beginPath(); ctx.moveTo(8, 40); ctx.bezierCurveTo(22, 12, 40, 56, 56, 22); ctx.stroke();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#5a9a5a'; ctx.beginPath(); ctx.moveTo(8, 40); ctx.bezierCurveTo(22, 12, 40, 56, 56, 22); ctx.stroke();
+      break;
+    case 'doll':
+      shape('#c89a6a', () => ctx.arc(32, 16, 9, 0, Math.PI * 2));
+      shape('#8a3a2a', () => { ctx.moveTo(22, 26); ctx.lineTo(42, 26); ctx.lineTo(48, 56); ctx.lineTo(16, 56); ctx.closePath(); });
+      break;
+    case 'bear':
+      shape('#5a78b0', () => { ctx.arc(22, 14, 6, 0, Math.PI * 2); ctx.moveTo(48, 14); ctx.arc(42, 14, 6, 0, Math.PI * 2); });
+      shape('#5a78b0', () => ctx.arc(32, 22, 12, 0, Math.PI * 2));
+      shape('#5a78b0', () => ctx.ellipse(32, 46, 15, 14, 0, 0, Math.PI * 2));
+      ctx.fillStyle = '#1a120b'; ctx.beginPath(); ctx.arc(27, 20, 2, 0, Math.PI * 2); ctx.arc(37, 23, 2, 0, Math.PI * 2); ctx.fill();
+      break;
+    case 'tooth':
+      shape('#ece4cc', () => { ctx.moveTo(18, 14); ctx.quadraticCurveTo(32, 4, 46, 14); ctx.quadraticCurveTo(50, 30, 44, 36); ctx.lineTo(40, 56); ctx.lineTo(34, 40); ctx.lineTo(30, 40); ctx.lineTo(24, 56); ctx.lineTo(20, 36); ctx.quadraticCurveTo(14, 30, 18, 14); });
+      break;
+    default:
+      shape('#888', () => ctx.arc(32, 32, 16, 0, Math.PI * 2));
+  }
+  return (itemIconCache[id] = c.toDataURL());
+}

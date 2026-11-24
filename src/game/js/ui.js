@@ -8,6 +8,60 @@ const DREAD_MAX = 10;
 
 const ui = {
   overlay: null,   // the open overlay's id, if any: blocks movement
+  selected: null,  // the item picked up from the inventory bar, if any
+
+  // ─── The inventory bar ───
+  // A slot per item; click (or press its number) to pick it up; with one
+  // picked up, clicking another combines them, and Space uses it on what
+  // you're facing. Teeth are counted at the end.
+  drawInventory() {
+    const slots = $('inv-slots');
+    slots.innerHTML = '';
+    game.items.forEach((id, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'inv-slot' + (ui.selected === id ? ' selected' : '');
+      b.dataset.item = id;
+      b.title = ITEMS[id].name;
+      b.setAttribute('aria-label', `${ITEMS[id].name}${i < 9 ? ` (${i + 1})` : ''}`);
+      b.setAttribute('aria-pressed', String(ui.selected === id));
+      b.innerHTML = `<img src="${itemIcon(id)}" alt=""><span class="inv-key">${i < 9 ? i + 1 : ''}</span>`;
+      b.addEventListener('click', () => ui.pickSlot(id));
+      slots.appendChild(b);
+    });
+    $('inv-teeth').hidden = !game.teeth;
+    $('inv-teeth-count').textContent = String(game.teeth);
+    $('inventory').hidden = !game.items.length && !game.teeth;
+    ui.drawItemInfo();
+  },
+
+  pickSlot(id) {
+    if (game.busy || ui.overlay) return;
+    if (ui.selected && ui.selected !== id) { const a = ui.selected; return useThingCombine(a, id); }
+    ui.select(ui.selected === id ? null : id);
+  },
+
+  select(id) {
+    ui.selected = id;
+    document.querySelectorAll('.inv-slot').forEach(b => {
+      b.classList.toggle('selected', b.dataset.item === id);
+      b.setAttribute('aria-pressed', String(b.dataset.item === id));
+    });
+    ui.drawItemInfo();
+  },
+
+  drawItemInfo() {
+    const info = $('inv-info');
+    if (!ui.selected) { info.hidden = true; return; }
+    info.hidden = false;
+    $('inv-info-name').textContent = ITEMS[ui.selected].name;
+  },
+
+  flashSlot(id) {
+    const b = document.querySelector(`.inv-slot[data-item="${id}"]`);
+    if (!b) return;
+    b.classList.remove('new'); void b.offsetWidth; b.classList.add('new');
+  },
 
   log(text, kind = '') {
     const log = $('log');
@@ -90,7 +144,10 @@ const ui = {
       };
       // Wait a moment before listening, so the key that opened the
       // dialogue doesn't also answer it.
-      setTimeout(() => document.addEventListener('keydown', onKey, true), 150);
+      // (Unless it's already been answered, by a quick click: a listener
+      // added after that would never be removed, and would swallow those
+      // number keys for good.)
+      setTimeout(() => { if (!answered) document.addEventListener('keydown', onKey, true); }, 150);
       box.hidden = false;
       ui.overlay = 'dialog';
       list.querySelector('button')?.focus({ preventScroll: true });
