@@ -334,7 +334,7 @@ function loop(now) {
   tickDoors(now);
 
   updateGlints(now, dt);
-  // The portraits' curse: once your Dread reaches 6, the boogles come.
+  // The portraits' curse: once your Dread reaches 6, the boogleswarm comes.
   if (game.flags.portraitCurse && game.dread >= 6 && !busy() && !game.curse && !game.inFlashback && here.room !== 'porch') {
     game.flags.portraitCurse = false;
     game.busy = true;
@@ -541,4 +541,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { renderer: () => renderer, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { renderer: () => renderer, addSprite, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

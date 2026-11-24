@@ -6,6 +6,13 @@
 const $ = id => document.getElementById(id);
 const DREAD_MAX = 10;
 
+// Who has a face to show when they speak: the official artwork (art.js).
+const PORTRAITS = {
+  'The Crooked Man': CHARACTER_ART.crookedManClose,
+  'Filthy Jasper': CHARACTER_ART.jasper,
+  'Joseph Patrini': CHARACTER_ART.joseph,
+};
+
 const ui = {
   overlay: null,   // the open overlay's id, if any: blocks movement
   selected: null,  // the item picked up from the inventory bar, if any
@@ -125,6 +132,10 @@ const ui = {
       const box = $('dialog');
       $('dialog-speaker').textContent = speaker || '';
       $('dialog-speaker').hidden = !speaker;
+      const face = PORTRAITS[speaker];
+      $('dialog-portrait').hidden = !face;
+      if (face) $('dialog-portrait').src = face;
+      box.classList.toggle('has-portrait', !!face);
       $('dialog-text').textContent = text;
       const list = $('dialog-choices');
       list.innerHTML = '';

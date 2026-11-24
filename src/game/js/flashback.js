@@ -215,7 +215,7 @@ const FLASHBACKS = {
     rooms: ['music', 'hallway'],
     async play(m) {
       await m.begin('Seventy years ago. The music room, late. You are Joseph Patrini, the Lockwoods’ manservant.', 16, 16, 0);
-      const gail = m.person('petunia', 850, 925, 0xffe0c8);
+      const gail = m.person('gail', 850, 925, 0xffe0c8);
       await m.say('The family is in bed. The room is yours and Gail’s, the way it always is after the last fire is banked. She wants the song. The one you wrote for her.');
       await m.thing({ id: 'm_harpsichord', name: 'The harpsichord', x: 965, y: 845, h: 66, verb: 'Play', text: 'You play it for her, the little climbing tune that turns and comes home. Gail dances alone on the boards, slow, her eyes closed, and laughs when she gets the steps wrong. She pins up her hair with the silver hairpin you gave her the Christmas you were married.' });
       PATRINI_TUNE.concat(PATRINI_TUNE).forEach((n, i) => sound.pluck(NOTE[n], i * 0.55, 1.2, 0.16));
@@ -233,7 +233,7 @@ const FLASHBACKS = {
     async corrupt(m) {
       await m.begin('Seventy years ago. The hallway. You are Eustace Lockwood.', 12, 13, 2);
       await m.say('Music. The servant is playing his little tune, as if this were an ordinary night. The house hates that tune. You hate it too, now.');
-      const j = m.person('patrini', 930, 875, 0xfff0dc);
+      const j = m.person('joseph', 930, 875, 0xfff0dc);
       await m.reach(['music']);
       await m.say('He stops playing when he sees you. He stands between you and the door his wife has just gone through.', 'Joseph Patrini');
       m.remove(j);

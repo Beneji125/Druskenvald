@@ -257,8 +257,29 @@ function buildGrounds() {
   });
   g.roofMat = new THREE.MeshStandardMaterial({ map: slateTexture(), roughness: 0.85, side: THREE.DoubleSide });
   add(warpable(roof.geo()), g.roofMat);
-  const brickMat = new THREE.MeshStandardMaterial({ color: 0x5a2e24, roughness: 1 });
-  chimneys = [chimneys[2], chimneys[chimneys.length - 3]].filter(Boolean);
+  const brickMat = new THREE.MeshStandardMaterial({ color: 0x3a2622, roughness: 1 });
+  // The central tower (as in the official painting of the house): a
+  // square lantern-room on the flat of the roof, a steep cap with iron
+  // cresting, and one round window that wakes up, burning orange, when the
+  // house turns.
+  const flat = chimneys.slice().sort((a, b) => Math.hypot(a.x - ARRIVAL.houseC.x, a.y - (ARRIVAL.houseC.z + 160)) - Math.hypot(b.x - ARRIVAL.houseC.x, b.y - (ARRIVAL.houseC.z + 160)))[0];
+  if (flat) {
+    const y0 = TOP + ROOF_CAP * ROOF_PITCH * CELL - 6, tw = 70, th = 150, tx = flat.x, tz = flat.y;
+    add(warpable(new THREE.BoxGeometry(tw, th, tw, 2, 4, 2).translate(tx, y0 + th / 2, tz)), g.skinMat);
+    add(warpable(new THREE.BoxGeometry(tw + 12, 5, tw + 12, 2, 1, 2).translate(tx, y0 + th + 2, tz)), g.roofMat);
+    add(warpable(new THREE.ConeGeometry((tw + 6) * 0.72, 64, 4, 3).rotateY(Math.PI / 4).translate(tx, y0 + th + 36, tz)), g.roofMat);
+    const crest = quadBuilder();
+    for (let i = -3; i <= 3; i++) { const x = tx + i * 9; crest.add([[x - 0.8, y0 + th + 66, tz - 0.5], [x + 0.8, y0 + th + 66, tz - 0.5], [x + 0.8, y0 + th + 82, tz - 0.5], [x - 0.8, y0 + th + 82, tz - 0.5]]); }
+    add(warpable(crest.geo()), new THREE.MeshStandardMaterial({ color: 0x141414, side: THREE.DoubleSide }), { shadow: false });
+    g.eyeMat = new THREE.MeshBasicMaterial({ color: 0x1a1410 });
+    add(warpable(new THREE.CircleGeometry(18, 24).translate(tx, y0 + th * 0.62, tz + tw / 2 + 0.8)), g.eyeMat, { shadow: false });
+    const bars = quadBuilder(), yc = y0 + th * 0.62, zf = tz + tw / 2 + 1.2;
+    bars.add([[tx - 18, yc - 1.4, zf], [tx + 18, yc - 1.4, zf], [tx + 18, yc + 1.4, zf], [tx - 18, yc + 1.4, zf]]);
+    bars.add([[tx - 1.4, yc - 18, zf], [tx + 1.4, yc - 18, zf], [tx + 1.4, yc + 18, zf], [tx - 1.4, yc + 18, zf]]);
+    add(warpable(bars.geo()), new THREE.MeshBasicMaterial({ color: 0x0a0806, side: THREE.DoubleSide }), { shadow: false });
+    chimneys = chimneys.filter(c => Math.hypot(c.x - tx, c.y - tz) > 120);
+  }
+  chimneys = [chimneys[1], chimneys[chimneys.length - 2]].filter(Boolean);
   chimneys.forEach(c => {
     const y0 = TOP + ROOF_CAP * ROOF_PITCH * CELL - 10;
     add(warpable(new THREE.BoxGeometry(26, 90, 26, 1, 3, 1).translate(c.x, y0 + 45, c.y)), brickMat);
@@ -266,7 +287,8 @@ function buildGrounds() {
   // The turret, rising out of the round gallery.
   const tur = { x: 250, z: 905, r: 112 }, tTop = TOP + WALL_H;
   add(warpable(new THREE.CylinderGeometry(tur.r, tur.r, tTop - WALL_H + 2, 20, 6).translate(tur.x, (tTop + WALL_H - 2) / 2, tur.z)), g.skinMat);
-  add(warpable(new THREE.ConeGeometry(tur.r + 20, 250, 20, 4).translate(tur.x, tTop + 125, tur.z)), g.roofMat);
+  add(warpable(new THREE.ConeGeometry(tur.r + 16, 330, 20, 5).translate(tur.x, tTop + 165, tur.z)), g.roofMat);
+  add(warpable(new THREE.CylinderGeometry(1.2, 1.2, 40, 6, 2).translate(tur.x, tTop + 350, tur.z)), new THREE.MeshStandardMaterial({ color: 0x141414 }), { shadow: false });
   [-1.1, -0.35, 0.4, 1.15, Math.PI].forEach(a => {
     const nx = Math.sin(a), nz = Math.cos(a), tx = Math.cos(a), tz = -Math.sin(a);
     for (let s = 1; s <= STOREYS; s++) {
@@ -335,6 +357,14 @@ function buildGrounds() {
   g.sky = new THREE.Mesh(new THREE.SphereGeometry(9000, 24, 12), new THREE.MeshBasicMaterial({ map: duskSkyTexture(), side: THREE.BackSide, fog: false, depthWrite: false }));
   g.sky.renderOrder = -1;
   scene.add(g.sky);
+  // After the twist: a churning green-grey storm sky (the official
+  // painting's), and the moon behind it.
+  g.clouds = new THREE.Mesh(new THREE.SphereGeometry(8800, 24, 12), new THREE.MeshBasicMaterial({ map: stormCloudTexture(), side: THREE.BackSide, fog: false, depthWrite: false, transparent: true, opacity: 0 }));
+  g.clouds.renderOrder = -1;
+  scene.add(g.clouds);
+  g.moon = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshBasicMaterial({ map: moonTexture(), fog: false, depthWrite: false, transparent: true }));
+  g.moon.renderOrder = -1;
+  scene.add(g.moon);
   g.sun = new THREE.DirectionalLight(0xffa070, 0);
   g.sun.position.set(ARRIVAL.houseC.x - 3000, 600, ARRIVAL.houseC.z + 1600);
   g.sun.target.position.set(ARRIVAL.houseC.x, 0, ARRIVAL.houseC.z);
@@ -369,6 +399,8 @@ function setTwist(k) {
   const q = Math.round(k * 12) / 12;
   if (q !== g.skinAt) { g.skinAt = q; houseSkin(g.skinCanvas, q); g.skinTex.needsUpdate = true; }
   g.winMat.emissiveIntensity = 1.4 * Math.max(0, 1 - k * 1.6);
+  // the tower's round window: dark glass, then a burning eye
+  if (g.eyeMat) g.eyeMat.color.set(0x1a1410).lerp(new THREE.Color(0xff8a2a), clamp01((k - 0.4) / 0.6));
   g.winMat.color.setScalar(1 - k * 0.75);
   g.roofMat.color.setScalar(1 - k * 0.45);
   g.pondMat.emissiveIntensity = 0.5 * (1 - k);
@@ -397,6 +429,8 @@ function setTwist(k) {
 function showOutdoors(on) {
   const g = grounds;
   g.sky.visible = on;
+  g.clouds.visible = on;
+  g.moon.visible = on;
   g.village.visible = on;
   g.sun.intensity = 0;
   Object.values(g.people).forEach(s => { s.visible = false; });
@@ -722,6 +756,11 @@ function tickArrival(now, dt) {
   if (Math.abs(cam.fov - fov) > 0.01) { cam.fov = fov; cam.updateProjectionMatrix(); }
   billboards.forEach(b => { b.rotation.y = c.yaw; });
   g.sky.position.copy(cam.position);
+  g.clouds.position.copy(cam.position);
+  g.clouds.rotation.y = clock * 0.004;
+  // the moon: up to the north-east, pale at dusk, sickly green after
+  g.moon.position.set(cam.position.x + 3600, cam.position.y + 3900, cam.position.z - 6200);
+  g.moon.lookAt(cam.position);
 
   // The light: dusk, then the gloom of the twist, then the storm.
   const tw = A.twist, st = A.storm;
@@ -732,17 +771,21 @@ function tickArrival(now, dt) {
   f = Math.min(1.6, f);
   const mix = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k);
   const amb = world.ambient;
-  amb.color.copy(mix(0xffc8b0, 0x9aa0c0, tw).lerp(new THREE.Color(0x6c7a9c), st));
+  amb.color.copy(mix(0xffc8b0, 0x9ab4a6, tw).lerp(new THREE.Color(0x6c7a9c), st));
   amb.groundColor.copy(mix(0x4a3a40, 0x3a3a44, tw).lerp(new THREE.Color(0x3b3426), st));
   amb.intensity = lerp(lerp(2.4, 3.4, tw), 4.2, st) + f * 1.2;
   // the low sun, and after the twist a cold, sickly moonlight
-  g.sun.color.copy(mix(0xffa070, 0x8a9ad0, tw));
+  g.sun.color.copy(mix(0xffa070, 0xa0c0b4, tw));
   g.sun.intensity = lerp(1.8, 1.1, tw) * (1 - st * 0.6);
   world.lightning.intensity = f * 3;
-  g.sky.material.color.copy(mix(0xffffff, 0x4a4656, tw).lerp(new THREE.Color(0x0a0a10), st)).multiplyScalar(1 + f * 0.8);
+  g.sky.material.color.copy(mix(0xffffff, 0x3a4640, tw).lerp(new THREE.Color(0x0a0c0b), st)).multiplyScalar(1 + f * 0.8);
+  g.clouds.material.opacity = tw * (1 - st * 0.55);
+  g.clouds.material.color.setScalar(1 - st * 0.6 + f * 0.6);
+  g.moon.material.opacity = 0.35 + tw * 0.55 - st * 0.5;
+  g.moon.material.color.copy(mix(0xfff4e0, 0xd8f0e0, tw));
   // (At dusk the fog matches the sky just under the horizon, so the far
   // edge of the valley melts into it.)
-  world.scene.fog.color.copy(mix(0x5a3a48, 0x22222c, tw).lerp(new THREE.Color(0x030306), st));
+  world.scene.fog.color.copy(mix(0x5a3a48, 0x1e2622, tw).lerp(new THREE.Color(0x030306), st));
   world.scene.fog.density = lerp(lerp(0.00022, 0.0006, tw), lerp(0.0016, 0.0042, A.close), st);
   world.scene.background.copy(world.scene.fog.color);
   g.lampMat.opacity = (1 - st) * (0.85 + 0.15 * Math.sin(clock * 3.1));

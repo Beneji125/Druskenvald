@@ -218,6 +218,8 @@ function drawFoe(canvas, art) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, 256, 256);
   const img = typeof art === 'function' ? art() : spriteTexture(art).image;
+  // (a painting still on its way: draw it when it arrives)
+  if (img instanceof HTMLImageElement && !(img.complete && img.naturalWidth)) { img.addEventListener('load', () => drawFoe(canvas, art), { once: true }); return; }
   const s = Math.min(240 / img.width, 240 / img.height);
   ctx.drawImage(img, (256 - img.width * s) / 2, 256 - img.height * s - 4, img.width * s, img.height * s);
 }

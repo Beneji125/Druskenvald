@@ -324,40 +324,14 @@ const SPRITES = {
     ctx.fillStyle = '#e8ecf2'; ctx.beginPath(); ctx.ellipse(64, 112, 12, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(54, 104, 20, 10);  // the teacup
     ctx.fillStyle = '#c8ccd6'; ctx.beginPath(); ctx.arc(50, 116, 7, 0, Math.PI * 2); ctx.arc(78, 116, 7, 0, Math.PI * 2); ctx.fill();
   }) },
-  crookedMan: { size: [58, 116], draw: () => {
-    const [c, ctx] = artCanvas(128, 256);
-    ctx.shadowColor = 'rgba(170,195,255,0.95)'; ctx.shadowBlur = 10; ctx.fillStyle = '#050304';
-    ctx.beginPath(); ctx.ellipse(70, 34, 13, 17, 0.35, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(52, 22); ctx.lineTo(90, 14); ctx.lineTo(84, 0); ctx.lineTo(62, 6); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(56, 48); ctx.quadraticCurveTo(40, 120, 46, 200); ctx.lineTo(34, 252); ctx.lineTo(58, 252); ctx.lineTo(64, 206); ctx.lineTo(74, 252); ctx.lineTo(96, 252); ctx.lineTo(84, 196); ctx.quadraticCurveTo(94, 120, 82, 50); ctx.closePath(); ctx.fill();
-    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.strokeStyle = '#050304';
-    ctx.beginPath(); ctx.moveTo(80, 60); ctx.lineTo(108, 118); ctx.lineTo(112, 150); ctx.stroke();
-    ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(112, 150); ctx.lineTo(96, 40); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(96, 40); ctx.lineTo(122, 30); ctx.lineTo(120, 64); ctx.closePath(); ctx.fill();
-    ctx.shadowColor = 'rgba(255,240,200,1)'; ctx.fillStyle = '#f2e6c4';
-    ctx.beginPath(); ctx.arc(74, 34, 2, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.arc(81, 31, 2, 0, Math.PI * 2); ctx.fill();
-    return artTexture(c);
-  } },
+  // (coloured like the official boogleswarm: grey-brown, pale-bellied,
+  // red-eyed)
   weasel: { size: [30, 16], draw: () => inkSprite(128, 64, (ctx) => {
-    ctx.fillStyle = '#3a2618';
+    ctx.fillStyle = '#5a4c44';
     ctx.beginPath(); ctx.moveTo(6, 50); ctx.quadraticCurveTo(30, 30, 70, 34); ctx.quadraticCurveTo(100, 26, 118, 38); ctx.lineTo(122, 44); ctx.quadraticCurveTo(100, 50, 76, 52); ctx.quadraticCurveTo(40, 58, 6, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
-    ctx.fillStyle = '#ffd36a'; ctx.beginPath(); ctx.arc(108, 36, 2.5, 0, Math.PI * 2); ctx.fill();
-  }) },
-  // Filthy Jasper: a grey, greasy weasel sitting up, with a man's pink
-  // hands, clutching a tooth.
-  jasper: { size: [32, 40], draw: () => inkSprite(96, 120, (ctx) => {
-    ctx.fillStyle = '#5a5248';
-    ctx.beginPath(); ctx.moveTo(30, 118); ctx.quadraticCurveTo(14, 70, 38, 44); ctx.quadraticCurveTo(48, 36, 58, 44); ctx.quadraticCurveTo(80, 70, 66, 118); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(66, 112); ctx.quadraticCurveTo(92, 108, 88, 84); ctx.lineWidth = 6; ctx.stroke(); ctx.lineWidth = 3;   // tail
-    ctx.beginPath(); ctx.ellipse(48, 30, 16, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(36, 22); ctx.lineTo(34, 10); ctx.lineTo(42, 18); ctx.moveTo(60, 22); ctx.lineTo(62, 10); ctx.lineTo(54, 18); ctx.fill(); ctx.stroke();   // ears
-    ctx.beginPath(); ctx.moveTo(48, 36); ctx.lineTo(48, 46); ctx.stroke();   // snout
-    ctx.fillStyle = '#f0c060'; ctx.beginPath(); ctx.arc(41, 28, 2.6, 0, Math.PI * 2); ctx.arc(55, 28, 2.6, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#e8a8a0';                                                  // the hands
-    ctx.beginPath(); ctx.ellipse(38, 70, 7, 5, 0.4, 0, Math.PI * 2); ctx.ellipse(58, 70, 7, 5, -0.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.lineWidth = 2; [34, 38, 42].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x - 1, 80); ctx.stroke(); }); [54, 58, 62].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 72); ctx.lineTo(x + 1, 80); ctx.stroke(); });
-    ctx.fillStyle = '#ece4cc'; ctx.beginPath(); ctx.moveTo(44, 62); ctx.lineTo(52, 62); ctx.lineTo(50, 72); ctx.lineTo(46, 72); ctx.closePath(); ctx.fill(); ctx.stroke();   // the tooth
+    ctx.fillStyle = '#b8aca0'; ctx.beginPath(); ctx.moveTo(60, 50); ctx.quadraticCurveTo(90, 50, 112, 44); ctx.lineTo(100, 48); ctx.quadraticCurveTo(80, 54, 60, 52); ctx.fill();
+    ctx.fillStyle = '#5a4c44'; ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
+    ctx.shadowColor = '#ff2020'; ctx.shadowBlur = 6; ctx.fillStyle = '#ff3a3a'; ctx.beginPath(); ctx.arc(108, 36, 2.8, 0, Math.PI * 2); ctx.fill();
   }) },
   // His nest: rags and paper, and teeth packed in like seeds.
   nest: { size: [46, 16], draw: () => inkSprite(160, 56, (ctx) => {
@@ -366,13 +340,6 @@ const SPRITES = {
     for (let i = 0; i < 26; i++) { ctx.fillStyle = ['#5a4a3a', '#7a6a50', '#4a3a40'][i % 3]; ctx.fillRect(10 + rand() * 140, 26 + rand() * 22, 8 + rand() * 14, 3 + rand() * 4); }
     ctx.fillStyle = '#ece4cc'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(16 + rand() * 128, 30 + rand() * 20, 1.8, 0, Math.PI * 2); ctx.fill(); }
   }) },
-  patrini: { size: [44, 90], ghost: true, draw: () => {
-    const [c, ctx] = artCanvas(128, 256);
-    ctx.shadowColor = 'rgba(120,180,255,1)'; ctx.shadowBlur = 16; ctx.fillStyle = 'rgba(110,160,235,0.55)';
-    ctx.beginPath(); ctx.ellipse(64, 46, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(40, 72); ctx.quadraticCurveTo(30, 160, 44, 256); ctx.lineTo(84, 256); ctx.quadraticCurveTo(98, 160, 88, 72); ctx.closePath(); ctx.fill();
-    return artTexture(c);
-  } },
 };
 
 const spriteTextureCache = {};
@@ -644,24 +611,6 @@ Object.assign(SPRITES, {
     ctx.lineWidth = 5; ctx.strokeStyle = '#7a7a80'; ctx.beginPath(); ctx.moveTo(20, 50); ctx.quadraticCurveTo(4, 30, 14, 8); ctx.stroke();
     ctx.fillStyle = '#d8f070'; ctx.beginPath(); ctx.ellipse(65, 33, 3, 2, 0, 0, Math.PI * 2); ctx.ellipse(76, 33, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
   }) },
-  // The Crooked Man as he greets you on the porch: no axe, a bent-top hat,
-  // one long arm up in a wave, and that grin.
-  crookedHost: { size: [58, 116], draw: () => {
-    const [c, ctx] = artCanvas(128, 256);
-    ctx.shadowColor = 'rgba(170,195,255,0.9)'; ctx.shadowBlur = 10; ctx.fillStyle = '#050304';
-    ctx.beginPath(); ctx.ellipse(66, 40, 13, 17, 0.45, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(46, 30); ctx.lineTo(86, 22); ctx.lineTo(70, 2); ctx.lineTo(54, 10); ctx.closePath(); ctx.fill();   // the bent-top hat
-    ctx.beginPath(); ctx.moveTo(42, 32); ctx.lineTo(92, 22); ctx.lineTo(92, 27); ctx.lineTo(42, 37); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(52, 56); ctx.quadraticCurveTo(38, 120, 46, 200); ctx.lineTo(30, 252); ctx.lineTo(54, 252); ctx.lineTo(62, 206); ctx.lineTo(76, 252); ctx.lineTo(100, 252); ctx.lineTo(84, 196); ctx.quadraticCurveTo(92, 120, 80, 56); ctx.closePath(); ctx.fill();
-    ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.strokeStyle = '#050304';
-    ctx.beginPath(); ctx.moveTo(80, 64); ctx.lineTo(104, 44); ctx.lineTo(112, 8); ctx.stroke();       // the waving arm, bent wrong
-    ctx.beginPath(); ctx.moveTo(52, 66); ctx.lineTo(30, 120); ctx.lineTo(36, 160); ctx.stroke();
-    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(112, 8); ctx.lineTo(104, 0); ctx.moveTo(112, 8); ctx.lineTo(120, 2); ctx.moveTo(112, 8); ctx.lineTo(124, 10); ctx.stroke();
-    ctx.shadowColor = 'rgba(255,240,180,1)'; ctx.shadowBlur = 6;
-    ctx.fillStyle = '#e8d890'; ctx.beginPath(); ctx.moveTo(56, 44); ctx.quadraticCurveTo(70, 62, 82, 38); ctx.quadraticCurveTo(70, 50, 56, 44); ctx.fill();   // the grin
-    ctx.strokeStyle = '#6a5a20'; ctx.lineWidth = 1; for (let x = 60; x < 80; x += 3.5) { ctx.beginPath(); ctx.moveTo(x, 44 + (x - 56) * 0.1); ctx.lineTo(x + 0.6, 52 - Math.abs(x - 69) * 0.3); ctx.stroke(); }
-    return artTexture(c);
-  } },
   flowers: { size: [44, 16], draw: () => inkSprite(176, 64, (ctx) => {
     const rand = seededRandom(21);
     ctx.fillStyle = '#2e5a2a'; for (let i = 0; i < 26; i++) { ctx.beginPath(); ctx.ellipse(10 + rand() * 156, 44 + rand() * 18, 6, 14, rand() - 0.5, 0, Math.PI * 2); ctx.fill(); }
@@ -691,7 +640,7 @@ function houseSkin(canvas, rot) {
   const W = canvas.width, H = canvas.height;
   const rand = seededRandom(31);
   const mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * rot));
-  const [r, g, b] = mix([196, 186, 166], [52, 48, 43]);
+  const [r, g, b] = mix([196, 186, 166], [46, 48, 42]);
   ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(0, 0, W, H);
   for (let y = 0; y < H; y += 12) {
     ctx.fillStyle = `rgba(0,0,0,${0.12 + rot * 0.18 + rand() * 0.1})`; ctx.fillRect(0, y, W, 2);
@@ -894,5 +843,147 @@ function stillLifeTexture(seed) {
   ['#6a2a1e', '#7a6a2a', '#4a2a3a', '#6a4a1a'].forEach((col, i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(66 + i * 10 + rand() * 4, 60 - (i % 2) * 6, 6, 0, Math.PI * 2); ctx.fill(); });
   if (seed % 2) { ctx.fillStyle = '#4a4a42'; ctx.beginPath(); ctx.ellipse(100, 70, 14, 6, 0.3, 0, Math.PI * 2); ctx.fill(); }
   ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 128, 96);
+  return artTexture(c);
+}
+
+
+// ─── The official artwork ─────────────────────────────────────────────
+// Characters from the book's own illustrations (docs/explore/characters/,
+// masters in source-assets/originals/). Each loads once; a sprite made from
+// one is drawn onto its canvas when the picture arrives.
+
+const CHARACTER_ART = {
+  crookedMan: 'explore/characters/crooked-man.webp',          // full figure
+  crookedManClose: 'explore/characters/crooked-man-close.webp', // the doorway painting, cropped
+  jasper: 'explore/characters/filthy-jasper.webp',
+  boogleswarm: 'explore/characters/boogleswarm.webp',
+  joseph: 'explore/characters/joseph-patrini.webp',
+  gail: 'explore/characters/gail-patrini.webp',
+  sally: 'explore/characters/sally-lockwood.webp',
+};
+const ART_IMAGES = {};
+function artImage(src) {
+  if (!ART_IMAGES[src]) { const img = new Image(); img.src = src; ART_IMAGES[src] = img; }
+  return ART_IMAGES[src];
+}
+// Calls `fn(img)` once the picture is ready (straight away if it is).
+function whenArt(src, fn) {
+  const img = artImage(src);
+  if (img.complete && img.naturalWidth) fn(img); else img.addEventListener('load', () => fn(img), { once: true });
+}
+// Start fetching them all now, so they're ready by the time they're seen.
+Object.values(CHARACTER_ART).forEach(artImage);
+
+// A canvas texture painted from a picture once it has loaded.
+function paintedTexture(cw, ch, src, paint) {
+  const [c, ctx] = artCanvas(cw, ch);
+  const tex = artTexture(c);
+  whenArt(src, img => { ctx.clearRect(0, 0, cw, ch); paint(ctx, img, cw, ch); tex.needsUpdate = true; });
+  return tex;
+}
+// The whole picture, fitted to the canvas's bottom edge, with a faint glow
+// round it so it stands out of the dark.
+function paintGlowing(glow) {
+  return (ctx, img, cw, ch) => {
+    const pad = 10, s = Math.min((cw - pad * 2) / img.width, (ch - pad) / img.height);
+    const w = img.width * s, h = img.height * s;
+    if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 12; }
+    ctx.drawImage(img, (cw - w) / 2, ch - h, w, h);
+  };
+}
+// A whole person from an official head-and-shoulders portrait: the
+// portrait at life size, and beneath it a soft body in their colours that
+// fades away towards the floor, the way someone half-remembered (or a
+// ghost) would. `ghost` washes it all cold blue.
+function paintFigure(body, ghost = false) {
+  return (ctx, img, cw, ch) => {
+    const bustH = ch * body.bust, bustW = Math.min(cw, bustH * img.width / img.height);
+    const x0 = cw / 2, top = bustH * 0.8;
+    // the body: shoulders as wide as the portrait's, narrowing at the
+    // waist, then the skirt or coat
+    ctx.filter = 'blur(2px)';      // soft-edged, like something half-seen
+    ctx.fillStyle = body.colour;
+    ctx.beginPath();
+    ctx.moveTo(x0 - bustW * 0.46, top);
+    ctx.quadraticCurveTo(x0 - bustW * 0.42, top + ch * 0.18, x0 - bustW * 0.3, top + ch * 0.26);
+    ctx.lineTo(x0 - bustW * body.hem, ch);
+    ctx.lineTo(x0 + bustW * body.hem, ch);
+    ctx.lineTo(x0 + bustW * 0.3, top + ch * 0.26);
+    ctx.quadraticCurveTo(x0 + bustW * 0.42, top + ch * 0.18, x0 + bustW * 0.46, top);
+    ctx.closePath(); ctx.fill();
+    if (body.apron) { ctx.fillStyle = body.apron; ctx.beginPath(); ctx.moveTo(x0 - bustW * 0.2, top + ch * 0.2); ctx.lineTo(x0 + bustW * 0.2, top + ch * 0.2); ctx.lineTo(x0 + bustW * 0.3, ch); ctx.lineTo(x0 - bustW * 0.3, ch); ctx.closePath(); ctx.fill(); }
+    ctx.filter = 'none';
+    // light from one side
+    const g = ctx.createLinearGradient(x0 - bustW / 2, 0, x0 + bustW / 2, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0.3)'); g.addColorStop(0.45, 'rgba(255,240,220,0.06)'); g.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = g; ctx.fillRect(0, top, cw, ch); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(img, x0 - bustW / 2, 0, bustW, bustH);
+    // fading out towards the floor
+    // (one fill over the whole canvas: destination-in clears whatever it
+    // doesn't cover)
+    const fade = ctx.createLinearGradient(0, 0, 0, ch);
+    fade.addColorStop(0, 'rgba(0,0,0,1)'); fade.addColorStop(0.5, 'rgba(0,0,0,1)'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = fade; ctx.fillRect(0, 0, cw, ch);
+    if (ghost) { ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'rgba(110,160,235,0.55)'; ctx.fillRect(0, 0, cw, ch); }
+    ctx.globalCompositeOperation = 'source-over';
+  };
+}
+const BODIES = {
+  joseph: { bust: 0.34, colour: '#1c1e22', hem: 0.36 },                       // black tailcoat
+  gail: { bust: 0.34, colour: '#1c2024', hem: 0.48, apron: '#cfc8b8' },       // black dress, white apron
+  sally: { bust: 0.4, colour: '#bcb6c6', hem: 0.46 },                         // a pale frock
+};
+
+// The paintings as cut-outs in the house (sizes are life-size, as for the
+// furniture: the Crooked Man stands taller than a door).
+Object.assign(SPRITES, {
+  crookedMan: { size: [46, 94], draw: () => paintedTexture(256, 512, CHARACTER_ART.crookedMan, paintGlowing('rgba(150,180,255,0.75)')) },
+  crookedHost: { size: [46, 94], draw: () => paintedTexture(256, 512, CHARACTER_ART.crookedMan, paintGlowing('rgba(150,180,255,0.75)')) },
+  jasper: { size: [40, 35], draw: () => paintedTexture(256, 224, CHARACTER_ART.jasper, paintGlowing('rgba(255,120,120,0.35)')) },
+  patrini: { size: [18, 64], ghost: true, draw: () => paintedTexture(128, 456, CHARACTER_ART.joseph, paintFigure(BODIES.joseph, true)) },
+  joseph: { size: [18, 64], draw: () => paintedTexture(128, 456, CHARACTER_ART.joseph, paintFigure(BODIES.joseph)) },
+  gail: { size: [17, 57], draw: () => paintedTexture(128, 430, CHARACTER_ART.gail, paintFigure(BODIES.gail)) },
+  sally: { size: [15, 44], draw: () => paintedTexture(128, 376, CHARACTER_ART.sally, paintFigure(BODIES.sally)) },
+});
+
+// A portrait for the foyer wall, from an official head-and-shoulders
+// painting: on a dark ground, under old varnish.
+function officialPortraitTexture(src) {
+  return paintedTexture(96, 128, src, (ctx, img, cw, ch) => {
+    const bg = ctx.createRadialGradient(cw / 2, ch * 0.4, 4, cw / 2, ch * 0.5, ch * 0.7);
+    bg.addColorStop(0, '#3a3226'); bg.addColorStop(1, '#0e0c0a');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, cw, ch);
+    const s = Math.min(cw / img.width, (ch - 6) / img.height) * 1.05;
+    ctx.drawImage(img, (cw - img.width * s) / 2, ch - img.height * s, img.width * s, img.height * s);
+    ctx.fillStyle = 'rgba(80,60,20,0.22)'; ctx.fillRect(0, 0, cw, ch);
+  });
+}
+
+// The storm sky after the twist: churning green-grey cloud, as in the
+// official painting of the house. Lower half fades out (the land is there).
+function stormCloudTexture() {
+  const [c, ctx] = artCanvas(512, 256);
+  const rand = seededRandom(91);
+  ctx.fillStyle = '#26302b'; ctx.fillRect(0, 0, 512, 256);
+  for (let i = 0; i < 260; i++) {
+    const x = rand() * 512, y = rand() * 150, r = 10 + rand() * 46, v = rand();
+    const col = v < 0.5 ? `rgba(120,140,128,${(0.05 + rand() * 0.12).toFixed(3)})` : `rgba(14,20,17,${(0.08 + rand() * 0.16).toFixed(3)})`;
+    ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y, r * 1.8, r * 0.55, (rand() - 0.5) * 0.8, 0, Math.PI * 2); ctx.fill();
+    if (x < 60) { ctx.beginPath(); ctx.ellipse(x + 512, y, r * 1.8, r * 0.55, 0, 0, Math.PI * 2); ctx.fill(); }   // wrap round
+  }
+  const fade = ctx.createLinearGradient(0, 110, 0, 140);
+  fade.addColorStop(0, 'rgba(0,0,0,0)'); fade.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = fade; ctx.fillRect(0, 110, 512, 146);
+  return artTexture(c);
+}
+
+// The moon: a pale disc with a soft halo.
+function moonTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  const halo = ctx.createRadialGradient(64, 64, 14, 64, 64, 64);
+  halo.addColorStop(0, 'rgba(240,250,240,0.5)'); halo.addColorStop(1, 'rgba(200,230,210,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0, 0, 128, 128);
+  ctx.fillStyle = '#eef4ea'; ctx.beginPath(); ctx.arc(64, 64, 16, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(150,170,150,0.35)'; [[58, 60, 4], [70, 68, 3], [62, 72, 2.5]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); });
   return artTexture(c);
 }

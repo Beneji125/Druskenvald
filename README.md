@@ -220,6 +220,16 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   soul (Crookedness). When your nerve breaks he steals something you carry,
   mementos included; his nest under the foyer stairs (visible only when
   you're terrified, until you've found it) has everything he took.
+- **The official artwork** (`docs/explore/characters/`, full-size masters
+  in `source-assets/originals/explore/characters/`): the painting of the
+  house (title screen), the Crooked Man (the full figure wherever he stands
+  in the house, the doorway painting as his face in dialogue), Filthy
+  Jasper, the boogleswarm (its encounter), and Joseph Patrini, Gail Patrini
+  and Sally Lockwood (the first three foyer portraits, and Joseph and Gail
+  in Joseph's memory; a head-and-shoulders portrait becomes a whole person
+  by fading into a soft body, `paintFigure` in art.js). `CHARACTER_ART` in
+  art.js lists them; `PORTRAITS` in ui.js says whose face shows when they
+  speak. Vessla Browntooth's portrait is kept for a later floor.
 - **The arrival** (`arrival.js`): a new game opens outside at dusk, at the
   estate's gate (the book's "Meet the Jenkins" and "There Was a Crooked
   Man"): the village lamps below, the Jenkins (Walter, Gilly, Dani and

@@ -432,7 +432,10 @@ function hangPictures(w) {
     }
     picked.forEach(k => {
       const [pw, ph, py] = PICTURE_SIZE[spec.kind];
-      const tex = spec.kind === 'portrait' ? portraitTexture(n) : spec.kind === 'landscape' ? landscapeTexture(n) : stillLifeTexture(n);
+      // (the first of the foyer's portraits are the household's own faces,
+      // from the official art)
+      const official = spec.room === 'foyer' && [CHARACTER_ART.joseph, CHARACTER_ART.gail, CHARACTER_ART.sally][picked.indexOf(k)];
+      const tex = official ? officialPortraitTexture(official) : spec.kind === 'portrait' ? portraitTexture(n) : spec.kind === 'landscape' ? landscapeTexture(n) : stillLifeTexture(n);
       n++;
       const inward = [-DIRS[k.d][0], -DIRS[k.d][1]], lean = wallLean(k.x, k.y);
       const g = new THREE.Group();

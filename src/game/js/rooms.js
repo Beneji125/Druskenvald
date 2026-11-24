@@ -520,19 +520,23 @@ async function peacockScene() {
 
 ENCOUNTERS.swarm = {
   name: 'The Boogleswarm',
-  art: () => swarmArt(),
+  art: () => artImage(CHARACTER_ART.boogleswarm),
   calmMax: 2,
-  intro: 'A crack in the wallpaper splits wider, and wider, and out of it pour boogles: little scuttling things of dust and teeth and too many legs, chittering, swarming over the floor towards your feet.',
+  intro: 'A crack in the wallpaper splits wider, and wider, and out of it pours a boogleswarm: grey weasels, dozens of them, red-eyed and grinning, slinking over each other and over the floor towards you. Some of them have human teeth crammed into their mouths. One of them says your name, in your own voice.',
   prompt: 'They swarm and scatter and swarm again.',
   calmFull: 'The swarm hangs back, uncertain, at the edge of the light. One more push and they’ll go.',
   flee: 'You run, and they don’t follow far. The walls swallow them again.',
   acts: [
-    { id: 'lantern', text: 'Hold the lantern high', once: true, calm: 1, line: 'You lift the lantern above your head. The boogles shrink from the light, squealing, and the swarm thins.' },
+    { id: 'lantern', text: 'Hold the lantern high', once: true, calm: 1, line: 'You lift the lantern above your head. The weasels shrink from the light, squealing, and the swarm thins.' },
     { id: 'shout', text: 'Stamp and shout', once: true, calm: 1, line: 'You stamp and shout at them like a farmer at crows. The swarm breaks and re-forms further off.' },
+    // Boogleswarms covet teeth above all, and will bargain for them (the book).
+    { id: 'tooth', text: 'Toss them a tooth', once: true, calm: 1, when: () => game.teeth > 0,
+      line: 'You hold up a tooth, and the whole swarm goes still, every red eye on it. You toss it into the corner. They boil after it, fighting over it, and when they come back they come slower, almost polite.',
+      run: () => { game.teeth--; ui.drawInventory(); } },
     { id: 'crush', text: 'Crush them underfoot', dark: true, line: 'You bring your heel down, and down, and down. They pop like blisters. You keep going long after they’ve stopped moving.', run: st => { st.result = 'killed'; } },
   ],
   items: {
-    salt: { calm: 2, line: 'You fling a handful of salt across the floor. Where it lands, boogles shrivel and smoke and flee, and none of them will cross the line.' },
+    salt: { calm: 2, line: 'You fling a handful of salt across the floor. Where it lands, the weasels shriek and smoke and flee, and none of them will cross the line.' },
   },
   patterns: [
     { duration: 5, text: 'They pour across the floor towards you.',
@@ -541,7 +545,7 @@ ENCOUNTERS.swarm = {
         if (this.next > 0) return;
         this.next = api.easy ? 0.35 : 0.22;
         const e = api.edge(), v = api.aim(e, 70 + api.rand() * 40);
-        api.add({ x: e.x, y: e.y, ...v, r: 5, glyph: '✷', color: '#8a7a6a', update: (s, d, tt) => { s.vx += Math.sin(tt * 9 + s.y) * 6; } });
+        api.add({ x: e.x, y: e.y, ...v, r: 5, glyph: '≈', color: '#9a8a80', update: (s, d, tt) => { s.vx += Math.sin(tt * 9 + s.y) * 6; } });
       } },
     { duration: 5, text: 'They scatter, and circle, and close in.',
       spawn(api, t, dt) {
@@ -549,29 +553,17 @@ ENCOUNTERS.swarm = {
         if (this.next > 0) return;
         this.next = api.easy ? 1.3 : 0.9;
         const n = api.easy ? 8 : 12, r = 150, cx = api.soul.x, cy = api.soul.y;
-        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; api.add({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, r: 5, glyph: '✷', color: '#8a7a6a', life: 3 }); }
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; api.add({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, r: 5, glyph: '≈', color: '#9a8a80', life: 3 }); }
       } },
   ],
 };
-
-function swarmArt() {
-  const [c, ctx] = artCanvas(256, 256);
-  const rand = seededRandom(29);
-  for (let i = 0; i < 70; i++) {
-    const x = 30 + rand() * 196, y = 100 + rand() * 150;
-    ctx.fillStyle = '#5a4a3a'; ctx.beginPath(); ctx.ellipse(x, y, 7, 5, rand() * 3, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 1; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 16, y + (rand() - 0.5) * 12); ctx.stroke(); }
-    ctx.fillStyle = '#ece4cc'; ctx.fillRect(x - 2, y - 1, 1.5, 2); ctx.fillRect(x + 1, y - 1, 1.5, 2);
-  }
-  return c;
-}
 
 async function boogleSwarm() {
   const r = await runEncounter(ENCOUNTERS.swarm);
   if (r === 'released' || r === 'killed') {
     game.flags.swarmDone = r;
     if (r === 'killed') game.crooked = (game.crooked || 0) + 1;
-    await ui.say('', r === 'killed' ? 'When you stop, the floor is grey with crushed boogles, and your shoes are wet. In the foyer, every portrait is smiling.' : 'The last of the boogles squeezes back into the crack, and the crack closes over like a healed cut. The painted eyes in the foyer, at last, look away.');
+    await ui.say('', r === 'killed' ? 'When you stop, the floor is grey with crushed weasels and scattered teeth, and your shoes are wet. In the foyer, every portrait is smiling.' : 'The last of the weasels squeezes back into the crack, with a backward grin, and the crack closes over like a healed cut. The painted eyes in the foyer, at last, look away.');
   } else if (r === 'fled') game.flags.portraitCurse = true;   // still marked
   saveGame();
 }

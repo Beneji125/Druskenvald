@@ -33,7 +33,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
   padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   text-align: center;
-  background: radial-gradient(ellipse at 50% 40%, #1c1610 0%, var(--ink) 72%);
+  /* the official painting of the house, darkened behind the text */
+  background: radial-gradient(ellipse at 50% 50%, rgba(13,10,7,0.72) 0%, rgba(13,10,7,0.45) 55%, rgba(13,10,7,0.82) 100%), url('explore/characters/crooked-house.webp') center 30% / cover no-repeat, var(--ink);
   overflow-y: auto;
 }
 #start h1 { font-family: 'Cinzel Decorative', Georgia, serif; font-weight: 400; color: var(--gold); font-size: clamp(2rem, 7vw, 3.4rem); margin: 0; letter-spacing: 0.05em; }
@@ -200,6 +201,10 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   z-index: 5;
 }
 #dialog-speaker { margin: 0 0 0.4em; font-size: 0.95rem; }
+/* The speaker's face, when there's official art for them (ui.js PORTRAITS). */
+#dialog.has-portrait { padding-left: calc(20px + 6.6rem); min-height: calc(6rem + 32px); }
+#dialog-portrait { position: absolute; left: 16px; top: 16px; width: 5.6rem; height: 5.6rem; object-fit: contain; background: radial-gradient(circle at 50% 40%, #2a2218, #0c0a08); border: 1px solid var(--gold-dim); border-radius: 3px; box-shadow: inset 0 0 12px #000; }
+@media (max-width: 640px) { #dialog.has-portrait { padding-left: calc(16px + 4.8rem); } #dialog-portrait { width: 4rem; height: 4rem; left: 12px; top: 14px; } }
 #dialog-text { margin: 0 0 0.9em; font-size: 1.1rem; line-height: 1.5; }
 #dialog-choices, .ouija-choices { display: flex; flex-direction: column; gap: 6px; }
 #dialog-choices button, .ouija-choices button {
@@ -253,7 +258,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #encounter { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: radial-gradient(ellipse at 50% 40%, rgba(30,8,8,0.88), rgba(3,2,4,0.97) 70%); overflow-y: auto; }
 .enc-panel { width: min(38rem, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .enc-top { display: flex; align-items: flex-end; gap: 14px; }
-.enc-foe { width: 150px; height: 150px; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
+.enc-foe { width: 9.5rem; height: 9.5rem; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
 .enc-who { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
 .enc-name { font-size: 1.25rem; }
 .enc-calm, .enc-dread { display: flex; align-items: center; gap: 8px; }
