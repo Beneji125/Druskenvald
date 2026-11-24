@@ -285,6 +285,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 @keyframes flare { 30% { filter: drop-shadow(0 0 30px #fff) brightness(3); } }
 .glyph-pad { display: grid; grid-template-columns: repeat(4, 48px); gap: 6px; }
 .glyph-pad button { height: 40px; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; font-size: 1rem; }
+.painting { width: min(480px, 90vw); height: auto; aspect-ratio: 480 / 300; border: 8px solid #6b5428; box-shadow: 0 6px 30px #000; cursor: crosshair; }
+.painting-panel { background: rgba(10,8,6,0.9); padding: 16px; border-radius: 4px; }
 .keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 
 #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }

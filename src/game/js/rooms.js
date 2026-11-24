@@ -339,3 +339,179 @@ async function petuniaForced() {
   f.petuniaAngered = true;
   saveGame();
 }
+
+// ─── The gallery: Keziah's paintings and the peacock ──────────────────
+// The book: Keziah Endicott painted these landscapes in the last year of
+// her life, from her dreams of the house, and hid weasels, centipedes and
+// pigeons in every one; the white marble peacock wakes as a basilisk when
+// you take its bloodstone eye, and her shade drags people into the
+// paintings. Here: only frightened eyes see what she hid; the peacock's
+// gaze can be turned back on itself with a shard of mirror.
+
+const PAINTING_CREATURES = [
+  { id: 'weasel', name: 'a weasel', x: 0.18, y: 0.66 },
+  { id: 'centipede', name: 'a centipede', x: 0.63, y: 0.30 },
+  { id: 'pigeon', name: 'a pigeon', x: 0.84, y: 0.74 },
+];
+
+async function landscapesScene() {
+  const t = THINGS.find(x => x.id === 'landscapes');
+  if (game.flags.paintingsRead) { await ui.say(t.name, 'Now you know what to look for, you see them in every painting: weasels in the hedgerows, centipedes in the clouds, pigeons in the trees. Keziah was warning someone. Nobody listened.'); return; }
+  if (game.dread < 4) { await ui.say(t.name, t.text + ' You stare, and see only hills and trees. Perhaps you’re not frightened enough to see what she saw.'); return; }
+  const pick = await ui.say(t.name, t.text + ' The longer you look, the more the brushstrokes seem to hide something.', [{ id: 'look', text: 'Look closer' }, { id: 'leave', text: 'Look away' }]);
+  if (pick !== 'look') return;
+  const found = await paintingPuzzle();
+  if (found) {
+    game.flags.paintingsRead = true;
+    addClue('keziah');
+    await ui.say('', 'A weasel, a centipede, a pigeon: hidden in every one of her paintings, the three vermin of the three hags. Keziah saw them in her dreams, and painted them, over and over, as a warning. Signed in the corner of each, small: K. Endicott.');
+  }
+}
+
+// The painting: find the three creatures. How clearly you can see them
+// depends on how frightened you are. Click or tap them; or move the lens
+// with the arrow keys and press Space.
+function paintingPuzzle() {
+  return new Promise(resolve => {
+    const root = $('keys');
+    root.innerHTML = `<div class="keys-panel painting-panel">
+      <p class="keys-text">Find what Keziah hid in her painting. (0 of 3)</p>
+      <canvas class="painting" width="480" height="300" aria-label="A painted landscape. Arrow keys move the lens; Space looks closer."></canvas>
+      <button type="button" class="keys-leave">Look away</button></div>`;
+    root.hidden = false; ui.overlay = 'keys';
+    const canvas = root.querySelector('.painting'), ctx = canvas.getContext('2d'), text = root.querySelector('.keys-text');
+    const found = new Set(), lens = { x: 0.5, y: 0.5 };
+    const vis = game.dread >= 7 ? 0.75 : 0.3;
+    const draw = () => {
+      ctx.drawImage(landscapeArt(), 0, 0, 480, 300);
+      PAINTING_CREATURES.forEach(c => {
+        ctx.globalAlpha = found.has(c.id) ? 1 : vis;
+        drawVermin(ctx, c.id, c.x * 480, c.y * 300, found.has(c.id));
+        ctx.globalAlpha = 1;
+      });
+      ctx.strokeStyle = 'rgba(255,240,200,0.8)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(lens.x * 480, lens.y * 300, 26, 0, Math.PI * 2); ctx.stroke();
+    };
+    const tryAt = (x, y) => {
+      const c = PAINTING_CREATURES.find(k => !found.has(k.id) && Math.hypot((k.x - x) * 480, (k.y - y) * 300) < 30);
+      if (c) { found.add(c.id); sound.pluck(NOTE.A * 2, 0, 0.5, 0.1); text.textContent = `There: ${c.name}. (${found.size} of 3)`; }
+      else { text.textContent = `Only paint. (${found.size} of 3)`; }
+      draw();
+      if (found.size === 3) setTimeout(() => finish(true), 900);
+    };
+    canvas.addEventListener('click', e => { const r = canvas.getBoundingClientRect(); lens.x = (e.clientX - r.left) / r.width; lens.y = (e.clientY - r.top) / r.height; tryAt(lens.x, lens.y); });
+    const onKey = e => {
+      e.stopImmediatePropagation();
+      const k = e.key.toLowerCase(), step = 0.04;
+      if (k === 'arrowleft' || k === 'a') lens.x = Math.max(0, lens.x - step);
+      else if (k === 'arrowright' || k === 'd') lens.x = Math.min(1, lens.x + step);
+      else if (k === 'arrowup' || k === 'w') lens.y = Math.max(0, lens.y - step);
+      else if (k === 'arrowdown' || k === 's') lens.y = Math.min(1, lens.y + step);
+      else if (k === ' ' || k === 'enter') { e.preventDefault(); tryAt(lens.x, lens.y); return; }
+      else if (k === 'escape') { e.preventDefault(); finish(false); return; }
+      else return;
+      e.preventDefault(); draw();
+    };
+    let done = false;
+    const finish = ok => { if (done) return; done = true; document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; lockInput(300); resolve(ok); };
+    root.querySelector('.keys-leave').addEventListener('click', () => finish(false));
+    document.addEventListener('keydown', onKey, true);
+    draw();
+  });
+}
+
+let landscapeCanvas = null;
+function landscapeArt() {
+  if (landscapeCanvas) return landscapeCanvas;
+  const [c, ctx] = artCanvas(480, 300);
+  const rand = seededRandom(91);
+  const sky = ctx.createLinearGradient(0, 0, 0, 300); sky.addColorStop(0, '#5a5e70'); sky.addColorStop(0.6, '#9a8a6a'); sky.addColorStop(1, '#4a4030');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 480, 300);
+  for (let i = 0; i < 6; i++) { ctx.fillStyle = `rgba(230,220,200,${0.15 + rand() * 0.15})`; ctx.beginPath(); ctx.ellipse(rand() * 480, 30 + rand() * 90, 40 + rand() * 50, 12 + rand() * 10, 0, 0, Math.PI * 2); ctx.fill(); }
+  [[0.62, '#4a5a3a'], [0.72, '#3a4a2e'], [0.84, '#2e3a24']].forEach(([y, col]) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 300); for (let x = 0; x <= 480; x += 20) ctx.lineTo(x, 300 * y + Math.sin(x * 0.02 + y * 9) * 18 + rand() * 6); ctx.lineTo(480, 300); ctx.fill(); });
+  for (let i = 0; i < 9; i++) { const x = rand() * 480, y = 180 + rand() * 90; ctx.fillStyle = '#1e2618'; ctx.fillRect(x - 2, y, 4, 30); ctx.beginPath(); ctx.arc(x, y, 14 + rand() * 10, 0, Math.PI * 2); ctx.fill(); }
+  for (let i = 0; i < 400; i++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? 0 : 255},${rand() < 0.5 ? 0 : 255},0,0.04)`; ctx.fillRect(rand() * 480, rand() * 300, 6, 2); }   // brushwork
+  return (landscapeCanvas = c);
+}
+
+function drawVermin(ctx, kind, x, y, clear) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.strokeStyle = clear ? '#f0d890' : '#2a2018'; ctx.fillStyle = clear ? 'rgba(240,216,144,0.25)' : '#2a2018'; ctx.lineWidth = 2;
+  if (kind === 'weasel') { ctx.beginPath(); ctx.ellipse(0, 0, 16, 5, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(15, -4, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+  if (kind === 'centipede') { ctx.beginPath(); ctx.moveTo(-18, 0); ctx.quadraticCurveTo(0, -10, 18, 2); ctx.stroke(); for (let i = -15; i <= 15; i += 5) { ctx.beginPath(); ctx.moveTo(i, -3); ctx.lineTo(i - 2, 5); ctx.stroke(); } }
+  if (kind === 'pigeon') { ctx.beginPath(); ctx.ellipse(0, 0, 10, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(8, -7, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(-17, -4); ctx.stroke(); }
+  ctx.restore();
+}
+
+ENCOUNTERS.peacock = {
+  name: 'The Marble Peacock',
+  art: 'peacock',
+  calmMax: 3,
+  intro: 'Marble grinds against marble. The peacock turns its head, and its tail rises and fans across the alcove, every feather an unblinking eye. Its one red eye fixes on you, and your limbs grow heavy and cold. In the paintings on the walls, an old woman’s face is watching too, and smiling.',
+  prompt: st => ['Its eye follows you. Your fingertips are going grey.', 'Keziah’s face moves from painting to painting, closer each time.', 'Feathers rattle like knives in a drawer.'][st.turn % 3],
+  calmFull: 'The peacock is still. In the nearest painting, Keziah closes her eyes. It’s over, if you let it be.',
+  notReady: 'Its eye is still on you.',
+  flee: 'You back out of the gallery, keeping your eyes on the floor. The grinding of marble follows you to the door.',
+  acts: [
+    { id: 'eyes', text: 'Close your eyes', once: true, calm: 1, line: 'You squeeze your eyes shut and stand very still. The heaviness in your limbs eases. You can feel it looking, but it can’t hold you if you won’t look back.' },
+    { id: 'keziah', text: 'Speak to Keziah', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
+      line: '“Mrs Endicott. Keziah.” In the painting, the old woman starts, as if nobody has said her name in a very long time. Her face softens. She looks, for a moment, only tired.' },
+    { id: 'vermin', text: 'Name what she painted: the weasel, the centipede, the pigeon', once: true, calm: 2, when: () => game.flags.paintingsRead,
+      line: '“You saw them,” you say. “The weasel. The centipede. The pigeon. You tried to warn them.” Keziah’s painted eyes fill. She nods, once, and the peacock’s tail sinks a little.' },
+  ],
+  items: {
+    shard: { calm: 3, line: 'You raise the mirror shard between you and the peacock. Its red eye meets its own reflection, and holds, and cannot look away. Grey creeps back over the white marble like frost, and the great tail stiffens, and the bird is only stone again.' },
+    hatchet: { kill: true, line: 'You swing the hatchet into the peacock’s neck. Marble cracks, and cracks again, and the bird comes apart in great white chunks. In every painting at once, Keziah screams, and the paint runs.' },
+    knife: { kill: true, line: 'You turn from the bird and drive the knife into the nearest painting, through Keziah’s smiling face, and drag it down. The canvas shrieks as it tears. The peacock topples, and shatters on the floor.' },
+    salt: { line: 'You throw salt at the peacock. It glances off the marble. Whatever this is, it isn’t afraid of salt.' },
+  },
+  patterns: [
+    { duration: 6, text: 'Its gaze sweeps the room: stay out of the beam.',
+      start(api) { this.y = 20; this.dir = 1; },
+      spawn(api, t, dt) {
+        this.beam = this.beam || api.add({ x: api.w / 2, y: 20, rect: [api.w, 22], color: 'rgba(200,40,40,0.55)', life: 999, armed: 0.6 });
+        this.beam.y += this.dir * (api.easy ? 60 : 85) * dt;
+        if (this.beam.y > api.h - 15 || this.beam.y < 15) this.dir *= -1;
+      } },
+    { duration: 6, text: 'Its tail fans, and the feathers fly.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0.3) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.0 : 0.7;
+        const n = api.easy ? 5 : 7, base = Math.PI * (0.15 + api.rand() * 0.1);
+        for (let i = 0; i < n; i++) { const a = base + i / (n - 1) * Math.PI * 0.7; api.add({ x: api.w / 2, y: -5, vx: Math.cos(a) * 130, vy: Math.sin(a) * 130, r: 5, glyph: '❦', color: '#e8e4dc' }); }
+      } },
+    { duration: 6, text: 'Keziah reaches out of her frames to pull you in.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0.2) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.2 : 0.85;
+        const x = 30 + api.rand() * (api.w - 60), y = 30 + api.rand() * (api.h - 60);
+        api.add({ x, y, rect: [54, 40], color: 'rgba(160,140,100,0.6)', armed: 0.9, life: 1.6, onHit: (s, a) => a.effect('slow', 2) });
+      } },
+  ],
+};
+
+async function peacockScene() {
+  const t = THINGS.find(x => x.id === 'peacock');
+  const f = game.flags;
+  if (f.peacockDone) { await ui.say(t.name, f.peacockDone === 'killed' ? 'White rubble, and a red stone eye lying in it. In the torn paintings, nothing watches any more.' : 'Grey stone now, both eye sockets empty. It is only a statue, and a sad one.'); return; }
+  const pick = await ui.say(t.name, t.text, [{ id: 'pry', text: 'Try to pry out the bloodstone' }, { id: 'leave', text: 'Leave it' }]);
+  if (pick !== 'pry') return;
+  const r = await runEncounter(ENCOUNTERS.peacock);
+  if (r === 'released') {
+    f.peacockDone = 'freed';
+    await ui.say('', 'In the painting, Keziah smiles at you, a small tired smile, and then she isn’t there: just hills, and trees, and in the hedgerow a little painted weasel. The bloodstone drops from the peacock’s eye into your waiting hand, warm as blood.');
+    giveMemento('gem');
+    addDread(-3);
+    await runFlashback('keziah');
+  } else if (r === 'killed') {
+    f.peacockDone = 'killed';
+    game.crooked = (game.crooked || 0) + 1;
+    game.tainted.push('gem');
+    await ui.say('', 'In the silence, the bloodstone lies among the marble, slick and red. You pick it up. It is cold. Somewhere far away an old woman is laughing, or crying; it is hard to tell.');
+    giveMemento('gem');
+    await runFlashback('keziah', { corrupt: true });
+  }
+  saveGame();
+}

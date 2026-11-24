@@ -185,6 +185,31 @@ const FLASHBACKS = {
     },
   },
 
+  // Keziah Endicott: the gallery, at her easel, the night it happened.
+  keziah: {
+    rooms: ['gallery', 'foyer'],
+    async play(m) {
+      await m.begin('Seventy years ago. The gallery, near midnight. You are Keziah Endicott, Petunia’s mother, and you have not slept properly in a year.', 4, 16, 3);
+      await m.say('The dreams again. The little door at the top of the house, glowing red as a coal, with six round hollows set around it like empty eyes. And the things in the walls: the weasels, the crawling things, the grey birds. They belong to someone. Three someones.');
+      await m.thing({ id: 'm_easel', name: 'Your easel', x: 262, y: 900, h: 50, verb: 'Paint', text: 'You paint a hedgerow, and in it, before you can stop your hand, a weasel. You always paint them in now. Someone has to see. Someone has to understand what this house is.' });
+      await m.thing({ id: 'm_peacock', name: 'The peacock', x: 152, y: 930, h: 95, verb: 'Look at', text: 'Your husband’s last gift, God rest him: a white marble peacock, with a bloodstone for an eye. The other eye you never had set. Lately you could swear it watches you paint.' });
+      await m.say('From the foyer, a sound like a dropped sack. Then footsteps, slow and unhurried, crossing the tiles.');
+      await m.reach(['foyer']);
+      m.person('crookedMan', 560, 950, 0xd8c8b0);
+      await m.say('Eustace stands under the chandelier. Your daughter’s husband. He has your daughter’s blood on his shirt. “Mother,” he says, pleasantly. “You’re up late.”', 'Keziah Endicott');
+      await m.end('She had painted it a hundred times, and still she had not seen it coming. Her last thought was of the little red door at the top of the house, and its six empty hollows. Something has to fill them, she thought. Something of each of us.');
+      addClue('attic');
+    },
+    async corrupt(m) {
+      await m.begin('Seventy years ago. The foyer. You are Eustace Lockwood.', 7, 16, 3);
+      await m.say('The old woman is still awake, in her round room, painting her nonsense. She has been telling them all for a year what the house is. She is the only one who knew. The house wants her quiet.');
+      m.person('petunia', 262, 900, 0xd8d0c8);
+      await m.reach(['gallery']);
+      await m.say('She doesn’t turn round. “I painted you,” she says. “Over and over. I just never painted your face.”', 'Keziah Endicott');
+      await m.end('The paintings watched. The peacock watched. You took your time.');
+    },
+  },
+
   // Joseph Patrini: the music room, playing for Gail.
   patrini: {
     rooms: ['music', 'hallway'],

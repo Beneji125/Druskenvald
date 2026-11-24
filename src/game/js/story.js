@@ -27,6 +27,8 @@ const CLUES = [
   { id: 'mementos',  text: 'Six mementos open the way to the attic: a gem, a key, a cup, a doll, a bear and a pin. They are on every floor.' },
   { id: 'son',       text: 'Patrini’s last words: “Find my son. He lives.”' },
   { id: 'toys',      text: 'From Petunia’s memory: Sally hid her doll at the bottom of the toy chest. Arthur’s blue bear was in his cradle. (Upstairs.)' },
+  { id: 'keziah',    text: 'Keziah Endicott hid a weasel, a centipede and a pigeon in every one of her paintings: the vermin of the three hags she saw in her dreams.' },
+  { id: 'attic',     text: 'From Keziah’s memory: a little door at the top of the house, glowing red, with six round hollows around it waiting to be filled.' },
   { id: 'gail',      text: 'From Joseph Patrini’s memory: Gail hid in the trophy room upstairs, behind the great stuffed bear, with her silver hairpin.' },
 ];
 
@@ -49,7 +51,7 @@ const THINGS = [
   { id: 'oven', verb: 'Examine', run: () => ovenScene() },
   { id: 'feast', verb: 'Examine', run: () => feastScene() },
   { id: 'staircase', verb: 'Climb', run: () => stairsScene() },
-  { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes' },
+  { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes', verb: 'Study', run: () => landscapesScene() },
   { id: 'mirror', dreadText: [4, 'In the long crack, the room is not empty. It is full of dancers, pale and turning, turning, their mouths open in a laugh you cannot hear. When you look away from the glass the room is empty again.'] },
   { id: 'tree', run: () => treeScene() },
   // Only for frightened eyes.
@@ -685,13 +687,6 @@ function showPatrini() {
 
 // ─── Teasers for rooms the next chapter opens up ──────────────────────
 
-async function peacockScene() {
-  const t = THINGS.find(x => x.id === 'peacock');
-  const pick = await ui.say(t.name, t.text, [{ id: 'pry', text: 'Try to pry out the bloodstone' }, { id: 'leave', text: 'Leave it' }]);
-  if (pick !== 'pry') return;
-  await ui.say('', 'The instant your fingers touch the stone, marble grinds against marble. The peacock’s head turns, slowly, towards you, and its great tail begins to rise. You snatch your hand back, and it settles. But it is watching you now.');
-  addDread(2);
-}
 
 
 
