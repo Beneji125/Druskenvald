@@ -23,8 +23,17 @@
   --cream-dim: #b8a07a;
   --crimson: #a04d3c;
   --cold: #9fb6dc;
+  /* Every panel (dialogue, journal, map, room card, encounters, the
+     inventory's label, the volume panel) shares one frame. */
+  --frame-bg: rgba(16, 13, 10, 0.95);
+  --frame-border: 1px solid var(--gold-dim);
+  --frame-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(201, 169, 110, 0.07);
+  --frame-pad: 16px 20px;
   color-scheme: dark;
 }
+/* Everything is sized in rem, so the whole interface grows a little on a
+   big screen and stays compact on a phone. */
+html { font-size: clamp(15px, 0.4vw + 10px, 19px); }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; background: #030306; color: var(--cream); overflow: hidden; }
 body { font-family: 'IM Fell English', Georgia, serif; -webkit-tap-highlight-color: transparent; }
@@ -59,9 +68,9 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #start .credits { font-size: 0.78rem; opacity: 0.75; }
 #sound-panel {
   position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 46px)); right: max(14px, env(safe-area-inset-right));
-  z-index: 8; width: 230px;
+  z-index: 8; width: 15rem;
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px;
-  padding: 14px 16px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; box-shadow: 0 8px 30px #000;
+  padding: 14px 16px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow);
 }
 #sound-panel label { font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--cream-dim); }
 #sound-panel input[type=range] { width: 100%; accent-color: var(--gold); min-width: 0; }
@@ -80,13 +89,13 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   pointer-events: none;
 }
 #hud-top > * { pointer-events: auto; }
-#room-name { font-family: 'Cinzel', serif; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
+#room-name { font-family: 'Cinzel', serif; font-size: 1.12rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
 #room-name.show { animation: room-in 1.2s ease; }
 @keyframes room-in { from { opacity: 0; letter-spacing: 0.3em; } to { opacity: 1; } }
 #dread { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .dread-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
 #dread-pips { display: flex; gap: 3px; }
-#dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
+#dread-pips span { width: 0.6rem; height: 0.92rem; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
 #dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
 #dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
 #dread.jolt { animation: jolt 0.4s; }
@@ -94,7 +103,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #btn-lantern { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.05em; padding: 0.3em 0.6em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 #btn-lantern[aria-pressed="true"] { color: var(--cream-dim); border-style: dashed; }
 #btn-lantern:hover, #btn-lantern:focus-visible { border-color: var(--gold); outline: none; }
-#oil { width: 70px; height: 6px; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
+#oil { width: 4.6rem; height: 0.4rem; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
 #oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
 #oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
 @keyframes oil-low { to { opacity: 0.4; } }
@@ -107,26 +116,28 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #beat.miss { animation: beat-miss 0.3s; }
 @keyframes beat-hit { 50% { transform: scale(1.6); background: #fff2c8; } }
 @keyframes beat-miss { 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
+@keyframes beat-miss-phone { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 #dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
-.hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hud-right { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
 .hud-right button, .hud-right a {
-  font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.05em; text-decoration: none;
-  padding: 0.4em 0.75em; cursor: pointer;
-  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.05em; text-decoration: none;
+  min-width: 2.4rem; padding: 0.45em 0.8em; cursor: pointer; text-align: center;
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px;
 }
 .hud-right button:hover, .hud-right a:hover, .hud-right button:focus-visible, .hud-right a:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
 
 #room-card {
   position: absolute; top: max(78px, calc(env(safe-area-inset-top) + 66px)); left: max(14px, env(safe-area-inset-left));
-  width: min(380px, calc(100vw - 28px));
-  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  width: min(25rem, calc(100vw - 28px));
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow);
   padding: 12px 16px;
 }
 #room-card.show { animation: card-in 0.5s ease; }
 @keyframes card-in { from { opacity: 0; transform: translateY(-6px); } }
-#room-card h2 { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin: 0 1.6em 0.35em 0; font-weight: 600; }
+#room-card h2, #dialog-speaker, .sheet h2, .enc-name { font-family: 'Cinzel', serif; color: var(--gold); font-weight: 600; letter-spacing: 0.06em; }
+#room-card h2 { font-size: 1rem; margin: 0 1.6em 0.35em 0; }
 #room-card p { margin: 0; line-height: 1.45; font-size: 0.98rem; }
 #room-card-close, .overlay .close { position: absolute; top: 4px; right: 6px; background: none; border: none; font-size: 1.3rem; color: var(--cream-dim); cursor: pointer; padding: 4px 8px; }
 
@@ -154,7 +165,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 #pad {
   position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
-  display: grid; grid-template-columns: repeat(3, 44px) 60px; grid-template-rows: 44px 44px; gap: 5px;
+  display: grid; grid-template-columns: repeat(3, 2.9rem) 3.9rem; grid-template-rows: 2.9rem 2.9rem; gap: 0.3rem;
 }
 #pad button {
   font-size: 1.05rem; cursor: pointer;
@@ -163,7 +174,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 }
 #pad button:active { background: rgba(201,169,110,0.25); }
 #pad .use { grid-column: 4; grid-row: 1 / span 2; font-family: 'Cinzel', serif; font-size: 0.85rem; }
-@media (pointer: fine) { #pad { opacity: 0.55; transform: scale(0.85); transform-origin: bottom right; } #pad:hover { opacity: 1; } }
+@media (pointer: fine) { #pad { opacity: 0.5; } #pad:hover { opacity: 1; } }
 @media (pointer: coarse) { #pad { grid-template-columns: repeat(3, 56px) 70px; grid-template-rows: 56px 56px; } }
 
 /* ── The inventory bar ── */
@@ -174,7 +185,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .inv-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 #inv-slots { display: flex; gap: 5px; flex-wrap: wrap; }
 .inv-slot {
-  position: relative; width: 50px; height: 50px; padding: 3px; cursor: pointer;
+  position: relative; width: 3.3rem; height: 3.3rem; padding: 3px; cursor: pointer;
   background: rgba(18,16,13,0.82); border: 1px solid rgba(138,110,66,0.7); border-radius: 4px;
   transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
@@ -186,7 +197,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .inv-key { position: absolute; top: 1px; left: 3px; font-family: 'Cinzel', serif; font-size: 0.62rem; color: var(--cream-dim); }
 #inv-teeth { display: flex; align-items: center; gap: 3px; font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--cream-dim); }
 #inv-teeth img { width: 26px; height: 26px; }
-#inv-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 5px 10px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#inv-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); }
 #inv-info-name { font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.85rem; }
 #inv-examine { font-size: 0.85rem; cursor: pointer; background: none; border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; padding: 0.1em 0.5em; }
 .inv-hint { font-size: 0.82rem; color: var(--cream-dim); }
@@ -196,13 +207,13 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #dialog {
   position: absolute; left: 50%; transform: translateX(-50%);
   bottom: max(16px, env(safe-area-inset-bottom));
-  width: min(680px, calc(100vw - 24px));
+  width: min(44rem, calc(100vw - 24px));
   max-height: 70vh; overflow-y: auto;
-  background: rgba(14,12,10,0.95); border: 1px solid var(--gold-dim); border-radius: 3px;
-  padding: 16px 20px 14px; box-shadow: 0 10px 40px #000;
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px;
+  padding: var(--frame-pad); box-shadow: var(--frame-shadow);
   z-index: 5;
 }
-#dialog-speaker { font-family: 'Cinzel', serif; color: var(--gold); margin: 0 0 0.4em; font-size: 0.95rem; letter-spacing: 0.06em; }
+#dialog-speaker { margin: 0 0 0.4em; font-size: 0.95rem; }
 #dialog-text { margin: 0 0 0.9em; font-size: 1.1rem; line-height: 1.5; }
 #dialog-choices, .ouija-choices { display: flex; flex-direction: column; gap: 6px; }
 #dialog-choices button, .ouija-choices button {
@@ -216,8 +227,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── Journal and map ── */
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3,3,6,0.7); padding: 16px; z-index: 6; }
-.sheet { position: relative; width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: #17130f; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 18px 22px; }
-.sheet h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.05rem; font-weight: 600; margin: 0.2em 0 0.6em; }
+.sheet { position: relative; width: min(38rem, 100%); max-height: 100%; overflow-y: auto; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
+.sheet h2 { font-size: 1.05rem; margin: 0.2em 0 0.6em; }
 #memento-slots { list-style: none; padding: 0; margin: 0 0 1.2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 #memento-slots li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed rgba(138,110,66,0.45); border-radius: 3px; color: var(--cream-dim); }
 #memento-slots li.have { border-style: solid; border-color: var(--gold); color: var(--cream); background: rgba(201,169,110,0.08); }
@@ -226,7 +237,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #memento-slots .glyph { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--gold); }
 #clue-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 0.5em; line-height: 1.45; }
 #clue-list .none { list-style: none; margin-left: -1.1em; color: var(--cream-dim); }
-.map-sheet { width: min(760px, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
+.map-sheet { width: min(52rem, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
 .map-frame { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 
 /* ── The spirit board ── */
@@ -241,7 +252,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   background: radial-gradient(circle, rgba(200,160,255,0.85) 0%, rgba(150,100,255,0.35) 45%, rgba(120,80,255,0) 70%); mix-blend-mode: screen; }
 .ob-glow.lit { animation: ob-glow 0.9s ease-out; }
 @keyframes ob-glow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
-.ob-side { width: 400px; display: flex; flex-direction: column; gap: 12px; }
+.ob-side { width: 26rem; display: flex; flex-direction: column; gap: 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .ouija-spelled { min-height: 1.5em; margin: 0; font-family: 'Cinzel', serif; font-size: 1.6rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); overflow-wrap: anywhere; }
 .ouija-text { min-height: 1.4em; margin: 0; font-style: italic; color: var(--cream-dim); line-height: 1.45; }
 @media (max-width: 820px), (max-aspect-ratio: 1/1) {
@@ -254,14 +265,14 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── Encounters ── */
 #encounter { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: radial-gradient(ellipse at 50% 40%, rgba(30,8,8,0.88), rgba(3,2,4,0.97) 70%); overflow-y: auto; }
-.enc-panel { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.enc-panel { width: min(38rem, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .enc-top { display: flex; align-items: flex-end; gap: 14px; }
 .enc-foe { width: 150px; height: 150px; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
 .enc-who { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
-.enc-name { font-family: 'Cinzel Decorative', Georgia, serif; color: var(--gold); font-size: 1.3rem; }
+.enc-name { font-size: 1.25rem; }
 .enc-calm, .enc-dread { display: flex; align-items: center; gap: 8px; }
 .enc-dread-pips { display: flex; gap: 3px; }
-.enc-dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
+.enc-dread-pips span { width: 0.6rem; height: 0.92rem; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
 .enc-dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; }
 .enc-dread.high .enc-dread-pips span.on { background: #c45a48; border-color: #e08a70; }
 .enc-calm-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
@@ -281,7 +292,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── The harpsichord ── */
 #keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
-.keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.keys-panel { width: min(38rem, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .keys-text { margin: 0; font-size: 1.1rem; font-style: italic; }
 .keyboard { display: flex; gap: 4px; width: 100%; height: 150px; }
 .keyboard .key b { display: block; font-size: 1.1rem; color: #5a2a10; }
@@ -289,8 +300,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
 .keyboard .key.pressed { background: #a8946a; }
 .keyboard .key.hint { box-shadow: inset 0 0 0 3px rgba(120,170,255,0.75), 0 0 14px rgba(120,170,255,0.5); }
-.glyph-panel { background: rgba(10,6,4,0.9); padding: 16px; border: 1px solid rgba(255,120,40,0.4); border-radius: 4px; }
-.glyph { width: 210px; height: 210px; }
+.glyph-panel { border-color: rgba(255,120,40,0.5); }
+svg.glyph { width: 210px; height: 210px; }
 .glyph .gdot { fill: rgba(255,200,140,0.5); }
 .glyph .gline { fill: none; stroke: rgba(255,120,40,0.35); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
 .glyph .gmine { fill: none; stroke: #ffe0a0; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
@@ -300,7 +311,6 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .glyph-pad { display: grid; grid-template-columns: repeat(4, 48px); gap: 6px; }
 .glyph-pad button { height: 40px; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; font-size: 1rem; }
 .painting { width: min(480px, 90vw); height: auto; aspect-ratio: 480 / 300; border: 8px solid #6b5428; box-shadow: 0 6px 30px #000; cursor: crosshair; }
-.painting-panel { background: rgba(10,8,6,0.9); padding: 16px; border-radius: 4px; }
 .keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 
 #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }
@@ -320,11 +330,14 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 @media (max-width: 640px) {
   #room-card { top: max(112px, calc(env(safe-area-inset-top) + 100px)); padding: 10px 14px; }
   #room-card p { font-size: 0.92rem; }
-  #log { bottom: max(250px, calc(env(safe-area-inset-bottom) + 240px)); }
+  #log { bottom: max(290px, calc(env(safe-area-inset-bottom) + 280px)); }
+  /* (on a phone the room card fills the top: the beat sits low on the left) */
+  #beat { top: auto; left: 12px; transform: none; bottom: max(140px, calc(env(safe-area-inset-bottom) + 130px)); }
+  #beat.miss { animation-name: beat-miss-phone; }
   #prompt { bottom: max(146px, calc(env(safe-area-inset-bottom) + 136px)); }
   #pad { left: 50%; right: auto; transform: translateX(-50%); }
   #inventory { left: 50%; transform: translateX(-50%); bottom: max(190px, calc(env(safe-area-inset-bottom) + 180px)); max-width: calc(100vw - 24px); align-items: center; }
-  .inv-slot { width: 44px; height: 44px; }
+  .inv-slot { width: 2.9rem; height: 2.9rem; }
   .inv-hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -684,11 +697,11 @@ function artGrime(ctx, w, h, rand, amount = 1) {
 // room has its own paper; some get pictures hung on it.
 
 const ROOM_WALLS = {
-  parlor:       { paper: '#4a2b2b', motif: '#6b3d38', dado: '#2b1a12', pattern: 'damask' },
-  foyer:        { paper: '#1f2b23', motif: '#2d3d31', dado: '#22170f', pattern: 'stripe', pictures: 'portrait' },
-  gallery:      { paper: '#4b4741', motif: '#57524a', dado: '#2d241b', pattern: 'plain', pictures: 'landscape' },
+  parlor:       { paper: '#3e2826', motif: '#4c302c', dado: '#2b1a12', pattern: 'damask' },
+  foyer:        { paper: '#1f2b23', motif: '#26342a', dado: '#22170f', pattern: 'stripe' },
+  gallery:      { paper: '#46423c', motif: '#4e4a42', dado: '#2d241b', pattern: 'plain' },
   music:        { paper: '#1f2836', motif: '#2b3850', dado: '#1c1510', pattern: 'stripe' },
-  dining:       { paper: '#4a3a1e', motif: '#5e4a26', dado: '#2a1c10', pattern: 'damask' },
+  dining:       { paper: '#45361e', motif: '#524024', dado: '#2a1c10', pattern: 'damask' },
   kitchen:      { paper: '#5b574c', motif: '#6a6658', dado: '#4a4a44', pattern: 'tile' },
   hallway:      { paper: '#2d2016', motif: '#3a2a1c', dado: '#1f150d', pattern: 'panel' },
   conservatory: { paper: '#2f3a35', motif: '#3c4a42', dado: '#2b2a24', pattern: 'plain' },
@@ -719,35 +732,6 @@ function wallTexture(roomId, variant = 0) {
     ctx.lineWidth = 2;
     if (spec.pattern === 'panel') { ctx.strokeRect(14, 20, 100, 70); ctx.strokeRect(14, 100, 100, 66); }
     else for (let y = 0; y < 256; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y + 2); ctx.stroke(); }
-  }
-  // Pictures on the wall.
-  if (spec.pictures && rand() < 0.85) {
-    const pw = 44 + rand() * 20, ph = spec.pictures === 'portrait' ? 60 + rand() * 14 : 38 + rand() * 10;
-    const px = 64 - pw / 2 + (rand() - 0.5) * 16, py = 40 + rand() * 30;
-    ctx.save();
-    ctx.translate(px + pw / 2, py + ph / 2);
-    ctx.rotate((rand() - 0.5) * 0.12);        // every frame hangs a little crooked
-    ctx.translate(-pw / 2, -ph / 2);
-    ctx.fillStyle = '#6b5428'; ctx.fillRect(-5, -5, pw + 10, ph + 10);
-    ctx.fillStyle = '#3d2e14'; ctx.fillRect(-2, -2, pw + 4, ph + 4);
-    if (spec.pictures === 'portrait') {
-      ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, pw, ph);
-      ctx.fillStyle = '#8a7a60';
-      ctx.beginPath(); ctx.ellipse(pw / 2, ph * 0.38, pw * 0.17, ph * 0.17, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2a2018';
-      ctx.beginPath(); ctx.ellipse(pw / 2, ph, pw * 0.38, ph * 0.38, 0, Math.PI, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0a0806';                                      // wide, frightened eyes
-      ctx.beginPath(); ctx.arc(pw / 2 - 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.arc(pw / 2 + 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.fill();
-    } else {
-      const sky = ctx.createLinearGradient(0, 0, 0, ph);
-      sky.addColorStop(0, '#3a3c48'); sky.addColorStop(1, '#5a4f3a');
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, pw, ph);
-      ctx.fillStyle = '#2a2a22';
-      ctx.beginPath(); ctx.moveTo(0, ph * 0.7);
-      for (let x = 0; x <= pw; x += 6) ctx.lineTo(x, ph * (0.55 + rand() * 0.2));
-      ctx.lineTo(pw, ph); ctx.lineTo(0, ph); ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
   }
   // Dado, skirting, cornice.
   ctx.fillStyle = spec.dado; ctx.fillRect(0, 170, 128, 86);
@@ -813,7 +797,8 @@ function floorTexture(roomId) {
       ctx.fillStyle = (x + y) % 2 ? a : b;
       ctx.fillRect(x * s, y * s, s, s);
     }
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    for (let i = 0; i < 30; i++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? '0,0,0' : '255,240,220'},${(rand() * 0.06).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(rand() * 256, rand() * 256, 10 + rand() * 40, 6 + rand() * 24, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
     for (let i = 0; i < 14; i++) { ctx.beginPath(); let x = rand() * 256, y = rand() * 256; ctx.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rand() - 0.5) * 40; y += (rand() - 0.5) * 40; ctx.lineTo(x, y); } ctx.stroke(); }
   };
   const boards = (base, w = 32) => {
@@ -825,13 +810,15 @@ function floorTexture(roomId) {
       for (let k = 0; k < 6; k++) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(x + 4 + rand() * (w - 8), rand() * 256, 1, 20 + rand() * 60); }
     }
   };
-  if (roomId === 'foyer') tiles('#4b4440', '#2a2522');
-  else if (roomId === 'conservatory') tiles('#55534a', '#3a3a33');
+  if (roomId === 'foyer') tiles('#3c3632', '#2a2522');
+  else if (roomId === 'conservatory') tiles('#45443c', '#36362f');
   else if (roomId === 'kitchen') {
-    ctx.fillStyle = '#3f3a33'; ctx.fillRect(0, 0, 256, 256);
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
-    for (let y = 0; y < 256; y += 42) for (let x = -20; x < 256; x += 60) ctx.strokeRect(x + ((y / 42) % 2) * 30 + rand() * 6, y + rand() * 4, 56, 40);
-    for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(${170 + rand() * 60},${150 + rand() * 50},120,0.5)`; ctx.fillRect(rand() * 256, rand() * 256, 3 + rand() * 6, 2 + rand() * 4); } // broken crockery
+    // flagstones, each a slightly different grey
+    ctx.fillStyle = '#211d19'; ctx.fillRect(0, 0, 256, 256);
+    for (let y = 0; y < 256; y += 64) for (let x = 0; x < 256; x += 64) {
+      const o = ((y / 64) % 2) * 32, v = 52 + rand() * 16;
+      [[x + o, y], [x + o - 256, y]].forEach(([fx, fy]) => { ctx.fillStyle = `rgb(${v},${v - 4},${v - 9})`; ctx.fillRect(fx + 2, fy + 2, 60, 60); });
+    }
   }
   else if (roomId === 'porch') boards('#2b231c', 24);
   else if (roomId === 'music') boards('#2c2018');
@@ -853,14 +840,33 @@ function danceFloorTexture() {
   return artTexture(c);
 }
 
+// The glasshouse roof's iron glazing bars; drawn the same on its picture
+// and on its glow mask, so lightning lights the panes and not the iron.
+function glassFrames(ctx, colour) {
+  ctx.fillStyle = colour;
+  for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, x % 128 ? 3 : 8, 256);
+  for (let y = 0; y < 256; y += 64) ctx.fillRect(0, y, 256, y % 128 ? 3 : 8);
+}
+function glassGlowTexture() {
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
+  glassFrames(ctx, '#000');
+  return artTexture(c, { repeat: true, srgb: false });
+}
+
 function ceilingTexture(kind) {
   const [c, ctx] = artCanvas(256, 256);
   const rand = seededRandom(kind.length * 11);
   if (kind === 'glass') {
-    ctx.fillStyle = '#0a1016'; ctx.fillRect(0, 0, 256, 256);
-    ctx.fillStyle = '#1e1a16';
-    for (let x = 0; x < 256; x += 64) ctx.fillRect(x, 0, 6, 256);
-    for (let y = 0; y < 256; y += 64) ctx.fillRect(0, y, 256, 6);
+    const g = ctx.createLinearGradient(0, 0, 256, 256);
+    g.addColorStop(0, '#0c1218'); g.addColorStop(1, '#070a0e');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = 'rgba(150,170,200,0.18)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 70; i++) { const x = rand() * 256, y = rand() * 256; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1, y + 5 + rand() * 12); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(20,30,18,0.5)';
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.ellipse(rand() * 256, rand() * 256, 14 + rand() * 20, 6 + rand() * 10, rand() * 3, 0, Math.PI * 2); ctx.fill(); }   // leaves on the glass
+    ctx.fillStyle = '#16120e';
+    glassFrames(ctx, '#16120e');
     return artTexture(c, { repeat: true });
   }
   ctx.fillStyle = kind === 'porch' ? '#1d1712' : '#25201b'; ctx.fillRect(0, 0, 256, 256);
@@ -1051,7 +1057,7 @@ function brickTexture() {
   const rand = seededRandom(12);
   ctx.fillStyle = '#1c120c'; ctx.fillRect(0, 0, 128, 128);
   for (let y = 0; y < 128; y += 12) for (let x = -12; x < 128; x += 26) {
-    ctx.fillStyle = `rgb(${90 + rand() * 40},${40 + rand() * 20},${30 + rand() * 15})`;
+    ctx.fillStyle = `rgb(${64 + rand() * 26},${36 + rand() * 14},${30 + rand() * 10})`;
     ctx.fillRect(x + ((y / 12) % 2) * 13, y + 1, 24, 10);
   }
   return artTexture(c);
@@ -1132,23 +1138,11 @@ function fireplaceTextures() {
   return { map: artTexture(c), glow: artTexture(m) };
 }
 
-// The long dining table's cloth, laid for the feast.
-function feastTexture() {
-  const [c, ctx] = artCanvas(128, 256);
-  const rand = seededRandom(21);
-  ctx.fillStyle = '#d8d2c2'; ctx.fillRect(0, 0, 128, 256);
-  for (let i = 0; i < 8; i++) { const x = i % 2 ? 98 : 30, y = 30 + Math.floor(i / 2) * 60; ctx.fillStyle = '#f2efe6'; ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#999'; ctx.stroke(); }
-  ctx.fillStyle = '#a0a4a8'; ctx.beginPath(); ctx.ellipse(64, 128, 26, 40, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#8a4a1c'; ctx.beginPath(); ctx.ellipse(64, 128, 18, 30, 0, 0, Math.PI * 2); ctx.fill();          // the roast
-  for (let i = 0; i < 14; i++) { ctx.fillStyle = ['#8a1a1a', '#3a6a2a', '#c9a040', '#6a2a5a'][i % 4]; ctx.beginPath(); ctx.arc(20 + rand() * 88, 10 + rand() * 236, 4 + rand() * 4, 0, Math.PI * 2); ctx.fill(); }
-  return artTexture(c);
-}
-
 // Harpsichord: lacquered case with yellowed keys along its front.
 function harpsichordFrontTexture() {
   const [c, ctx] = artCanvas(256, 64);
   ctx.fillStyle = '#2a1a10'; ctx.fillRect(0, 0, 256, 64);
-  ctx.fillStyle = '#d8c89a'; ctx.fillRect(10, 8, 236, 26);
+  ctx.fillStyle = '#8a7e60'; ctx.fillRect(10, 8, 236, 26);
   ctx.fillStyle = '#111';
   for (let x = 10; x < 246; x += 11) { ctx.fillRect(x, 8, 1, 26); if ((x / 11) % 7 !== 2 && (x / 11) % 7 !== 6) ctx.fillRect(x + 7, 8, 5, 15); }
   return artTexture(c);
@@ -1440,6 +1434,126 @@ function lampGlowTexture() {
   const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
   g.addColorStop(0, 'rgba(255,230,170,1)'); g.addColorStop(0.3, 'rgba(255,190,110,0.6)'); g.addColorStop(1, 'rgba(255,160,80,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 32, 32);
+  return artTexture(c);
+}
+
+
+// ─── Furniture (furniture.js) ─────────────────────────────────────────
+
+// Upholstery: a faded weave in one colour, worn paler in places.
+function fabricTexture(base) {
+  const [c, ctx] = artCanvas(64, 64);
+  const rand = seededRandom(base.charCodeAt(1) * 7 + base.charCodeAt(3));
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 64, 64);
+  for (let y = 0; y < 64; y += 2) { ctx.fillStyle = `rgba(0,0,0,${(0.05 + rand() * 0.06).toFixed(3)})`; ctx.fillRect(0, y, 64, 1); }
+  for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(255,240,220,0.05)'; ctx.beginPath(); ctx.ellipse(rand() * 64, rand() * 64, 6 + rand() * 10, 4 + rand() * 6, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// Grey dressed stone, in blocks; with moss, for the garden bench.
+function stoneTexture(moss = false) {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(moss ? 44 : 43);
+  ctx.fillStyle = '#2a2724'; ctx.fillRect(0, 0, 128, 128);
+  if (moss) { ctx.fillStyle = '#58544c'; ctx.fillRect(0, 0, 128, 128); }
+  else for (let y = 0; y < 128; y += 32) for (let x = -32; x < 128; x += 64) {
+    const v = 78 + rand() * 18;
+    ctx.fillStyle = `rgb(${v},${v - 4},${v - 10})`; ctx.fillRect(x + ((y / 32) % 2) * 32 + 1, y + 1, 62, 30);
+  }
+  artGrime(ctx, 128, 128, rand, 0.8);
+  if (moss) for (let i = 0; i < 26; i++) { ctx.fillStyle = `rgba(${50 + rand() * 20},${74 + rand() * 20},${36},0.45)`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 128, 4 + rand() * 14, 3 + rand() * 8, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// The dining table's cloth: old linen, yellowed, with wine stains.
+function tableclothTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(27);
+  ctx.fillStyle = '#767062'; ctx.fillRect(0, 0, 128, 256);
+  ctx.strokeStyle = 'rgba(60,50,40,0.25)'; ctx.lineWidth = 2; ctx.strokeRect(5, 5, 118, 246);
+  for (let i = 0; i < 18; i++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? '60,50,36' : '255,250,235'},${(rand() * 0.08).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 256, 8 + rand() * 20, 6 + rand() * 14, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  for (let i = 0; i < 10; i++) { ctx.fillStyle = `rgba(80,20,24,${(0.15 + rand() * 0.2).toFixed(2)})`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 256, 3 + rand() * 9, 2 + rand() * 6, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c);
+}
+
+// Leaves, dense and glossy, for the bergamot tree's crown.
+function leafTexture() {
+  const [c, ctx] = artCanvas(64, 64);
+  const rand = seededRandom(33);
+  ctx.fillStyle = '#1c3218'; ctx.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < 60; i++) { const v = rand(); ctx.fillStyle = v < 0.4 ? '#2e4e26' : v < 0.8 ? '#24401e' : '#3e5e2e'; ctx.beginPath(); ctx.ellipse(rand() * 64, rand() * 64, 5, 2.4, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// Flames for the hearth: lit by setHearth (story.js) through emissive.
+function fireTexture() {
+  const [c, ctx] = artCanvas(64, 64);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 64, 64);
+  const g = ctx.createRadialGradient(32, 60, 2, 32, 50, 30);
+  g.addColorStop(0, '#fff'); g.addColorStop(0.35, '#c86'); g.addColorStop(1, '#000');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(8, 64); for (let x = 8; x <= 56; x += 6) ctx.lineTo(x, 26 + Math.abs(Math.sin(x * 0.7)) * 22); ctx.lineTo(56, 64); ctx.closePath(); ctx.fill();
+  return artTexture(c);
+}
+
+// ─── Pictures on the walls (world.js hangs them) ──────────────────────
+
+// A family portrait, each one different: someone in dark clothes against a
+// darker ground, eyes a little too wide.
+function portraitTexture(seed) {
+  const [c, ctx] = artCanvas(96, 128);
+  const rand = seededRandom(seed * 19 + 3);
+  const bg = ctx.createRadialGradient(48, 50, 4, 48, 60, 80);
+  bg.addColorStop(0, ['#3a3226', '#2a2e28', '#36282a', '#2c2a34'][seed % 4]); bg.addColorStop(1, '#0e0c0a');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 96, 128);
+  const skin = ['#9a826a', '#a88c70', '#8a7460', '#b09478'][Math.floor(rand() * 4)];
+  const coat = ['#1e1a18', '#2a1e1a', '#1a2026', '#2a2620', '#3a2a2a'][Math.floor(rand() * 5)];
+  const hair = ['#1a1410', '#3a2a1a', '#6a6258', '#4a3020', '#2a2220'][Math.floor(rand() * 5)];
+  const woman = rand() < 0.5, child = rand() < 0.2;
+  const hx = 48, hy = child ? 58 : 48, hr = child ? 12 : 14;
+  ctx.fillStyle = coat; ctx.beginPath(); ctx.ellipse(48, 128, child ? 26 : 36, child ? 44 : 52, 0, Math.PI, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = woman ? '#cfc6b0' : '#d8d0c0'; ctx.beginPath(); ctx.moveTo(42, hy + hr + 4); ctx.lineTo(48, hy + hr + 14); ctx.lineTo(54, hy + hr + 4); ctx.fill();   // collar
+  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(hx, hy, hr * 0.85, hr, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = hair;
+  if (woman) { ctx.beginPath(); ctx.ellipse(hx, hy - 4, hr * 0.95, hr * 0.8, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.fill(); ctx.beginPath(); ctx.arc(hx, hy - hr - 2, 6, 0, Math.PI * 2); ctx.fill(); }
+  else { ctx.beginPath(); ctx.ellipse(hx, hy - 6, hr * 0.9, hr * 0.6, 0, Math.PI, Math.PI * 2); ctx.fill(); if (rand() < 0.4) { ctx.beginPath(); ctx.ellipse(hx, hy + hr * 0.6, hr * 0.55, hr * 0.4, 0, 0, Math.PI); ctx.fill(); } }
+  ctx.fillStyle = '#f0e8d8'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx, hy - 1, 2.6, 0, Math.PI * 2); ctx.fill(); });   // the whites of the eyes
+  ctx.fillStyle = '#0a0806'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx + (rand() - 0.5), hy - 1, 1.2, 0, Math.PI * 2); ctx.fill(); });
+  ctx.strokeStyle = 'rgba(30,20,14,0.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx - 3, hy + 7); ctx.lineTo(hx + 3, hy + 7); ctx.stroke();
+  artGrime(ctx, 96, 128, rand, 0.4);
+  // old varnish
+  ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 96, 128);
+  return artTexture(c);
+}
+
+// A landscape: moor, lake or wood under a heavy sky, each different.
+function landscapeTexture(seed) {
+  const [c, ctx] = artCanvas(160, 112);
+  const rand = seededRandom(seed * 23 + 5);
+  const sky = ctx.createLinearGradient(0, 0, 0, 70);
+  const tops = [['#4a4e5a', '#8a7a5a'], ['#3a4250', '#6a6a64'], ['#5a4a46', '#9a7a52'], ['#2e3440', '#5a5e5a']][seed % 4];
+  sky.addColorStop(0, tops[0]); sky.addColorStop(1, tops[1]);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 160, 112);
+  const band = (y0, amp, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 112); for (let x = 0; x <= 160; x += 8) ctx.lineTo(x, y0 + Math.sin(x * 0.04 + rand() * 6) * amp + rand() * amp * 0.5); ctx.lineTo(160, 112); ctx.closePath(); ctx.fill(); };
+  band(56, 8, '#3e4038'); band(68, 6, '#34362c');
+  if (seed % 3 === 1) { ctx.fillStyle = '#4a5462'; ctx.fillRect(0, 78, 160, 10); }      // a lake
+  band(84, 5, '#2a2a20');
+  if (seed % 3 === 2) for (let i = 0; i < 9; i++) { const x = rand() * 160; ctx.fillStyle = '#1e2018'; ctx.beginPath(); ctx.moveTo(x, 90); ctx.lineTo(x + 6, 56 + rand() * 14); ctx.lineTo(x + 12, 90); ctx.fill(); }
+  artGrime(ctx, 160, 112, rand, 0.4);
+  ctx.fillStyle = 'rgba(80,60,20,0.16)'; ctx.fillRect(0, 0, 160, 112);
+  return artTexture(c);
+}
+
+// A still life for the dining room and parlour: fruit, a jug, a dead bird.
+function stillLifeTexture(seed) {
+  const [c, ctx] = artCanvas(128, 96);
+  const rand = seededRandom(seed * 29 + 7);
+  ctx.fillStyle = '#1a140e'; ctx.fillRect(0, 0, 128, 96);
+  ctx.fillStyle = '#3a2a1a'; ctx.fillRect(0, 62, 128, 34);
+  ctx.fillStyle = '#5a4a32'; ctx.beginPath(); ctx.ellipse(40, 46, 13, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(34, 26, 12, 6);
+  ['#6a2a1e', '#7a6a2a', '#4a2a3a', '#6a4a1a'].forEach((col, i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(66 + i * 10 + rand() * 4, 60 - (i % 2) * 6, 6, 0, Math.PI * 2); ctx.fill(); });
+  if (seed % 2) { ctx.fillStyle = '#4a4a42'; ctx.beginPath(); ctx.ellipse(100, 70, 14, 6, 0.3, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 128, 96);
   return artTexture(c);
 }
 
@@ -1810,6 +1924,542 @@ const sound = {
   },
 };
 
+// ─── src/game/js/furniture.js ────────────────────────────────────────
+// Furniture and fixtures, built from simple shapes (boxes, cylinders,
+// spheres) in one style: dark, worn wood, faded cloth, tarnished brass,
+// grey stone. People, ghosts and creatures stay as flat drawn cut-outs
+// (SPRITES in art.js); so do the peacock and the chandelier.
+//
+// Sizes are life-size: the floor plan's pixels are about a tenth of a foot
+// (a square is five feet, the ceilings ten), so a chair seat sits at 17 and
+// a table top at 28.
+//
+// Each piece is a group standing at (x, y) on the plan, turned by `rot`:
+// its own +z is its front, so a piece against a wall has its back to it
+// (see snapPiece, below).
+
+const FURN_MATS = {};
+function furnMat(key, make) { return FURN_MATS[key] || (FURN_MATS[key] = make()); }
+const woodM = c => furnMat('wood' + c, () => new THREE.MeshStandardMaterial({ map: woodTexture(c), roughness: 0.75 }));
+const clothM = c => furnMat('cloth' + c, () => new THREE.MeshStandardMaterial({ map: fabricTexture(c), roughness: 1 }));
+const plainM = (c, r = 0.9, m = 0) => furnMat(`plain${c}/${r}/${m}`, () => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m }));
+const stoneM = () => furnMat('stone', () => new THREE.MeshStandardMaterial({ map: stoneTexture(), roughness: 0.95 }));
+const brassM = () => plainM(0x6e5426, 0.45, 0.65);
+const ironM = () => plainM(0x232120, 0.55, 0.6);
+const marbleM = () => plainM(0x726c62, 0.55, 0);
+
+// The palette: one muted cloth per room, and the woods.
+const CLOTH = { parlor: '#4a2a28', music: '#2c3446', porch: '#3a3028', dining: '#4a3424', gallery: '#3a3a34' };
+const WOOD = { dark: '#2a190d', mid: '#3a2414', light: '#4a3420', grey: '#3e3a32' };
+
+// Facing away from the wall on side `d` (0–3, N E S W) of a square.
+function faceAway(d) { return Math.atan2(-DIRS[d][0], -DIRS[d][1]); }
+// Facing a point.
+function faceTowards(x, y, tx, ty) { return Math.atan2(tx - x, ty - y); }
+
+// Puts a piece flat against the nearest wall of its square (or the wall on
+// side `p.wall`, if given): its back `depth / 2` out from the wall's face,
+// facing into the room.
+function snapPiece(p, depth) {
+  const c = GRID.cellAtPx(p.x, p.y);
+  if (!c || !c.walk) return;
+  let d = p.wall;
+  if (d === undefined) {
+    let best = Infinity;
+    c.edges.forEach((e, k) => {
+      if (e !== 'wall') return;
+      const dist = k % 2 ? Math.abs(p.x - (c.x + DIRS[k][0] * CELL / 2)) : Math.abs(p.y - (c.y + DIRS[k][1] * CELL / 2));
+      if (dist < best) { best = dist; d = k; }
+    });
+  }
+  if (d === undefined) return;
+  const out = CELL / 2 - WALL_T / 2 - depth / 2 - 0.5;
+  if (d % 2) p.x = c.x + DIRS[d][0] * out; else p.y = c.y + DIRS[d][1] * out;
+  p.rot = faceAway(d);
+  p.wallDir = d;
+}
+
+function piece(scene, x, z, rot = 0) {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z); g.rotation.y = rot;
+  scene.add(g);
+  return g;
+}
+function mesh(g, geo, mat, x, y, z, shadow = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = shadow; m.receiveShadow = true;
+  g.add(m);
+  return m;
+}
+const blk = (g, w, h, d, mat, x, y, z, shadow) => mesh(g, new THREE.BoxGeometry(w, h, d), mat, x, y, z, shadow);
+const cyl = (g, rt, rb, h, mat, x, y, z, seg = 14, shadow) => mesh(g, new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z, shadow);
+const ball = (g, r, mat, x, y, z, s = [1, 1, 1]) => { const m = mesh(g, new THREE.SphereGeometry(r, 14, 10), mat, x, y, z); m.scale.set(...s); return m; };
+
+// Every part of every piece is its own mesh while it's built; once the
+// house is furnished, mergeStatic() bakes all the parts that never move
+// into one mesh per material, so the whole house draws in a few dozen
+// calls instead of a thousand (and the lantern's shadows with it). Parts
+// that change later (the feast, the fire, glass) are left as they are:
+// anything under an object with userData.keep, transparent, or with more
+// than one material.
+function mergeStatic(scene, roots) {
+  const buckets = new Map();
+  const take = o => {
+    if (o.userData.keep) return;
+    [...o.children].forEach(take);
+    if (!o.isMesh || Array.isArray(o.material) || o.material.transparent || !o.geometry.attributes.uv) return;
+    const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    g.applyMatrix4(o.matrixWorld);
+    let b = buckets.get(o.material);
+    if (!b) buckets.set(o.material, b = { pos: [], norm: [], uv: [], cast: false });
+    const add = (arr, attr) => { const a = attr.array; for (let i = 0; i < a.length; i++) arr.push(a[i]); };
+    add(b.pos, g.attributes.position); add(b.norm, g.attributes.normal); add(b.uv, g.attributes.uv);
+    b.cast = b.cast || o.castShadow;
+    g.dispose();
+    o.parent.remove(o);
+  };
+  roots.forEach(r => { if (!r) return; r.updateWorldMatrix(true, true); take(r); });
+  const made = [];
+  buckets.forEach((b, mat) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(b.pos, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(b.norm, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(b.uv, 2));
+    const m = new THREE.Mesh(geo, mat);
+    m.castShadow = b.cast; m.receiveShadow = true;
+    scene.add(m);
+    made.push(m);
+  });
+  return made;
+}
+
+// ─── The pieces ───────────────────────────────────────────────────────
+
+function chair(g, cloth, rocking = false) {
+  const w = woodM(WOOD.mid);
+  [[-7, -7], [7, -7], [-7, 7], [7, 7]].forEach(([x, z]) => blk(g, 2, 17, 2, w, x, 8.5, z));
+  blk(g, 18, 2.5, 18, w, 0, 17.2, 0);
+  blk(g, 16, 2, 15, clothM(cloth), 0, 19.4, 0.5);
+  [-7, 7].forEach(x => blk(g, 2, 24, 2, w, x, 30, -8));
+  blk(g, 13, 15, 1.4, clothM(cloth), 0, 30, -8);
+  blk(g, 18, 2.5, 2.4, w, 0, 42, -8);
+  if (rocking) [-7, 7].forEach(x => { const r = blk(g, 2, 1.6, 30, w, x, 0.8, 0); r.rotation.x = 0.04; });
+}
+
+function sofa(g, cloth, len = 70) {
+  const c = clothM(cloth), w = woodM(WOOD.dark);
+  blk(g, len, 9, 28, c, 0, 8.5, 0);
+  [-1, 1].forEach(s => blk(g, len / 2 - 7, 5, 22, c, s * (len / 4 - 2.5), 15.5, 2));
+  blk(g, len, 20, 7, c, 0, 22, -10.5);
+  [-1, 1].forEach(s => { blk(g, 6, 11, 28, c, s * (len / 2 - 3), 18.5, 0); });
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => blk(g, 3, 4, 3, w, a * (len / 2 - 4), 2, b * 11));
+}
+
+function roundTable(g) {
+  const w = woodM(WOOD.mid);
+  cyl(g, 30, 30, 2.5, w, 0, 27.8, 0, 32);
+  cyl(g, 30.6, 30.6, 1, woodM(WOOD.dark), 0, 26.2, 0, 32);
+  cyl(g, 3.5, 4.5, 24, woodM(WOOD.dark), 0, 14, 0);
+  [0, 1, 2].forEach(i => { const f = blk(g, 3, 3, 20, woodM(WOOD.dark), 0, 1.5, 0); f.rotation.y = i * Math.PI * 2 / 3; f.translateZ(8); });
+}
+
+function sideboard(g) {
+  const w = woodM(WOOD.mid), dk = woodM(WOOD.dark);
+  blk(g, 110, 26, 24, w, 0, 18, 0);
+  blk(g, 116, 2.5, 27, dk, 0, 32.3, 0.5);
+  [-1, 0, 1].forEach(i => {
+    blk(g, 32, 7, 1, dk, i * 36, 26, 12.4);
+    blk(g, 32, 14, 1, dk, i * 36, 13, 12.4);
+    blk(g, 4, 1.5, 1.5, brassM(), i * 36, 26, 13.4);
+  });
+  [[-52, -10], [52, -10], [-52, 10], [52, 10]].forEach(([x, z]) => blk(g, 3, 5, 3, dk, x, 2.5, z));
+  // a pair of tarnished candlesticks
+  [-40, 40].forEach(x => { cyl(g, 1.2, 2.4, 9, brassM(), x, 38, -4); cyl(g, 0.9, 0.9, 6, plainM(0xcfc6aa), x, 45.5, -4); });
+}
+
+// The long dining table and the phantom feast laid on it. Returns what
+// setFeast() needs to change when the feast ends.
+function diningTable(g) {
+  const w = woodM(WOOD.mid), dk = woodM(WOOD.dark);
+  blk(g, 76, 3, 176, w, 0, 27.5, 0);
+  [[-32, -80], [32, -80], [-32, 80], [32, 80]].forEach(([x, z]) => blk(g, 4, 26, 4, dk, x, 13, z));
+  blk(g, 66, 4, 2, dk, 0, 24, -80); blk(g, 66, 4, 2, dk, 0, 24, 80);
+  const cloth = new THREE.MeshStandardMaterial({ map: tableclothTexture(), roughness: 1 });
+  blk(g, 82, 0.6, 182, cloth, 0, 29.3, 0);
+  [-41, 41].forEach(x => blk(g, 0.6, 9, 182, cloth, x, 25, 0, false));
+  [-91, 91].forEach(z => blk(g, 82, 9, 0.6, cloth, 0, 25, z, false));
+  const food = new THREE.Group(); g.add(food);
+  const plate = plainM(0xb8b2a0, 0.5), silver = plainM(0x8a8a88, 0.35, 0.7), wine = plainM(0x4a0e10, 0.3);
+  const place = (x, z) => {
+    cyl(food, 6.5, 5.5, 0.7, plate, x, 30, z, 18);
+    cyl(food, 1.4, 1.1, 5, plainM(0x9a9a98, 0.3, 0.6), x + (x < 0 ? 8 : -8), 32.2, z - 7, 8);
+    cyl(food, 1.3, 1.3, 1.5, wine, x + (x < 0 ? 8 : -8), 34.4, z - 7, 8);
+  };
+  [-60, 0, 60].forEach(z => { place(-27, z); place(27, z); });
+  place(0, -80); place(0, 80);
+  // The centre: a roast on a silver platter, tureens and bowls of fruit.
+  cyl(food, 15, 13, 1, silver, 0, 30.2, 0, 24);
+  (ball(food, 9, plainM(0x6a3a1c, 0.6), 0, 33, 0, [1.3, 0.62, 1]));
+  [-36, 36].forEach(z => {
+    cyl(food, 7, 5, 6, plate, 0, 32.6, z, 16);
+    (cyl(food, 6.4, 6.4, 0.6, plainM(0x6a4420, 0.4), 0, 35.4, z, 16));
+  });
+  [[-14, -22], [14, 22]].forEach(([x, z]) => {
+    cyl(food, 6, 3.5, 3.5, plate, x, 31.6, z, 14);
+    ['#6a2020', '#5a6a2a', '#8a6a2a', '#4a2448'].forEach((c, i) => (ball(food, 2.2, plainM(new THREE.Color(c).getHex(), 0.6), x + (i % 2 ? 2 : -2), 34, z + (i < 2 ? 2 : -2))));
+  });
+  // Two candelabra, their candles lit (the flames kept apart, to put out).
+  const flames = [];
+  const lit = new THREE.Group(); lit.userData.keep = true; g.add(lit);
+  [-56, 56].forEach(z => {
+    cyl(food, 4, 5, 1.2, brassM(), 0, 30.4, z);
+    cyl(food, 0.9, 1.2, 16, brassM(), 0, 38, z);
+    blk(food, 18, 1, 1.4, brassM(), 0, 45, z);
+    [-8, 0, 8].forEach(x => {
+      cyl(food, 1, 1, 7, plainM(0x9a927c), x, 49.5, z, 8);
+      const f = mesh(lit, new THREE.ConeGeometry(0.9, 2.6, 8), new THREE.MeshBasicMaterial({ color: 0xffd890 }), x, 54.2, z, false);
+      flames.push(f);
+    });
+  });
+  // The dishes baked into a few meshes of their own, which setFeast can
+  // hide or char all at once.
+  const baked = new THREE.Group();
+  g.parent.add(baked);
+  food.userData.keep = false;
+  mergeStatic(baked, [food]);
+  g.remove(food);
+  return { food: baked, cloth, flames };
+}
+
+// The feast's end: freed, the food crumbles to dust and the candles go
+// out; burned, everything is charred black.
+function setFeast(state) {
+  const f = world.feast;
+  if (!f || world.feastState === state) return;
+  world.feastState = state;
+  if (state === 'released') {
+    f.food.visible = false;
+    f.flames.forEach(m => { m.visible = false; });
+    f.cloth.color.set(0x8a8478);
+  } else if (state === 'killed') {
+    f.cloth.color.set(0x2a2420);
+    f.food.children.forEach(m => { m.material = plainM(0x16120e, 1); });
+    f.flames.forEach(m => { m.visible = false; });
+  }
+}
+
+function harpsichord(outer) {
+  // (built from the keyboard back; shifted so the middle of the case is at
+  // the piece's position)
+  const g = new THREE.Group(); g.position.z = 36; outer.add(g);
+  const caseM = woodM(WOOD.dark);
+  // The case: long and tapering away from the keys (a wing), on turned legs.
+  const shape = [[-17, 0], [17, 0], [17, -50], [6, -78], [-17, -78]];
+  const body = new THREE.Group(); g.add(body); body.position.y = 26;
+  for (let i = 0; i < shape.length; i++) {
+    const [ax, az] = shape[i], [bx, bz] = shape[(i + 1) % shape.length];
+    const len = Math.hypot(bx - ax, bz - az);
+    const side = blk(body, len, 10, 1.6, caseM, (ax + bx) / 2, 5, (az + bz) / 2);
+    side.rotation.y = -Math.atan2(bz - az, bx - ax);
+  }
+  blk(body, 33, 1, 76, woodM(WOOD.mid), 0, 1, -39);              // the soundboard's floor
+  const lid = blk(body, 33, 1, 64, caseM, 0, 10, -45);            // the lid, propped open
+  lid.rotation.z = -0.9; lid.position.set(-14, 22, -45);
+  const keys = new THREE.MeshStandardMaterial({ map: harpsichordFrontTexture(), roughness: 0.6 });
+  mesh(body, new THREE.BoxGeometry(32, 1.5, 9), [caseM, caseM, keys, caseM, caseM, caseM], 0, 3, 4.5);
+  blk(body, 34, 4, 2, caseM, 0, 2, 9.5);
+  [[-14, 5], [14, 5], [-14, -70], [8, -70]].forEach(([x, z]) => cyl(g, 1.4, 2.2, 26, caseM, x, 13, z, 8));
+  // a stool before it
+  blk(g, 18, 2, 12, clothM(CLOTH.music), 0, 17, 18);
+  [[-7, 13], [7, 13], [-7, 23], [7, 23]].forEach(([x, z]) => blk(g, 1.6, 16, 1.6, caseM, x, 8, z));
+}
+
+function harp(g) {
+  const gilt = plainM(0x7a6230, 0.45, 0.5);
+  blk(g, 14, 4, 18, gilt, 0, 2, 0);                                              // base
+  const col = cyl(g, 1.6, 2, 58, gilt, -5, 31, 6, 10); col.rotation.x = 0.06;     // the column
+  const sb = blk(g, 4, 54, 7, woodM(WOOD.light), 3, 30, -4); sb.rotation.x = -0.3; // the soundboard
+  const neck = blk(g, 3, 3, 24, gilt, -1, 58, -4); neck.rotation.x = 0.35;
+  const pts = [];
+  for (let i = 0; i < 9; i++) { const k = i / 8; pts.push(-1, 10 + k * 40, -10 + k * 12, -1, 57 + k * 2, -12 + k * 18); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  g.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0xb8a880, transparent: true, opacity: 0.6 })));
+}
+
+function barrel(g) {
+  const w = woodM(WOOD.light);
+  cyl(g, 10.5, 10.5, 30, w, 0, 15, 0, 16);
+  cyl(g, 12, 12, 10, w, 0, 15, 0, 16);
+  [4, 15, 26].forEach(y => cyl(g, 12.3 - Math.abs(y - 15) * 0.15, 12.3 - Math.abs(y - 15) * 0.15, 1.6, ironM(), 0, y, 0, 16));
+}
+
+// A mossy stone garden bench: a slab on two carved supports.
+function bench(g) {
+  const st = furnMat('mossStone', () => new THREE.MeshStandardMaterial({ map: stoneTexture(true), roughness: 1 }));
+  blk(g, 66, 4, 18, st, 0, 15, 0);
+  [-24, 24].forEach(x => { blk(g, 10, 13, 14, st, x, 6.5, 0); blk(g, 13, 2, 17, st, x, 1, 0); });
+}
+
+// A potted plant for the glasshouse: a clay pot with the bare branches.
+function pottedShrub(g, scene, x, y) {
+  cyl(g, 9, 7, 14, plainM(0x6a3a24, 1), 0, 7, 0, 14);
+  cyl(g, 8.4, 8.4, 0.5, plainM(0x1e1610, 1), 0, 13.6, 0, 14);
+  const s = addSprite(scene, 'shrub', x, y);
+  s.position.y = 12; s.scale.setScalar(1.1);
+  return s;
+}
+
+// The bergamot tree in the conservatory: a gnarled trunk, a few limbs and
+// a crown of leaves with the green fruit, kept under the glass.
+function bergamotTree(g) {
+  const bark = woodM('#2e2016');
+  cyl(g, 4, 6.5, 64, bark, 0, 32, 0, 10);
+  [[0.6, 0, 30], [-0.5, 1.8, 26], [0.4, 3.6, 22]].forEach(([tilt, a, len]) => {
+    const limb = cyl(g, 1.6, 3, len, bark, 0, 56, 0, 8);
+    limb.rotation.set(tilt * Math.cos(a), 0, tilt * Math.sin(a));
+    limb.translateY(len / 2 - 2);
+  });
+  const leaf = furnMat('leaves', () => new THREE.MeshStandardMaterial({ map: leafTexture(), roughness: 1 }));
+  const rand = seededRandom(81);
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2, r = 14 + rand() * 18;
+    ball(g, 14 + rand() * 6, leaf, Math.cos(a) * r, 82 + rand() * 14, Math.sin(a) * r, [1, 0.7, 1]);
+  }
+  ball(g, 20, leaf, 0, 96, 0, [1, 0.6, 1]);
+  const fruit = plainM(0x8a9a3a, 0.6);
+  for (let i = 0; i < 14; i++) { const a = rand() * Math.PI * 2, r = 22 + rand() * 18; ball(g, 2.2, fruit, Math.cos(a) * r, 74 + rand() * 18, Math.sin(a) * r); }
+  // a ring of earth round its foot
+  cyl(g, 22, 24, 1.2, plainM(0x1e1610, 1), 0, 0.6, 0, 20, false);
+}
+
+// The parlour fireplace: stone jambs and lintel, a wooden mantel shelf, a
+// hearth slab, the firebox and the fire (lit or banked, see setHearth).
+function fireplace(g, w) {
+  const st = stoneM();
+  blk(g, 84, 3, 30, st, 0, 1.5, 6);                         // hearth
+  [-31, 31].forEach(x => blk(g, 14, 52, 16, st, x, 26, -1));
+  blk(g, 76, 12, 18, st, 0, 50, -1);                       // lintel
+  blk(g, 90, 3, 22, woodM(WOOD.dark), 0, 57.5, 0);          // mantel shelf
+  blk(g, 50, 44, 3, plainM(0x0a0806, 1), 0, 22, -8);        // the back of the firebox
+  [-24, 24].forEach(x => blk(g, 2, 44, 14, plainM(0x100c0a, 1), x, 22, -1));
+  const logs = woodM('#24160c');
+  [[-6, 0.3], [6, -0.3]].forEach(([x, r]) => { const l = cyl(g, 2.2, 2.2, 26, logs, x, 5, 0, 8); l.rotation.set(0, r, Math.PI / 2); });
+  const fire = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xff7a30, emissiveMap: fireTexture(), emissiveIntensity: 0.25, transparent: true, depthWrite: false });
+  w.hearthMats.push(fire);
+  mesh(g, new THREE.PlaneGeometry(40, 30), fire, 0, 17, -2, false);
+  // things on the mantel: a clock and two candlesticks
+  blk(g, 10, 13, 6, woodM(WOOD.mid), 0, 65.5, -4);
+  cyl(g, 3, 3, 0.6, plainM(0xc8bea0), 0, 67, -0.7, 16).rotation.x = Math.PI / 2;
+  [-28, 28].forEach(x => cyl(g, 1.2, 2.2, 10, brassM(), x, 64, -4));
+}
+
+// The foyer stairs: a straight flight up along the east wall, solid steps
+// with a banister on the open side, climbing into the dark.
+function stairs(g) {
+  const w = woodM(WOOD.mid), dk = woodM(WOOD.dark), runner = clothM('#3a2224');
+  const n = 10, rise = 11.2, go = 11, wide = 50;
+  for (let i = 0; i < n; i++) {
+    const h = rise * (i + 1);
+    blk(g, wide, h, go, dk, 0, h / 2, -i * go);
+    blk(g, wide + 2, 1.4, go + 1.5, w, 0, h + 0.7, -i * go + 0.6);
+    blk(g, 26, 0.3, go, runner, 0, h + 1.5, -i * go, false);
+  }
+  // The banister: a newel post, balusters and a sloping rail.
+  const side = -wide / 2 + 2;
+  cyl(g, 2.6, 2.6, 46, dk, side, 23, 3, 10);
+  ball(g, 3.2, dk, side, 47, 3);
+  for (let i = 0; i < n; i += 1) cyl(g, 0.7, 0.7, 30, dk, side, rise * (i + 1) + 15, -i * go, 6);
+  const len = Math.hypot(n * go, n * rise);
+  const rail = blk(g, 2.4, 2.4, len, w, side, rise * (n / 2) + 32, -(n - 1) * go / 2);
+  rail.rotation.x = Math.atan2(rise, go);
+}
+
+function bustOnPedestal(g) {
+  const st = plainM(0x4e4a44, 0.9);
+  blk(g, 18, 3, 18, st, 0, 1.5, 0);
+  cyl(g, 6.5, 7.5, 34, st, 0, 20, 0, 12);
+  blk(g, 16, 3, 16, st, 0, 38.5, 0);
+  blk(g, 6, 2, 0.6, plainM(0x1a1814, 0.6, 0.4), 0, 30, 6.9);    // the worn name plate
+  const m = marbleM();
+  ball(g, 9, m, 0, 44, 0, [1, 0.55, 0.62]);                   // shoulders
+  cyl(g, 2.6, 3, 6, m, 0, 49.5, 0, 10);                       // neck
+  ball(g, 4.6, m, 0, 56, 0.4, [0.85, 1.12, 0.95]);            // head
+  ball(g, 1.1, m, 0, 55.6, 4.6, [0.8, 1.4, 0.9]);              // nose
+}
+
+// The spirit board and its planchette, lying on the parlour table: the
+// same artwork the séance uses. The board faces whoever sits on the
+// fireplace side.
+function layBoard(w, p) {
+  const lay = (src, wd, dp) => {
+    const img = new Image();
+    const tex = new THREE.CanvasTexture(img);
+    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    img.onload = () => { tex.needsUpdate = true; };
+    img.src = src;
+    const glow = src.includes('Board');
+    const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.2, roughness: 0.6, emissive: glow ? 0x9a70ff : 0x000000, emissiveMap: glow ? tex : null, emissiveIntensity: glow ? 0.12 : 0 });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), mat);
+    m.rotation.x = -Math.PI / 2;
+    m.receiveShadow = true;
+    w.scene.add(m);
+    return m;
+  };
+  const board = lay('explore/Ouija_Board.webp', 32, 32 * 2000 / 1539);
+  board.position.set(p.x, 29.2, p.y);
+  board.rotation.z = Math.PI * 0.75;
+  w.boardMat = board.material;
+  const pl = lay('explore/Planchette.webp', 6.5, 6.5 * 1078 / 621);
+  pl.position.set(p.x + 3, 29.4, p.y - 2);
+  pl.rotation.z = Math.PI * 0.6;
+}
+
+// ─── The search spots' furniture (items.js), along their walls ─────────
+
+function consoleTable(g) {
+  const w = woodM(WOOD.mid);
+  blk(g, 46, 2.5, 16, w, 0, 30, 0);
+  blk(g, 42, 6, 14, woodM(WOOD.dark), 0, 26, -0.5);
+  blk(g, 10, 1.4, 1, brassM(), 0, 26, 6.8);
+  [[-20, -6], [20, -6], [-20, 6], [20, 6]].forEach(([x, z]) => blk(g, 2.4, 28, 2.4, w, x, 14, z));
+}
+function umbrellaStand(g) {
+  cyl(g, 6.5, 5.5, 22, plainM(0x2e3a32, 0.7), 0, 11, 0, 14);
+  [[-2, 0, 0.12], [2, 1, -0.1], [0, -2, 0.2]].forEach(([x, z, tilt]) => {
+    const u = cyl(g, 1.1, 2.4, 40, plainM(0x161412, 0.8), x, 30, z, 8);
+    u.rotation.z = tilt;
+    ball(g, 1.4, woodM(WOOD.light), x - tilt * 20, 51, z);
+  });
+}
+function sconce(g) {
+  blk(g, 8, 10, 1.4, brassM(), 0, 64, -3.3);
+  blk(g, 1.4, 1.4, 8, brassM(), 0, 62, 0);
+  cyl(g, 2.6, 2, 2, brassM(), 0, 63, 4, 10);
+  cyl(g, 3.2, 2.6, 9, new THREE.MeshStandardMaterial({ color: 0x9a9a84, roughness: 0.2, transparent: true, opacity: 0.45 }), 0, 68.5, 4, 10);
+}
+function woodBasket(g) {
+  blk(g, 30, 12, 18, woodM('#4a3620'), 0, 6, 0);
+  const logs = woodM('#3a2a18');
+  [[-7, 0], [0, 0.3], [7, -0.2], [-3.5, 0.1], [3.5, -0.1]].forEach(([x, r], i) => { const l = cyl(g, 2.6, 2.6, 26, logs, x, i < 3 ? 14 : 18.5, 0, 8); l.rotation.set(Math.PI / 2, 0, r); });
+}
+function cupboard(g) {
+  const w = woodM(WOOD.mid), dk = woodM(WOOD.dark);
+  blk(g, 44, 72, 20, w, 0, 36, 0);
+  blk(g, 48, 3, 22, dk, 0, 73.5, 0.5);
+  [-10.5, 10.5].forEach(x => { blk(g, 19, 30, 1, dk, x, 50, 10.4); blk(g, 19, 30, 1, dk, x, 17, 10.4); blk(g, 1.2, 4, 1.2, brassM(), x > 0 ? 1.5 : -1.5, 36, 11.2); });
+}
+function pottingBench(g) {
+  const w = woodM(WOOD.grey);
+  blk(g, 50, 2.5, 20, w, 0, 30, 0);
+  blk(g, 50, 2, 18, w, 0, 9, 0);
+  blk(g, 50, 12, 1.5, w, 0, 37, -9.5);
+  [[-23, -8], [23, -8], [-23, 8], [23, 8]].forEach(([x, z]) => blk(g, 2.6, 30, 2.6, w, x, 15, z));
+  [[-14, 0], [2, 3], [15, -2]].forEach(([x, z]) => cyl(g, 4.4, 3.4, 7, plainM(0x6a3a24, 1), x, 34.7, z, 10));
+  [[-10, 0], [6, 0]].forEach(([x, z]) => cyl(g, 5, 4, 6, plainM(0x6a3a24, 1), x, 13, z, 10));
+}
+function cabinet(g) {
+  const w = woodM(WOOD.dark);
+  blk(g, 34, 64, 16, w, 0, 32, 0);
+  blk(g, 38, 3, 18, w, 0, 65.5, 0.5);
+  const glass = blk(g, 28, 38, 0.5, new THREE.MeshStandardMaterial({ color: 0x6a7a88, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.3 }), 0, 42, 8.3, false);
+  glass.castShadow = false;
+  [26, 46].forEach(y => blk(g, 30, 1, 13, woodM(WOOD.mid), 0, y, 0));
+  blk(g, 30, 16, 1, woodM(WOOD.mid), 0, 12, 8.2);
+}
+function musicStand(g) {
+  const b = brassM();
+  cyl(g, 1, 1, 44, b, 0, 22, 0, 8);
+  [0, 2.1, 4.2].forEach(a => { const f = blk(g, 1, 1, 12, b, 0, 1, 0); f.rotation.y = a; f.translateZ(5); });
+  const desk = blk(g, 24, 16, 1, b, 0, 50, 1); desk.rotation.x = -0.35;
+  blk(g, 24, 1.5, 3, b, 0, 42.5, 4);
+}
+function pump(g) {
+  const st = stoneM();
+  blk(g, 32, 22, 22, st, 0, 31, 0);
+  blk(g, 26, 6, 18, plainM(0x1a1a1c, 0.3), 0, 39.5, 1);       // the sink's well
+  blk(g, 34, 3, 24, st, 0, 43.5, 0);
+  [-12, 12].forEach(x => blk(g, 5, 20, 18, st, x, 10, 0));
+  const iron = ironM();
+  cyl(g, 2.4, 2.8, 26, iron, 0, 56, -6, 10);
+  const spout = blk(g, 2.4, 2.4, 10, iron, 0, 64, -1); spout.rotation.x = 0.3;
+  const handle = blk(g, 2, 2, 20, iron, 0, 70, -10); handle.rotation.x = -0.5;
+}
+
+// The furniture of SCENERY (world.js) and the search spots, by kind.
+// Returns the built group (or a sprite, for those that stay cut-outs).
+const FURNITURE = {
+  chair: (g, p) => chair(g, p.cloth || CLOTH.parlor, p.rocking),
+  sofa: (g, p) => sofa(g, p.cloth || CLOTH.parlor, p.len),
+  roundTable, sideboard, harpsichord, harp, barrel, bench, stairs, bustOnPedestal,
+  console: consoleTable, umbrellas: umbrellaStand, sconce, woodbasket: woodBasket,
+  cupboard, pottingBench, cabinet, musicStand, pump,
+  tree: bergamotTree,
+};
+// How deep each is (for snapping it against a wall).
+const FURN_DEPTH = { sofa: 28, sideboard: 27, fireplace: 30, console: 16, umbrellas: 13, sconce: 0, woodbasket: 18, cupboard: 22, pottingBench: 20, cabinet: 18, musicStand: 6, pump: 24 };
+
+function addScenery(w, p) {
+  const { scene } = w;
+  if (p.snap) snapPiece(p, FURN_DEPTH[p.kind] ?? 20);
+  if (FURNITURE[p.kind]) {
+    const g = piece(scene, p.x, p.y, p.rot || 0);
+    FURNITURE[p.kind](g, p);
+    if (p.kind === 'roundTable') layBoard(w, p);
+    return g;
+  }
+  if (p.kind === 'shrub') { const g = piece(scene, p.x, p.y); w.sprites.push(pottedShrub(g, scene, p.x, p.y)); return g; }
+  if (SPRITES[p.kind]) { w.sprites.push(addSprite(scene, p.kind, p.x, p.y)); return null; }
+  switch (p.kind) {
+    case 'diningTable': {
+      const g = piece(scene, p.x, p.y, p.rot || 0);
+      w.feast = diningTable(g);
+      return g;
+    }
+    case 'fireplace': {
+      const g = piece(scene, p.x, p.y, p.rot || 0);
+      fireplace(g, w);
+      return g;
+    }
+    case 'oven': {
+      const mats = [brickTexture(), brickTexture(), brickTexture(), brickTexture(), ovenFrontTexture(), brickTexture()].map(t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, emissive: 0x501008, emissiveIntensity: 0.15 }));
+      const g = piece(scene, p.x, p.y, -Math.PI * 0.75);   // its door towards the room
+      mesh(g, new THREE.BoxGeometry(64, 66, 56), mats, 0, 33, 0);
+      blk(g, 70, 4, 60, stoneM(), 0, 68, 0);
+      cyl(g, 7, 8, 44, plainM(0x3a2418, 1), 0, 92, -14, 10);     // the flue
+      w.ovenMats = mats;
+      return g;
+    }
+    case 'fallenShelf': {
+      const g = piece(scene, p.x, p.y, 0.2);
+      const w1 = woodM(WOOD.light);
+      // a tall dresser, toppled forward and caught on its own drawer
+      const a = blk(g, 100, 64, 16, w1, 0, 24, -4); a.rotation.x = -0.95;
+      [-30, 0, 30].forEach(x => { const s = blk(g, 2, 60, 14, woodM(WOOD.mid), x, 26, -2); s.rotation.x = -0.95; });
+      blk(g, 40, 10, 18, woodM(WOOD.mid), -20, 5, 20);
+      // broken crockery around it
+      const rand = seededRandom(5), shard = plainM(0x9a9282, 0.6);
+      for (let i = 0; i < 14; i++) { const s = blk(g, 2 + rand() * 4, 0.6, 2 + rand() * 4, shard, (rand() - 0.5) * 110, 0.3, 18 + rand() * 30, false); s.rotation.y = rand() * 3; }
+      return g;
+    }
+    case 'mirror': {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(40, 52), new THREE.MeshStandardMaterial({ map: mirrorTexture(), transparent: true, alphaTest: 0.05, roughness: 0.2, metalness: 0.5 }));
+      const c = GRID.cellAtPx(p.x, p.y);
+      m.position.set(p.x, 62, c.y - CELL / 2 + WALL_T / 2 + 0.6);   // flat on the square's north wall
+      scene.add(m);
+      w.mirror = m;
+      return m;
+    }
+    case 'danceFloor': {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(170, 150), new THREE.MeshStandardMaterial({ map: danceFloorTexture(), transparent: true, depthWrite: false, roughness: 1 }));
+      m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.4, p.y); m.receiveShadow = true;
+      scene.add(m);
+      return m;
+    }
+  }
+  return null;
+}
+
 // ─── src/game/js/world.js ────────────────────────────────────────────
 // Builds the 3D house from the grid: a wall on every walled edge (papered on
 // the room's side), floors and ceilings square by square, door frames,
@@ -1819,41 +2469,46 @@ const sound = {
 // Every wall leans a little at the top and the camera never sits quite
 // level: there isn't a right angle anywhere in the Crooked House.
 
-// Furniture and fixtures, in floor-plan pixels. Sprite kinds are upright
-// pictures (art.js SPRITES); the rest are simple shapes. `block` keeps the
-// player out of the squares it covers: `r` is a radius around the centre,
-// `rect` is [width, depth].
+// Furniture and fixtures, in floor-plan pixels (built in furniture.js).
+// `block` keeps the player out of the squares it covers: `r` is a radius
+// around the centre (or around `at`), `rect` is [width, depth]. `snap`
+// puts a piece flat against its nearest wall, facing into the room; `rot`
+// turns one by hand (its front faces +y at 0).
+const ringOfChairs = (cx, cy, r, n, cloth) => [...Array(n)].map((_, i) => {
+  const a = i * Math.PI * 2 / n, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+  return { kind: 'chair', x, y, rot: faceTowards(x, y, cx, cy), cloth };
+});
 const SCENERY = [
   // Parlour
   { kind: 'roundTable', x: 505, y: 630, block: { r: 30 } },
-  ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ kind: 'chair', x: 505 + Math.cos(i * Math.PI / 4) * 74, y: 630 + Math.sin(i * Math.PI / 4) * 74 })),
-  { kind: 'fireplace', x: 340, y: 742, wall: 3 },
-  { kind: 'sofa', x: 312, y: 590 },
+  ...ringOfChairs(505, 630, 46, 8, CLOTH.parlor),
+  { kind: 'fireplace', x: 352, y: 752, snap: true },
+  { kind: 'sofa', x: 312, y: 590, snap: true, cloth: CLOTH.parlor, len: 64 },
   // Foyer
   { kind: 'chandelier', x: 535, y: 950 },
-  { kind: 'stairs', x: 640, y: 845, block: { rect: [60, 110] } },
+  { kind: 'stairs', x: 652, y: 896, block: { rect: [60, 110], at: [640, 845] } },
   // Gallery
-  ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y })),
+  ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y, rot: faceTowards(x, y, 270, 905) })),
   { kind: 'peacock', x: 152, y: 930, block: { r: 20 } },
   // Music room
-  { kind: 'harpsichord', x: 965, y: 845, block: { r: 30 } },
+  { kind: 'harpsichord', x: 965, y: 845, rot: faceTowards(965, 845, 850, 925), block: { r: 30 } },
   { kind: 'mirror', x: 845, y: 802, wall: 0 },
-  { kind: 'sofa', x: 790, y: 880 },
-  { kind: 'sofa', x: 960, y: 1035 },
-  { kind: 'harp', x: 880, y: 1035 },
+  { kind: 'sofa', x: 790, y: 880, snap: true, cloth: CLOTH.music },
+  { kind: 'sofa', x: 960, y: 1035, snap: true, cloth: CLOTH.music },
+  { kind: 'harp', x: 880, y: 1032, rot: Math.PI },
   { kind: 'danceFloor', x: 850, y: 925 },
   // Dining room
   { kind: 'diningTable', x: 865, y: 650, block: { rect: [80, 180] } },
-  ...[[810, 590], [810, 650], [810, 710], [920, 590], [920, 650], [920, 710], [865, 545], [865, 755]].map(([x, y]) => ({ kind: 'chair', x, y })),
-  { kind: 'sideboard', x: 990, y: 650 },
+  ...[[808, 590], [808, 650], [808, 710], [922, 590], [922, 650], [922, 710], [865, 544], [865, 756]].map(([x, y]) => ({ kind: 'chair', x, y, rot: faceTowards(x, y, 865, y === 544 || y === 756 ? 650 : y), cloth: CLOTH.dining })),
+  { kind: 'sideboard', x: 990, y: 650, snap: true },
   // Kitchen
   { kind: 'oven', x: 975, y: 440, block: { r: 30 } },
   { kind: 'fallenShelf', x: 880, y: 262, block: { r: 30 } },
   { kind: 'barrel', x: 724, y: 252 },
-  { kind: 'chair', x: 470, y: 1135 },   // the porch's rocking chair
+  { kind: 'chair', x: 470, y: 1135, rocking: true, rot: 0, cloth: CLOTH.porch },   // the porch's rocking chair
   // Conservatory
   { kind: 'tree', x: 490, y: 300, block: { r: 40 } },
-  { kind: 'bench', x: 520, y: 480, rot: 0 },
+  { kind: 'bench', x: 520, y: 480, rot: Math.PI },
   { kind: 'bench', x: 350, y: 300, rot: Math.PI / 2 },
   { kind: 'shrub', x: 330, y: 440 }, { kind: 'shrub', x: 650, y: 230 }, { kind: 'shrub', x: 330, y: 160 }, { kind: 'shrub', x: 640, y: 160 },
 ];
@@ -1885,11 +2540,13 @@ function buildWorld(renderer, quality) {
   const flash = { value: 0 };
   const w = { scene, camera, flash, sprites: [], fixedLights: [], windowMats: [], hearthMats: [], disposables: [] };
   world = w;
+  const fixtures = [];      // static parts, merged at the end (mergeStatic)
   const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
     m.position.set(x, y, z); m.rotation.y = rotY;
     m.castShadow = m.receiveShadow = true;
     scene.add(m);
+    fixtures.push(m);
     return m;
   };
 
@@ -2061,7 +2718,7 @@ function buildWorld(renderer, quality) {
   });
   Object.entries(ceilQuads).forEach(([kind, list]) => {
     const m = ceilMats[kind] || (ceilMats[kind] = new THREE.MeshStandardMaterial({ map: ceilingTexture(kind), roughness: 1, metalness: 0,
-      emissive: kind === 'glass' ? 0x9fb4d8 : 0x000000, emissiveIntensity: 0 }));
+      emissive: kind === 'glass' ? 0x9fb4d8 : 0x000000, emissiveMap: kind === 'glass' ? glassGlowTexture() : null, emissiveIntensity: 0 }));
     if (kind === 'glass') w.windowMats.push(m);
     scene.add(new THREE.Mesh(flatGeo(list, WALL_H, true), m));
   });
@@ -2109,18 +2766,21 @@ function buildWorld(renderer, quality) {
   // ── Furniture ──
   GRID.cells.forEach(c => { c.blocked = false; });
   // The pieces added for search spots (items.js), against their walls.
-  [...SEARCHES.filter(s => s.prop), PUMP].forEach(s => addScenery(w, { kind: s.prop, x: s.x, y: s.y, rot: s.wallDir % 2 ? Math.PI / 2 : 0 }, box));
+  [...SEARCHES.filter(s => s.prop), PUMP].forEach(s => fixtures.push(addScenery(w, { kind: s.prop, x: s.x, y: s.y, rot: s.wallDir === undefined ? 0 : faceAway(s.wallDir) })));
   SCENERY.forEach(p => {
-    addScenery(w, p, box);
+    fixtures.push(addScenery(w, p));
     if (p.block) {
+      const [bx, by] = p.block.at || [p.x, p.y];
       GRID.cells.forEach(c => {
         if (!c.walk) return;
-        const inR = p.block.r !== undefined && Math.hypot(c.x - p.x, c.y - p.y) < p.block.r + CELL / 2;
-        const inRect = p.block.rect && Math.abs(c.x - p.x) < p.block.rect[0] / 2 && Math.abs(c.y - p.y) < p.block.rect[1] / 2;
+        const inR = p.block.r !== undefined && Math.hypot(c.x - bx, c.y - by) < p.block.r + CELL / 2;
+        const inRect = p.block.rect && Math.abs(c.x - bx) < p.block.rect[0] / 2 && Math.abs(c.y - by) < p.block.rect[1] / 2;
         if (inR || inRect) c.blocked = true;
       });
     }
   });
+  fixtures.push(...hangPictures(w));
+  mergeStatic(scene, fixtures);
 
   // Things drawn straight onto a wall (e.g. the hallway scratches). Shown
   // or hidden each frame by the main loop, for things only Dread reveals.
@@ -2188,173 +2848,70 @@ function wallLean(x, z) {
   return [Math.sin(x * 0.013 + z * 0.007) * 3 + Math.sin(z * 0.031) * 1.2, Math.cos(z * 0.011 - x * 0.005) * 3 + Math.sin(x * 0.027) * 1.2];
 }
 
-function addScenery(w, p, box) {
-  const { scene } = w;
-  if (SPRITES[p.kind]) {
-    w.sprites.push(addSprite(scene, p.kind, p.x, p.y));
-    return;
-  }
-  const wood = c => new THREE.MeshStandardMaterial({ map: woodTexture(c), roughness: 0.75 });
-  switch (p.kind) {
-    case 'roundTable': {
-      const top = new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 4, 32), wood('#3a2212'));
-      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
-      // The spirit board and its planchette, lying on the table: the same
-      // artwork the séance uses. The board faces whoever sits on the
-      // fireplace side.
-      const lay = (src, wd, dp, y, glow) => {
-        const img = new Image();
-        const tex = new THREE.CanvasTexture(img);
-        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-        img.onload = () => { tex.needsUpdate = true; };
-        img.src = src;
-        const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.2, roughness: 0.6, emissive: glow ? 0x9a70ff : 0x000000, emissiveMap: glow ? tex : null, emissiveIntensity: glow ? 0.12 : 0 });
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), mat);
-        m.rotation.x = -Math.PI / 2;
-        m.receiveShadow = true;
-        scene.add(m);
-        return m;
-      };
-      const board = lay('explore/Ouija_Board.webp', 34, 34 * 2000 / 1539, 40.1, true);
-      board.position.set(p.x, 40.1, p.y);
-      board.rotation.z = Math.PI * 0.75;
-      w.boardMat = board.material;
-      const pl = lay('explore/Planchette.webp', 7, 7 * 1078 / 621, 40.3, false);
-      pl.position.set(p.x + 3, 40.3, p.y - 2);
-      pl.rotation.z = Math.PI * 0.6;
-      box(10, 36, 10, wood('#2a180c'), p.x, 18, p.y);
-      break;
-    }
-    case 'diningTable': {
-      const feastMat = new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 });
-      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), feastMat, wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
-      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
-      w.feastMat = feastMat;
-      [[-34, -84], [34, -84], [-34, 84], [34, 84]].forEach(([dx, dz]) => box(6, 36, 6, wood('#2a180c'), p.x + dx, 18, p.y + dz));
-      break;
-    }
-    case 'sideboard': box(30, 44, 120, wood('#33200f'), p.x, 22, p.y); break;
-    // Search-spot furniture: each is drawn along its wall (`rot` turns it
-    // to an east or west wall).
-    case 'console': {
-      const m = wood('#3a2414');
-      box(48, 4, 18, m, p.x, 40, p.y, p.rot);
-      box(44, 10, 16, wood('#2e1c0e'), p.x, 33, p.y, p.rot);
-      const off = [[-20, -6], [20, -6], [-20, 6], [20, 6]];
-      off.forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, m, p.x + x, 15, p.y + z); });
-      break;
-    }
-    case 'umbrellas': {
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 26, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a3a, roughness: 0.8 }));
-      pot.position.set(p.x, 13, p.y); pot.castShadow = pot.receiveShadow = true; scene.add(pot);
-      [[-2, 0.15], [2, -0.1], [0, 0.3]].forEach(([dx, tilt]) => { const u = box(1.5, 44, 1.5, new THREE.MeshStandardMaterial({ color: 0x1a1612 }), p.x + dx, 30, p.y); u.rotation.z = tilt; });
-      break;
-    }
-    case 'sconce': {
-      const brass = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, roughness: 0.4, metalness: 0.7 });
-      box(10, 3, 8, brass, p.x, 62, p.y, p.rot);
-      const glass = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 4.5, 12, 10), new THREE.MeshStandardMaterial({ color: 0xa0a890, roughness: 0.2, transparent: true, opacity: 0.5 }));
-      glass.position.set(p.x, 70, p.y); scene.add(glass);
-      break;
-    }
-    case 'woodbasket': box(30, 16, 20, new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 }), p.x, 8, p.y, p.rot); break;
-    case 'cupboard': {
-      box(46, 70, 22, wood('#3a2616'), p.x, 35, p.y, p.rot);
-      const [x, z] = turnXZ(0, 11.5, p.rot);
-      box(42, 2, 1, wood('#1e140a'), p.x + x, 36, p.y + z, p.rot);
-      break;
-    }
-    case 'pottingBench': {
-      box(50, 4, 22, wood('#4a3a28'), p.x, 30, p.y, p.rot);
-      [[-22, -8], [22, -8], [-22, 8], [22, 8]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, wood('#3a2a1a'), p.x + x, 15, p.y + z); });
-      [[-14, 0], [2, 3], [15, -2]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); const pot = new THREE.Mesh(new THREE.CylinderGeometry(5, 4, 8, 10), new THREE.MeshStandardMaterial({ color: 0x8a4a2a, roughness: 1 })); pot.position.set(p.x + x, 36, p.y + z); pot.castShadow = true; scene.add(pot); });
-      break;
-    }
-    case 'cabinet': {
-      box(36, 64, 18, wood('#2e1c0e'), p.x, 32, p.y, p.rot);
-      const [x, z] = turnXZ(0, 9.2, p.rot);
-      const glass = box(30, 40, 0.5, new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 }), p.x + x, 40, p.y + z, p.rot);
-      glass.castShadow = false;
-      break;
-    }
-    case 'musicStand': {
-      const brass = new THREE.MeshStandardMaterial({ color: 0x9a7a3a, roughness: 0.4, metalness: 0.7 });
-      box(2, 44, 2, brass, p.x, 22, p.y);
-      const desk = box(26, 18, 1.5, brass, p.x, 50, p.y, p.rot); desk.rotateX(-0.35);
-      break;
-    }
-    case 'pump': {
-      box(30, 20, 24, new THREE.MeshStandardMaterial({ color: 0x5a5650, roughness: 0.9 }), p.x, 30, p.y, p.rot);
-      const iron = new THREE.MeshStandardMaterial({ color: 0x2a2826, roughness: 0.5, metalness: 0.6 });
-      box(5, 30, 5, iron, p.x, 55, p.y);
-      const h = box(18, 2, 2, iron, p.x, 70, p.y, p.rot); h.rotation.z = 0.4;
-      break;
-    }
-    case 'bench': box(80, 18, 24, new THREE.MeshStandardMaterial({ color: 0x4a4e44, roughness: 1 }), p.x, 9, p.y, p.rot || 0); break;
-    case 'oven': {
-      const mats = [brickTexture(), brickTexture(), brickTexture(), brickTexture(), ovenFrontTexture(), brickTexture()].map(t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, emissive: 0x501008, emissiveIntensity: 0.15 }));
-      const m = new THREE.Mesh(new THREE.BoxGeometry(64, 70, 56), mats);
-      m.position.set(p.x, 35, p.y); m.rotation.y = -Math.PI * 0.75;   // door towards the room m.castShadow = m.receiveShadow = true; scene.add(m);
-      w.ovenMats = mats;
-      break;
-    }
-    case 'fallenShelf': {
-      const m = box(110, 14, 34, wood('#3b2816'), p.x, 30, p.y);
-      m.rotation.z = 0.42; m.rotation.y = 0.2;
-      box(70, 6, 46, wood('#2e1d10'), p.x + 20, 18, p.y + 6).rotation.z = -0.25;
-      break;
-    }
-    case 'harpsichord': {
-      const caseMat = wood('#24160c');
-      const front = new THREE.MeshStandardMaterial({ map: harpsichordFrontTexture(), roughness: 0.6 });
-      const m = new THREE.Mesh(new THREE.BoxGeometry(110, 30, 50), [caseMat, caseMat, caseMat, caseMat, caseMat, front]);
-      m.position.set(p.x, 44, p.y); m.rotation.y = Math.PI * 0.82; m.castShadow = m.receiveShadow = true; scene.add(m);
-      const lid = box(110, 3, 50, caseMat, p.x, 74, p.y, Math.PI * 0.82);
-      lid.rotateX(-0.75); lid.position.y = 78;
-      [[-46, -18], [46, -18], [-46, 18], [46, 18]].forEach(([dx, dz]) => {
-        const a = Math.PI * 0.82, rx = dx * Math.cos(a) + dz * Math.sin(a), rz = -dx * Math.sin(a) + dz * Math.cos(a);
-        box(5, 30, 5, caseMat, p.x + rx, 15, p.y + rz);
+// Pictures hung on the walls: each one its own frame, a few to a room,
+// spaced out and kept clear of doors, windows and tall furniture. The
+// foyer's portraits and the gallery's landscapes start where the story's
+// `portraits` and `landscapes` are.
+const PICTURES = [
+  { room: 'foyer', kind: 'portrait', count: 7, near: 'portraits' },
+  { room: 'gallery', kind: 'landscape', count: 6, near: 'landscapes' },
+  { room: 'parlor', kind: 'still', count: 2 },
+  { room: 'dining', kind: 'still', count: 2 },
+  { room: 'hallway', kind: 'portrait', count: 3 },
+];
+const PICTURE_SIZE = { portrait: [27, 36, 66], landscape: [40, 28, 62], still: [32, 24, 64] };   // width, height, centre height
+
+function hangPictures(w) {
+  const doors = DOORS.list.map(d => { const v = w.doors[d.id], L = CELL * d.cells.length; return [v.line[0] + v.u[0] * L / 2, v.line[1] + v.u[1] * L / 2]; });
+  const avoid = [
+    ...FLOOR.windows.map(p => [p.x, p.y]),
+    ...SEARCHES.filter(s => s.prop && s.prop !== 'console' && s.prop !== 'woodbasket' && s.prop !== 'umbrellas').map(s => [s.x, s.y]),
+    ...THINGS.filter(t => t.decal).map(t => [t.x, t.y]),
+    ...SCENERY.filter(p => p.kind === 'mirror' || p.kind === 'stairs').map(p => [p.x, p.y]),
+  ];
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4422, roughness: 0.5, metalness: 0.5 });
+  let n = 0;
+  const hung = [];
+  PICTURES.forEach(spec => {
+    const cands = [];
+    GRID.cells.forEach(c => {
+      if (!c.walk || c.room !== spec.room) return;
+      c.edges.forEach((e, d) => {
+        if (e !== 'wall') return;
+        const x = c.x + DIRS[d][0] * CELL / 2, y = c.y + DIRS[d][1] * CELL / 2;
+        if (doors.some(([dx, dy]) => Math.hypot(dx - x, dy - y) < 58)) return;
+        if (avoid.some(([ax, ay]) => Math.hypot(ax - x, ay - y) < 44)) return;
+        cands.push({ x, y, d });
       });
-      break;
+    });
+    const near = spec.near && THINGS.find(t => t.id === spec.near);
+    const rand = seededRandom(spec.room.length * 13);
+    cands.forEach(k => { k.key = near ? Math.hypot(k.x - near.x, k.y - near.y) : rand(); });
+    cands.sort((a, b) => a.key - b.key);
+    const picked = [];
+    for (const k of cands) {
+      if (picked.length >= spec.count) break;
+      if (picked.every(p => Math.hypot(p.x - k.x, p.y - k.y) >= 100)) picked.push(k);
     }
-    case 'bustOnPedestal': {
-      const ped = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 46, 12), new THREE.MeshStandardMaterial({ color: 0x5a544a, roughness: 0.9 }));
-      ped.position.set(p.x, 23, p.y); ped.castShadow = ped.receiveShadow = true; scene.add(ped);
-      w.sprites.push(addSprite(scene, 'bust', p.x, p.y));
-      break;
-    }
-    case 'stairs': {
-      // A quarter-turn of steps climbing the foyer's north-east corner.
-      const mat = wood('#3a2616');
-      for (let i = 0; i < 9; i++) {
-        const a = Math.PI * (1 - i / 16);
-        box(26, 8 + i * 10, 40, mat, p.x + 20 + Math.cos(a) * 34, (8 + i * 10) / 2, p.y + 40 - Math.sin(a) * 60 - i * 6, -a);
-      }
-      break;
-    }
-    case 'fireplace': {
-      const t = fireplaceTextures();
-      const mat = new THREE.MeshStandardMaterial({ map: t.map, emissive: 0xff7a30, emissiveMap: t.glow, emissiveIntensity: 0.25, roughness: 0.9 });
-      w.hearthMats.push(mat);
-      const m = new THREE.Mesh(new THREE.BoxGeometry(70, 64, 20), [mat, mat, mat, mat, mat, mat]);
-      m.position.set(p.x, 32, p.y); m.rotation.y = Math.PI * 0.25; m.castShadow = m.receiveShadow = true; scene.add(m);
-      break;
-    }
-    case 'mirror': {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(48, 62), new THREE.MeshStandardMaterial({ map: mirrorTexture(), transparent: true, alphaTest: 0.05, roughness: 0.2, metalness: 0.5 }));
-      const c = GRID.cellAtPx(p.x, p.y);
-      m.position.set(p.x, 62, c.y - CELL / 2 + 4.5);   // flat on the square's north wall
-      scene.add(m);
-      w.mirror = m;
-      break;
-    }
-    case 'danceFloor': {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(170, 150), new THREE.MeshStandardMaterial({ map: danceFloorTexture(), transparent: true, depthWrite: false, roughness: 1 }));
-      m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.4, p.y); m.receiveShadow = true;
-      scene.add(m);
-      break;
-    }
-  }
+    picked.forEach(k => {
+      const [pw, ph, py] = PICTURE_SIZE[spec.kind];
+      const tex = spec.kind === 'portrait' ? portraitTexture(n) : spec.kind === 'landscape' ? landscapeTexture(n) : stillLifeTexture(n);
+      n++;
+      const inward = [-DIRS[k.d][0], -DIRS[k.d][1]], lean = wallLean(k.x, k.y);
+      const g = new THREE.Group();
+      g.position.set(k.x + inward[0] * (WALL_T / 2 + 1.2) + lean[0] * py / WALL_H, py, k.y + inward[1] * (WALL_T / 2 + 1.2) + lean[1] * py / WALL_H);
+      g.rotation.set(0, faceAway(k.d), (rand() - 0.5) * 0.07);     // every frame hangs a little crooked
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(pw + 6, ph + 6, 2), frameMat);
+      frame.castShadow = true; frame.receiveShadow = true;
+      g.add(frame);
+      const canvas = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
+      canvas.position.z = 1.05;
+      g.add(canvas);
+      w.scene.add(g);
+      hung.push(g);
+    });
+  });
+  return hung;
 }
 
 // An upright cut-out that turns to face you (main.js turns every one in
@@ -2704,9 +3261,9 @@ const CLUES = [
 
 // How high each thing's glint hangs (world units; the ceiling is WALL_H).
 const THING_HEIGHTS = {
-  petunia: 70, spirit_board: 46, harpsichord: 66, portraits: 80, peacock: 95, oven: 62, feast: 48,
+  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 95, oven: 62, feast: 38,
   staircase: 60, front_door: 72, chandelier: 92, fireplace: 50, landscapes: 80, mirror: 70,
-  collapsed_shelf: 45, tree: 95, bench: 30,
+  collapsed_shelf: 30, tree: 80, bench: 22,
 };
 
 // Things you can look at or use, and where they are (floor-plan pixels).
@@ -4497,14 +5054,14 @@ async function feastScene() {
   const result = await runEncounter(ENCOUNTERS.feast);
   if (result === 'released') {
     game.flags.feastDone = 'released';
-    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x5a5048), world.feastMat.needsUpdate = true);
+    setFeast('released');
     await ui.say('', 'The dishes settle onto the table one by one, and crumble, and are dust. Where the roast was, something glints among the ashes of the feast: a plain gold ring.');
     giveItem('ring', { quiet: true });
     addDread(-2);
   } else if (result === 'killed') {
     game.flags.feastDone = 'killed';
     game.crooked = (game.crooked || 0) + 1;
-    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x1a1410), world.feastMat.needsUpdate = true);
+    setFeast('killed');
     await ui.say('', 'When the fire dies, the table is scorched black. In the ash lies a gold ring, blistered by the heat. Somewhere in the walls, something sighs with pleasure.');
     giveItem('ring', { quiet: true });
   }
@@ -5485,9 +6042,11 @@ function buildGrounds() {
     scene.add(m);
     return m;
   };
+  const fixed = [];     // static parts, merged at the end (mergeStatic)
   const boxAt = (w, h, d, mat, x, y, z, rot = 0, shadow = true) => {
     const m = add(new THREE.BoxGeometry(w, h, d), mat, { shadow });
     m.position.set(x, y, z); m.rotation.y = rot;
+    fixed.push(m);
     return m;
   };
 
@@ -5496,9 +6055,12 @@ function buildGrounds() {
   const grass = grassTexture(); grass.repeat.set(330, 44);
   g.grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 1, side: THREE.DoubleSide });
   world.ground.geometry.dispose();
-  world.ground.geometry = new THREE.PlaneGeometry(50000, 6600);
+  // (In smaller pieces and a little below the floors, so a huge triangle's
+  // depth can never poke up through the house's floors.)
+  world.ground.geometry = new THREE.PlaneGeometry(50000, 6600, 100, 24);
   world.ground.material = g.grassMat;
-  world.ground.position.set(1000, -0.5, ARRIVAL.hillTop - 3300);
+  g.grassMat.polygonOffset = true; g.grassMat.polygonOffsetFactor = 2; g.grassMat.polygonOffsetUnits = 4;
+  world.ground.position.set(1000, -1.5, ARRIVAL.hillTop - 3300);
   const zFoot = ARRIVAL.hillTop - ARRIVAL.valley / ARRIVAL.hillDrop;
   const hill = quadBuilder();
   const gu = (x, z) => [x / 150, z / 150];
@@ -5740,6 +6302,7 @@ function buildGrounds() {
   const host = g.people.crookedHost.material;
   host.depthWrite = false; host.alphaTest = 0;
 
+  mergeStatic(scene, fixed);
   setTwist(1);
   showOutdoors(false);
 }
@@ -5959,7 +6522,7 @@ async function runArrival() {
     await caption('On the porch, the front door creaks open.');
     await beat(walkTo(592, 1262, 3600, 0));
     const start = GRID.at(game.cx, game.cy);
-    await beat(tween(1800, k => { A.close = k; arrival.cam.x = lerp(592, start.x, smooth(k)); arrival.cam.z = lerp(1262, start.y + 10, smooth(k)); arrival.cam.walking = k < 1; arrival.cam.pitch = lerp(0.1, -0.04, smooth(k)); }));
+    await beat(tween(1800, k => { A.close = k; arrival.cam.x = lerp(592, start.x, smooth(k)); arrival.cam.z = lerp(1262, start.y + CAM_BACK, smooth(k)); arrival.cam.walking = k < 1; arrival.cam.pitch = lerp(0.1, -0.04, smooth(k)); }));
   } catch (e) {
     if (e !== SKIP) console.error(e);
   }
@@ -6154,6 +6717,9 @@ function tickArrival(now, dt) {
 // storm, and the controls — keyboard, the on-screen pad, and the buttons.
 
 const STEP_MS = 230, TURN_MS = 190;
+// The eye sits this far back from the middle of its square, so the wall
+// ahead isn't right in your face (the wall behind is 24 away).
+const CAM_BACK = 17;
 let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
@@ -6247,7 +6813,7 @@ function addCharacters() {
   const glintMat = () => new THREE.MeshBasicMaterial({ map: glintTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   const glintTex = glintTexture();
   world.glints = THINGS.map(t => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), glintMat());
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), glintMat());
     m.position.set(t.x, t.h, t.y); m.userData.thing = t; m.userData.phase = (t.x * 7 + t.y * 13) % 6.28;
     world.scene.add(m);
     return m;
@@ -6418,7 +6984,7 @@ function loop(now) {
   const bump = bk < 1 ? Math.sin(bk * Math.PI) * 6 : 0;
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const cam = world.camera;
-  cam.position.set(px + fx * (bump - 10), EYE_H + bob, pz + fz * (bump - 10));
+  cam.position.set(px + fx * (bump - CAM_BACK), EYE_H + bob, pz + fz * (bump - CAM_BACK));
   cam.rotation.order = 'YXZ';
   cam.rotation.y = yaw;
   // Never quite level, in a house with no right angles. The cursed waltz
@@ -6511,7 +7077,7 @@ function loop(now) {
   // Quiet for the séance; the waltz drops back while you're at the keys
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : game.inFlashback ? 0.7 : 1);
-  if (game.flags.feastDone && world.feastMat.map) { world.feastMat.map = null; world.feastMat.color.set(game.flags.feastDone === 'killed' ? 0x1a1410 : 0x5a5048); world.feastMat.needsUpdate = true; }
+  if (game.flags.feastDone) setFeast(game.flags.feastDone);
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
@@ -6545,24 +7111,27 @@ function tickDoors(now) {
 // one you've already looked at stays faint. Each sits just in front of its
 // thing (towards you), so the thing itself can't hide it, while walls and
 // closed doors still do.
-const GLINT_RANGE = CELL * 5;
+const GLINT_RANGE = CELL * 3.5;
 function updateGlints(now, dt) {
   const cam = world.camera, quiet = busy();
   const faced = quiet ? null : thingAtHand();
+  const hereRoom = GRID.at(game.cx, game.cy).room;
   const k = Math.min(1, dt * 8);
   world.glints.forEach(g => {
     const t = g.userData.thing;
     const d = Math.hypot(t.x - cam.position.x, t.y - cam.position.z);
     let target = 0;
-    if (!quiet && d < GLINT_RANGE && thingAvailable(t)) {
+    // Only things in the room you're in (or the one you're facing).
+    const room = t.glintRoom ?? (t.glintRoom = GRID.cellAtPx(t.x, t.y)?.room ?? null);
+    if (!quiet && d < GLINT_RANGE && thingAvailable(t) && (t === faced || room === hereRoom)) {
       const seen = game.flags.examined && game.flags.examined[t.id];
       const pulse = 0.75 + 0.25 * Math.sin(now / 520 + g.userData.phase);
-      target = (t === faced ? 1 : seen ? 0.22 : 0.6 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
+      target = (t === faced ? 1 : seen ? 0.12 : 0.42 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
     }
     g.material.opacity += (target - g.material.opacity) * k;
     g.visible = g.material.opacity > 0.01;
     if (!g.visible) return;
-    const s = t === faced ? 1.5 + 0.1 * Math.sin(now / 180) : 1;
+    const s = t === faced ? 1.25 + 0.08 * Math.sin(now / 180) : 1;
     g.scale.setScalar(s);
     const len = Math.max(1, d), pull = Math.min(16, d * 0.4);
     g.position.set(t.x + (cam.position.x - t.x) / len * pull, t.h, t.y + (cam.position.z - t.y) / len * pull);
@@ -6686,7 +7255,7 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { renderer: () => renderer, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
 </script>
 </body>
 </html>

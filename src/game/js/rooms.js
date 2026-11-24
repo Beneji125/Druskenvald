@@ -89,14 +89,14 @@ async function feastScene() {
   const result = await runEncounter(ENCOUNTERS.feast);
   if (result === 'released') {
     game.flags.feastDone = 'released';
-    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x5a5048), world.feastMat.needsUpdate = true);
+    setFeast('released');
     await ui.say('', 'The dishes settle onto the table one by one, and crumble, and are dust. Where the roast was, something glints among the ashes of the feast: a plain gold ring.');
     giveItem('ring', { quiet: true });
     addDread(-2);
   } else if (result === 'killed') {
     game.flags.feastDone = 'killed';
     game.crooked = (game.crooked || 0) + 1;
-    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x1a1410), world.feastMat.needsUpdate = true);
+    setFeast('killed');
     await ui.say('', 'When the fire dies, the table is scorched black. In the ash lies a gold ring, blistered by the heat. Somewhere in the walls, something sighs with pleasure.');
     giveItem('ring', { quiet: true });
   }

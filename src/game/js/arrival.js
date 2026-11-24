@@ -90,9 +90,11 @@ function buildGrounds() {
     scene.add(m);
     return m;
   };
+  const fixed = [];     // static parts, merged at the end (mergeStatic)
   const boxAt = (w, h, d, mat, x, y, z, rot = 0, shadow = true) => {
     const m = add(new THREE.BoxGeometry(w, h, d), mat, { shadow });
     m.position.set(x, y, z); m.rotation.y = rot;
+    fixed.push(m);
     return m;
   };
 
@@ -101,9 +103,12 @@ function buildGrounds() {
   const grass = grassTexture(); grass.repeat.set(330, 44);
   g.grassMat = new THREE.MeshStandardMaterial({ map: grass, roughness: 1, side: THREE.DoubleSide });
   world.ground.geometry.dispose();
-  world.ground.geometry = new THREE.PlaneGeometry(50000, 6600);
+  // (In smaller pieces and a little below the floors, so a huge triangle's
+  // depth can never poke up through the house's floors.)
+  world.ground.geometry = new THREE.PlaneGeometry(50000, 6600, 100, 24);
   world.ground.material = g.grassMat;
-  world.ground.position.set(1000, -0.5, ARRIVAL.hillTop - 3300);
+  g.grassMat.polygonOffset = true; g.grassMat.polygonOffsetFactor = 2; g.grassMat.polygonOffsetUnits = 4;
+  world.ground.position.set(1000, -1.5, ARRIVAL.hillTop - 3300);
   const zFoot = ARRIVAL.hillTop - ARRIVAL.valley / ARRIVAL.hillDrop;
   const hill = quadBuilder();
   const gu = (x, z) => [x / 150, z / 150];
@@ -345,6 +350,7 @@ function buildGrounds() {
   const host = g.people.crookedHost.material;
   host.depthWrite = false; host.alphaTest = 0;
 
+  mergeStatic(scene, fixed);
   setTwist(1);
   showOutdoors(false);
 }
@@ -564,7 +570,7 @@ async function runArrival() {
     await caption('On the porch, the front door creaks open.');
     await beat(walkTo(592, 1262, 3600, 0));
     const start = GRID.at(game.cx, game.cy);
-    await beat(tween(1800, k => { A.close = k; arrival.cam.x = lerp(592, start.x, smooth(k)); arrival.cam.z = lerp(1262, start.y + 10, smooth(k)); arrival.cam.walking = k < 1; arrival.cam.pitch = lerp(0.1, -0.04, smooth(k)); }));
+    await beat(tween(1800, k => { A.close = k; arrival.cam.x = lerp(592, start.x, smooth(k)); arrival.cam.z = lerp(1262, start.y + CAM_BACK, smooth(k)); arrival.cam.walking = k < 1; arrival.cam.pitch = lerp(0.1, -0.04, smooth(k)); }));
   } catch (e) {
     if (e !== SKIP) console.error(e);
   }

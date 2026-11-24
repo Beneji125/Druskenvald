@@ -37,11 +37,11 @@ function artGrime(ctx, w, h, rand, amount = 1) {
 // room has its own paper; some get pictures hung on it.
 
 const ROOM_WALLS = {
-  parlor:       { paper: '#4a2b2b', motif: '#6b3d38', dado: '#2b1a12', pattern: 'damask' },
-  foyer:        { paper: '#1f2b23', motif: '#2d3d31', dado: '#22170f', pattern: 'stripe', pictures: 'portrait' },
-  gallery:      { paper: '#4b4741', motif: '#57524a', dado: '#2d241b', pattern: 'plain', pictures: 'landscape' },
+  parlor:       { paper: '#3e2826', motif: '#4c302c', dado: '#2b1a12', pattern: 'damask' },
+  foyer:        { paper: '#1f2b23', motif: '#26342a', dado: '#22170f', pattern: 'stripe' },
+  gallery:      { paper: '#46423c', motif: '#4e4a42', dado: '#2d241b', pattern: 'plain' },
   music:        { paper: '#1f2836', motif: '#2b3850', dado: '#1c1510', pattern: 'stripe' },
-  dining:       { paper: '#4a3a1e', motif: '#5e4a26', dado: '#2a1c10', pattern: 'damask' },
+  dining:       { paper: '#45361e', motif: '#524024', dado: '#2a1c10', pattern: 'damask' },
   kitchen:      { paper: '#5b574c', motif: '#6a6658', dado: '#4a4a44', pattern: 'tile' },
   hallway:      { paper: '#2d2016', motif: '#3a2a1c', dado: '#1f150d', pattern: 'panel' },
   conservatory: { paper: '#2f3a35', motif: '#3c4a42', dado: '#2b2a24', pattern: 'plain' },
@@ -72,35 +72,6 @@ function wallTexture(roomId, variant = 0) {
     ctx.lineWidth = 2;
     if (spec.pattern === 'panel') { ctx.strokeRect(14, 20, 100, 70); ctx.strokeRect(14, 100, 100, 66); }
     else for (let y = 0; y < 256; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y + 2); ctx.stroke(); }
-  }
-  // Pictures on the wall.
-  if (spec.pictures && rand() < 0.85) {
-    const pw = 44 + rand() * 20, ph = spec.pictures === 'portrait' ? 60 + rand() * 14 : 38 + rand() * 10;
-    const px = 64 - pw / 2 + (rand() - 0.5) * 16, py = 40 + rand() * 30;
-    ctx.save();
-    ctx.translate(px + pw / 2, py + ph / 2);
-    ctx.rotate((rand() - 0.5) * 0.12);        // every frame hangs a little crooked
-    ctx.translate(-pw / 2, -ph / 2);
-    ctx.fillStyle = '#6b5428'; ctx.fillRect(-5, -5, pw + 10, ph + 10);
-    ctx.fillStyle = '#3d2e14'; ctx.fillRect(-2, -2, pw + 4, ph + 4);
-    if (spec.pictures === 'portrait') {
-      ctx.fillStyle = '#1a1410'; ctx.fillRect(0, 0, pw, ph);
-      ctx.fillStyle = '#8a7a60';
-      ctx.beginPath(); ctx.ellipse(pw / 2, ph * 0.38, pw * 0.17, ph * 0.17, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2a2018';
-      ctx.beginPath(); ctx.ellipse(pw / 2, ph, pw * 0.38, ph * 0.38, 0, Math.PI, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#0a0806';                                      // wide, frightened eyes
-      ctx.beginPath(); ctx.arc(pw / 2 - 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.arc(pw / 2 + 4, ph * 0.36, 2.3, 0, Math.PI * 2); ctx.fill();
-    } else {
-      const sky = ctx.createLinearGradient(0, 0, 0, ph);
-      sky.addColorStop(0, '#3a3c48'); sky.addColorStop(1, '#5a4f3a');
-      ctx.fillStyle = sky; ctx.fillRect(0, 0, pw, ph);
-      ctx.fillStyle = '#2a2a22';
-      ctx.beginPath(); ctx.moveTo(0, ph * 0.7);
-      for (let x = 0; x <= pw; x += 6) ctx.lineTo(x, ph * (0.55 + rand() * 0.2));
-      ctx.lineTo(pw, ph); ctx.lineTo(0, ph); ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
   }
   // Dado, skirting, cornice.
   ctx.fillStyle = spec.dado; ctx.fillRect(0, 170, 128, 86);
@@ -166,7 +137,8 @@ function floorTexture(roomId) {
       ctx.fillStyle = (x + y) % 2 ? a : b;
       ctx.fillRect(x * s, y * s, s, s);
     }
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    for (let i = 0; i < 30; i++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? '0,0,0' : '255,240,220'},${(rand() * 0.06).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(rand() * 256, rand() * 256, 10 + rand() * 40, 6 + rand() * 24, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
     for (let i = 0; i < 14; i++) { ctx.beginPath(); let x = rand() * 256, y = rand() * 256; ctx.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rand() - 0.5) * 40; y += (rand() - 0.5) * 40; ctx.lineTo(x, y); } ctx.stroke(); }
   };
   const boards = (base, w = 32) => {
@@ -178,13 +150,15 @@ function floorTexture(roomId) {
       for (let k = 0; k < 6; k++) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(x + 4 + rand() * (w - 8), rand() * 256, 1, 20 + rand() * 60); }
     }
   };
-  if (roomId === 'foyer') tiles('#4b4440', '#2a2522');
-  else if (roomId === 'conservatory') tiles('#55534a', '#3a3a33');
+  if (roomId === 'foyer') tiles('#3c3632', '#2a2522');
+  else if (roomId === 'conservatory') tiles('#45443c', '#36362f');
   else if (roomId === 'kitchen') {
-    ctx.fillStyle = '#3f3a33'; ctx.fillRect(0, 0, 256, 256);
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 3;
-    for (let y = 0; y < 256; y += 42) for (let x = -20; x < 256; x += 60) ctx.strokeRect(x + ((y / 42) % 2) * 30 + rand() * 6, y + rand() * 4, 56, 40);
-    for (let i = 0; i < 60; i++) { ctx.fillStyle = `rgba(${170 + rand() * 60},${150 + rand() * 50},120,0.5)`; ctx.fillRect(rand() * 256, rand() * 256, 3 + rand() * 6, 2 + rand() * 4); } // broken crockery
+    // flagstones, each a slightly different grey
+    ctx.fillStyle = '#211d19'; ctx.fillRect(0, 0, 256, 256);
+    for (let y = 0; y < 256; y += 64) for (let x = 0; x < 256; x += 64) {
+      const o = ((y / 64) % 2) * 32, v = 52 + rand() * 16;
+      [[x + o, y], [x + o - 256, y]].forEach(([fx, fy]) => { ctx.fillStyle = `rgb(${v},${v - 4},${v - 9})`; ctx.fillRect(fx + 2, fy + 2, 60, 60); });
+    }
   }
   else if (roomId === 'porch') boards('#2b231c', 24);
   else if (roomId === 'music') boards('#2c2018');
@@ -206,14 +180,33 @@ function danceFloorTexture() {
   return artTexture(c);
 }
 
+// The glasshouse roof's iron glazing bars; drawn the same on its picture
+// and on its glow mask, so lightning lights the panes and not the iron.
+function glassFrames(ctx, colour) {
+  ctx.fillStyle = colour;
+  for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, x % 128 ? 3 : 8, 256);
+  for (let y = 0; y < 256; y += 64) ctx.fillRect(0, y, 256, y % 128 ? 3 : 8);
+}
+function glassGlowTexture() {
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 256, 256);
+  glassFrames(ctx, '#000');
+  return artTexture(c, { repeat: true, srgb: false });
+}
+
 function ceilingTexture(kind) {
   const [c, ctx] = artCanvas(256, 256);
   const rand = seededRandom(kind.length * 11);
   if (kind === 'glass') {
-    ctx.fillStyle = '#0a1016'; ctx.fillRect(0, 0, 256, 256);
-    ctx.fillStyle = '#1e1a16';
-    for (let x = 0; x < 256; x += 64) ctx.fillRect(x, 0, 6, 256);
-    for (let y = 0; y < 256; y += 64) ctx.fillRect(0, y, 256, 6);
+    const g = ctx.createLinearGradient(0, 0, 256, 256);
+    g.addColorStop(0, '#0c1218'); g.addColorStop(1, '#070a0e');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = 'rgba(150,170,200,0.18)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 70; i++) { const x = rand() * 256, y = rand() * 256; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1, y + 5 + rand() * 12); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(20,30,18,0.5)';
+    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.ellipse(rand() * 256, rand() * 256, 14 + rand() * 20, 6 + rand() * 10, rand() * 3, 0, Math.PI * 2); ctx.fill(); }   // leaves on the glass
+    ctx.fillStyle = '#16120e';
+    glassFrames(ctx, '#16120e');
     return artTexture(c, { repeat: true });
   }
   ctx.fillStyle = kind === 'porch' ? '#1d1712' : '#25201b'; ctx.fillRect(0, 0, 256, 256);
@@ -404,7 +397,7 @@ function brickTexture() {
   const rand = seededRandom(12);
   ctx.fillStyle = '#1c120c'; ctx.fillRect(0, 0, 128, 128);
   for (let y = 0; y < 128; y += 12) for (let x = -12; x < 128; x += 26) {
-    ctx.fillStyle = `rgb(${90 + rand() * 40},${40 + rand() * 20},${30 + rand() * 15})`;
+    ctx.fillStyle = `rgb(${64 + rand() * 26},${36 + rand() * 14},${30 + rand() * 10})`;
     ctx.fillRect(x + ((y / 12) % 2) * 13, y + 1, 24, 10);
   }
   return artTexture(c);
@@ -485,23 +478,11 @@ function fireplaceTextures() {
   return { map: artTexture(c), glow: artTexture(m) };
 }
 
-// The long dining table's cloth, laid for the feast.
-function feastTexture() {
-  const [c, ctx] = artCanvas(128, 256);
-  const rand = seededRandom(21);
-  ctx.fillStyle = '#d8d2c2'; ctx.fillRect(0, 0, 128, 256);
-  for (let i = 0; i < 8; i++) { const x = i % 2 ? 98 : 30, y = 30 + Math.floor(i / 2) * 60; ctx.fillStyle = '#f2efe6'; ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#999'; ctx.stroke(); }
-  ctx.fillStyle = '#a0a4a8'; ctx.beginPath(); ctx.ellipse(64, 128, 26, 40, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#8a4a1c'; ctx.beginPath(); ctx.ellipse(64, 128, 18, 30, 0, 0, Math.PI * 2); ctx.fill();          // the roast
-  for (let i = 0; i < 14; i++) { ctx.fillStyle = ['#8a1a1a', '#3a6a2a', '#c9a040', '#6a2a5a'][i % 4]; ctx.beginPath(); ctx.arc(20 + rand() * 88, 10 + rand() * 236, 4 + rand() * 4, 0, Math.PI * 2); ctx.fill(); }
-  return artTexture(c);
-}
-
 // Harpsichord: lacquered case with yellowed keys along its front.
 function harpsichordFrontTexture() {
   const [c, ctx] = artCanvas(256, 64);
   ctx.fillStyle = '#2a1a10'; ctx.fillRect(0, 0, 256, 64);
-  ctx.fillStyle = '#d8c89a'; ctx.fillRect(10, 8, 236, 26);
+  ctx.fillStyle = '#8a7e60'; ctx.fillRect(10, 8, 236, 26);
   ctx.fillStyle = '#111';
   for (let x = 10; x < 246; x += 11) { ctx.fillRect(x, 8, 1, 26); if ((x / 11) % 7 !== 2 && (x / 11) % 7 !== 6) ctx.fillRect(x + 7, 8, 5, 15); }
   return artTexture(c);
@@ -793,5 +774,125 @@ function lampGlowTexture() {
   const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
   g.addColorStop(0, 'rgba(255,230,170,1)'); g.addColorStop(0.3, 'rgba(255,190,110,0.6)'); g.addColorStop(1, 'rgba(255,160,80,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, 32, 32);
+  return artTexture(c);
+}
+
+
+// ─── Furniture (furniture.js) ─────────────────────────────────────────
+
+// Upholstery: a faded weave in one colour, worn paler in places.
+function fabricTexture(base) {
+  const [c, ctx] = artCanvas(64, 64);
+  const rand = seededRandom(base.charCodeAt(1) * 7 + base.charCodeAt(3));
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 64, 64);
+  for (let y = 0; y < 64; y += 2) { ctx.fillStyle = `rgba(0,0,0,${(0.05 + rand() * 0.06).toFixed(3)})`; ctx.fillRect(0, y, 64, 1); }
+  for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(255,240,220,0.05)'; ctx.beginPath(); ctx.ellipse(rand() * 64, rand() * 64, 6 + rand() * 10, 4 + rand() * 6, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// Grey dressed stone, in blocks; with moss, for the garden bench.
+function stoneTexture(moss = false) {
+  const [c, ctx] = artCanvas(128, 128);
+  const rand = seededRandom(moss ? 44 : 43);
+  ctx.fillStyle = '#2a2724'; ctx.fillRect(0, 0, 128, 128);
+  if (moss) { ctx.fillStyle = '#58544c'; ctx.fillRect(0, 0, 128, 128); }
+  else for (let y = 0; y < 128; y += 32) for (let x = -32; x < 128; x += 64) {
+    const v = 78 + rand() * 18;
+    ctx.fillStyle = `rgb(${v},${v - 4},${v - 10})`; ctx.fillRect(x + ((y / 32) % 2) * 32 + 1, y + 1, 62, 30);
+  }
+  artGrime(ctx, 128, 128, rand, 0.8);
+  if (moss) for (let i = 0; i < 26; i++) { ctx.fillStyle = `rgba(${50 + rand() * 20},${74 + rand() * 20},${36},0.45)`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 128, 4 + rand() * 14, 3 + rand() * 8, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// The dining table's cloth: old linen, yellowed, with wine stains.
+function tableclothTexture() {
+  const [c, ctx] = artCanvas(128, 256);
+  const rand = seededRandom(27);
+  ctx.fillStyle = '#767062'; ctx.fillRect(0, 0, 128, 256);
+  ctx.strokeStyle = 'rgba(60,50,40,0.25)'; ctx.lineWidth = 2; ctx.strokeRect(5, 5, 118, 246);
+  for (let i = 0; i < 18; i++) { ctx.fillStyle = `rgba(${rand() < 0.5 ? '60,50,36' : '255,250,235'},${(rand() * 0.08).toFixed(3)})`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 256, 8 + rand() * 20, 6 + rand() * 14, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  for (let i = 0; i < 10; i++) { ctx.fillStyle = `rgba(80,20,24,${(0.15 + rand() * 0.2).toFixed(2)})`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 256, 3 + rand() * 9, 2 + rand() * 6, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c);
+}
+
+// Leaves, dense and glossy, for the bergamot tree's crown.
+function leafTexture() {
+  const [c, ctx] = artCanvas(64, 64);
+  const rand = seededRandom(33);
+  ctx.fillStyle = '#1c3218'; ctx.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < 60; i++) { const v = rand(); ctx.fillStyle = v < 0.4 ? '#2e4e26' : v < 0.8 ? '#24401e' : '#3e5e2e'; ctx.beginPath(); ctx.ellipse(rand() * 64, rand() * 64, 5, 2.4, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
+  return artTexture(c, { repeat: true });
+}
+
+// Flames for the hearth: lit by setHearth (story.js) through emissive.
+function fireTexture() {
+  const [c, ctx] = artCanvas(64, 64);
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 64, 64);
+  const g = ctx.createRadialGradient(32, 60, 2, 32, 50, 30);
+  g.addColorStop(0, '#fff'); g.addColorStop(0.35, '#c86'); g.addColorStop(1, '#000');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.moveTo(8, 64); for (let x = 8; x <= 56; x += 6) ctx.lineTo(x, 26 + Math.abs(Math.sin(x * 0.7)) * 22); ctx.lineTo(56, 64); ctx.closePath(); ctx.fill();
+  return artTexture(c);
+}
+
+// ─── Pictures on the walls (world.js hangs them) ──────────────────────
+
+// A family portrait, each one different: someone in dark clothes against a
+// darker ground, eyes a little too wide.
+function portraitTexture(seed) {
+  const [c, ctx] = artCanvas(96, 128);
+  const rand = seededRandom(seed * 19 + 3);
+  const bg = ctx.createRadialGradient(48, 50, 4, 48, 60, 80);
+  bg.addColorStop(0, ['#3a3226', '#2a2e28', '#36282a', '#2c2a34'][seed % 4]); bg.addColorStop(1, '#0e0c0a');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 96, 128);
+  const skin = ['#9a826a', '#a88c70', '#8a7460', '#b09478'][Math.floor(rand() * 4)];
+  const coat = ['#1e1a18', '#2a1e1a', '#1a2026', '#2a2620', '#3a2a2a'][Math.floor(rand() * 5)];
+  const hair = ['#1a1410', '#3a2a1a', '#6a6258', '#4a3020', '#2a2220'][Math.floor(rand() * 5)];
+  const woman = rand() < 0.5, child = rand() < 0.2;
+  const hx = 48, hy = child ? 58 : 48, hr = child ? 12 : 14;
+  ctx.fillStyle = coat; ctx.beginPath(); ctx.ellipse(48, 128, child ? 26 : 36, child ? 44 : 52, 0, Math.PI, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = woman ? '#cfc6b0' : '#d8d0c0'; ctx.beginPath(); ctx.moveTo(42, hy + hr + 4); ctx.lineTo(48, hy + hr + 14); ctx.lineTo(54, hy + hr + 4); ctx.fill();   // collar
+  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(hx, hy, hr * 0.85, hr, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = hair;
+  if (woman) { ctx.beginPath(); ctx.ellipse(hx, hy - 4, hr * 0.95, hr * 0.8, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.fill(); ctx.beginPath(); ctx.arc(hx, hy - hr - 2, 6, 0, Math.PI * 2); ctx.fill(); }
+  else { ctx.beginPath(); ctx.ellipse(hx, hy - 6, hr * 0.9, hr * 0.6, 0, Math.PI, Math.PI * 2); ctx.fill(); if (rand() < 0.4) { ctx.beginPath(); ctx.ellipse(hx, hy + hr * 0.6, hr * 0.55, hr * 0.4, 0, 0, Math.PI); ctx.fill(); } }
+  ctx.fillStyle = '#f0e8d8'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx, hy - 1, 2.6, 0, Math.PI * 2); ctx.fill(); });   // the whites of the eyes
+  ctx.fillStyle = '#0a0806'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx + (rand() - 0.5), hy - 1, 1.2, 0, Math.PI * 2); ctx.fill(); });
+  ctx.strokeStyle = 'rgba(30,20,14,0.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx - 3, hy + 7); ctx.lineTo(hx + 3, hy + 7); ctx.stroke();
+  artGrime(ctx, 96, 128, rand, 0.4);
+  // old varnish
+  ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 96, 128);
+  return artTexture(c);
+}
+
+// A landscape: moor, lake or wood under a heavy sky, each different.
+function landscapeTexture(seed) {
+  const [c, ctx] = artCanvas(160, 112);
+  const rand = seededRandom(seed * 23 + 5);
+  const sky = ctx.createLinearGradient(0, 0, 0, 70);
+  const tops = [['#4a4e5a', '#8a7a5a'], ['#3a4250', '#6a6a64'], ['#5a4a46', '#9a7a52'], ['#2e3440', '#5a5e5a']][seed % 4];
+  sky.addColorStop(0, tops[0]); sky.addColorStop(1, tops[1]);
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 160, 112);
+  const band = (y0, amp, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, 112); for (let x = 0; x <= 160; x += 8) ctx.lineTo(x, y0 + Math.sin(x * 0.04 + rand() * 6) * amp + rand() * amp * 0.5); ctx.lineTo(160, 112); ctx.closePath(); ctx.fill(); };
+  band(56, 8, '#3e4038'); band(68, 6, '#34362c');
+  if (seed % 3 === 1) { ctx.fillStyle = '#4a5462'; ctx.fillRect(0, 78, 160, 10); }      // a lake
+  band(84, 5, '#2a2a20');
+  if (seed % 3 === 2) for (let i = 0; i < 9; i++) { const x = rand() * 160; ctx.fillStyle = '#1e2018'; ctx.beginPath(); ctx.moveTo(x, 90); ctx.lineTo(x + 6, 56 + rand() * 14); ctx.lineTo(x + 12, 90); ctx.fill(); }
+  artGrime(ctx, 160, 112, rand, 0.4);
+  ctx.fillStyle = 'rgba(80,60,20,0.16)'; ctx.fillRect(0, 0, 160, 112);
+  return artTexture(c);
+}
+
+// A still life for the dining room and parlour: fruit, a jug, a dead bird.
+function stillLifeTexture(seed) {
+  const [c, ctx] = artCanvas(128, 96);
+  const rand = seededRandom(seed * 29 + 7);
+  ctx.fillStyle = '#1a140e'; ctx.fillRect(0, 0, 128, 96);
+  ctx.fillStyle = '#3a2a1a'; ctx.fillRect(0, 62, 128, 34);
+  ctx.fillStyle = '#5a4a32'; ctx.beginPath(); ctx.ellipse(40, 46, 13, 18, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(34, 26, 12, 6);
+  ['#6a2a1e', '#7a6a2a', '#4a2a3a', '#6a4a1a'].forEach((col, i) => { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(66 + i * 10 + rand() * 4, 60 - (i % 2) * 6, 6, 0, Math.PI * 2); ctx.fill(); });
+  if (seed % 2) { ctx.fillStyle = '#4a4a42'; ctx.beginPath(); ctx.ellipse(100, 70, 14, 6, 0.3, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 128, 96);
   return artTexture(c);
 }

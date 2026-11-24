@@ -3,6 +3,9 @@
 // storm, and the controls — keyboard, the on-screen pad, and the buttons.
 
 const STEP_MS = 230, TURN_MS = 190;
+// The eye sits this far back from the middle of its square, so the wall
+// ahead isn't right in your face (the wall behind is 24 away).
+const CAM_BACK = 17;
 let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
@@ -96,7 +99,7 @@ function addCharacters() {
   const glintMat = () => new THREE.MeshBasicMaterial({ map: glintTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   const glintTex = glintTexture();
   world.glints = THINGS.map(t => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), glintMat());
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), glintMat());
     m.position.set(t.x, t.h, t.y); m.userData.thing = t; m.userData.phase = (t.x * 7 + t.y * 13) % 6.28;
     world.scene.add(m);
     return m;
@@ -267,7 +270,7 @@ function loop(now) {
   const bump = bk < 1 ? Math.sin(bk * Math.PI) * 6 : 0;
   const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
   const cam = world.camera;
-  cam.position.set(px + fx * (bump - 10), EYE_H + bob, pz + fz * (bump - 10));
+  cam.position.set(px + fx * (bump - CAM_BACK), EYE_H + bob, pz + fz * (bump - CAM_BACK));
   cam.rotation.order = 'YXZ';
   cam.rotation.y = yaw;
   // Never quite level, in a house with no right angles. The cursed waltz
@@ -360,7 +363,7 @@ function loop(now) {
   // Quiet for the séance; the waltz drops back while you're at the keys
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : game.inFlashback ? 0.7 : 1);
-  if (game.flags.feastDone && world.feastMat.map) { world.feastMat.map = null; world.feastMat.color.set(game.flags.feastDone === 'killed' ? 0x1a1410 : 0x5a5048); world.feastMat.needsUpdate = true; }
+  if (game.flags.feastDone) setFeast(game.flags.feastDone);
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
@@ -394,24 +397,27 @@ function tickDoors(now) {
 // one you've already looked at stays faint. Each sits just in front of its
 // thing (towards you), so the thing itself can't hide it, while walls and
 // closed doors still do.
-const GLINT_RANGE = CELL * 5;
+const GLINT_RANGE = CELL * 3.5;
 function updateGlints(now, dt) {
   const cam = world.camera, quiet = busy();
   const faced = quiet ? null : thingAtHand();
+  const hereRoom = GRID.at(game.cx, game.cy).room;
   const k = Math.min(1, dt * 8);
   world.glints.forEach(g => {
     const t = g.userData.thing;
     const d = Math.hypot(t.x - cam.position.x, t.y - cam.position.z);
     let target = 0;
-    if (!quiet && d < GLINT_RANGE && thingAvailable(t)) {
+    // Only things in the room you're in (or the one you're facing).
+    const room = t.glintRoom ?? (t.glintRoom = GRID.cellAtPx(t.x, t.y)?.room ?? null);
+    if (!quiet && d < GLINT_RANGE && thingAvailable(t) && (t === faced || room === hereRoom)) {
       const seen = game.flags.examined && game.flags.examined[t.id];
       const pulse = 0.75 + 0.25 * Math.sin(now / 520 + g.userData.phase);
-      target = (t === faced ? 1 : seen ? 0.22 : 0.6 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
+      target = (t === faced ? 1 : seen ? 0.12 : 0.42 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
     }
     g.material.opacity += (target - g.material.opacity) * k;
     g.visible = g.material.opacity > 0.01;
     if (!g.visible) return;
-    const s = t === faced ? 1.5 + 0.1 * Math.sin(now / 180) : 1;
+    const s = t === faced ? 1.25 + 0.08 * Math.sin(now / 180) : 1;
     g.scale.setScalar(s);
     const len = Math.max(1, d), pull = Math.min(16, d * 0.4);
     g.position.set(t.x + (cam.position.x - t.x) / len * pull, t.h, t.y + (cam.position.z - t.y) / len * pull);
@@ -535,4 +541,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { renderer: () => renderer, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

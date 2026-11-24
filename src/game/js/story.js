@@ -34,9 +34,9 @@ const CLUES = [
 
 // How high each thing's glint hangs (world units; the ceiling is WALL_H).
 const THING_HEIGHTS = {
-  petunia: 70, spirit_board: 46, harpsichord: 66, portraits: 80, peacock: 95, oven: 62, feast: 48,
+  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 95, oven: 62, feast: 38,
   staircase: 60, front_door: 72, chandelier: 92, fireplace: 50, landscapes: 80, mirror: 70,
-  collapsed_shelf: 45, tree: 95, bench: 30,
+  collapsed_shelf: 30, tree: 80, bench: 22,
 };
 
 // Things you can look at or use, and where they are (floor-plan pixels).

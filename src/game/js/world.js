@@ -6,41 +6,46 @@
 // Every wall leans a little at the top and the camera never sits quite
 // level: there isn't a right angle anywhere in the Crooked House.
 
-// Furniture and fixtures, in floor-plan pixels. Sprite kinds are upright
-// pictures (art.js SPRITES); the rest are simple shapes. `block` keeps the
-// player out of the squares it covers: `r` is a radius around the centre,
-// `rect` is [width, depth].
+// Furniture and fixtures, in floor-plan pixels (built in furniture.js).
+// `block` keeps the player out of the squares it covers: `r` is a radius
+// around the centre (or around `at`), `rect` is [width, depth]. `snap`
+// puts a piece flat against its nearest wall, facing into the room; `rot`
+// turns one by hand (its front faces +y at 0).
+const ringOfChairs = (cx, cy, r, n, cloth) => [...Array(n)].map((_, i) => {
+  const a = i * Math.PI * 2 / n, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+  return { kind: 'chair', x, y, rot: faceTowards(x, y, cx, cy), cloth };
+});
 const SCENERY = [
   // Parlour
   { kind: 'roundTable', x: 505, y: 630, block: { r: 30 } },
-  ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ kind: 'chair', x: 505 + Math.cos(i * Math.PI / 4) * 74, y: 630 + Math.sin(i * Math.PI / 4) * 74 })),
-  { kind: 'fireplace', x: 340, y: 742, wall: 3 },
-  { kind: 'sofa', x: 312, y: 590 },
+  ...ringOfChairs(505, 630, 46, 8, CLOTH.parlor),
+  { kind: 'fireplace', x: 352, y: 752, snap: true },
+  { kind: 'sofa', x: 312, y: 590, snap: true, cloth: CLOTH.parlor, len: 64 },
   // Foyer
   { kind: 'chandelier', x: 535, y: 950 },
-  { kind: 'stairs', x: 640, y: 845, block: { rect: [60, 110] } },
+  { kind: 'stairs', x: 652, y: 896, block: { rect: [60, 110], at: [640, 845] } },
   // Gallery
-  ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y })),
+  ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y, rot: faceTowards(x, y, 270, 905) })),
   { kind: 'peacock', x: 152, y: 930, block: { r: 20 } },
   // Music room
-  { kind: 'harpsichord', x: 965, y: 845, block: { r: 30 } },
+  { kind: 'harpsichord', x: 965, y: 845, rot: faceTowards(965, 845, 850, 925), block: { r: 30 } },
   { kind: 'mirror', x: 845, y: 802, wall: 0 },
-  { kind: 'sofa', x: 790, y: 880 },
-  { kind: 'sofa', x: 960, y: 1035 },
-  { kind: 'harp', x: 880, y: 1035 },
+  { kind: 'sofa', x: 790, y: 880, snap: true, cloth: CLOTH.music },
+  { kind: 'sofa', x: 960, y: 1035, snap: true, cloth: CLOTH.music },
+  { kind: 'harp', x: 880, y: 1032, rot: Math.PI },
   { kind: 'danceFloor', x: 850, y: 925 },
   // Dining room
   { kind: 'diningTable', x: 865, y: 650, block: { rect: [80, 180] } },
-  ...[[810, 590], [810, 650], [810, 710], [920, 590], [920, 650], [920, 710], [865, 545], [865, 755]].map(([x, y]) => ({ kind: 'chair', x, y })),
-  { kind: 'sideboard', x: 990, y: 650 },
+  ...[[808, 590], [808, 650], [808, 710], [922, 590], [922, 650], [922, 710], [865, 544], [865, 756]].map(([x, y]) => ({ kind: 'chair', x, y, rot: faceTowards(x, y, 865, y === 544 || y === 756 ? 650 : y), cloth: CLOTH.dining })),
+  { kind: 'sideboard', x: 990, y: 650, snap: true },
   // Kitchen
   { kind: 'oven', x: 975, y: 440, block: { r: 30 } },
   { kind: 'fallenShelf', x: 880, y: 262, block: { r: 30 } },
   { kind: 'barrel', x: 724, y: 252 },
-  { kind: 'chair', x: 470, y: 1135 },   // the porch's rocking chair
+  { kind: 'chair', x: 470, y: 1135, rocking: true, rot: 0, cloth: CLOTH.porch },   // the porch's rocking chair
   // Conservatory
   { kind: 'tree', x: 490, y: 300, block: { r: 40 } },
-  { kind: 'bench', x: 520, y: 480, rot: 0 },
+  { kind: 'bench', x: 520, y: 480, rot: Math.PI },
   { kind: 'bench', x: 350, y: 300, rot: Math.PI / 2 },
   { kind: 'shrub', x: 330, y: 440 }, { kind: 'shrub', x: 650, y: 230 }, { kind: 'shrub', x: 330, y: 160 }, { kind: 'shrub', x: 640, y: 160 },
 ];
@@ -72,11 +77,13 @@ function buildWorld(renderer, quality) {
   const flash = { value: 0 };
   const w = { scene, camera, flash, sprites: [], fixedLights: [], windowMats: [], hearthMats: [], disposables: [] };
   world = w;
+  const fixtures = [];      // static parts, merged at the end (mergeStatic)
   const box = (wd, h, d, mat, x, y, z, rotY = 0) => {
     const m = new THREE.Mesh(new THREE.BoxGeometry(wd, h, d), mat);
     m.position.set(x, y, z); m.rotation.y = rotY;
     m.castShadow = m.receiveShadow = true;
     scene.add(m);
+    fixtures.push(m);
     return m;
   };
 
@@ -248,7 +255,7 @@ function buildWorld(renderer, quality) {
   });
   Object.entries(ceilQuads).forEach(([kind, list]) => {
     const m = ceilMats[kind] || (ceilMats[kind] = new THREE.MeshStandardMaterial({ map: ceilingTexture(kind), roughness: 1, metalness: 0,
-      emissive: kind === 'glass' ? 0x9fb4d8 : 0x000000, emissiveIntensity: 0 }));
+      emissive: kind === 'glass' ? 0x9fb4d8 : 0x000000, emissiveMap: kind === 'glass' ? glassGlowTexture() : null, emissiveIntensity: 0 }));
     if (kind === 'glass') w.windowMats.push(m);
     scene.add(new THREE.Mesh(flatGeo(list, WALL_H, true), m));
   });
@@ -296,18 +303,21 @@ function buildWorld(renderer, quality) {
   // ── Furniture ──
   GRID.cells.forEach(c => { c.blocked = false; });
   // The pieces added for search spots (items.js), against their walls.
-  [...SEARCHES.filter(s => s.prop), PUMP].forEach(s => addScenery(w, { kind: s.prop, x: s.x, y: s.y, rot: s.wallDir % 2 ? Math.PI / 2 : 0 }, box));
+  [...SEARCHES.filter(s => s.prop), PUMP].forEach(s => fixtures.push(addScenery(w, { kind: s.prop, x: s.x, y: s.y, rot: s.wallDir === undefined ? 0 : faceAway(s.wallDir) })));
   SCENERY.forEach(p => {
-    addScenery(w, p, box);
+    fixtures.push(addScenery(w, p));
     if (p.block) {
+      const [bx, by] = p.block.at || [p.x, p.y];
       GRID.cells.forEach(c => {
         if (!c.walk) return;
-        const inR = p.block.r !== undefined && Math.hypot(c.x - p.x, c.y - p.y) < p.block.r + CELL / 2;
-        const inRect = p.block.rect && Math.abs(c.x - p.x) < p.block.rect[0] / 2 && Math.abs(c.y - p.y) < p.block.rect[1] / 2;
+        const inR = p.block.r !== undefined && Math.hypot(c.x - bx, c.y - by) < p.block.r + CELL / 2;
+        const inRect = p.block.rect && Math.abs(c.x - bx) < p.block.rect[0] / 2 && Math.abs(c.y - by) < p.block.rect[1] / 2;
         if (inR || inRect) c.blocked = true;
       });
     }
   });
+  fixtures.push(...hangPictures(w));
+  mergeStatic(scene, fixtures);
 
   // Things drawn straight onto a wall (e.g. the hallway scratches). Shown
   // or hidden each frame by the main loop, for things only Dread reveals.
@@ -375,173 +385,70 @@ function wallLean(x, z) {
   return [Math.sin(x * 0.013 + z * 0.007) * 3 + Math.sin(z * 0.031) * 1.2, Math.cos(z * 0.011 - x * 0.005) * 3 + Math.sin(x * 0.027) * 1.2];
 }
 
-function addScenery(w, p, box) {
-  const { scene } = w;
-  if (SPRITES[p.kind]) {
-    w.sprites.push(addSprite(scene, p.kind, p.x, p.y));
-    return;
-  }
-  const wood = c => new THREE.MeshStandardMaterial({ map: woodTexture(c), roughness: 0.75 });
-  switch (p.kind) {
-    case 'roundTable': {
-      const top = new THREE.Mesh(new THREE.CylinderGeometry(32, 32, 4, 32), wood('#3a2212'));
-      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
-      // The spirit board and its planchette, lying on the table: the same
-      // artwork the séance uses. The board faces whoever sits on the
-      // fireplace side.
-      const lay = (src, wd, dp, y, glow) => {
-        const img = new Image();
-        const tex = new THREE.CanvasTexture(img);
-        tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-        img.onload = () => { tex.needsUpdate = true; };
-        img.src = src;
-        const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.2, roughness: 0.6, emissive: glow ? 0x9a70ff : 0x000000, emissiveMap: glow ? tex : null, emissiveIntensity: glow ? 0.12 : 0 });
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), mat);
-        m.rotation.x = -Math.PI / 2;
-        m.receiveShadow = true;
-        scene.add(m);
-        return m;
-      };
-      const board = lay('explore/Ouija_Board.webp', 34, 34 * 2000 / 1539, 40.1, true);
-      board.position.set(p.x, 40.1, p.y);
-      board.rotation.z = Math.PI * 0.75;
-      w.boardMat = board.material;
-      const pl = lay('explore/Planchette.webp', 7, 7 * 1078 / 621, 40.3, false);
-      pl.position.set(p.x + 3, 40.3, p.y - 2);
-      pl.rotation.z = Math.PI * 0.6;
-      box(10, 36, 10, wood('#2a180c'), p.x, 18, p.y);
-      break;
-    }
-    case 'diningTable': {
-      const feastMat = new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 });
-      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), feastMat, wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
-      top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
-      w.feastMat = feastMat;
-      [[-34, -84], [34, -84], [-34, 84], [34, 84]].forEach(([dx, dz]) => box(6, 36, 6, wood('#2a180c'), p.x + dx, 18, p.y + dz));
-      break;
-    }
-    case 'sideboard': box(30, 44, 120, wood('#33200f'), p.x, 22, p.y); break;
-    // Search-spot furniture: each is drawn along its wall (`rot` turns it
-    // to an east or west wall).
-    case 'console': {
-      const m = wood('#3a2414');
-      box(48, 4, 18, m, p.x, 40, p.y, p.rot);
-      box(44, 10, 16, wood('#2e1c0e'), p.x, 33, p.y, p.rot);
-      const off = [[-20, -6], [20, -6], [-20, 6], [20, 6]];
-      off.forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, m, p.x + x, 15, p.y + z); });
-      break;
-    }
-    case 'umbrellas': {
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 26, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a3a, roughness: 0.8 }));
-      pot.position.set(p.x, 13, p.y); pot.castShadow = pot.receiveShadow = true; scene.add(pot);
-      [[-2, 0.15], [2, -0.1], [0, 0.3]].forEach(([dx, tilt]) => { const u = box(1.5, 44, 1.5, new THREE.MeshStandardMaterial({ color: 0x1a1612 }), p.x + dx, 30, p.y); u.rotation.z = tilt; });
-      break;
-    }
-    case 'sconce': {
-      const brass = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, roughness: 0.4, metalness: 0.7 });
-      box(10, 3, 8, brass, p.x, 62, p.y, p.rot);
-      const glass = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 4.5, 12, 10), new THREE.MeshStandardMaterial({ color: 0xa0a890, roughness: 0.2, transparent: true, opacity: 0.5 }));
-      glass.position.set(p.x, 70, p.y); scene.add(glass);
-      break;
-    }
-    case 'woodbasket': box(30, 16, 20, new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 }), p.x, 8, p.y, p.rot); break;
-    case 'cupboard': {
-      box(46, 70, 22, wood('#3a2616'), p.x, 35, p.y, p.rot);
-      const [x, z] = turnXZ(0, 11.5, p.rot);
-      box(42, 2, 1, wood('#1e140a'), p.x + x, 36, p.y + z, p.rot);
-      break;
-    }
-    case 'pottingBench': {
-      box(50, 4, 22, wood('#4a3a28'), p.x, 30, p.y, p.rot);
-      [[-22, -8], [22, -8], [-22, 8], [22, 8]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); box(3, 30, 3, wood('#3a2a1a'), p.x + x, 15, p.y + z); });
-      [[-14, 0], [2, 3], [15, -2]].forEach(([a, b]) => { const [x, z] = turnXZ(a, b, p.rot); const pot = new THREE.Mesh(new THREE.CylinderGeometry(5, 4, 8, 10), new THREE.MeshStandardMaterial({ color: 0x8a4a2a, roughness: 1 })); pot.position.set(p.x + x, 36, p.y + z); pot.castShadow = true; scene.add(pot); });
-      break;
-    }
-    case 'cabinet': {
-      box(36, 64, 18, wood('#2e1c0e'), p.x, 32, p.y, p.rot);
-      const [x, z] = turnXZ(0, 9.2, p.rot);
-      const glass = box(30, 40, 0.5, new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 }), p.x + x, 40, p.y + z, p.rot);
-      glass.castShadow = false;
-      break;
-    }
-    case 'musicStand': {
-      const brass = new THREE.MeshStandardMaterial({ color: 0x9a7a3a, roughness: 0.4, metalness: 0.7 });
-      box(2, 44, 2, brass, p.x, 22, p.y);
-      const desk = box(26, 18, 1.5, brass, p.x, 50, p.y, p.rot); desk.rotateX(-0.35);
-      break;
-    }
-    case 'pump': {
-      box(30, 20, 24, new THREE.MeshStandardMaterial({ color: 0x5a5650, roughness: 0.9 }), p.x, 30, p.y, p.rot);
-      const iron = new THREE.MeshStandardMaterial({ color: 0x2a2826, roughness: 0.5, metalness: 0.6 });
-      box(5, 30, 5, iron, p.x, 55, p.y);
-      const h = box(18, 2, 2, iron, p.x, 70, p.y, p.rot); h.rotation.z = 0.4;
-      break;
-    }
-    case 'bench': box(80, 18, 24, new THREE.MeshStandardMaterial({ color: 0x4a4e44, roughness: 1 }), p.x, 9, p.y, p.rot || 0); break;
-    case 'oven': {
-      const mats = [brickTexture(), brickTexture(), brickTexture(), brickTexture(), ovenFrontTexture(), brickTexture()].map(t => new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, emissive: 0x501008, emissiveIntensity: 0.15 }));
-      const m = new THREE.Mesh(new THREE.BoxGeometry(64, 70, 56), mats);
-      m.position.set(p.x, 35, p.y); m.rotation.y = -Math.PI * 0.75;   // door towards the room m.castShadow = m.receiveShadow = true; scene.add(m);
-      w.ovenMats = mats;
-      break;
-    }
-    case 'fallenShelf': {
-      const m = box(110, 14, 34, wood('#3b2816'), p.x, 30, p.y);
-      m.rotation.z = 0.42; m.rotation.y = 0.2;
-      box(70, 6, 46, wood('#2e1d10'), p.x + 20, 18, p.y + 6).rotation.z = -0.25;
-      break;
-    }
-    case 'harpsichord': {
-      const caseMat = wood('#24160c');
-      const front = new THREE.MeshStandardMaterial({ map: harpsichordFrontTexture(), roughness: 0.6 });
-      const m = new THREE.Mesh(new THREE.BoxGeometry(110, 30, 50), [caseMat, caseMat, caseMat, caseMat, caseMat, front]);
-      m.position.set(p.x, 44, p.y); m.rotation.y = Math.PI * 0.82; m.castShadow = m.receiveShadow = true; scene.add(m);
-      const lid = box(110, 3, 50, caseMat, p.x, 74, p.y, Math.PI * 0.82);
-      lid.rotateX(-0.75); lid.position.y = 78;
-      [[-46, -18], [46, -18], [-46, 18], [46, 18]].forEach(([dx, dz]) => {
-        const a = Math.PI * 0.82, rx = dx * Math.cos(a) + dz * Math.sin(a), rz = -dx * Math.sin(a) + dz * Math.cos(a);
-        box(5, 30, 5, caseMat, p.x + rx, 15, p.y + rz);
+// Pictures hung on the walls: each one its own frame, a few to a room,
+// spaced out and kept clear of doors, windows and tall furniture. The
+// foyer's portraits and the gallery's landscapes start where the story's
+// `portraits` and `landscapes` are.
+const PICTURES = [
+  { room: 'foyer', kind: 'portrait', count: 7, near: 'portraits' },
+  { room: 'gallery', kind: 'landscape', count: 6, near: 'landscapes' },
+  { room: 'parlor', kind: 'still', count: 2 },
+  { room: 'dining', kind: 'still', count: 2 },
+  { room: 'hallway', kind: 'portrait', count: 3 },
+];
+const PICTURE_SIZE = { portrait: [27, 36, 66], landscape: [40, 28, 62], still: [32, 24, 64] };   // width, height, centre height
+
+function hangPictures(w) {
+  const doors = DOORS.list.map(d => { const v = w.doors[d.id], L = CELL * d.cells.length; return [v.line[0] + v.u[0] * L / 2, v.line[1] + v.u[1] * L / 2]; });
+  const avoid = [
+    ...FLOOR.windows.map(p => [p.x, p.y]),
+    ...SEARCHES.filter(s => s.prop && s.prop !== 'console' && s.prop !== 'woodbasket' && s.prop !== 'umbrellas').map(s => [s.x, s.y]),
+    ...THINGS.filter(t => t.decal).map(t => [t.x, t.y]),
+    ...SCENERY.filter(p => p.kind === 'mirror' || p.kind === 'stairs').map(p => [p.x, p.y]),
+  ];
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x5a4422, roughness: 0.5, metalness: 0.5 });
+  let n = 0;
+  const hung = [];
+  PICTURES.forEach(spec => {
+    const cands = [];
+    GRID.cells.forEach(c => {
+      if (!c.walk || c.room !== spec.room) return;
+      c.edges.forEach((e, d) => {
+        if (e !== 'wall') return;
+        const x = c.x + DIRS[d][0] * CELL / 2, y = c.y + DIRS[d][1] * CELL / 2;
+        if (doors.some(([dx, dy]) => Math.hypot(dx - x, dy - y) < 58)) return;
+        if (avoid.some(([ax, ay]) => Math.hypot(ax - x, ay - y) < 44)) return;
+        cands.push({ x, y, d });
       });
-      break;
+    });
+    const near = spec.near && THINGS.find(t => t.id === spec.near);
+    const rand = seededRandom(spec.room.length * 13);
+    cands.forEach(k => { k.key = near ? Math.hypot(k.x - near.x, k.y - near.y) : rand(); });
+    cands.sort((a, b) => a.key - b.key);
+    const picked = [];
+    for (const k of cands) {
+      if (picked.length >= spec.count) break;
+      if (picked.every(p => Math.hypot(p.x - k.x, p.y - k.y) >= 100)) picked.push(k);
     }
-    case 'bustOnPedestal': {
-      const ped = new THREE.Mesh(new THREE.CylinderGeometry(9, 11, 46, 12), new THREE.MeshStandardMaterial({ color: 0x5a544a, roughness: 0.9 }));
-      ped.position.set(p.x, 23, p.y); ped.castShadow = ped.receiveShadow = true; scene.add(ped);
-      w.sprites.push(addSprite(scene, 'bust', p.x, p.y));
-      break;
-    }
-    case 'stairs': {
-      // A quarter-turn of steps climbing the foyer's north-east corner.
-      const mat = wood('#3a2616');
-      for (let i = 0; i < 9; i++) {
-        const a = Math.PI * (1 - i / 16);
-        box(26, 8 + i * 10, 40, mat, p.x + 20 + Math.cos(a) * 34, (8 + i * 10) / 2, p.y + 40 - Math.sin(a) * 60 - i * 6, -a);
-      }
-      break;
-    }
-    case 'fireplace': {
-      const t = fireplaceTextures();
-      const mat = new THREE.MeshStandardMaterial({ map: t.map, emissive: 0xff7a30, emissiveMap: t.glow, emissiveIntensity: 0.25, roughness: 0.9 });
-      w.hearthMats.push(mat);
-      const m = new THREE.Mesh(new THREE.BoxGeometry(70, 64, 20), [mat, mat, mat, mat, mat, mat]);
-      m.position.set(p.x, 32, p.y); m.rotation.y = Math.PI * 0.25; m.castShadow = m.receiveShadow = true; scene.add(m);
-      break;
-    }
-    case 'mirror': {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(48, 62), new THREE.MeshStandardMaterial({ map: mirrorTexture(), transparent: true, alphaTest: 0.05, roughness: 0.2, metalness: 0.5 }));
-      const c = GRID.cellAtPx(p.x, p.y);
-      m.position.set(p.x, 62, c.y - CELL / 2 + 4.5);   // flat on the square's north wall
-      scene.add(m);
-      w.mirror = m;
-      break;
-    }
-    case 'danceFloor': {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(170, 150), new THREE.MeshStandardMaterial({ map: danceFloorTexture(), transparent: true, depthWrite: false, roughness: 1 }));
-      m.rotation.x = -Math.PI / 2; m.position.set(p.x, 0.4, p.y); m.receiveShadow = true;
-      scene.add(m);
-      break;
-    }
-  }
+    picked.forEach(k => {
+      const [pw, ph, py] = PICTURE_SIZE[spec.kind];
+      const tex = spec.kind === 'portrait' ? portraitTexture(n) : spec.kind === 'landscape' ? landscapeTexture(n) : stillLifeTexture(n);
+      n++;
+      const inward = [-DIRS[k.d][0], -DIRS[k.d][1]], lean = wallLean(k.x, k.y);
+      const g = new THREE.Group();
+      g.position.set(k.x + inward[0] * (WALL_T / 2 + 1.2) + lean[0] * py / WALL_H, py, k.y + inward[1] * (WALL_T / 2 + 1.2) + lean[1] * py / WALL_H);
+      g.rotation.set(0, faceAway(k.d), (rand() - 0.5) * 0.07);     // every frame hangs a little crooked
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(pw + 6, ph + 6, 2), frameMat);
+      frame.castShadow = true; frame.receiveShadow = true;
+      g.add(frame);
+      const canvas = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 }));
+      canvas.position.z = 1.05;
+      g.add(canvas);
+      w.scene.add(g);
+      hung.push(g);
+    });
+  });
+  return hung;
 }
 
 // An upright cut-out that turns to face you (main.js turns every one in

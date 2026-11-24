@@ -9,8 +9,17 @@
   --cream-dim: #b8a07a;
   --crimson: #a04d3c;
   --cold: #9fb6dc;
+  /* Every panel (dialogue, journal, map, room card, encounters, the
+     inventory's label, the volume panel) shares one frame. */
+  --frame-bg: rgba(16, 13, 10, 0.95);
+  --frame-border: 1px solid var(--gold-dim);
+  --frame-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(201, 169, 110, 0.07);
+  --frame-pad: 16px 20px;
   color-scheme: dark;
 }
+/* Everything is sized in rem, so the whole interface grows a little on a
+   big screen and stays compact on a phone. */
+html { font-size: clamp(15px, 0.4vw + 10px, 19px); }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; background: #030306; color: var(--cream); overflow: hidden; }
 body { font-family: 'IM Fell English', Georgia, serif; -webkit-tap-highlight-color: transparent; }
@@ -45,9 +54,9 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #start .credits { font-size: 0.78rem; opacity: 0.75; }
 #sound-panel {
   position: absolute; top: max(56px, calc(env(safe-area-inset-top) + 46px)); right: max(14px, env(safe-area-inset-right));
-  z-index: 8; width: 230px;
+  z-index: 8; width: 15rem;
   display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 12px;
-  padding: 14px 16px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; box-shadow: 0 8px 30px #000;
+  padding: 14px 16px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow);
 }
 #sound-panel label { font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--cream-dim); }
 #sound-panel input[type=range] { width: 100%; accent-color: var(--gold); min-width: 0; }
@@ -66,13 +75,13 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   pointer-events: none;
 }
 #hud-top > * { pointer-events: auto; }
-#room-name { font-family: 'Cinzel', serif; font-size: 1.05rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
+#room-name { font-family: 'Cinzel', serif; font-size: 1.12rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 8px #000; min-height: 1.4em; }
 #room-name.show { animation: room-in 1.2s ease; }
 @keyframes room-in { from { opacity: 0; letter-spacing: 0.3em; } to { opacity: 1; } }
 #dread { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .dread-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
 #dread-pips { display: flex; gap: 3px; }
-#dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
+#dread-pips span { width: 0.6rem; height: 0.92rem; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); background: rgba(255,255,255,0.03); transition: background 0.4s, box-shadow 0.4s; }
 #dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
 #dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
 #dread.jolt { animation: jolt 0.4s; }
@@ -80,7 +89,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #btn-lantern { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.05em; padding: 0.3em 0.6em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 #btn-lantern[aria-pressed="true"] { color: var(--cream-dim); border-style: dashed; }
 #btn-lantern:hover, #btn-lantern:focus-visible { border-color: var(--gold); outline: none; }
-#oil { width: 70px; height: 6px; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
+#oil { width: 4.6rem; height: 0.4rem; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
 #oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
 #oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
 @keyframes oil-low { to { opacity: 0.4; } }
@@ -93,26 +102,28 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #beat.miss { animation: beat-miss 0.3s; }
 @keyframes beat-hit { 50% { transform: scale(1.6); background: #fff2c8; } }
 @keyframes beat-miss { 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
+@keyframes beat-miss-phone { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 #dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
-.hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hud-right { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
 .hud-right button, .hud-right a {
-  font-family: 'Cinzel', serif; font-size: 0.78rem; letter-spacing: 0.05em; text-decoration: none;
-  padding: 0.4em 0.75em; cursor: pointer;
-  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 0.05em; text-decoration: none;
+  min-width: 2.4rem; padding: 0.45em 0.8em; cursor: pointer; text-align: center;
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px;
 }
 .hud-right button:hover, .hud-right a:hover, .hud-right button:focus-visible, .hud-right a:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
 
 #room-card {
   position: absolute; top: max(78px, calc(env(safe-area-inset-top) + 66px)); left: max(14px, env(safe-area-inset-left));
-  width: min(380px, calc(100vw - 28px));
-  background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px;
+  width: min(25rem, calc(100vw - 28px));
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow);
   padding: 12px 16px;
 }
 #room-card.show { animation: card-in 0.5s ease; }
 @keyframes card-in { from { opacity: 0; transform: translateY(-6px); } }
-#room-card h2 { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold); margin: 0 1.6em 0.35em 0; font-weight: 600; }
+#room-card h2, #dialog-speaker, .sheet h2, .enc-name { font-family: 'Cinzel', serif; color: var(--gold); font-weight: 600; letter-spacing: 0.06em; }
+#room-card h2 { font-size: 1rem; margin: 0 1.6em 0.35em 0; }
 #room-card p { margin: 0; line-height: 1.45; font-size: 0.98rem; }
 #room-card-close, .overlay .close { position: absolute; top: 4px; right: 6px; background: none; border: none; font-size: 1.3rem; color: var(--cream-dim); cursor: pointer; padding: 4px 8px; }
 
@@ -140,7 +151,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 #pad {
   position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
-  display: grid; grid-template-columns: repeat(3, 44px) 60px; grid-template-rows: 44px 44px; gap: 5px;
+  display: grid; grid-template-columns: repeat(3, 2.9rem) 3.9rem; grid-template-rows: 2.9rem 2.9rem; gap: 0.3rem;
 }
 #pad button {
   font-size: 1.05rem; cursor: pointer;
@@ -149,7 +160,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 }
 #pad button:active { background: rgba(201,169,110,0.25); }
 #pad .use { grid-column: 4; grid-row: 1 / span 2; font-family: 'Cinzel', serif; font-size: 0.85rem; }
-@media (pointer: fine) { #pad { opacity: 0.55; transform: scale(0.85); transform-origin: bottom right; } #pad:hover { opacity: 1; } }
+@media (pointer: fine) { #pad { opacity: 0.5; } #pad:hover { opacity: 1; } }
 @media (pointer: coarse) { #pad { grid-template-columns: repeat(3, 56px) 70px; grid-template-rows: 56px 56px; } }
 
 /* ── The inventory bar ── */
@@ -160,7 +171,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .inv-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 #inv-slots { display: flex; gap: 5px; flex-wrap: wrap; }
 .inv-slot {
-  position: relative; width: 50px; height: 50px; padding: 3px; cursor: pointer;
+  position: relative; width: 3.3rem; height: 3.3rem; padding: 3px; cursor: pointer;
   background: rgba(18,16,13,0.82); border: 1px solid rgba(138,110,66,0.7); border-radius: 4px;
   transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
@@ -172,7 +183,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .inv-key { position: absolute; top: 1px; left: 3px; font-family: 'Cinzel', serif; font-size: 0.62rem; color: var(--cream-dim); }
 #inv-teeth { display: flex; align-items: center; gap: 3px; font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--cream-dim); }
 #inv-teeth img { width: 26px; height: 26px; }
-#inv-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 5px 10px; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#inv-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); }
 #inv-info-name { font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.85rem; }
 #inv-examine { font-size: 0.85rem; cursor: pointer; background: none; border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; padding: 0.1em 0.5em; }
 .inv-hint { font-size: 0.82rem; color: var(--cream-dim); }
@@ -182,13 +193,13 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #dialog {
   position: absolute; left: 50%; transform: translateX(-50%);
   bottom: max(16px, env(safe-area-inset-bottom));
-  width: min(680px, calc(100vw - 24px));
+  width: min(44rem, calc(100vw - 24px));
   max-height: 70vh; overflow-y: auto;
-  background: rgba(14,12,10,0.95); border: 1px solid var(--gold-dim); border-radius: 3px;
-  padding: 16px 20px 14px; box-shadow: 0 10px 40px #000;
+  background: var(--frame-bg); border: var(--frame-border); border-radius: 3px;
+  padding: var(--frame-pad); box-shadow: var(--frame-shadow);
   z-index: 5;
 }
-#dialog-speaker { font-family: 'Cinzel', serif; color: var(--gold); margin: 0 0 0.4em; font-size: 0.95rem; letter-spacing: 0.06em; }
+#dialog-speaker { margin: 0 0 0.4em; font-size: 0.95rem; }
 #dialog-text { margin: 0 0 0.9em; font-size: 1.1rem; line-height: 1.5; }
 #dialog-choices, .ouija-choices { display: flex; flex-direction: column; gap: 6px; }
 #dialog-choices button, .ouija-choices button {
@@ -202,8 +213,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── Journal and map ── */
 .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(3,3,6,0.7); padding: 16px; z-index: 6; }
-.sheet { position: relative; width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: #17130f; border: 1px solid var(--gold-dim); border-radius: 3px; padding: 18px 22px; }
-.sheet h2 { font-family: 'Cinzel', serif; color: var(--gold); font-size: 1.05rem; font-weight: 600; margin: 0.2em 0 0.6em; }
+.sheet { position: relative; width: min(38rem, 100%); max-height: 100%; overflow-y: auto; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
+.sheet h2 { font-size: 1.05rem; margin: 0.2em 0 0.6em; }
 #memento-slots { list-style: none; padding: 0; margin: 0 0 1.2em; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 #memento-slots li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px dashed rgba(138,110,66,0.45); border-radius: 3px; color: var(--cream-dim); }
 #memento-slots li.have { border-style: solid; border-color: var(--gold); color: var(--cream); background: rgba(201,169,110,0.08); }
@@ -212,7 +223,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #memento-slots .glyph { font-size: 1.3rem; width: 1.4em; text-align: center; color: var(--gold); }
 #clue-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 0.5em; line-height: 1.45; }
 #clue-list .none { list-style: none; margin-left: -1.1em; color: var(--cream-dim); }
-.map-sheet { width: min(760px, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
+.map-sheet { width: min(52rem, 100%); height: min(92vh, 100%); display: flex; flex-direction: column; }
 .map-frame { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 
 /* ── The spirit board ── */
@@ -227,7 +238,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   background: radial-gradient(circle, rgba(200,160,255,0.85) 0%, rgba(150,100,255,0.35) 45%, rgba(120,80,255,0) 70%); mix-blend-mode: screen; }
 .ob-glow.lit { animation: ob-glow 0.9s ease-out; }
 @keyframes ob-glow { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
-.ob-side { width: 400px; display: flex; flex-direction: column; gap: 12px; }
+.ob-side { width: 26rem; display: flex; flex-direction: column; gap: 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .ouija-spelled { min-height: 1.5em; margin: 0; font-family: 'Cinzel', serif; font-size: 1.6rem; letter-spacing: 0.25em; color: #c9b0ff; text-shadow: 0 0 12px rgba(150,110,255,0.8); overflow-wrap: anywhere; }
 .ouija-text { min-height: 1.4em; margin: 0; font-style: italic; color: var(--cream-dim); line-height: 1.45; }
 @media (max-width: 820px), (max-aspect-ratio: 1/1) {
@@ -240,14 +251,14 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── Encounters ── */
 #encounter { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: radial-gradient(ellipse at 50% 40%, rgba(30,8,8,0.88), rgba(3,2,4,0.97) 70%); overflow-y: auto; }
-.enc-panel { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.enc-panel { width: min(38rem, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .enc-top { display: flex; align-items: flex-end; gap: 14px; }
 .enc-foe { width: 150px; height: 150px; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
 .enc-who { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
-.enc-name { font-family: 'Cinzel Decorative', Georgia, serif; color: var(--gold); font-size: 1.3rem; }
+.enc-name { font-size: 1.25rem; }
 .enc-calm, .enc-dread { display: flex; align-items: center; gap: 8px; }
 .enc-dread-pips { display: flex; gap: 3px; }
-.enc-dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
+.enc-dread-pips span { width: 0.6rem; height: 0.92rem; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
 .enc-dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; }
 .enc-dread.high .enc-dread-pips span.on { background: #c45a48; border-color: #e08a70; }
 .enc-calm-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
@@ -267,7 +278,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 /* ── The harpsichord ── */
 #keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
-.keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.keys-panel { width: min(38rem, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; background: var(--frame-bg); border: var(--frame-border); border-radius: 3px; box-shadow: var(--frame-shadow); padding: var(--frame-pad); }
 .keys-text { margin: 0; font-size: 1.1rem; font-style: italic; }
 .keyboard { display: flex; gap: 4px; width: 100%; height: 150px; }
 .keyboard .key b { display: block; font-size: 1.1rem; color: #5a2a10; }
@@ -275,8 +286,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
 .keyboard .key.pressed { background: #a8946a; }
 .keyboard .key.hint { box-shadow: inset 0 0 0 3px rgba(120,170,255,0.75), 0 0 14px rgba(120,170,255,0.5); }
-.glyph-panel { background: rgba(10,6,4,0.9); padding: 16px; border: 1px solid rgba(255,120,40,0.4); border-radius: 4px; }
-.glyph { width: 210px; height: 210px; }
+.glyph-panel { border-color: rgba(255,120,40,0.5); }
+svg.glyph { width: 210px; height: 210px; }
 .glyph .gdot { fill: rgba(255,200,140,0.5); }
 .glyph .gline { fill: none; stroke: rgba(255,120,40,0.35); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
 .glyph .gmine { fill: none; stroke: #ffe0a0; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
@@ -286,7 +297,6 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .glyph-pad { display: grid; grid-template-columns: repeat(4, 48px); gap: 6px; }
 .glyph-pad button { height: 40px; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; font-size: 1rem; }
 .painting { width: min(480px, 90vw); height: auto; aspect-ratio: 480 / 300; border: 8px solid #6b5428; box-shadow: 0 6px 30px #000; cursor: crosshair; }
-.painting-panel { background: rgba(10,8,6,0.9); padding: 16px; border-radius: 4px; }
 .keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 
 #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }
@@ -306,11 +316,14 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 @media (max-width: 640px) {
   #room-card { top: max(112px, calc(env(safe-area-inset-top) + 100px)); padding: 10px 14px; }
   #room-card p { font-size: 0.92rem; }
-  #log { bottom: max(250px, calc(env(safe-area-inset-bottom) + 240px)); }
+  #log { bottom: max(290px, calc(env(safe-area-inset-bottom) + 280px)); }
+  /* (on a phone the room card fills the top: the beat sits low on the left) */
+  #beat { top: auto; left: 12px; transform: none; bottom: max(140px, calc(env(safe-area-inset-bottom) + 130px)); }
+  #beat.miss { animation-name: beat-miss-phone; }
   #prompt { bottom: max(146px, calc(env(safe-area-inset-bottom) + 136px)); }
   #pad { left: 50%; right: auto; transform: translateX(-50%); }
   #inventory { left: 50%; transform: translateX(-50%); bottom: max(190px, calc(env(safe-area-inset-bottom) + 180px)); max-width: calc(100vw - 24px); align-items: center; }
-  .inv-slot { width: 44px; height: 44px; }
+  .inv-slot { width: 2.9rem; height: 2.9rem; }
   .inv-hint { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {

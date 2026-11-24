@@ -152,7 +152,11 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
 - **Where things are:**
   - `src/game/js/` — the game, joined in the order of `GAME_FILES` in
     build.js: `core.js` (the grid), `art.js` (all the placeholder art),
-    `audio.js`, `world.js` (the 3D house, furniture placement in `SCENERY`),
+    `audio.js`, `furniture.js` (every piece of furniture, built from simple
+    shapes at life size, and `mergeStatic`, which bakes the parts that never
+    move into a few meshes so the house draws quickly), `world.js` (the 3D
+    house; where the furniture stands is `SCENERY`, and `PICTURES` says how
+    many framed pictures hang in which room),
     `ui.js`, `story.js` (every scene, the séance questions, mementos and
     clues), and the rest described below, then `main.js` (movement and the
     loop). They share one scope, so build.js stops if two files declare the
