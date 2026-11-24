@@ -197,6 +197,16 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   `ENCOUNTERS` (`rooms.js`): its art, lines, Acts, Items and attack
   patterns. "Gentler encounters" in the 🔊 panel slows attacks and halves
   the Dread they cost. So far: the dining room's Phantom Feast.
+- **Dread** (`dread.js`) is how you see the house, not just a meter: Calm
+  (0–3) is safe and blind to its secrets, Uneasy (4–6) brings whispers and
+  starts to show what's hidden, Terrified (7–9) shows its true face, and 10
+  breaks your nerve. L (or the HUD button) turns the lantern up or down:
+  bright keeps you calm but burns oil faster; low lets Dread creep up (never
+  past 8 on its own) and reveals things. Oil runs out after about 15 minutes
+  bright (never, in Gentler mode); in the dark Dread climbs to breaking. You
+  calm down by the lit parlour fire, by drinking tea, and by freeing ghosts.
+  A thing can be `minDread` (only there when frightened enough) or have a
+  `dreadText`; the hallway's scratches and the cracked mirror are examples.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

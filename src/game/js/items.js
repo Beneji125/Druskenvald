@@ -53,6 +53,7 @@ const SEARCHES = [
   { id: 'gallery_cab', room: 'gallery',      x: 300,  y: 1035, h: 40, prop: 'cabinet', name: 'The display cabinet', text: 'A glass-fronted cabinet of curios: a stuffed bird, a seashell, a bundle of letters too damp to read.' },
   { id: 'music_stand', room: 'music',        x: 900,  y: 1040, h: 52, prop: 'musicStand', name: 'The music stand', finds: 'music_a', text: 'A brass music stand with a few loose pages still clipped to it.' },
   { id: 'music_sofa',  room: 'music',        x: 790,  y: 880,  h: 30, name: 'The settee', text: 'The cushions crunch. You try not to think about why.' },
+  { id: 'sconce',      room: 'hallway',      x: 742,  y: 760,  h: 70, prop: 'sconce', name: 'The wall lamp', finds: 'oil', text: 'An old oil lamp in a bracket on the wall, cold for years. Its reservoir still sloshes when you lift it.' },
   { id: 'rocker',      room: 'porch',        x: 470,  y: 1135, h: 36, name: 'The rocking chair', text: 'A rocking chair on the porch, still gently rocking though the wind can’t reach it.' },
 ];
 
@@ -172,7 +173,11 @@ async function searchSpot(s) {
     return;
   }
   game.searched.add(s.id);
-  if (s.finds) {
+  if (s.finds === 'oil' && hasItem('oil')) {
+    // Already carrying a flask: pour this straight into the lantern.
+    await ui.say(s.name, `${s.text} You already have a flask, so you pour this straight into the lantern.`);
+    game.oil = 1; ui.setOil(1);
+  } else if (s.finds) {
     await ui.say(s.name, s.text);
     giveItem(s.finds);
   } else {
@@ -186,7 +191,7 @@ async function searchSpot(s) {
 // Furniture added for a search spot stands flush against the nearest wall
 // of its square (walls run along the grid's edges, not the traced lines),
 // and its glint moves with it.
-const PROP_DEPTH = { console: 18, umbrellas: 14, woodbasket: 20, cupboard: 22, pottingBench: 22, cabinet: 18, musicStand: 10, pump: 24 };
+const PROP_DEPTH = { decal: 0, sconce: 8, console: 18, umbrellas: 14, woodbasket: 20, cupboard: 22, pottingBench: 22, cabinet: 18, musicStand: 10, pump: 24 };
 function snapToWall(s) {
   const c = GRID.cellAtPx(s.x, s.y);
   if (!c || !c.walk) return;
@@ -203,7 +208,7 @@ function snapToWall(s) {
   else { s.y = c.y + DIRS[best.d][1] * (CELL / 2 - inset); s.x = clamp(s.x, c.x - lim, c.x + lim); }
 }
 const PUMP = { id: 'pump', x: 1012, y: 258, prop: 'pump' };
-[...SEARCHES.filter(s => s.prop), PUMP].forEach(snapToWall);
+[...SEARCHES.filter(s => s.prop), PUMP, ...THINGS.filter(t => t.decal)].forEach(snapToWall);
 
 // Search spots join THINGS, so they glint and can be faced and used like
 // anything else. The pump isn't a search, but it's somewhere to use the

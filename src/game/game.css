@@ -76,6 +76,16 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
 #dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
 #dread.jolt { animation: jolt 0.4s; }
+#lantern-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+#btn-lantern { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.05em; padding: 0.3em 0.6em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#btn-lantern[aria-pressed="true"] { color: var(--cream-dim); border-style: dashed; }
+#btn-lantern:hover, #btn-lantern:focus-visible { border-color: var(--gold); outline: none; }
+#oil { width: 70px; height: 6px; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
+#oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
+#oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
+@keyframes oil-low { to { opacity: 0.4; } }
+#dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 .hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .hud-right button, .hud-right a {

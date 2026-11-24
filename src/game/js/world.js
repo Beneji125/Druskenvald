@@ -308,6 +308,19 @@ function buildWorld(renderer, quality) {
     }
   });
 
+  // Things drawn straight onto a wall (e.g. the hallway scratches). Shown
+  // or hidden each frame by the main loop, for things only Dread reveals.
+  w.decals = THINGS.filter(t => t.decal).map(t => {
+    const [dw, dh] = t.decalSize;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(dw, dh), new THREE.MeshStandardMaterial({ map: t.decal(), transparent: true, depthWrite: false, roughness: 1 }));
+    const n = [-DIRS[t.wallDir][0], -DIRS[t.wallDir][1]];
+    m.position.set(t.x + n[0] * 0.6, t.h, t.y + n[1] * 0.6);
+    m.rotation.y = Math.atan2(n[0], n[1]);
+    m.userData.thing = t;
+    scene.add(m);
+    return m;
+  });
+
   // ── Outside: dark ground, dead trees, the storm ──
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshStandardMaterial({ color: 0x0b0d0a, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(FLOOR.width / 2, -0.5, FLOOR.height / 2);
@@ -418,6 +431,13 @@ function addScenery(w, p, box) {
       const pot = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 26, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a3a, roughness: 0.8 }));
       pot.position.set(p.x, 13, p.y); pot.castShadow = pot.receiveShadow = true; scene.add(pot);
       [[-2, 0.15], [2, -0.1], [0, 0.3]].forEach(([dx, tilt]) => { const u = box(1.5, 44, 1.5, new THREE.MeshStandardMaterial({ color: 0x1a1612 }), p.x + dx, 30, p.y); u.rotation.z = tilt; });
+      break;
+    }
+    case 'sconce': {
+      const brass = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, roughness: 0.4, metalness: 0.7 });
+      box(10, 3, 8, brass, p.x, 62, p.y, p.rot);
+      const glass = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 4.5, 12, 10), new THREE.MeshStandardMaterial({ color: 0xa0a890, roughness: 0.2, transparent: true, opacity: 0.5 }));
+      glass.position.set(p.x, 70, p.y); scene.add(glass);
       break;
     }
     case 'woodbasket': box(30, 16, 20, new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 }), p.x, 8, p.y, p.rot); break;

@@ -21,7 +21,7 @@
   <h1>The Crooked House</h1>
   <p class="floor">First Floor</p>
   <p>The storm drove you up the hill, and the front door opened before you knocked. Somewhere in this house are six mementos that open the way to the attic, and whatever waits up there.</p>
-  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>1</kbd>–<kbd>9</kbd> pick up an item · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
+  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>1</kbd>–<kbd>9</kbd> pick up an item · <kbd>L</kbd> lantern up or down · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
   <div class="start-buttons">
     <button type="button" id="btn-continue" class="big">Continue</button>
     <button type="button" id="btn-new" class="big">Start again</button>
@@ -34,12 +34,17 @@
 
 <section id="game" hidden>
   <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
+  <div id="dread-veil" aria-hidden="true"></div>
 
   <div id="hud-top">
     <div class="hud-left">
       <div id="room-name"></div>
       <div id="dread" role="meter" aria-label="Dread" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
         <span class="dread-label">Dread</span><span id="dread-pips"></span>
+      </div>
+      <div id="lantern-row">
+        <button type="button" id="btn-lantern" aria-pressed="false">Lantern: bright</button>
+        <div id="oil" title="Oil in the lantern"><span id="oil-fill"></span></div>
       </div>
     </div>
     <div class="hud-right">

@@ -409,6 +409,20 @@ function doorTexture() {
   return artTexture(c);
 }
 
+// Words scratched through the hallway wallpaper by a child's hand.
+function scratchesDecal() {
+  const [c, ctx] = artCanvas(256, 150);
+  ctx.strokeStyle = 'rgba(232,216,180,0.6)'; ctx.lineWidth = 1.1; ctx.lineCap = 'round';
+  ctx.font = '22px Georgia, serif'; ctx.textAlign = 'center';
+  const lines = ['SHE SLEEPS IN THE', 'ROUND ROOM', 'DONT LOOK IN HER EYE', 'LET HER LOOK IN HER OWN'];
+  const rand = seededRandom(66);
+  lines.forEach((l, i) => {
+    ctx.save(); ctx.translate(128, 30 + i * 34); ctx.rotate((rand() - 0.5) * 0.1);
+    ctx.strokeText(l, 0, 0); ctx.restore();
+  });
+  return artTexture(c);
+}
+
 // A glint: a soft four-pointed star, marking something you can look at
 // or use.
 function glintTexture() {

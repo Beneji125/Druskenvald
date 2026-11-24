@@ -87,6 +87,19 @@ const ui = {
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   },
 
+  setOil(v) {
+    const el = $('oil-fill');
+    el.style.width = `${Math.round(clamp01(v) * 100)}%`;
+    $('oil').classList.toggle('low', v < 0.2);
+  },
+
+  setLanternMode(low) {
+    const b = $('btn-lantern');
+    b.textContent = low ? 'Lantern: low' : 'Lantern: bright';
+    b.setAttribute('aria-pressed', String(low));
+    b.title = (low ? 'Turn the lantern up (L)' : 'Turn the lantern down (L)');
+  },
+
   setDread(value) {
     const pips = $('dread-pips');
     if (pips.children.length !== DREAD_MAX) {

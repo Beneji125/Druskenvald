@@ -90,6 +90,16 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; box-shadow: 0 0 6px rgba(140,170,230,0.6); }
 #dread.high #dread-pips span.on { background: #c45a48; border-color: #e08a70; box-shadow: 0 0 8px rgba(220,100,80,0.7); }
 #dread.jolt { animation: jolt 0.4s; }
+#lantern-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+#btn-lantern { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.05em; padding: 0.3em 0.6em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
+#btn-lantern[aria-pressed="true"] { color: var(--cream-dim); border-style: dashed; }
+#btn-lantern:hover, #btn-lantern:focus-visible { border-color: var(--gold); outline: none; }
+#oil { width: 70px; height: 6px; border: 1px solid rgba(201,169,110,0.5); border-radius: 3px; overflow: hidden; }
+#oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
+#oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
+@keyframes oil-low { to { opacity: 0.4; } }
+#dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 .hud-right { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .hud-right button, .hud-right a {
@@ -291,7 +301,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   <h1>The Crooked House</h1>
   <p class="floor">First Floor</p>
   <p>The storm drove you up the hill, and the front door opened before you knocked. Somewhere in this house are six mementos that open the way to the attic, and whatever waits up there.</p>
-  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>1</kbd>–<kbd>9</kbd> pick up an item · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
+  <p class="how">Walk with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or the arrow keys · turn with <kbd>Q</kbd><kbd>E</kbd> or <kbd>←</kbd><kbd>→</kbd> · <kbd>Space</kbd> to look or use · <kbd>1</kbd>–<kbd>9</kbd> pick up an item · <kbd>L</kbd> lantern up or down · <kbd>M</kbd> map · <kbd>J</kbd> journal. On a phone, use the buttons.</p>
   <div class="start-buttons">
     <button type="button" id="btn-continue" class="big">Continue</button>
     <button type="button" id="btn-new" class="big">Start again</button>
@@ -304,12 +314,17 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 
 <section id="game" hidden>
   <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
+  <div id="dread-veil" aria-hidden="true"></div>
 
   <div id="hud-top">
     <div class="hud-left">
       <div id="room-name"></div>
       <div id="dread" role="meter" aria-label="Dread" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
         <span class="dread-label">Dread</span><span id="dread-pips"></span>
+      </div>
+      <div id="lantern-row">
+        <button type="button" id="btn-lantern" aria-pressed="false">Lantern: bright</button>
+        <div id="oil" title="Oil in the lantern"><span id="oil-fill"></span></div>
       </div>
     </div>
     <div class="hud-right">
@@ -972,6 +987,20 @@ function doorTexture() {
   return artTexture(c);
 }
 
+// Words scratched through the hallway wallpaper by a child's hand.
+function scratchesDecal() {
+  const [c, ctx] = artCanvas(256, 150);
+  ctx.strokeStyle = 'rgba(232,216,180,0.6)'; ctx.lineWidth = 1.1; ctx.lineCap = 'round';
+  ctx.font = '22px Georgia, serif'; ctx.textAlign = 'center';
+  const lines = ['SHE SLEEPS IN THE', 'ROUND ROOM', 'DONT LOOK IN HER EYE', 'LET HER LOOK IN HER OWN'];
+  const rand = seededRandom(66);
+  lines.forEach((l, i) => {
+    ctx.save(); ctx.translate(128, 30 + i * 34); ctx.rotate((rand() - 0.5) * 0.1);
+    ctx.strokeText(l, 0, 0); ctx.restore();
+  });
+  return artTexture(c);
+}
+
 // A glint: a soft four-pointed star, marking something you can look at
 // or use.
 function glintTexture() {
@@ -1391,6 +1420,41 @@ const sound = {
     }
   },
 
+  // Dread you can hear: soft whispers now and then when uneasy; a slow
+  // heartbeat, and whispers more often, when terrified.
+  setDreadBand(band) {
+    if (!this.ctx || band === this.band) return;
+    this.band = band;
+    clearInterval(this.heartTimer); clearTimeout(this.whisperTimer);
+    if (band === 'terrified' || band === 'breaking') this.heartTimer = setInterval(() => this.heartbeat(), 950);
+    const whisperEvery = band === 'uneasy' ? 14000 : band === 'calm' ? 0 : 6000;
+    const next = () => { this.whisperTimer = setTimeout(() => { this.whisper(); next(); }, whisperEvery * (0.6 + Math.random() * 0.8)); };
+    if (whisperEvery) next();
+  },
+  heartbeat() {
+    const t = this.ctx.currentTime;
+    [0, 0.22].forEach((d, i) => {
+      const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(i ? 52 : 60, t + d); o.frequency.exponentialRampToValueAtTime(32, t + d + 0.15);
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(i ? 0.25 : 0.4, t + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.2);
+      o.connect(g).connect(this.master); o.start(t + d); o.stop(t + d + 0.22);
+    });
+  },
+  // A breathy, wordless murmur from one side.
+  whisper() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, dur = 1.2 + Math.random() * 1.2;
+    const src = this.ctx.createBufferSource(); src.buffer = this.noise;
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 9;
+    bp.frequency.setValueAtTime(900 + Math.random() * 600, t);
+    for (let k = 0.15; k < dur; k += 0.18) bp.frequency.linearRampToValueAtTime(700 + Math.random() * 1500, t + k);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    const pan = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    let node = src.connect(bp).connect(g);
+    if (pan) { pan.pan.value = Math.random() < 0.5 ? -0.8 : 0.8; node = node.connect(pan); }
+    node.connect(this.master);
+    src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+
   // Hit in an encounter: a dull, cold thump.
   hit() {
     if (!this.ctx) return;
@@ -1735,6 +1799,19 @@ function buildWorld(renderer, quality) {
     }
   });
 
+  // Things drawn straight onto a wall (e.g. the hallway scratches). Shown
+  // or hidden each frame by the main loop, for things only Dread reveals.
+  w.decals = THINGS.filter(t => t.decal).map(t => {
+    const [dw, dh] = t.decalSize;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(dw, dh), new THREE.MeshStandardMaterial({ map: t.decal(), transparent: true, depthWrite: false, roughness: 1 }));
+    const n = [-DIRS[t.wallDir][0], -DIRS[t.wallDir][1]];
+    m.position.set(t.x + n[0] * 0.6, t.h, t.y + n[1] * 0.6);
+    m.rotation.y = Math.atan2(n[0], n[1]);
+    m.userData.thing = t;
+    scene.add(m);
+    return m;
+  });
+
   // ── Outside: dark ground, dead trees, the storm ──
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshStandardMaterial({ color: 0x0b0d0a, roughness: 1 }));
   ground.rotation.x = -Math.PI / 2; ground.position.set(FLOOR.width / 2, -0.5, FLOOR.height / 2);
@@ -1845,6 +1922,13 @@ function addScenery(w, p, box) {
       const pot = new THREE.Mesh(new THREE.CylinderGeometry(7, 6, 26, 12), new THREE.MeshStandardMaterial({ color: 0x3a4a3a, roughness: 0.8 }));
       pot.position.set(p.x, 13, p.y); pot.castShadow = pot.receiveShadow = true; scene.add(pot);
       [[-2, 0.15], [2, -0.1], [0, 0.3]].forEach(([dx, tilt]) => { const u = box(1.5, 44, 1.5, new THREE.MeshStandardMaterial({ color: 0x1a1612 }), p.x + dx, 30, p.y); u.rotation.z = tilt; });
+      break;
+    }
+    case 'sconce': {
+      const brass = new THREE.MeshStandardMaterial({ color: 0x8a6a2a, roughness: 0.4, metalness: 0.7 });
+      box(10, 3, 8, brass, p.x, 62, p.y, p.rot);
+      const glass = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 4.5, 12, 10), new THREE.MeshStandardMaterial({ color: 0xa0a890, roughness: 0.2, transparent: true, opacity: 0.5 }));
+      glass.position.set(p.x, 70, p.y); scene.add(glass);
       break;
     }
     case 'woodbasket': box(30, 16, 20, new THREE.MeshStandardMaterial({ color: 0x4a3420, roughness: 1 }), p.x, 8, p.y, p.rot); break;
@@ -2103,6 +2187,19 @@ const ui = {
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   },
 
+  setOil(v) {
+    const el = $('oil-fill');
+    el.style.width = `${Math.round(clamp01(v) * 100)}%`;
+    $('oil').classList.toggle('low', v < 0.2);
+  },
+
+  setLanternMode(low) {
+    const b = $('btn-lantern');
+    b.textContent = low ? 'Lantern: low' : 'Lantern: bright';
+    b.setAttribute('aria-pressed', String(low));
+    b.title = (low ? 'Turn the lantern up (L)' : 'Turn the lantern down (L)');
+  },
+
   setDread(value) {
     const pips = $('dread-pips');
     if (pips.children.length !== DREAD_MAX) {
@@ -2291,7 +2388,12 @@ const THINGS = [
   { id: 'feast', verb: 'Examine', run: () => feastScene() },
   { id: 'staircase', verb: 'Climb', run: () => stairsScene() },
   { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes' },
-  { id: 'mirror' }, { id: 'tree', run: () => treeScene() },
+  { id: 'mirror', dreadText: [4, 'In the long crack, the room is not empty. It is full of dancers, pale and turning, turning, their mouths open in a laugh you cannot hear. When you look away from the glass the room is empty again.'] },
+  { id: 'tree', run: () => treeScene() },
+  // Only for frightened eyes.
+  { id: 'scratches', name: 'The scratches in the wallpaper', x: 692, y: 905, h: 46, minDread: 7, verb: 'Read',
+    prop: 'decal', decal: () => scratchesDecal(), decalSize: [30, 18],
+    text: 'Low on the wall, scratched through the paper by a small hand, over and over: SHE SLEEPS IN THE ROUND ROOM. DON’T LOOK IN HER EYE. LET HER LOOK IN HER OWN.' },
   { id: 'bench', when: () => game.flags.petuniaGone },
 ].map(t => {
   const poi = FLOOR.pois.find(p => p.id === t.id) || {};
@@ -2303,6 +2405,7 @@ const game = {
   mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
+  oil: 1, lanternLow: false,
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -2311,7 +2414,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0 });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -2322,6 +2425,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
+    oil: game.oil, lanternLow: game.lanternLow,
   }));
 }
 
@@ -2335,6 +2439,8 @@ function loadGame() {
     game.teeth = s.teeth || 0;
     game.searched = new Set(s.searched || []);
     game.crooked = s.crooked || 0;
+    game.oil = s.oil ?? 1;
+    game.lanternLow = !!s.lanternLow;
     return true;
   } catch { return false; }
 }
@@ -2434,12 +2540,16 @@ function hideRoomCard() { $('room-card').hidden = true; }
 // you, within about a square, and not on the far side of a wall. (Things
 // sit where they are on the floor plan, not on the grid, so a harpsichord
 // can be ahead of you and a little to one side.)
+function thingAvailable(t) {
+  return (!t.when || t.when()) && (!t.minDread || game.dread >= t.minDread);
+}
+
 function thingAtHand() {
   const here = GRID.at(game.cx, game.cy);
   const fx = here.x + DIRS[game.dir][0] * CELL * 0.75, fy = here.y + DIRS[game.dir][1] * CELL * 0.75;
   let best = null, bestD = CELL * 1.05;
   for (const t of THINGS) {
-    if (t.when && !t.when()) continue;
+    if (!thingAvailable(t)) continue;
     const d = Math.hypot(t.x - fx, t.y - fy);
     if (d >= bestD) continue;
     if (GRID.segs.some(([a, b]) => segmentsCross([here.x, here.y], [t.x, t.y], a, b))) continue;
@@ -2456,7 +2566,7 @@ async function useThing(t, item) {
   try {
     if (item) await useItemOn(item, t);
     else if (t.run) await t.run();
-    else await ui.say(t.name, t.text);
+    else await ui.say(t.name, thingText(t));
   } finally {
     game.busy = false;
     lockInput(250);
@@ -2910,6 +3020,11 @@ async function peacockScene() {
 
 async function ovenScene() {
   const t = THINGS.find(x => x.id === 'oven');
+  // Frightened enough, you see what was hidden on the lock all along.
+  if (game.dread >= 7 && !game.flags.glyphSeen) {
+    game.flags.glyphSeen = true;
+    await ui.say(t.name, 'Your eyes are wide and your heart is hammering, and so you see it: a small coiled glyph scratched into the rusted lock, glowing faintly like a coal. It was always there. It is waiting for someone to force the door.');
+  }
   if (!game.flags.ovenHeard) {
     game.flags.ovenHeard = true;
     await ui.say(t.name, t.text);
@@ -3015,6 +3130,7 @@ const SEARCHES = [
   { id: 'gallery_cab', room: 'gallery',      x: 300,  y: 1035, h: 40, prop: 'cabinet', name: 'The display cabinet', text: 'A glass-fronted cabinet of curios: a stuffed bird, a seashell, a bundle of letters too damp to read.' },
   { id: 'music_stand', room: 'music',        x: 900,  y: 1040, h: 52, prop: 'musicStand', name: 'The music stand', finds: 'music_a', text: 'A brass music stand with a few loose pages still clipped to it.' },
   { id: 'music_sofa',  room: 'music',        x: 790,  y: 880,  h: 30, name: 'The settee', text: 'The cushions crunch. You try not to think about why.' },
+  { id: 'sconce',      room: 'hallway',      x: 742,  y: 760,  h: 70, prop: 'sconce', name: 'The wall lamp', finds: 'oil', text: 'An old oil lamp in a bracket on the wall, cold for years. Its reservoir still sloshes when you lift it.' },
   { id: 'rocker',      room: 'porch',        x: 470,  y: 1135, h: 36, name: 'The rocking chair', text: 'A rocking chair on the porch, still gently rocking though the wind can’t reach it.' },
 ];
 
@@ -3134,7 +3250,11 @@ async function searchSpot(s) {
     return;
   }
   game.searched.add(s.id);
-  if (s.finds) {
+  if (s.finds === 'oil' && hasItem('oil')) {
+    // Already carrying a flask: pour this straight into the lantern.
+    await ui.say(s.name, `${s.text} You already have a flask, so you pour this straight into the lantern.`);
+    game.oil = 1; ui.setOil(1);
+  } else if (s.finds) {
     await ui.say(s.name, s.text);
     giveItem(s.finds);
   } else {
@@ -3148,7 +3268,7 @@ async function searchSpot(s) {
 // Furniture added for a search spot stands flush against the nearest wall
 // of its square (walls run along the grid's edges, not the traced lines),
 // and its glint moves with it.
-const PROP_DEPTH = { console: 18, umbrellas: 14, woodbasket: 20, cupboard: 22, pottingBench: 22, cabinet: 18, musicStand: 10, pump: 24 };
+const PROP_DEPTH = { decal: 0, sconce: 8, console: 18, umbrellas: 14, woodbasket: 20, cupboard: 22, pottingBench: 22, cabinet: 18, musicStand: 10, pump: 24 };
 function snapToWall(s) {
   const c = GRID.cellAtPx(s.x, s.y);
   if (!c || !c.walk) return;
@@ -3165,7 +3285,7 @@ function snapToWall(s) {
   else { s.y = c.y + DIRS[best.d][1] * (CELL / 2 - inset); s.x = clamp(s.x, c.x - lim, c.x + lim); }
 }
 const PUMP = { id: 'pump', x: 1012, y: 258, prop: 'pump' };
-[...SEARCHES.filter(s => s.prop), PUMP].forEach(snapToWall);
+[...SEARCHES.filter(s => s.prop), PUMP, ...THINGS.filter(t => t.decal)].forEach(snapToWall);
 
 // Search spots join THINGS, so they glint and can be faced and used like
 // anything else. The pump isn't a search, but it's somewhere to use the
@@ -3219,6 +3339,115 @@ async function examineItem(id) {
   if (game.busy || !id) return;
   game.busy = true;
   try { await ui.say(ITEMS[id].name, ITEMS[id].text); } finally { game.busy = false; lockInput(250); }
+}
+
+// ─── src/game/js/dread.js ────────────────────────────────────────────
+// Dread: not just a meter to keep empty, but how you see the house.
+//
+//   0–3  Calm        an old, rotting house. Safe, and blind to its secrets.
+//   4–6  Uneasy      whispers; things not quite right start to show.
+//   7–9  Terrified   the house's true face; some secrets exist only here.
+//   10   Breaking    you run (story.js: nerveBreaks).
+//
+// The lantern is how you steer it. Bright, it keeps you calm, but burns
+// oil faster and hides what the house would rather you didn't see. Low,
+// Dread creeps up (never past LOW_CAP on its own) and the hidden starts to
+// show. If the oil runs out, the dark drives you all the way to breaking.
+// You calm down by the lit parlour fire, with a cup of tea, by freeing a
+// ghost, or just by keeping the lantern bright.
+//
+// Things in THINGS can carry `minDread` (only there when you're at least
+// that frightened) and `dreadText: [n, text]` (what you see instead once
+// your Dread is n or more).
+
+const DREAD_BANDS = [
+  { name: 'calm', from: 0 }, { name: 'uneasy', from: 4 }, { name: 'terrified', from: 7 }, { name: 'breaking', from: 10 },
+];
+const LOW_CAP = 8;
+// Seconds per point of Dread gained or lost, by situation.
+const DREAD_RATES = { hearth: -5, bright: -30, low: 25, dark: 8 };
+// Oil: the share of a full lantern burned per second at each setting.
+// A full lantern lasts 15 minutes bright, nearly 40 low.
+const OIL_BURN = { bright: 1 / 900, low: 1 / 2300 };
+const LANTERN_LEVEL = { bright: 1, low: 0.32, dark: 0.04 };
+
+function dreadBand(d = game.dread) {
+  return [...DREAD_BANDS].reverse().find(b => d >= b.from).name;
+}
+
+let dreadClock = 0, lanternNow = 1;
+
+// Called every frame by the main loop (dt in seconds). Returns the
+// lantern's brightness (0–1) for the light.
+function tickDread(dt, here) {
+  const quiet = !game.busy && !ui.overlay && !game.curse && !game.inEncounter && !game.flags.breaking;
+  // Oil.
+  const setting = game.lanternLow ? 'low' : 'bright';
+  if (!easyMode() && game.oil > 0) {
+    const before = game.oil;
+    game.oil = Math.max(0, game.oil - OIL_BURN[setting] * dt);
+    if (before > 0.15 && game.oil <= 0.15) ui.log('The lantern is guttering. It needs oil.', 'scare');
+    if (before > 0 && game.oil === 0) { ui.log('The lantern sputters and goes out. The dark presses in.', 'scare'); sound.hit(); }
+  }
+  ui.setOil(easyMode() ? 1 : game.oil);
+  const dark = game.oil <= 0 && !easyMode();
+  // Dread drifting.
+  const byFire = game.flags.hearthLit && here.room === 'parlor';
+  const rate = dark ? DREAD_RATES.dark : byFire ? DREAD_RATES.hearth : game.lanternLow ? DREAD_RATES.low : DREAD_RATES.bright;
+  if (quiet) {
+    dreadClock += dt;
+    if (dreadClock >= Math.abs(rate)) {
+      dreadClock = 0;
+      if (rate < 0 && game.dread > 0) addDread(-1);
+      else if (rate > 0 && (dark || game.dread < LOW_CAP)) addDread(1);
+    }
+  } else dreadClock = 0;
+  // The lantern's light eases towards its setting.
+  const target = dark ? LANTERN_LEVEL.dark : LANTERN_LEVEL[setting];
+  lanternNow += (target - lanternNow) * Math.min(1, dt * 3);
+  applyDreadLook(dt);
+  return lanternNow;
+}
+
+// How Dread looks and sounds: the view darkens at the edges and drains of
+// colour as it rises; whispers when uneasy, a heartbeat when terrified.
+let lookNow = 0;
+function applyDreadLook(dt) {
+  const target = game.dread / DREAD_MAX;
+  lookNow += (target - lookNow) * Math.min(1, dt * 1.5);
+  const veil = $('dread-veil');
+  veil.style.opacity = String(Math.max(0, (lookNow - 0.25) * 1.25).toFixed(3));
+  const sat = 1 - Math.max(0, lookNow - 0.35) * 0.9;
+  $('view').style.filter = lookNow > 0.36 ? `saturate(${sat.toFixed(2)}) contrast(${(1 + (lookNow - 0.36) * 0.25).toFixed(2)})` : '';
+  sound.setDreadBand(dreadBand());
+}
+
+function toggleLantern() {
+  if (!easyMode() && game.oil <= 0) { ui.log('There’s no oil left to burn.', 'note'); return; }
+  game.lanternLow = !game.lanternLow;
+  ui.setLanternMode(game.lanternLow);
+  ui.log(game.lanternLow ? 'You turn the lantern down. The dark comes closer, and so does everything in it.' : 'You turn the lantern up, and the house draws back a little.', 'note');
+  saveGame();
+}
+
+function refillLantern() {
+  takeItem('oil');
+  game.oil = 1;
+  ui.setOil(1);
+  ui.log('You fill the lantern. The flame steadies and climbs.', 'gain');
+  saveGame();
+}
+
+async function drinkTea() {
+  swapItem('tea', 'kettle');
+  await ui.say('', 'You drink the bergamot tea straight from the kettle’s spout, scalding and sweet. For a moment you’re somewhere warm and ordinary, and your hands stop shaking.');
+  addDread(-3);
+}
+
+// What a thing looks like at your current Dread.
+function thingText(t) {
+  if (t.dreadText && game.dread >= t.dreadText[0]) return t.dreadText[1];
+  return t.text;
 }
 
 // ─── src/game/js/encounter.js ────────────────────────────────────────
@@ -3753,6 +3982,8 @@ function startGame(fresh) {
   ui.setDread(game.dread);
   ui.select(null);
   ui.drawInventory();
+  ui.setLanternMode(game.lanternLow);
+  ui.setOil(game.oil);
   setHearth(!!game.flags.hearthLit);
   const c = GRID.at(game.cx, game.cy);
   ui.setRoom(roomById(c.room)?.name || '');
@@ -3818,6 +4049,9 @@ function act(cmd) {
     const t = thingAtHand();
     // Holding an item: use it on whatever's in front of you.
     if (ui.selected) {
+      // Some things you use on yourself: oil for the lantern, tea to drink.
+      if (ui.selected === 'oil') return refillLantern();
+      if (ui.selected === 'tea' && (!t || t.id !== 'petunia')) { game.busy = true; return drinkTea().finally(() => { game.busy = false; lockInput(250); }); }
       if (t) return useThing(t, ui.selected);
       ui.log(`There’s nothing here to use the ${ITEMS[ui.selected].name.toLowerCase()} on.`, 'note');
       return ui.select(null);
@@ -3943,7 +4177,7 @@ function loop(now) {
   // The lantern, held a little to the right and below the eye.
   const rx = Math.cos(yaw), rz = -Math.sin(yaw);
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
-  world.lantern.intensity = LANTERN.intensity * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
+  world.lantern.intensity = LANTERN.intensity * tickDread(dt, here) * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
@@ -3983,9 +4217,6 @@ function loop(now) {
   if (game.curse && (game.busy || ui.overlay)) game.curseStart = now;
   else if (game.curse && now - game.curseStart > 3500) { game.curseStart = now; addDread(1); }
 
-  // Dread ebbs slowly when nothing is happening.
-  if (game.dread > 0 && !game.curse && !game.busy && clock - (game.dreadEbb || 0) > 30) { game.dreadEbb = clock; addDread(-1); }
-  else if (game.dread === 0 || game.curse || game.busy) game.dreadEbb = clock;
 
   // Doors swinging.
   Object.values(world.doors).forEach(v => {
@@ -4001,6 +4232,11 @@ function loop(now) {
   });
 
   updateGlints(now, dt);
+  world.decals.forEach(m => {
+    const target = thingAvailable(m.userData.thing) ? 1 : 0;
+    m.material.opacity += (target - m.material.opacity) * Math.min(1, dt * 2);
+    m.visible = m.material.opacity > 0.01;
+  });
 
   // Cut-outs turn to face you.
   billboards.forEach(b => { b.rotation.y = yaw; });
@@ -4022,7 +4258,9 @@ function loop(now) {
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
     const t = thingAtHand();
-    ui.setPrompt({ verb: `Use the ${ITEMS[ui.selected].name.toLowerCase()} on`, name: t ? t.name : 'nothing here' });
+    if (ui.selected === 'oil') ui.setPrompt({ verb: 'Fill', name: 'the lantern' });
+    else if (ui.selected === 'tea' && (!t || t.id !== 'petunia')) ui.setPrompt({ verb: 'Drink', name: 'the tea' });
+    else ui.setPrompt({ verb: `Use the ${ITEMS[ui.selected].name.toLowerCase()} on`, name: t ? t.name : 'nothing here' });
   } else {
     const door = doorAhead(), t = thingAtHand();
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
@@ -4043,7 +4281,7 @@ function updateGlints(now, dt) {
     const t = g.userData.thing;
     const d = Math.hypot(t.x - cam.position.x, t.y - cam.position.z);
     let target = 0;
-    if (!quiet && d < GLINT_RANGE && (!t.when || t.when())) {
+    if (!quiet && d < GLINT_RANGE && thingAvailable(t)) {
       const seen = game.flags.examined && game.flags.examined[t.id];
       const pulse = 0.75 + 0.25 * Math.sin(now / 520 + g.userData.phase);
       target = (t === faced ? 1 : seen ? 0.22 : 0.6 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
@@ -4102,6 +4340,7 @@ document.addEventListener('keydown', e => {
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j') { e.preventDefault(); ui.toggle('journal'); return; }
+  if (k === 'l' && !ui.overlay && !game.busy) { e.preventDefault(); toggleLantern(); return; }
   if (ui.overlay || game.busy || performance.now() < inputLockUntil) return;
   if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
   // The inventory: 1–9 pick up an item (or, holding one, combine it with
@@ -4122,6 +4361,7 @@ document.querySelectorAll('[data-cmd]').forEach(b => {
 });
 $('prompt').addEventListener('click', () => act('use'));
 $('btn-map').addEventListener('click', () => ui.toggle('map'));
+$('btn-lantern').addEventListener('click', () => { if (!ui.overlay && !game.busy) toggleLantern(); });
 $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
 document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
 $('room-card-close').addEventListener('click', hideRoomCard);

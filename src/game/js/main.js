@@ -67,6 +67,8 @@ function startGame(fresh) {
   ui.setDread(game.dread);
   ui.select(null);
   ui.drawInventory();
+  ui.setLanternMode(game.lanternLow);
+  ui.setOil(game.oil);
   setHearth(!!game.flags.hearthLit);
   const c = GRID.at(game.cx, game.cy);
   ui.setRoom(roomById(c.room)?.name || '');
@@ -132,6 +134,9 @@ function act(cmd) {
     const t = thingAtHand();
     // Holding an item: use it on whatever's in front of you.
     if (ui.selected) {
+      // Some things you use on yourself: oil for the lantern, tea to drink.
+      if (ui.selected === 'oil') return refillLantern();
+      if (ui.selected === 'tea' && (!t || t.id !== 'petunia')) { game.busy = true; return drinkTea().finally(() => { game.busy = false; lockInput(250); }); }
       if (t) return useThing(t, ui.selected);
       ui.log(`There’s nothing here to use the ${ITEMS[ui.selected].name.toLowerCase()} on.`, 'note');
       return ui.select(null);
@@ -257,7 +262,7 @@ function loop(now) {
   // The lantern, held a little to the right and below the eye.
   const rx = Math.cos(yaw), rz = -Math.sin(yaw);
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
-  world.lantern.intensity = LANTERN.intensity * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
+  world.lantern.intensity = LANTERN.intensity * tickDread(dt, here) * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
@@ -297,9 +302,6 @@ function loop(now) {
   if (game.curse && (game.busy || ui.overlay)) game.curseStart = now;
   else if (game.curse && now - game.curseStart > 3500) { game.curseStart = now; addDread(1); }
 
-  // Dread ebbs slowly when nothing is happening.
-  if (game.dread > 0 && !game.curse && !game.busy && clock - (game.dreadEbb || 0) > 30) { game.dreadEbb = clock; addDread(-1); }
-  else if (game.dread === 0 || game.curse || game.busy) game.dreadEbb = clock;
 
   // Doors swinging.
   Object.values(world.doors).forEach(v => {
@@ -315,6 +317,11 @@ function loop(now) {
   });
 
   updateGlints(now, dt);
+  world.decals.forEach(m => {
+    const target = thingAvailable(m.userData.thing) ? 1 : 0;
+    m.material.opacity += (target - m.material.opacity) * Math.min(1, dt * 2);
+    m.visible = m.material.opacity > 0.01;
+  });
 
   // Cut-outs turn to face you.
   billboards.forEach(b => { b.rotation.y = yaw; });
@@ -336,7 +343,9 @@ function loop(now) {
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
     const t = thingAtHand();
-    ui.setPrompt({ verb: `Use the ${ITEMS[ui.selected].name.toLowerCase()} on`, name: t ? t.name : 'nothing here' });
+    if (ui.selected === 'oil') ui.setPrompt({ verb: 'Fill', name: 'the lantern' });
+    else if (ui.selected === 'tea' && (!t || t.id !== 'petunia')) ui.setPrompt({ verb: 'Drink', name: 'the tea' });
+    else ui.setPrompt({ verb: `Use the ${ITEMS[ui.selected].name.toLowerCase()} on`, name: t ? t.name : 'nothing here' });
   } else {
     const door = doorAhead(), t = thingAtHand();
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
@@ -357,7 +366,7 @@ function updateGlints(now, dt) {
     const t = g.userData.thing;
     const d = Math.hypot(t.x - cam.position.x, t.y - cam.position.z);
     let target = 0;
-    if (!quiet && d < GLINT_RANGE && (!t.when || t.when())) {
+    if (!quiet && d < GLINT_RANGE && thingAvailable(t)) {
       const seen = game.flags.examined && game.flags.examined[t.id];
       const pulse = 0.75 + 0.25 * Math.sin(now / 520 + g.userData.phase);
       target = (t === faced ? 1 : seen ? 0.22 : 0.6 * pulse) * Math.min(1, (GLINT_RANGE - d) / CELL);
@@ -416,6 +425,7 @@ document.addEventListener('keydown', e => {
   if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j') { e.preventDefault(); ui.toggle('journal'); return; }
+  if (k === 'l' && !ui.overlay && !game.busy) { e.preventDefault(); toggleLantern(); return; }
   if (ui.overlay || game.busy || performance.now() < inputLockUntil) return;
   if (e.target.closest && e.target.closest('button') && (k === ' ' || k === 'enter')) return;
   // The inventory: 1–9 pick up an item (or, holding one, combine it with
@@ -436,6 +446,7 @@ document.querySelectorAll('[data-cmd]').forEach(b => {
 });
 $('prompt').addEventListener('click', () => act('use'));
 $('btn-map').addEventListener('click', () => ui.toggle('map'));
+$('btn-lantern').addEventListener('click', () => { if (!ui.overlay && !game.busy) toggleLantern(); });
 $('btn-journal').addEventListener('click', () => ui.toggle('journal'));
 document.querySelectorAll('.overlay .close').forEach(b => b.addEventListener('click', () => ui.close()));
 $('room-card-close').addEventListener('click', hideRoomCard);

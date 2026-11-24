@@ -247,6 +247,41 @@ const sound = {
     }
   },
 
+  // Dread you can hear: soft whispers now and then when uneasy; a slow
+  // heartbeat, and whispers more often, when terrified.
+  setDreadBand(band) {
+    if (!this.ctx || band === this.band) return;
+    this.band = band;
+    clearInterval(this.heartTimer); clearTimeout(this.whisperTimer);
+    if (band === 'terrified' || band === 'breaking') this.heartTimer = setInterval(() => this.heartbeat(), 950);
+    const whisperEvery = band === 'uneasy' ? 14000 : band === 'calm' ? 0 : 6000;
+    const next = () => { this.whisperTimer = setTimeout(() => { this.whisper(); next(); }, whisperEvery * (0.6 + Math.random() * 0.8)); };
+    if (whisperEvery) next();
+  },
+  heartbeat() {
+    const t = this.ctx.currentTime;
+    [0, 0.22].forEach((d, i) => {
+      const o = this.ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(i ? 52 : 60, t + d); o.frequency.exponentialRampToValueAtTime(32, t + d + 0.15);
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(i ? 0.25 : 0.4, t + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.2);
+      o.connect(g).connect(this.master); o.start(t + d); o.stop(t + d + 0.22);
+    });
+  },
+  // A breathy, wordless murmur from one side.
+  whisper() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, dur = 1.2 + Math.random() * 1.2;
+    const src = this.ctx.createBufferSource(); src.buffer = this.noise;
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 9;
+    bp.frequency.setValueAtTime(900 + Math.random() * 600, t);
+    for (let k = 0.15; k < dur; k += 0.18) bp.frequency.linearRampToValueAtTime(700 + Math.random() * 1500, t + k);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    const pan = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    let node = src.connect(bp).connect(g);
+    if (pan) { pan.pan.value = Math.random() < 0.5 ? -0.8 : 0.8; node = node.connect(pan); }
+    node.connect(this.master);
+    src.start(t, Math.random()); src.stop(t + dur + 0.05);
+  },
+
   // Hit in an encounter: a dull, cold thump.
   hit() {
     if (!this.ctx) return;

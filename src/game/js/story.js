@@ -48,7 +48,12 @@ const THINGS = [
   { id: 'feast', verb: 'Examine', run: () => feastScene() },
   { id: 'staircase', verb: 'Climb', run: () => stairsScene() },
   { id: 'front_door' }, { id: 'chandelier' }, { id: 'fireplace' }, { id: 'landscapes' },
-  { id: 'mirror' }, { id: 'tree', run: () => treeScene() },
+  { id: 'mirror', dreadText: [4, 'In the long crack, the room is not empty. It is full of dancers, pale and turning, turning, their mouths open in a laugh you cannot hear. When you look away from the glass the room is empty again.'] },
+  { id: 'tree', run: () => treeScene() },
+  // Only for frightened eyes.
+  { id: 'scratches', name: 'The scratches in the wallpaper', x: 692, y: 905, h: 46, minDread: 7, verb: 'Read',
+    prop: 'decal', decal: () => scratchesDecal(), decalSize: [30, 18],
+    text: 'Low on the wall, scratched through the paper by a small hand, over and over: SHE SLEEPS IN THE ROUND ROOM. DON’T LOOK IN HER EYE. LET HER LOOK IN HER OWN.' },
   { id: 'bench', when: () => game.flags.petuniaGone },
 ].map(t => {
   const poi = FLOOR.pois.find(p => p.id === t.id) || {};
@@ -60,6 +65,7 @@ const game = {
   mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
   items: [], teeth: 0, searched: new Set(),
   crooked: 0,        // how many hauntings you've destroyed rather than freed
+  oil: 1, lanternLow: false,
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -68,7 +74,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0 });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0, oil: 1, lanternLow: false });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -79,6 +85,7 @@ function saveGame() {
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
     items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
+    oil: game.oil, lanternLow: game.lanternLow,
   }));
 }
 
@@ -92,6 +99,8 @@ function loadGame() {
     game.teeth = s.teeth || 0;
     game.searched = new Set(s.searched || []);
     game.crooked = s.crooked || 0;
+    game.oil = s.oil ?? 1;
+    game.lanternLow = !!s.lanternLow;
     return true;
   } catch { return false; }
 }
@@ -191,12 +200,16 @@ function hideRoomCard() { $('room-card').hidden = true; }
 // you, within about a square, and not on the far side of a wall. (Things
 // sit where they are on the floor plan, not on the grid, so a harpsichord
 // can be ahead of you and a little to one side.)
+function thingAvailable(t) {
+  return (!t.when || t.when()) && (!t.minDread || game.dread >= t.minDread);
+}
+
 function thingAtHand() {
   const here = GRID.at(game.cx, game.cy);
   const fx = here.x + DIRS[game.dir][0] * CELL * 0.75, fy = here.y + DIRS[game.dir][1] * CELL * 0.75;
   let best = null, bestD = CELL * 1.05;
   for (const t of THINGS) {
-    if (t.when && !t.when()) continue;
+    if (!thingAvailable(t)) continue;
     const d = Math.hypot(t.x - fx, t.y - fy);
     if (d >= bestD) continue;
     if (GRID.segs.some(([a, b]) => segmentsCross([here.x, here.y], [t.x, t.y], a, b))) continue;
@@ -213,7 +226,7 @@ async function useThing(t, item) {
   try {
     if (item) await useItemOn(item, t);
     else if (t.run) await t.run();
-    else await ui.say(t.name, t.text);
+    else await ui.say(t.name, thingText(t));
   } finally {
     game.busy = false;
     lockInput(250);
@@ -667,6 +680,11 @@ async function peacockScene() {
 
 async function ovenScene() {
   const t = THINGS.find(x => x.id === 'oven');
+  // Frightened enough, you see what was hidden on the lock all along.
+  if (game.dread >= 7 && !game.flags.glyphSeen) {
+    game.flags.glyphSeen = true;
+    await ui.say(t.name, 'Your eyes are wide and your heart is hammering, and so you see it: a small coiled glyph scratched into the rusted lock, glowing faintly like a coal. It was always there. It is waiting for someone to force the door.');
+  }
   if (!game.flags.ovenHeard) {
     game.flags.ovenHeard = true;
     await ui.say(t.name, t.text);
