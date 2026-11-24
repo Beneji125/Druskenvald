@@ -227,7 +227,12 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   Jasper, the boogleswarm (its encounter), and Joseph Patrini, Gail Patrini
   and Sally Lockwood (the first three foyer portraits, and Joseph and Gail
   in Joseph's memory; a head-and-shoulders portrait becomes a whole person
-  by fading into a soft body, `paintFigure` in art.js). `CHARACTER_ART` in
+  by fading into a soft body, `paintFigure` in art.js). Standing in the
+  house, every character is stylized to sit in its light (`stylizePainting`:
+  a few tones, ink edges, lit by the lantern, with accents like the grin
+  and Jasper's eye kept bright; settings in `STYLE`); the paintings
+  themselves appear as they are beside the dialogue, on the encounter
+  screens and on the title screen. `CHARACTER_ART` in
   art.js lists them; `PORTRAITS` in ui.js says whose face shows when they
   speak. Vessla Browntooth's portrait is kept for a later floor.
 - **The arrival** (`arrival.js`): a new game opens outside at dusk, at the
