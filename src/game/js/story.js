@@ -511,14 +511,7 @@ async function petuniaScene(offer) {
       saveGame();
       return;
     } else if (pick === 'snatch') {
-      ui.flash('#cfe0ff', 900);
-      sound.thunder(0.6);
-      await ui.say('', 'You reach for the cup. Petunia’s head snaps round, and the green ribbon at her throat slips a finger’s width. The air turns to ice. She rises, and the scream that tears out of her is not a sound a living woman could make —');
-      f.petuniaAngered = true;
-      stepBack();
-      addDread(4);
-      ui.log('You stagger back. She is on the bench again, as if nothing had happened. She will not forget.', 'scare');
-      return;
+      return petuniaForced();
     }
   }
 }

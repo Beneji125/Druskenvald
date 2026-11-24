@@ -264,3 +264,78 @@ function glyphPuzzle() {
     show();
   });
 }
+
+// ─── The conservatory: Petunia, angered ───────────────────────────────
+// The book: forced, her grief turns to rage and she drains the life from
+// you; her green ribbon, pulled loose, destroys her. Here: snatch her cup
+// and she rises against you. Calm her with what she longs for, or seize
+// the ribbon.
+
+ENCOUNTERS.petunia = {
+  name: 'Petunia Lockwood',
+  art: 'petunia',
+  calmMax: 3,
+  intro: 'Petunia’s head snaps round. The green ribbon at her throat slips a finger’s width, and the air turns to ice. She rises from the bench, and the scream that tears out of her is not a sound a living woman could make.',
+  prompt: st => ['Her hands reach for you, cold as the grave.', 'She is weeping, and every tear freezes as it falls.', '“Give it back,” she says, in a voice like cracking ice. “It’s all I have.”'][st.turn % 3],
+  calmFull: 'Her hands fall to her sides. The ice in the air softens. She looks lost, and tired, and very sad. You could let her be.',
+  notReady: 'She’s still too far gone in her grief.',
+  flee: 'You stumble back out of the conservatory. Behind you, the weeping goes on.',
+  acts: [
+    { id: 'sorry', text: 'Apologise', once: true, calm: 1, line: '“I’m sorry. I shouldn’t have.” For a moment the cold eases. She doesn’t look at you, but she hears you.' },
+    { id: 'names', text: 'Speak of Sally and Arthur', once: true, calm: 2, when: () => game.clues.has('lockwoods'),
+      line: '“Sally,” you say. “Arthur.” Her face crumples. “My babies. Where are my babies?” The reaching hands falter.', run: () => { game.flags.petuniaNamed = true; } },
+    { id: 'ribbon', text: 'Seize the green ribbon', dark: true, line: 'You lunge past her hands and catch the faded green ribbon at her throat, and pull. It comes undone far too easily.',
+      run: st => { st.result = 'killed'; } },
+  ],
+  items: {
+    tea: { calm: 2, line: 'You hold out the bergamot tea. She stops. She takes it in her cold hands, and smells it, and her shoulders drop. “That’s how I make it,” she whispers.', run: () => { swapItem('tea', 'kettle'); game.flags.petuniaTea = true; } },
+    doll: { calm: 2, line: 'You hold up Sally’s doll. Petunia makes a small, broken sound and reaches for it, not for you.' },
+    bear: { calm: 2, line: 'You hold up Arthur’s blue bear. “He can’t sleep without it,” she says, and the rage goes out of her like a breath.' },
+    knife: { line: 'You raise the knife. She doesn’t even flinch. What could it do to her now?' },
+  },
+  patterns: [
+    { duration: 6, text: 'Cold hands sweep across the room, reaching for you.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0.2) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.1 : 0.8;
+        const left = api.rand() < 0.5, y = 20 + api.rand() * (api.h - 40);
+        api.add({ x: left ? -40 : api.w + 40, y, vx: left ? 170 : -170, vy: 0, rect: [70, 16], color: '#b8c4d8' });
+      } },
+    { duration: 6, text: 'Her tears freeze as they fall.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 0.22 : 0.14;
+        api.add({ x: api.rand() * api.w, y: -8, vx: 0, vy: 90 + api.rand() * 70, r: 4, color: '#cfe0ff' });
+      } },
+    { duration: 6, text: 'The teacup shatters in her hands, and the pieces fly.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0.3) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.4 : 1.0;
+        const n = api.easy ? 8 : 12, off = api.rand() * Math.PI;
+        for (let i = 0; i < n; i++) { const a = off + i / n * Math.PI * 2; api.add({ x: api.w / 2, y: api.h / 2, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, r: 5, color: '#f0f0f4', armed: 0.25 }); }
+      } },
+  ],
+};
+
+async function petuniaForced() {
+  const r = await runEncounter(ENCOUNTERS.petunia);
+  const f = game.flags;
+  if (r === 'released') return petuniaAtPeace();
+  if (r === 'killed') {
+    f.petuniaGone = true; f.petuniaKilled = true;
+    fadeSprite('petunia');
+    sound.thunder(1);
+    await ui.say('', 'Her head tips, and tips, and falls. There is a great deal of blood, and then there is none, and no Petunia either: only the faded green ribbon in your hand, and the white teacup lying on the bench where she sat.');
+    game.crooked = (game.crooked || 0) + 1;
+    game.tainted.push('cup');
+    giveItem('ribbon', { quiet: true });
+    giveMemento('cup');
+    await runFlashback('petunia', { corrupt: true });
+    return;
+  }
+  f.petuniaAngered = true;
+  saveGame();
+}
