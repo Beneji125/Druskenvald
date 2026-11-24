@@ -214,6 +214,14 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   soul (Crookedness). When your nerve breaks he steals something you carry,
   mementos included; his nest under the foyer stairs (visible only when
   you're terrified, until you've found it) has everything he took.
+- **Flashbacks** (`flashback.js`): freeing a ghost plays their last
+  minutes, in the house as it was seventy years ago (warm, sepia, every door
+  open, no storm, the family alive). You can walk and look within the
+  memory but not change how it ends. A ghost you destroyed is remembered
+  through Eustace's eyes instead, in red. Each memory is a short script in
+  `FLASHBACKS`, and each leaves a clue for upstairs: Petunia's (where
+  Sally's doll and Arthur's bear are) and Joseph Patrini's (where Gail hid,
+  with her hairpin).
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

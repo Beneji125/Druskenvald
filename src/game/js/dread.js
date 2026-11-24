@@ -36,6 +36,7 @@ let dreadClock = 0, lanternNow = 1;
 // Called every frame by the main loop (dt in seconds). Returns the
 // lantern's brightness (0–1) for the light.
 function tickDread(dt, here) {
+  if (game.inFlashback) { $('view').style.filter = ''; $('dread-veil').style.opacity = '0'; sound.setDreadBand('calm'); return 1; }
   const quiet = !game.busy && !ui.overlay && !game.curse && !game.inEncounter && !game.flags.breaking;
   // Oil.
   const setting = game.lanternLow ? 'low' : 'bright';

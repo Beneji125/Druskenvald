@@ -26,6 +26,8 @@ const CLUES = [
   { id: 'attic',     text: 'A hag is behind all of this. She is in the attic.' },
   { id: 'mementos',  text: 'Six mementos open the way to the attic: a gem, a key, a cup, a doll, a bear and a pin. They are on every floor.' },
   { id: 'son',       text: 'Patrini’s last words: “Find my son. He lives.”' },
+  { id: 'toys',      text: 'From Petunia’s memory: Sally hid her doll at the bottom of the toy chest. Arthur’s blue bear was in his cradle. (Upstairs.)' },
+  { id: 'gail',      text: 'From Joseph Patrini’s memory: Gail hid in the trophy room upstairs, behind the great stuffed bear, with her silver hairpin.' },
 ];
 
 // How high each thing's glint hangs (world units; the ceiling is WALL_H).
@@ -81,6 +83,7 @@ function newGame() {
 }
 
 function saveGame() {
+  if (game.inFlashback) return;      // saved when the memory ends
   store.set(SAVE_KEY, JSON.stringify({
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
@@ -162,8 +165,9 @@ function addClue(id) {
 
 function enteredCell(prev) {
   const c = GRID.at(game.cx, game.cy);
-  markSeen(c);
   const room = roomById(c.room);
+  if (game.inFlashback) { if (room) ui.setRoom(room.name); return; }   // the past: nothing stirs
+  markSeen(c);
   const prevRoom = prev ? prev.room : null;
   if (room && c.room !== prevRoom) {
     ui.setRoom(room.name);
@@ -205,6 +209,8 @@ function hideRoomCard() { $('room-card').hidden = true; }
 // sit where they are on the floor plan, not on the grid, so a harpsichord
 // can be ahead of you and a little to one side.)
 function thingAvailable(t) {
+  // In a memory, only the remembered things are there; outside one, never.
+  if (!!t.memory !== !!game.inFlashback) return false;
   return (!t.when || t.when()) && (!t.minDread || game.dread >= t.minDread);
 }
 
@@ -547,6 +553,7 @@ async function petuniaAtPeace() {
   await ui.say('', 'When you look up, the bench is empty. Only the tree is there, green and heavy with fruit, and a faint smell of bergamot.');
   giveMemento('cup');
   addDread(-3);
+  await runFlashback('petunia');
 }
 
 async function treeScene() {
@@ -609,6 +616,7 @@ async function harpsichordScene() {
   await ui.say('', 'The figure fades. With a soft crack, a single black ivory key springs loose and clatters to the floor.');
   game.flags.musicSolved = true;
   giveMemento('key');
+  await runFlashback('patrini');
 }
 
 // The keyboard: the tune plays with its keys lit, then you play it back.

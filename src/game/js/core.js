@@ -155,6 +155,7 @@ function canStep(c, dir) {
   const e = c.edges[dir];
   if (e === 'wall' || e === 'rail' || e === 'none') return false;
   if (e === 'door' && !DOORS.at(c, dir)?.open) return false;
+  if (typeof inFlashback === 'function' && inFlashback() && !flashbackAllows(GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]))) return false;
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
   return !!(n && n.walk && !n.blocked);   // `blocked`: big furniture (world.js)
 }

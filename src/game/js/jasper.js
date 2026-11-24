@@ -31,7 +31,7 @@ function jasperVoice() {
 // Called every frame by the main loop.
 function tickJasper(dt, here, now) {
   const s = world.jasper;
-  const quiet = !game.busy && !ui.overlay && !game.curse && !game.inEncounter && !game.flags.breaking && here.room !== 'porch';
+  const quiet = !game.busy && !ui.overlay && !game.curse && !game.inEncounter && !game.inFlashback && !game.flags.breaking && here.room !== 'porch';
   const band = dreadBand();
   // Terrified: he's here, waiting, a square or two away.
   if (quiet && (band === 'terrified')) {

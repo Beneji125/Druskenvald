@@ -168,10 +168,18 @@ const sound = {
     this.master.gain.setTargetAtTime(on ? this.volume : 0, this.ctx.currentTime, 0.3);
   },
 
+  // In a memory there's no storm.
+  setPast(on) {
+    this.past = on;
+    if (!this.stormGain) return;
+    if (on) this.stormGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.6);
+    else this.setPlace(this.place);
+  },
+
   // 'out', 'glass' or 'in': see STORM_PLACES.
   setPlace(place) {
     this.place = place;
-    if (!this.stormFilter) return;
+    if (!this.stormFilter || this.past) return;
     const p = STORM_PLACES[place] || STORM_PLACES.in, t = this.ctx.currentTime;
     this.stormFilter.frequency.setTargetAtTime(p.cutoff, t, 0.5);
     this.stormGain.gain.setTargetAtTime(p.gain, t, 0.5);

@@ -165,6 +165,7 @@ function act(cmd) {
 // ─── Doors ────────────────────────────────────────────────────────────
 
 function doorAhead() {
+  if (game.inFlashback) return null;      // memories leave the doors as they were
   const c = GRID.at(game.cx, game.cy);
   return c && c.edges[game.dir] === 'door' ? DOORS.at(c, game.dir) : null;
 }
@@ -291,6 +292,15 @@ function loop(now) {
   world.ambient.color.copy(moodColor);
   world.ambient.groundColor.copy(moodColor).multiplyScalar(0.55);   // so walls get it too
   world.ambient.intensity = moodLevel + f * (here.room === 'porch' || here.room === 'conservatory' ? 1.2 : 0.25);
+  // In a memory: a warm, lamplit evening, no storm, no lantern needed.
+  if (game.inFlashback) {
+    world.ambient.color.set(fb.corrupt ? 0xd07060 : 0xffd9a8);
+    world.ambient.groundColor.set(fb.corrupt ? 0x401010 : 0x6a4a2a);
+    world.ambient.intensity = 9;
+    world.lightning.intensity = 0;
+    world.lantern.intensity = 0;
+  }
+  world.rain.visible = !game.inFlashback;
   world.windowMats.forEach(m => { m.emissiveIntensity = 0.05 + f * 1.4; });
   world.rain.material.uniforms.time.value = clock;
   world.rain.material.uniforms.flash.value = f;
@@ -334,6 +344,7 @@ function loop(now) {
   // Hide anything you're standing inside of.
   world.sprites.forEach(s => {
     if (s.userData.kind === 'petunia' && game.flags.petuniaGone) return;
+    if (game.inFlashback && SPRITES[s.userData.kind]?.ghost) { s.material.opacity = 0; return; }   // no ghosts in the past
     const d = Math.hypot(s.position.x - cam.position.x, s.position.z - cam.position.z);
     s.material.opacity = d < 18 ? 0 : d < 34 ? (d - 18) / 16 : (s.userData.kind === 'petunia' ? 0.92 : 1);
   });
@@ -342,7 +353,7 @@ function loop(now) {
   sound.setTheme(musicFor(here));
   // Quiet for the séance; the waltz drops back while you're at the keys
   // so you can hear the tune you're playing.
-  sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
+  sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : game.inFlashback ? 0.7 : 1);
   if (game.flags.feastDone && world.feastMat.map) { world.feastMat.map = null; world.feastMat.color.set(game.flags.feastDone === 'killed' ? 0x1a1410 : 0x5a5048); world.feastMat.needsUpdate = true; }
 
   if (busy()) ui.setPrompt(null);
@@ -403,6 +414,7 @@ let dreadTheme = false;
 function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
+  if (game.inFlashback) return fb.active === 'patrini' && !fb.corrupt ? 'echoes' : 'house';   // Patrini's song plays on in his memory
   if (game.curse) return 'waltz';
   if (game.inEncounter) return 'dread';
   // Patrini's song, straight after the puzzle: only while you stay in the
@@ -493,4 +505,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
