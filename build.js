@@ -416,7 +416,7 @@ function build() {
 // Its own page, built the same way from src/game/: template.html, game.css
 // and the scripts in GAME_FILES (joined in this order into one module
 // script), after the house data from src/data/explore.json.
-const GAME_FILES = ['core.js', 'art.js', 'audio.js', 'world.js', 'ui.js', 'story.js', 'items.js', 'main.js'];
+const GAME_FILES = ['core.js', 'art.js', 'audio.js', 'world.js', 'ui.js', 'story.js', 'items.js', 'encounter.js', 'rooms.js', 'main.js'];
 const GAME_OUTPUT = path.join(DOCS_DIR, 'crooked-house.html');
 
 function readGameScript() {

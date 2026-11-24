@@ -216,6 +216,33 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   .ouija-text { text-align: center; }
 }
 
+/* ── Encounters ── */
+#encounter { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: radial-gradient(ellipse at 50% 40%, rgba(30,8,8,0.88), rgba(3,2,4,0.97) 70%); overflow-y: auto; }
+.enc-panel { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.enc-top { display: flex; align-items: flex-end; gap: 14px; }
+.enc-foe { width: 150px; height: 150px; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
+.enc-who { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.enc-name { font-family: 'Cinzel Decorative', Georgia, serif; color: var(--gold); font-size: 1.3rem; }
+.enc-calm, .enc-dread { display: flex; align-items: center; gap: 8px; }
+.enc-dread-pips { display: flex; gap: 3px; }
+.enc-dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
+.enc-dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; }
+.enc-dread.high .enc-dread-pips span.on { background: #c45a48; border-color: #e08a70; }
+.enc-calm-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+.enc-calm-pips { display: flex; gap: 4px; }
+.enc-calm-pips span { width: 18px; height: 10px; border-radius: 2px; border: 1px solid rgba(160,200,180,0.5); }
+.enc-calm-pips span.on { background: #8ac0a0; box-shadow: 0 0 8px rgba(140,200,170,0.7); }
+.enc-text { margin: 0; min-height: 3em; font-size: 1.05rem; line-height: 1.45; }
+.enc-arena-wrap { display: flex; justify-content: center; }
+.enc-arena { width: 100%; max-width: 540px; aspect-ratio: 360 / 220; border: 2px solid rgba(232,213,163,0.7); border-radius: 2px; touch-action: none; display: block; }
+.enc-menu { display: flex; flex-wrap: wrap; gap: 6px; min-height: 2.4em; }
+.enc-btn { font-size: 1rem; padding: 0.4em 0.8em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; display: flex; gap: 0.5em; align-items: baseline; }
+.enc-btn:hover, .enc-btn:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
+.enc-btn.disabled { opacity: 0.45; }
+.enc-btn.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
+.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; }
+#sound-panel .opt { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; font-size: 0.9rem; color: var(--cream-dim); }
+
 /* ── The harpsichord ── */
 #keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
 .keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }

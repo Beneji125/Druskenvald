@@ -59,6 +59,7 @@ const game = {
   cx: 0, cy: 0, dir: 0, dread: 0,
   mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
   items: [], teeth: 0, searched: new Set(),
+  crooked: 0,        // how many hauntings you've destroyed rather than freed
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -67,7 +68,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set() });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0 });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -77,7 +78,7 @@ function saveGame() {
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
-    items: game.items, teeth: game.teeth, searched: [...game.searched],
+    items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
   }));
 }
 
@@ -90,6 +91,7 @@ function loadGame() {
     game.items = (s.items || []).filter(id => ITEMS[id]);
     game.teeth = s.teeth || 0;
     game.searched = new Set(s.searched || []);
+    game.crooked = s.crooked || 0;
     return true;
   } catch { return false; }
 }
@@ -106,7 +108,8 @@ function addDread(n) {
   game.dread = clamp(game.dread + n, 0, DREAD_MAX);
   ui.setDread(game.dread);
   if (n > 0) { $('dread').classList.remove('jolt'); void $('dread').offsetWidth; $('dread').classList.add('jolt'); }
-  if (game.dread >= DREAD_MAX && !game.flags.breaking) nerveBreaks();
+  // (In an encounter, the encounter ends first and then breaks your nerve.)
+  if (game.dread >= DREAD_MAX && !game.flags.breaking && !game.inEncounter) nerveBreaks();
 }
 
 async function nerveBreaks() {
@@ -680,13 +683,6 @@ async function ovenScene() {
   }
 }
 
-async function feastScene() {
-  const t = THINGS.find(x => x.id === 'feast');
-  const pick = await ui.say(t.name, t.text, [{ id: 'eat', text: 'Take something from the table' }, { id: 'leave', text: 'Leave it' }]);
-  if (pick !== 'eat') return;
-  await ui.say('', 'You lift a little cake from a silver tray. It is warm, and it moves. You drop it, and it crawls back onto its plate.');
-  addDread(1);
-}
 
 // ─── The hallway: the Crooked Man ─────────────────────────────────────
 

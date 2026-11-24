@@ -331,6 +331,7 @@ function loop(now) {
   // Quiet for the séance; the waltz drops back while you're at the keys
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
+  if (game.flags.feastDone && world.feastMat.map) { world.feastMat.map = null; world.feastMat.color.set(game.flags.feastDone === 'killed' ? 0x1a1410 : 0x5a5048); world.feastMat.needsUpdate = true; }
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
@@ -389,6 +390,7 @@ function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
   if (game.curse) return 'waltz';
+  if (game.inEncounter) return 'dread';
   // Patrini's song, straight after the puzzle: only while you stay in the
   // music room. Leave, and it's over for good.
   if (game.echoesPlaying && here.room !== 'music') game.echoesPlaying = false;
@@ -455,6 +457,9 @@ volSlider.value = Math.round(sound.volume * 100);
 musicSlider.value = Math.round(sound.musicVolume * 100);
 volSlider.addEventListener('input', () => { sound.setVolume(volSlider.value / 100); if (!sound.on && volSlider.value > 0) { sound.setOn(true); showSound(); } });
 musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.value / 100));
+const easyBox = $('opt-easy');
+easyBox.checked = easyMode();
+easyBox.addEventListener('change', () => store.set(EASY_KEY, easyBox.checked ? 'on' : 'off'));
 $('btn-mute').addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
 const toggleSoundPanel = open => {
   soundPanel.hidden = open === undefined ? !soundPanel.hidden : !open;

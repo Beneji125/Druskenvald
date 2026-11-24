@@ -396,8 +396,10 @@ function addScenery(w, p, box) {
       break;
     }
     case 'diningTable': {
-      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 }), wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
+      const feastMat = new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 });
+      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), feastMat, wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
       top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
+      w.feastMat = feastMat;
       [[-34, -84], [34, -84], [-34, 84], [34, 84]].forEach(([dx, dz]) => box(6, 36, 6, wood('#2a180c'), p.x + dx, 18, p.y + dz));
       break;
     }

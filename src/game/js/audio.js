@@ -247,6 +247,16 @@ const sound = {
     }
   },
 
+  // Hit in an encounter: a dull, cold thump.
+  hit() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.25);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.32);
+  },
+
   // Picking something up: two soft wooden taps.
   pickup() {
     if (!this.ctx) return;

@@ -188,6 +188,15 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   of its square. Item pictures are drawn by `itemIcon()` in `art.js`. In
   the game: click an item or press 1–9 to pick it up, pick a second to
   combine them, Space to use it on what you face, X to examine it.
+- **Encounters:** when a haunting turns on you (`encounter.js`). No
+  fighting: you steer a lantern flame round an arena dodging its attacks,
+  every hit adds Dread, and between attacks you pick Act, Item, Release
+  (once Calm is full: the peaceful end) or Flee. Some items are the dark
+  way out, and raise Crookedness. Full Dread breaks your nerve: back to the
+  porch, and the encounter starts over next time. Each encounter is data in
+  `ENCOUNTERS` (`rooms.js`): its art, lines, Acts, Items and attack
+  patterns. "Gentler encounters" in the 🔊 panel slows attacks and halves
+  the Dread they cost. So far: the dining room's Phantom Feast.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

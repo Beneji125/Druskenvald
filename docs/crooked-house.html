@@ -230,6 +230,33 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   .ouija-text { text-align: center; }
 }
 
+/* ── Encounters ── */
+#encounter { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: radial-gradient(ellipse at 50% 40%, rgba(30,8,8,0.88), rgba(3,2,4,0.97) 70%); overflow-y: auto; }
+.enc-panel { width: min(560px, 100%); display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.enc-top { display: flex; align-items: flex-end; gap: 14px; }
+.enc-foe { width: 150px; height: 150px; flex: none; filter: drop-shadow(0 0 18px rgba(200,80,60,0.35)); }
+.enc-who { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.enc-name { font-family: 'Cinzel Decorative', Georgia, serif; color: var(--gold); font-size: 1.3rem; }
+.enc-calm, .enc-dread { display: flex; align-items: center; gap: 8px; }
+.enc-dread-pips { display: flex; gap: 3px; }
+.enc-dread-pips span { width: 9px; height: 14px; border-radius: 2px; border: 1px solid rgba(201,169,110,0.35); }
+.enc-dread-pips span.on { background: #6a8fc8; border-color: #9fb6dc; }
+.enc-dread.high .enc-dread-pips span.on { background: #c45a48; border-color: #e08a70; }
+.enc-calm-label { font-family: 'Cinzel', serif; font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+.enc-calm-pips { display: flex; gap: 4px; }
+.enc-calm-pips span { width: 18px; height: 10px; border-radius: 2px; border: 1px solid rgba(160,200,180,0.5); }
+.enc-calm-pips span.on { background: #8ac0a0; box-shadow: 0 0 8px rgba(140,200,170,0.7); }
+.enc-text { margin: 0; min-height: 3em; font-size: 1.05rem; line-height: 1.45; }
+.enc-arena-wrap { display: flex; justify-content: center; }
+.enc-arena { width: 100%; max-width: 540px; aspect-ratio: 360 / 220; border: 2px solid rgba(232,213,163,0.7); border-radius: 2px; touch-action: none; display: block; }
+.enc-menu { display: flex; flex-wrap: wrap; gap: 6px; min-height: 2.4em; }
+.enc-btn { font-size: 1rem; padding: 0.4em 0.8em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; display: flex; gap: 0.5em; align-items: baseline; }
+.enc-btn:hover, .enc-btn:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
+.enc-btn.disabled { opacity: 0.45; }
+.enc-btn.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
+.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; }
+#sound-panel .opt { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; font-size: 0.9rem; color: var(--cream-dim); }
+
 /* ── The harpsichord ── */
 #keys { position: absolute; inset: 0; z-index: 7; display: flex; align-items: flex-end; justify-content: center; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3,3,6,0.9), rgba(3,3,6,0.2)); }
 .keys-panel { width: min(560px, 100%); display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -299,6 +326,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
     <label for="vol-music">Music</label>
     <input type="range" id="vol-music" min="0" max="100" step="1">
     <button type="button" id="btn-mute" aria-pressed="false">Mute</button>
+    <label class="opt"><input type="checkbox" id="opt-easy"> Gentler encounters</label>
   </div>
 
   <div id="room-card" hidden>
@@ -357,6 +385,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
   </div>
 
   <div id="ouija" hidden role="dialog" aria-label="The spirit board"></div>
+  <div id="encounter" hidden role="dialog" aria-label="Encounter"></div>
   <div id="keys" hidden role="dialog" aria-label="The harpsichord"></div>
   <div id="flash" aria-hidden="true"></div>
 </section>
@@ -1362,6 +1391,16 @@ const sound = {
     }
   },
 
+  // Hit in an encounter: a dull, cold thump.
+  hit() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.25);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.32);
+  },
+
   // Picking something up: two soft wooden taps.
   pickup() {
     if (!this.ctx) return;
@@ -1784,8 +1823,10 @@ function addScenery(w, p, box) {
       break;
     }
     case 'diningTable': {
-      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 }), wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
+      const feastMat = new THREE.MeshStandardMaterial({ map: feastTexture(), roughness: 0.7 });
+      const top = new THREE.Mesh(new THREE.BoxGeometry(80, 5, 180), [wood('#3a2414'), wood('#3a2414'), feastMat, wood('#3a2414'), wood('#3a2414'), wood('#3a2414')]);
       top.position.set(p.x, 38, p.y); top.castShadow = top.receiveShadow = true; scene.add(top);
+      w.feastMat = feastMat;
       [[-34, -84], [34, -84], [-34, 84], [34, 84]].forEach(([dx, dz]) => box(6, 36, 6, wood('#2a180c'), p.x + dx, 18, p.y + dz));
       break;
     }
@@ -2261,6 +2302,7 @@ const game = {
   cx: 0, cy: 0, dir: 0, dread: 0,
   mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(),
   items: [], teeth: 0, searched: new Set(),
+  crooked: 0,        // how many hauntings you've destroyed rather than freed
   busy: false,       // a scene is playing: no walking
   curse: false,      // the waltz is playing
 };
@@ -2269,7 +2311,7 @@ const game = {
 
 function newGame() {
   const c = GRID.cellAtPx(FLOOR.start.x, FLOOR.start.y);
-  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set() });
+  Object.assign(game, { cx: c.cx, cy: c.cy, dir: 0, dread: 0, mementos: new Set(), clues: new Set(), flags: {}, seen: new Set(), roomsSeen: new Set(), curse: false, items: [], teeth: 0, searched: new Set(), crooked: 0 });
   game.doorsOpen = frontDoorOpen();
   store.remove(SAVE_KEY);
 }
@@ -2279,7 +2321,7 @@ function saveGame() {
     v: 1, cx: game.cx, cy: game.cy, dir: game.dir, dread: game.dread,
     mementos: [...game.mementos], clues: [...game.clues], flags: game.flags, seen: [...game.seen], roomsSeen: [...game.roomsSeen],
     doorsOpen: [...game.doorsOpen],
-    items: game.items, teeth: game.teeth, searched: [...game.searched],
+    items: game.items, teeth: game.teeth, searched: [...game.searched], crooked: game.crooked || 0,
   }));
 }
 
@@ -2292,6 +2334,7 @@ function loadGame() {
     game.items = (s.items || []).filter(id => ITEMS[id]);
     game.teeth = s.teeth || 0;
     game.searched = new Set(s.searched || []);
+    game.crooked = s.crooked || 0;
     return true;
   } catch { return false; }
 }
@@ -2308,7 +2351,8 @@ function addDread(n) {
   game.dread = clamp(game.dread + n, 0, DREAD_MAX);
   ui.setDread(game.dread);
   if (n > 0) { $('dread').classList.remove('jolt'); void $('dread').offsetWidth; $('dread').classList.add('jolt'); }
-  if (game.dread >= DREAD_MAX && !game.flags.breaking) nerveBreaks();
+  // (In an encounter, the encounter ends first and then breaks your nerve.)
+  if (game.dread >= DREAD_MAX && !game.flags.breaking && !game.inEncounter) nerveBreaks();
 }
 
 async function nerveBreaks() {
@@ -2882,13 +2926,6 @@ async function ovenScene() {
   }
 }
 
-async function feastScene() {
-  const t = THINGS.find(x => x.id === 'feast');
-  const pick = await ui.say(t.name, t.text, [{ id: 'eat', text: 'Take something from the table' }, { id: 'leave', text: 'Leave it' }]);
-  if (pick !== 'eat') return;
-  await ui.say('', 'You lift a little cake from a silver tray. It is warm, and it moves. You drop it, and it crawls back onto its plate.');
-  addDread(1);
-}
 
 // ─── The hallway: the Crooked Man ─────────────────────────────────────
 
@@ -3182,6 +3219,468 @@ async function examineItem(id) {
   if (game.busy || !id) return;
   game.busy = true;
   try { await ui.say(ITEMS[id].name, ITEMS[id].text); } finally { game.busy = false; lockInput(250); }
+}
+
+// ─── src/game/js/encounter.js ────────────────────────────────────────
+// Encounters: when a haunting turns on you. There is no fighting back.
+// The house throws its fear at you, and you weave a small lantern flame
+// (your nerve) through it; every hit adds Dread. Between its attacks you
+// choose what to do:
+//
+//   Act      say or do something: what you know and what you've seen
+//            opens up new things to try. The right ones bring Calm.
+//   Item     use something you carry: some calm, some protect, and some
+//            destroy (the dark way out).
+//   Release  once Calm is full, let the haunting go: the peaceful end.
+//   Flee     run, if the encounter lets you.
+//
+// If Dread fills, your nerve breaks: you flee to the porch, and the
+// encounter is there again, from the start, next time.
+//
+// Each encounter is data (ENCOUNTERS, in rooms.js): who you face, what
+// they say, the Acts and Items that work on them, and their attack
+// patterns. runEncounter() plays one and resolves with how it ended:
+// 'released', 'killed', 'fled' or 'broke'.
+
+const EASY_KEY = 'crooked_house_easy';
+const ARENA_W = 360, ARENA_H = 220;
+const SOUL_R = 6;
+
+const enc = { active: null };
+function easyMode() { return store.get(EASY_KEY) === 'on'; }
+
+async function runEncounter(def) {
+  const root = $('encounter');
+  const st = { def, calm: 0, turn: 0, result: null, shrink: 0, flags: {} };
+  enc.active = st;
+  game.inEncounter = true;
+  ui.select(null);
+  root.innerHTML = `
+    <div class="enc-panel">
+      <div class="enc-top">
+        <canvas class="enc-foe" width="256" height="256" aria-hidden="true"></canvas>
+        <div class="enc-who">
+          <div class="enc-name"></div>
+          <div class="enc-calm" role="meter" aria-label="Calm" aria-valuemin="0"><span class="enc-calm-label">Calm</span><span class="enc-calm-pips"></span></div>
+          <div class="enc-dread" role="meter" aria-label="Dread" aria-valuemin="0" aria-valuemax="10"><span class="enc-calm-label">Dread</span><span class="enc-dread-pips"></span></div>
+        </div>
+      </div>
+      <p class="enc-text" aria-live="polite"></p>
+      <div class="enc-arena-wrap"><canvas class="enc-arena" aria-label="Dodge with the arrow keys or WASD, or drag"></canvas></div>
+      <div class="enc-menu"></div>
+    </div>`;
+  root.hidden = false;
+  ui.overlay = 'encounter';
+  root.querySelector('.enc-name').textContent = def.name;
+  drawFoe(root.querySelector('.enc-foe'), def.art);
+  drawCalm(st);
+  drawEncDread();
+  const arena = root.querySelector('.enc-arena');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  arena.width = ARENA_W * dpr; arena.height = ARENA_H * dpr;
+  arena.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawArena(arena, st, { x: ARENA_W / 2, y: ARENA_H / 2 }, [], 0);
+  try {
+    await encSay(def.intro);
+    while (!st.result) {
+      const choice = await encMenu(st);
+      await encChoose(st, choice);
+      if (!st.result && game.dread >= DREAD_MAX) st.result = 'broke';   // e.g. from something you did
+      if (st.result) break;
+      const outcome = await dodge(st, arena, def.patterns[st.turn % def.patterns.length]);
+      if (outcome === 'broke') { st.result = 'broke'; break; }
+      st.turn++;
+      if (def.afterTurn) { const line = def.afterTurn(st); if (line) await encSay(line); }
+    }
+    if (st.result === 'broke') await encSay(def.broke || 'It is too much. You turn and run.');
+  } finally {
+    root.hidden = true;
+    root.innerHTML = '';
+    if (ui.overlay === 'encounter') ui.overlay = null;
+    enc.active = null;
+    game.inEncounter = false;
+    lockInput(400);
+  }
+  if (st.result === 'broke') await nerveBreaks();
+  return st.result;
+}
+
+// ─── Text and the menu ────────────────────────────────────────────────
+
+function encSay(text) {
+  if (!text) return Promise.resolve();
+  const root = $('encounter');
+  const p = root.querySelector('.enc-text');
+  p.textContent = text;
+  return encButtons([{ id: 'ok', text: 'Continue' }]);
+}
+
+// Shows buttons; resolves with the chosen id. Number keys pick, Escape
+// picks a 'back' button if there is one.
+function encButtons(buttons) {
+  return new Promise(resolve => {
+    const menu = $('encounter').querySelector('.enc-menu');
+    menu.innerHTML = '';
+    buttons.forEach((b, i) => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'enc-btn' + (b.dark ? ' dark' : '') + (b.disabled ? ' disabled' : '');
+      el.innerHTML = `<span class="key">${i + 1}</span>`;
+      el.appendChild(document.createTextNode(b.text));
+      el.addEventListener('click', () => done(b.id));
+      menu.appendChild(el);
+    });
+    let answered = false;
+    const onKey = e => {
+      const n = Number(e.key);
+      if (n >= 1 && n <= buttons.length) { e.preventDefault(); e.stopImmediatePropagation(); done(buttons[n - 1].id); }
+      else if (e.key === 'Escape' && buttons.some(b => b.id === 'back')) { e.preventDefault(); e.stopImmediatePropagation(); done('back'); }
+      else if ((e.key === 'Enter' || e.key === ' ') && buttons.length === 1) { e.preventDefault(); e.stopImmediatePropagation(); done(buttons[0].id); }
+      else e.stopImmediatePropagation();
+    };
+    const done = id => {
+      if (answered) return;
+      answered = true;
+      document.removeEventListener('keydown', onKey, true);
+      menu.innerHTML = '';
+      resolve(id);
+    };
+    setTimeout(() => { if (!answered) document.addEventListener('keydown', onKey, true); }, 120);
+    menu.querySelector('button')?.focus({ preventScroll: true });
+  });
+}
+
+async function encMenu(st) {
+  const def = st.def;
+  const p = $('encounter').querySelector('.enc-text');
+  for (;;) {
+    p.textContent = typeof def.prompt === 'function' ? def.prompt(st) : (def.prompt || 'What do you do?');
+    const ready = st.calm >= def.calmMax;
+    const top = [
+      { id: 'act', text: 'Act' },
+      { id: 'item', text: 'Item' },
+      { id: 'release', text: ready ? 'Release' : 'Release (not yet)', disabled: !ready },
+    ];
+    if (!def.noFlee) top.push({ id: 'flee', text: 'Flee' });
+    const pick = await encButtons(top);
+    if (pick === 'act') {
+      const acts = def.acts.filter(a => !a.when || a.when(st));
+      const sub = await encButtons([...acts.map(a => ({ id: a.id, text: a.text, dark: a.dark })), { id: 'back', text: 'Back' }]);
+      if (sub !== 'back') return { type: 'act', act: acts.find(a => a.id === sub) };
+    } else if (pick === 'item') {
+      if (!game.items.length) { p.textContent = 'You aren’t carrying anything.'; await encButtons([{ id: 'back', text: 'Back' }]); continue; }
+      const sub = await encButtons([...game.items.map(id => ({ id, text: ITEMS[id].name, dark: !!(def.items[id] && def.items[id].kill) })), { id: 'back', text: 'Back' }]);
+      if (sub !== 'back') return { type: 'item', id: sub };
+    } else if (pick === 'release') {
+      if (ready) return { type: 'release' };
+      p.textContent = def.notReady || 'It isn’t ready to let go. Not yet.';
+      await encButtons([{ id: 'back', text: 'Back' }]);
+    } else if (pick === 'flee') return { type: 'flee' };
+  }
+}
+
+async function encChoose(st, choice) {
+  const def = st.def;
+  if (choice.type === 'act') {
+    const a = choice.act;
+    const line = typeof a.line === 'function' ? a.line(st) : a.line;
+    if (a.once && st.flags['did_' + a.id]) { await encSay(a.again || 'You’ve tried that. It isn’t enough on its own.'); return; }
+    st.flags['did_' + a.id] = true;
+    await encSay(line);
+    if (a.calm) addCalm(st, a.calm);
+    if (a.run) await a.run(st);
+  } else if (choice.type === 'item') {
+    const u = def.items[choice.id];
+    if (!u) { await encSay(`The ${ITEMS[choice.id].name.toLowerCase()} is no use here.`); return; }
+    await encSay(typeof u.line === 'function' ? u.line(st) : u.line);
+    if (u.consume) takeItem(choice.id);
+    if (u.calm) addCalm(st, u.calm);
+    if (u.shrink) st.shrink = Math.min(0.6, st.shrink + u.shrink);
+    if (u.run) await u.run(st);
+    if (u.kill) st.result = 'killed';
+  } else if (choice.type === 'release') {
+    st.result = 'released';
+  } else if (choice.type === 'flee') {
+    await encSay(def.flee || 'You back away, and it lets you go. For now.');
+    st.result = 'fled';
+  }
+}
+
+function addCalm(st, n) {
+  st.calm = clamp(st.calm + n, 0, st.def.calmMax);
+  drawCalm(st);
+  if (st.calm >= st.def.calmMax && st.def.calmFull) $('encounter').querySelector('.enc-text').textContent = st.def.calmFull;
+}
+
+function drawCalm(st) {
+  const pips = $('encounter').querySelector('.enc-calm-pips');
+  pips.innerHTML = '';
+  for (let i = 0; i < st.def.calmMax; i++) { const s = document.createElement('span'); if (i < st.calm) s.className = 'on'; pips.appendChild(s); }
+  $('encounter').querySelector('.enc-calm').setAttribute('aria-valuenow', String(st.calm));
+  $('encounter').querySelector('.enc-calm').setAttribute('aria-valuemax', String(st.def.calmMax));
+}
+
+// Your Dread, which is what the encounter hits.
+function drawEncDread() {
+  const el = $('encounter').querySelector('.enc-dread-pips');
+  if (!el) return;
+  if (el.children.length !== DREAD_MAX) { el.innerHTML = ''; for (let i = 0; i < DREAD_MAX; i++) el.appendChild(document.createElement('span')); }
+  [...el.children].forEach((s, i) => s.classList.toggle('on', i < game.dread));
+  el.parentElement.classList.toggle('high', game.dread >= 7);
+  el.parentElement.setAttribute('aria-valuenow', String(Math.round(game.dread)));
+}
+
+function drawFoe(canvas, art) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 256, 256);
+  const img = typeof art === 'function' ? art() : spriteTexture(art).image;
+  const s = Math.min(240 / img.width, 240 / img.height);
+  ctx.drawImage(img, (256 - img.width * s) / 2, 256 - img.height * s - 4, img.width * s, img.height * s);
+}
+
+// ─── Dodging ──────────────────────────────────────────────────────────
+// A pattern: { duration (seconds), text (shown while it plays), start(api)
+// optional, spawn(api, t, dt) every frame }. Through `api` a pattern adds
+// shots: { x, y, vx, vy, r } circles, or { rect: [w, h] } bars, with an
+// optional `glyph` (a character drawn on it), `color`, `life` (seconds),
+// `update(shot, dt, t)`, and `hurt: false` for things that only look
+// dangerous. `api.soul` is where the flame is; `api.rand` is seeded.
+
+function dodge(st, canvas, pattern) {
+  return new Promise(resolve => {
+    const easy = easyMode();
+    const speed = easy ? 0.7 : 1;
+    const ctx = canvas.getContext('2d');
+    const soul = { x: ARENA_W / 2, y: ARENA_H / 2 };
+    const shots = [];
+    const held = new Set();
+    // `t` drives the pattern (capped per frame, so a stutter can't teleport
+    // shots); the attack ends by the real clock, so a slow device doesn't
+    // stretch it out.
+    let t = 0, last = performance.now(), invuln = 0, ended = false;
+    const started = performance.now();
+    const rand = seededRandom(st.turn * 101 + st.def.name.length);
+    // Lingering effects from what hit you: `blind` (the arena goes dark
+    // but for a little light round the flame) and `slow` (sluggish).
+    const fx = { blind: 0, slow: 0 };
+    // The salt line: a ring inside which shots crawl.
+    const pad = st.shrink * 60;
+    const inSalt = s => pad && s.x > pad * 1.6 && s.x < ARENA_W - pad * 1.6 && s.y > pad && s.y < ARENA_H - pad;
+    const bounds = { x0: SOUL_R, x1: ARENA_W - SOUL_R, y0: SOUL_R, y1: ARENA_H - SOUL_R };
+    const api = {
+      soul, rand, w: ARENA_W, h: ARENA_H, easy,
+      add(s) { s.age = 0; if (s.vx) s.vx *= speed; if (s.vy) s.vy *= speed; if (s.hurt === undefined) s.hurt = true; shots.push(s); return s; },
+      edge() { const side = Math.floor(rand() * 4); return side === 0 ? { x: rand() * ARENA_W, y: -10 } : side === 1 ? { x: ARENA_W + 10, y: rand() * ARENA_H } : side === 2 ? { x: rand() * ARENA_W, y: ARENA_H + 10 } : { x: -10, y: rand() * ARENA_H }; },
+      effect(name, secs) { fx[name] = Math.max(fx[name], easy ? secs * 0.6 : secs); },
+      aim(from, sp) { const dx = soul.x - from.x, dy = soul.y - from.y, d = Math.hypot(dx, dy) || 1; return { vx: dx / d * sp, vy: dy / d * sp }; },
+    };
+    $('encounter').querySelector('.enc-text').textContent = pattern.text || '';
+    $('encounter').querySelector('.enc-menu').innerHTML = '<span class="enc-dodge-hint">Move with WASD or the arrow keys · drag on a touch screen</span>';
+    if (pattern.start) pattern.start(api);
+    const KEYS = { w: 'u', arrowup: 'u', s: 'd', arrowdown: 'd', a: 'l', arrowleft: 'l', d: 'r', arrowright: 'r' };
+    const down = e => { const k = KEYS[e.key.toLowerCase()]; if (k) { held.add(k); e.preventDefault(); } e.stopImmediatePropagation(); };
+    const up = e => { const k = KEYS[e.key.toLowerCase()]; if (k) held.delete(k); e.stopImmediatePropagation(); };
+    let drag = null;
+    const rect = () => canvas.getBoundingClientRect();
+    const pdown = e => { canvas.setPointerCapture(e.pointerId); const r = rect(); drag = { x: e.clientX, y: e.clientY, sx: soul.x, sy: soul.y, k: ARENA_W / r.width }; };
+    const pmove = e => { if (!drag) return; soul.x = drag.sx + (e.clientX - drag.x) * drag.k; soul.y = drag.sy + (e.clientY - drag.y) * drag.k; };
+    const pup = () => { drag = null; };
+    document.addEventListener('keydown', down, true);
+    document.addEventListener('keyup', up, true);
+    canvas.addEventListener('pointerdown', pdown);
+    canvas.addEventListener('pointermove', pmove);
+    canvas.addEventListener('pointerup', pup);
+    canvas.addEventListener('pointercancel', pup);
+    const finish = how => {
+      if (ended) return;
+      ended = true;
+      document.removeEventListener('keydown', down, true);
+      document.removeEventListener('keyup', up, true);
+      canvas.removeEventListener('pointerdown', pdown);
+      canvas.removeEventListener('pointermove', pmove);
+      canvas.removeEventListener('pointerup', pup);
+      canvas.removeEventListener('pointercancel', pup);
+      drawArena(canvas, st, soul, [], 0);
+      resolve(how);
+    };
+    const frame = now => {
+      if (ended) return;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (document.hidden) { requestAnimationFrame(frame); return; }
+      t += dt;
+      const v = 140 * dt * (fx.slow > 0 ? 0.45 : 1);
+      fx.blind = Math.max(0, fx.blind - dt); fx.slow = Math.max(0, fx.slow - dt);
+      if (held.has('u')) soul.y -= v; if (held.has('d')) soul.y += v;
+      if (held.has('l')) soul.x -= v; if (held.has('r')) soul.x += v;
+      soul.x = clamp(soul.x, bounds.x0, bounds.x1); soul.y = clamp(soul.y, bounds.y0, bounds.y1);
+      pattern.spawn(api, t, dt);
+      for (let i = shots.length - 1; i >= 0; i--) {
+        const s = shots[i];
+        s.age += dt;
+        if (s.update) s.update(s, dt, t);
+        const k = inSalt(s) ? 0.35 : 1;
+        s.x += (s.vx || 0) * dt * k; s.y += (s.vy || 0) * dt * k;
+        const gone = (s.life && s.age > s.life) || s.x < -60 || s.x > ARENA_W + 60 || s.y < -60 || s.y > ARENA_H + 60;
+        if (gone) { shots.splice(i, 1); continue; }
+        if (!s.hurt || invuln > 0 || (s.armed !== undefined && s.age < s.armed)) continue;
+        const hit = s.rect
+          ? Math.abs(soul.x - s.x) < s.rect[0] / 2 + SOUL_R * 0.6 && Math.abs(soul.y - s.y) < s.rect[1] / 2 + SOUL_R * 0.6
+          : Math.hypot(soul.x - s.x, soul.y - s.y) < (s.r || 6) + SOUL_R * 0.6;
+        if (hit) {
+          invuln = easy ? 1.4 : 0.9;
+          sound.hit();
+          addDread(easy ? 0.5 : 1);
+          drawEncDread();
+          if (s.onHit) s.onHit(s, api);
+          if (game.dread >= DREAD_MAX) { finish('broke'); return; }
+        }
+      }
+      invuln = Math.max(0, invuln - dt);
+      drawArena(canvas, st, soul, shots, invuln, pad, fx);
+      if ((now - started) / 1000 >= pattern.duration) { finish('done'); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, ARENA_W, ARENA_H);
+  ctx.fillStyle = '#07060a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  if (pad) {                                   // the salt line: a pale ring keeping things out
+    ctx.strokeStyle = 'rgba(235,230,215,0.55)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 2;
+    ctx.strokeRect(pad * 1.6, pad, ARENA_W - pad * 3.2, ARENA_H - pad * 2); ctx.setLineDash([]);
+  }
+  shots.forEach(s => {
+    const fade = s.armed !== undefined && s.age < s.armed ? 0.35 : 1;
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = s.color || '#d8c49a';
+    if (s.rect) { ctx.fillRect(s.x - s.rect[0] / 2, s.y - s.rect[1] / 2, s.rect[0], s.rect[1]); }
+    else if (s.glyph) { ctx.font = `${Math.round((s.r || 6) * 2.4)}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.glyph, s.x, s.y); }
+    else { ctx.beginPath(); ctx.arc(s.x, s.y, s.r || 6, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  });
+  if (fx.blind > 0) {                          // blinded: darkness, but for the flame's own light
+    const a = Math.min(1, fx.blind * 2);
+    const m = ctx.createRadialGradient(soul.x, soul.y, 18, soul.x, soul.y, 60);
+    m.addColorStop(0, 'rgba(7,6,10,0)'); m.addColorStop(1, `rgba(7,6,10,${0.97 * a})`);
+    ctx.fillStyle = m; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  }
+  // The flame: your nerve. It flickers while you're shaken.
+  if (invuln > 0 && Math.floor(invuln * 12) % 2) return;
+  const g = ctx.createRadialGradient(soul.x, soul.y, 0, soul.x, soul.y, SOUL_R * 2.6);
+  g.addColorStop(0, 'rgba(255,240,200,1)'); g.addColorStop(0.35, 'rgba(255,180,90,0.9)'); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(soul.x, soul.y, SOUL_R * 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff4dc';
+  ctx.beginPath(); ctx.moveTo(soul.x, soul.y - SOUL_R * 1.4); ctx.quadraticCurveTo(soul.x + SOUL_R, soul.y, soul.x, soul.y + SOUL_R * 0.8); ctx.quadraticCurveTo(soul.x - SOUL_R, soul.y, soul.x, soul.y - SOUL_R * 1.4); ctx.fill();
+}
+
+// ─── src/game/js/rooms.js ────────────────────────────────────────────
+// The hauntings you can't simply look at: each room's encounter, as data
+// for the encounter engine (encounter.js), and the scenes that start them.
+// Kills raise Crookedness (game.crooked); see the dark route.
+
+const ENCOUNTERS = {};
+
+// ─── The dining room: the Phantom Feast ───────────────────────────────
+// The book: the food and tablecloth come alive; dishes fly at you, each
+// with its own effect (the sugar bowl blinds, the roast fish poisons, the
+// lobster claw cuts). Here: dodge the dishes; calm the feast by honouring
+// it as a guest would; or burn it.
+
+ENCOUNTERS.feast = {
+  name: 'The Phantom Feast',
+  art: () => feastFoeArt(),
+  calmMax: 3,
+  intro: 'As you reach for the table, the cutlery begins to tremble. The tablecloth heaves like something breathing underneath, and every dish on the table rises into the air and turns towards you.',
+  prompt: st => ['The feast hangs in the air, dripping, waiting.', 'Plates circle you slowly, like birds.', 'The tablecloth ripples. Somewhere, a chair scrapes back.'][st.turn % 3],
+  calmFull: 'The dishes sink slowly back towards the table. The feast is satisfied. You could let it rest.',
+  notReady: 'The feast isn’t done with you yet.',
+  flee: 'You back out of the room, and the dishes clatter down behind you.',
+  acts: [
+    { id: 'grace', text: 'Say grace', once: true, calm: 1, line: 'You bow your head and say the grace your grandmother used to say. The plates hesitate. A sugar bowl lowers itself an inch, almost politely.' },
+    { id: 'sit', text: 'Take a seat at the table', once: true, calm: 1, line: 'You pull out a chair and sit, as a guest should. For a moment every dish is perfectly still, as though a host somewhere has smiled.' },
+    { id: 'cook', text: 'Praise Mrs Patrini’s cooking', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
+      line: '“Gail Patrini’s roast,” you say, “the best in Wickermoor.” A ladle taps twice against a tureen, delighted, and the gravy boat makes a small, contented bow.' },
+    { id: 'eat', text: 'Eat something', line: 'You snatch a pastry out of the air and bite. It is warm. It moves in your mouth. You spit it out, gagging, and the whole feast laughs.',
+      run: () => { addDread(1); drawEncDread(); } },
+  ],
+  items: {
+    salt: { line: 'You pour a ring of salt around your feet. Whatever crosses it slows, as if wading through something thick.', shrink: 0.35 },
+    matches: { kill: true, line: 'You strike a match and drop it on the tablecloth. It goes up at once, with a shriek that comes from every dish at the same time. The feast burns. It takes a long time.' },
+    knife: { line: 'You wave the carving knife at the floating roast. It ducks, offended, and comes at you twice as hard.' },
+  },
+  patterns: [
+    { duration: 7, text: 'Sugar bowls! They fling their sugar as they pass.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 0.75 : 0.5;
+        const x = 20 + api.rand() * (api.w - 40);
+        api.add({ x, y: -12, vx: (api.rand() - 0.5) * 60, vy: 120 + api.rand() * 50, r: 9, glyph: '◒', color: '#e8e4dc', onHit: (s, a) => a.effect('blind', 2.2) });
+      } },
+    { duration: 7, text: 'Roast fish glide through the air in a shoal.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.3 : 0.95;
+        const fromLeft = api.rand() < 0.5, y0 = 30 + api.rand() * (api.h - 60);
+        for (let i = 0; i < (api.easy ? 3 : 4); i++) {
+          api.add({ x: fromLeft ? -20 - i * 34 : api.w + 20 + i * 34, y: y0, vx: fromLeft ? 130 : -130, vy: 0, r: 8, glyph: '❧', color: '#c9874a',
+            update: (s, d, tt) => { s.y = y0 + Math.sin(tt * 4 + i) * 18; }, onHit: (s, a) => a.effect('slow', 3) });
+        }
+      } },
+    { duration: 7, text: 'Lobster claws snap shut across the table, left and right.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0.3) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 1.1 : 0.8;
+        const y = 20 + api.rand() * (api.h - 40), w = api.w * (0.45 + api.rand() * 0.15), left = api.rand() < 0.5;
+        api.add({ x: left ? w / 2 : api.w - w / 2, y, rect: [w, 14], color: '#b8402e', armed: 0.6, life: 0.95 });
+      } },
+  ],
+};
+
+// The feast as you face it: the table, with dishes rising off it.
+function feastFoeArt() {
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.fillStyle = '#d8d2c2'; ctx.fillRect(20, 190, 216, 26);
+  ctx.fillStyle = '#3a2414'; ctx.fillRect(20, 216, 216, 10); ctx.fillRect(34, 226, 10, 30); ctx.fillRect(212, 226, 10, 30);
+  const dish = (x, y, col, w = 40) => { ctx.fillStyle = '#a0a4a8'; ctx.beginPath(); ctx.ellipse(x, y + 8, w / 2, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y, w / 2.6, 10, 0, Math.PI, Math.PI * 2); ctx.fill(); };
+  dish(128, 120, '#8a4a1c', 70); dish(60, 70, '#c9874a'); dish(196, 80, '#b8402e'); dish(90, 160, '#e8e4dc', 30); dish(176, 150, '#6a2a5a', 32);
+  ctx.strokeStyle = 'rgba(216,210,194,0.4)'; ctx.setLineDash([2, 5]);
+  [[128, 130], [60, 80], [196, 90]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, y + 10); ctx.lineTo(x, 188); ctx.stroke(); });
+  return c;
+}
+
+// Approaching the feast starts it, until it's been dealt with.
+async function feastScene() {
+  const t = THINGS.find(x => x.id === 'feast');
+  if (game.flags.feastDone) {
+    await ui.say(t.name, game.flags.feastDone === 'killed'
+      ? 'The table is a black scar. Ash lies where the feast was, and the smell of it will not leave the room.'
+      : 'The table is bare and dusty now, the feast gone as though it had never been. The room feels lighter.');
+    return;
+  }
+  const pick = await ui.say(t.name, t.text, [{ id: 'near', text: 'Step up to the table' }, { id: 'leave', text: 'Leave it' }]);
+  if (pick !== 'near') return;
+  const result = await runEncounter(ENCOUNTERS.feast);
+  if (result === 'released') {
+    game.flags.feastDone = 'released';
+    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x5a5048), world.feastMat.needsUpdate = true);
+    await ui.say('', 'The dishes settle onto the table one by one, and crumble, and are dust. Where the roast was, something glints among the ashes of the feast: a plain gold ring.');
+    giveItem('ring', { quiet: true });
+    addDread(-2);
+  } else if (result === 'killed') {
+    game.flags.feastDone = 'killed';
+    game.crooked = (game.crooked || 0) + 1;
+    world.feastMat && (world.feastMat.map = null, world.feastMat.color.set(0x1a1410), world.feastMat.needsUpdate = true);
+    await ui.say('', 'When the fire dies, the table is scorched black. In the ash lies a gold ring, blistered by the heat. Somewhere in the walls, something sighs with pleasure.');
+    giveItem('ring', { quiet: true });
+  }
+  saveGame();
 }
 
 // ─── src/game/js/main.js ─────────────────────────────────────────────
@@ -3518,6 +4017,7 @@ function loop(now) {
   // Quiet for the séance; the waltz drops back while you're at the keys
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : 1);
+  if (game.flags.feastDone && world.feastMat.map) { world.feastMat.map = null; world.feastMat.color.set(game.flags.feastDone === 'killed' ? 0x1a1410 : 0x5a5048); world.feastMat.needsUpdate = true; }
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {
@@ -3576,6 +4076,7 @@ function musicFor(here) {
   if (game.dread >= 7) dreadTheme = true;
   else if (game.dread <= 4) dreadTheme = false;
   if (game.curse) return 'waltz';
+  if (game.inEncounter) return 'dread';
   // Patrini's song, straight after the puzzle: only while you stay in the
   // music room. Leave, and it's over for good.
   if (game.echoesPlaying && here.room !== 'music') game.echoesPlaying = false;
@@ -3642,6 +4143,9 @@ volSlider.value = Math.round(sound.volume * 100);
 musicSlider.value = Math.round(sound.musicVolume * 100);
 volSlider.addEventListener('input', () => { sound.setVolume(volSlider.value / 100); if (!sound.on && volSlider.value > 0) { sound.setOn(true); showSound(); } });
 musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.value / 100));
+const easyBox = $('opt-easy');
+easyBox.checked = easyMode();
+easyBox.addEventListener('change', () => store.set(EASY_KEY, easyBox.checked ? 'on' : 'off'));
 $('btn-mute').addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
 const toggleSoundPanel = open => {
   soundPanel.hidden = open === undefined ? !soundPanel.hidden : !open;
