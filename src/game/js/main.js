@@ -262,7 +262,9 @@ function loop(now) {
   // Never quite level, in a house with no right angles. The cursed waltz
   // sets the room swaying.
   const sway = game.curse ? Math.sin(clock * 2.1) * 0.06 : 0;
-  cam.rotation.z = Math.sin(clock * 0.37) * 0.018 + Math.sin(clock * 0.13) * 0.012 + sway;
+  // Crookedness: the more you've destroyed, the more the house leans.
+  const lean = Math.min(5, game.crooked || 0) * 0.012;
+  cam.rotation.z = Math.sin(clock * 0.37) * 0.018 + Math.sin(clock * 0.13) * 0.012 + sway + lean;
   cam.rotation.x = -0.04 + Math.sin(clock * 0.29) * 0.01 + (game.curse ? Math.sin(clock * 1.3) * 0.03 : 0);
 
   // The lantern, held a little to the right and below the eye.
@@ -329,6 +331,12 @@ function loop(now) {
   });
 
   updateGlints(now, dt);
+  // The portraits' curse: once your Dread reaches 6, the boogles come.
+  if (game.flags.portraitCurse && game.dread >= 6 && !busy() && !game.curse && !game.inFlashback && here.room !== 'porch') {
+    game.flags.portraitCurse = false;
+    game.busy = true;
+    boogleSwarm().finally(() => { game.busy = false; lockInput(300); });
+  }
   tickJasper(dt, here, now);
   world.decals.forEach(m => {
     const target = thingAvailable(m.userData.thing) ? 1 : 0;

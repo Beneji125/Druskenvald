@@ -437,6 +437,11 @@ function buildGame(explore, gameJs) {
     toConstDeclarations(explore, true),
     gameJs,
   ].join('\n\n');
+  // Catch a syntax error here rather than as a blank page in the browser.
+  try { new Function(script); } catch (err) {
+    console.error(`error: the Crooked House game script doesn't parse: ${err.message}\n  (check src/game/js/ with: node --check src/game/js/<file>.js)`);
+    process.exit(1);
+  }
   const output = readFile('game/template.html')
     .split('/*__STYLES__*/').join(readFile('game/game.css').trim())
     .split('/*__GAME_SCRIPT__*/').join(script);

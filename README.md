@@ -231,6 +231,17 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   his hand guiding yours (after the séance), from his sheet music (both
   halves), or by ear. Or smash the harpsichord with the hatchet: the key
   comes out tainted, and his memory plays through Eustace's eyes.
+- **More of the first floor** (`rooms.js`): the kitchen's oven (undo its
+  glyph from memory, or force it and flee the fire), Petunia's encounter if
+  you snatch her cup (the green ribbon is the dark way), the gallery
+  (Keziah's paintings hide a weasel, a centipede and a pigeon for
+  frightened eyes; the peacock's gaze can be turned with the mirror shard;
+  Keziah's memory follows), the foyer portraits' curse (the next time your
+  Dread reaches 6, a swarm comes out of the walls), and spirit-board hints
+  after the séance (a word at a time, for a point of Dread). Destroying
+  hauntings raises Crookedness: your view leans, your portrait grins, the
+  Crooked Man whispers. With the gem, key and cup the stairs let you up:
+  the end of the first floor, with a tally of whom you freed.
 - **Light:** `ROOM_MOOD` in `world.js` gives each room its own base light
   (a colour and a level), easing in as you walk between rooms; `LANTERN`
   sets the lantern you carry.

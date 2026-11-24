@@ -260,14 +260,57 @@ async function noEscape() {
 
 // ─── The foyer ────────────────────────────────────────────────────────
 
+// The book: the portraits are cursed; whoever studies them may bring a
+// swarm out of the walls. Here: studying them marks you, and the next time
+// your Dread climbs to 6 the boogles come (rooms.js: boogleSwarm). The more
+// crooked you are, the wider your own portrait grins.
 async function portraitsScene() {
   const t = THINGS.find(x => x.id === 'portraits');
-  await ui.say(t.name, t.text);
+  const c = game.crooked || 0;
+  const yours = c >= 3 ? ' Your own portrait, newest of them all, is grinning from ear to ear now, a wide wet toothless grin, and the painted eyes are not frightened any more. They look pleased.'
+    : c >= 1 ? ' In your own portrait the toothless grin seems wider than you remember.' : '';
+  await ui.say(t.name, t.text + yours);
   addClue('lockwoods');
+  if (!game.flags.portraitCurse && !game.flags.swarmDone) {
+    game.flags.portraitCurse = true;
+    ui.log('As you turn away, every painted eye in the hall turns with you. You feel marked.', 'scare');
+    saveGame();
+  }
 }
 
+// The end of the first floor: with the gem, the key and the cup (the three
+// mementos down here), the stairs let you up. For now, that's the end of
+// the chapter: a tally of whom you freed and whom you destroyed.
 async function stairsScene() {
-  await ui.say('The staircase', 'You set a foot on the first step, and the whole staircase groans and shifts, twisting away from you up into the dark. The floor above is not ready for you. Not yet.');
+  const have = ['gem', 'key', 'cup'].filter(id => game.mementos.has(id));
+  if (have.length < 3) {
+    await ui.say('The staircase', `You set a foot on the first step, and the whole staircase groans and shifts, twisting away from you up into the dark. The floor above is not ready for you. Not yet.${have.length ? ` (Mementos from this floor: ${have.length} of 3.)` : ''}`);
+    return;
+  }
+  await ui.say('The staircase', 'You set a foot on the first step. The staircase creaks, and settles, and holds. Somewhere above you a door opens, and a cold draught comes down the stairs, smelling of dust and lavender and something rotten underneath.');
+  await chapterEnd();
+}
+
+async function chapterEnd() {
+  const fate = (id, tainted) => tainted ? 'destroyed' : 'freed';
+  const rows = [
+    ['Joseph Patrini', fate('key', game.tainted.includes('key'))],
+    ['Petunia Lockwood', fate('cup', game.tainted.includes('cup'))],
+    ['Keziah Endicott', fate('gem', game.tainted.includes('gem'))],
+  ];
+  const destroyed = rows.filter(r => r[1] === 'destroyed').length + (game.flags.feastDone === 'killed' ? 1 : 0) + (game.flags.ovenDone === 'killed' ? 1 : 0);
+  const road = game.crooked >= 5 ? 'The house knows you now. It has started calling you by a new name. Crooked.'
+    : destroyed ? 'Some of the dead are at rest. Some you sent into the dark. The house remembers both.'
+    : 'Every ghost you met on this floor, you let go in peace. Upstairs, the others are waiting for the same mercy.';
+  await showCard(`End of the first floor.
+
+${rows.map(([n, f]) => `${n}: ${f}`).join('\n')}
+
+${road}
+
+(The second floor, the attic and Vessla Browntooth are still to come.)`, true);
+  game.flags.chapterOne = true;
+  saveGame();
 }
 
 // ─── The parlour: the séance ──────────────────────────────────────────
@@ -286,10 +329,7 @@ const SEANCE_QUESTIONS = [
 ];
 
 async function seance() {
-  if (game.flags.seanceDone) {
-    await ui.say('The spirit board', 'You rest your fingers on the planchette. The board is cold, and nothing answers. Whoever spoke through it has said all they will.');
-    return;
-  }
+  if (game.flags.seanceDone) return spiritHint();
   const go = await ui.say('The spirit board', 'Adela Druskenvald’s spirit board lies ready on the table, the little heart-shaped planchette at its centre. A séance needs a question to begin: is anyone there?', [
     { id: 'yes', text: 'Rest your fingers on the planchette and ask' }, { id: 'no', text: 'Leave it alone' }]);
   if (go !== 'yes') return;
@@ -333,6 +373,31 @@ async function seance() {
   game.flags.seanceDone = true;
   saveGame();
   await sleep(2200);
+  closeOuija(board);
+}
+
+// After the séance the board still answers, a word at a time, if you're
+// willing to pay for it in nerve: a hint about whatever you're stuck on.
+const SPIRIT_HINTS = [
+  [() => !game.clues.has('lockwoods'), 'PORTRAITS'],
+  [() => !game.flags.petuniaGone, () => game.flags.petuniaTea ? 'NAMES' : 'TEA'],
+  [() => !game.flags.musicSolved, () => hasItem('music_full') || game.clues.has('patrini') ? 'PLAY' : 'DANCE'],
+  [() => !game.flags.ovenDone, () => game.flags.glyphSeen ? 'UNDO' : 'FLOUR'],
+  [() => !game.flags.feastDone, 'GRACE'],
+  [() => !game.flags.peacockDone, () => hasItem('shard') ? 'MIRROR' : 'KNIFE'],
+  [() => true, 'UPSTAIRS'],
+];
+async function spiritHint() {
+  const pick = await ui.say('The spirit board', 'The board is cold under your fingers. Patrini is still here, faintly. He could guide you, a word at a time, but every word he spells costs you a little of your nerve.', [
+    { id: 'ask', text: 'Ask what to do next' }, { id: 'no', text: 'Leave it' }]);
+  if (pick !== 'ask') return;
+  addDread(1);
+  const [, word] = SPIRIT_HINTS.find(([open]) => open());
+  const answer = typeof word === 'function' ? word() : word;
+  const board = openOuija();
+  board.say('The planchette shivers, and begins to move.');
+  await board.spell(answer);
+  await sleep(1200);
   closeOuija(board);
 }
 
@@ -710,7 +775,9 @@ function crookedMan() {
     if (k < 3.3) requestAnimationFrame(tick); else s.visible = false;
   };
   requestAnimationFrame(tick);
-  ui.log('A tall, crooked figure stands in the hall with an axe raised. “I cut them down, one by one!” He swings — and is gone.', 'scare');
+  ui.log((game.crooked || 0) >= 2
+    ? 'A tall, crooked figure stands in the hall with an axe, but he doesn’t raise it. He leans close instead and whispers, fond as a father: “You’ll be crooked too.” Then he’s gone.'
+    : 'A tall, crooked figure stands in the hall with an axe raised. “I cut them down, one by one!” He swings — and is gone.', 'scare');
   addDread(1);
 }
 
