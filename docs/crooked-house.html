@@ -1654,6 +1654,141 @@ function moonTexture() {
   return artTexture(c);
 }
 
+// ─── Test: three treatments of the official characters ────────────────
+// (A: the painting as it is; B: the painting stylized to sit in the house;
+// C: an ink redraw from the official design.) For choosing between them.
+
+// B: posterized to a few tones, painted highlights pressed down, outlined
+// in ink, with a little paper grain; lit by the house, not glowing.
+function stylizePainting(ctx, cw, ch, { bands = 5, sat = 0.6, tint = [1, 0.96, 0.88] } = {}) {
+  const d = ctx.getImageData(0, 0, cw, ch), p = d.data;
+  const a = new Uint8Array(cw * ch);
+  for (let i = 0; i < cw * ch; i++) a[i] = p[i * 4 + 3] > 40 ? 1 : 0;
+  const lum = new Float32Array(cw * ch);
+  for (let i = 0; i < cw * ch; i++) lum[i] = (0.3 * p[i * 4] + 0.59 * p[i * 4 + 1] + 0.11 * p[i * 4 + 2]) / 255;
+  const rand = seededRandom(3);
+  for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) {
+    const i = y * cw + x, o = i * 4;
+    if (!a[i]) { p[o + 3] = 0; continue; }
+    // ink: the silhouette's edge, and strong edges inside it
+    let edge = false;
+    for (let dy = -2; dy <= 2 && !edge; dy++) for (let dx = -2; dx <= 2; dx++) {
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= cw || yy >= ch || !a[yy * cw + xx]) { edge = true; break; }
+    }
+    const gx = x > 0 && x < cw - 1 ? lum[i + 1] - lum[i - 1] : 0, gy = y > 0 && y < ch - 1 ? lum[i + cw] - lum[i - cw] : 0;
+    if (edge || Math.hypot(gx, gy) > 0.3) { p[o] = 18; p[o + 1] = 12; p[o + 2] = 8; p[o + 3] = 255; continue; }
+    const L = Math.max(0.001, lum[i]);
+    const band = Math.min(0.8, (Math.floor(Math.min(0.999, L) * bands) + 0.5) / bands * 0.95);
+    const grain = 0.9 + rand() * 0.1;
+    for (let k = 0; k < 3; k++) {
+      const c = p[o + k] / 255, grey = L;
+      const desat = grey + (c - grey) * sat;
+      p[o + k] = Math.max(0, Math.min(255, desat * (band / L) * 255 * tint[k] * grain));
+    }
+    p[o + 3] = 255;
+  }
+  ctx.putImageData(d, 0, 0);
+}
+function paintStylized(opts) {
+  return (ctx, img, cw, ch) => { paintGlowing(null)(ctx, img, cw, ch); stylizePainting(ctx, cw, ch, opts); };
+}
+
+// C: the Crooked Man redrawn in ink after the official figure: the
+// crumpled top hat, the white tufts, the grey face and its yellow grin, the
+// tattered brown coat, striped trousers, curling shoes, the claws.
+function inkCrookedMan() {
+  return inkSprite(256, 512, (ctx) => {
+    ctx.lineWidth = 4;
+    const shape = (fill, pts, close = true) => { ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(...pts[0]); pts.slice(1).forEach(q => q.length === 4 ? ctx.quadraticCurveTo(...q) : ctx.lineTo(...q)); if (close) ctx.closePath(); ctx.fill(); ctx.stroke(); };
+    // legs, bent at the knees, in striped trousers
+    shape('#4a4632', [[96, 330], [70, 400], [92, 430], [84, 488], [112, 488], [118, 430], [128, 380], [146, 330]]);
+    shape('#4a4632', [[150, 330], [172, 392], [160, 430], [176, 488], [202, 488], [190, 430], [204, 380], [196, 330]]);
+    ctx.strokeStyle = 'rgba(20,16,8,0.6)'; ctx.lineWidth = 2;
+    for (let x = 0; x < 6; x++) { ctx.beginPath(); ctx.moveTo(84 + x * 8, 350); ctx.lineTo(90 + x * 6, 486); ctx.stroke(); ctx.beginPath(); ctx.moveTo(160 + x * 7, 350); ctx.lineTo(178 + x * 5, 486); ctx.stroke(); }
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 4;
+    // the curling shoes
+    shape('#2a1c14', [[70, 488], [118, 486], [118, 504], [52, 506], [30, 492], [48, 488]]);
+    shape('#2a1c14', [[172, 488], [212, 486], [236, 476], [230, 494], [212, 506], [170, 506]]);
+    // the long coat, tattered at the hem
+    shape('#5a3a2c', [[70, 150], [184, 140], [206, 240], [214, 360], [200, 372], [190, 356], [178, 380], [164, 360], [150, 374], [136, 352], [118, 372], [104, 350], [90, 366], [80, 340], [86, 240]]);
+    // waistcoat and cravat
+    shape('#4a2420', [[112, 160], [160, 156], [164, 300], [140, 312], [116, 300]]);
+    shape('#6a6a48', [[118, 150], [158, 146], [150, 196], [138, 178], [126, 200]]);
+    ctx.fillStyle = '#a89a70'; [[138, 230], [138, 262]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill(); });
+    // arms: one raised, bent the wrong way; one across the belly
+    shape('#5a3a2c', [[180, 150], [216, 186], [232, 120], [220, 98], [204, 124], [196, 160]]);
+    shape('#5a3a2c', [[84, 160], [58, 230], [100, 262], [122, 250], [92, 226], [104, 180]]);
+    // the claws
+    ctx.fillStyle = '#8a8c78';
+    ctx.beginPath(); ctx.ellipse(222, 92, 12, 14, 0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(130, 252, 14, 10, -0.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#d8cfa0'; ctx.lineWidth = 3;
+    [[212, 84, 196, 46], [222, 80, 214, 34], [232, 82, 238, 40], [240, 92, 252, 64]].forEach(([x1, y1, x2, y2]) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(x1 - 2, (y1 + y2) / 2, x2, y2); ctx.stroke(); });
+    [[124, 246, 92, 232], [130, 244, 104, 222], [138, 246, 118, 220]].forEach(([x1, y1, x2, y2]) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); });
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 4;
+    // the head, lolling to one side
+    ctx.save(); ctx.translate(150, 108); ctx.rotate(0.32);
+    ctx.fillStyle = '#d8d8cc';
+    ctx.beginPath(); ctx.ellipse(-30, 6, 14, 18, 0, 0, Math.PI * 2); ctx.ellipse(32, 4, 14, 18, 0, 0, Math.PI * 2); ctx.fill();   // white tufts
+    ctx.fillStyle = '#8a8c7a'; ctx.beginPath(); ctx.ellipse(0, 0, 30, 38, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // the grin: wide, yellow, crooked teeth
+    ctx.fillStyle = '#1a1008'; ctx.beginPath(); ctx.moveTo(-22, 6); ctx.quadraticCurveTo(0, 34, 24, 4); ctx.quadraticCurveTo(0, 14, -22, 6); ctx.fill();
+    ctx.fillStyle = '#d8c060'; ctx.lineWidth = 1.5;
+    for (let k = 0; k < 8; k++) { const tx = -18 + k * 5.2; ctx.beginPath(); ctx.rect(tx, 8 + Math.abs(k - 3.5) * -0.6, 4.4, 9 - Math.abs(k - 3.5) * 0.8); ctx.fill(); ctx.stroke(); }
+    ctx.lineWidth = 4;
+    // the crumpled top hat, down over the eyes
+    ctx.fillStyle = '#3a2a22';
+    ctx.beginPath(); ctx.ellipse(0, -12, 40, 9, -0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-24, -16); ctx.lineTo(-30, -84); ctx.quadraticCurveTo(-4, -100, 18, -88); ctx.lineTo(30, -50); ctx.lineTo(22, -16); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a5240'; ctx.fillRect(-26, -32, 52, 8);
+    ctx.restore();
+  });
+}
+
+// C: Filthy Jasper redrawn in ink after his official picture: a mangy
+// brown weasel over a post, a pink-red eye, a mouthful of teeth, a human
+// tooth in his paw, a bald pink tail.
+function inkJasper() {
+  return inkSprite(256, 224, (ctx) => {
+    ctx.lineWidth = 3.5;
+    // the post
+    ctx.fillStyle = '#3a2a1e'; ctx.beginPath(); ctx.moveTo(98, 112); ctx.lineTo(140, 110); ctx.lineTo(144, 222); ctx.lineTo(96, 222); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.5; [106, 118, 130].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 118); ctx.lineTo(x + 2, 220); ctx.stroke(); });
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 3.5;
+    // the tail: fur, then bare pink
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(58, 120); ctx.quadraticCurveTo(10, 170, 40, 196); ctx.quadraticCurveTo(120, 200, 176, 186); ctx.quadraticCurveTo(206, 180, 214, 198); ctx.stroke();
+    ctx.strokeStyle = '#7a3e2a'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(58, 120); ctx.quadraticCurveTo(10, 170, 40, 196); ctx.stroke();
+    ctx.strokeStyle = '#b87a88'; ctx.beginPath(); ctx.moveTo(40, 196); ctx.quadraticCurveTo(120, 200, 176, 186); ctx.quadraticCurveTo(206, 180, 214, 198); ctx.stroke();
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 3.5;
+    // the body, slung over the post
+    ctx.fillStyle = '#7a3e2a';
+    ctx.beginPath(); ctx.moveTo(48, 128); ctx.quadraticCurveTo(52, 70, 120, 62); ctx.quadraticCurveTo(170, 50, 196, 34); ctx.lineTo(206, 70); ctx.quadraticCurveTo(168, 96, 150, 112); ctx.lineTo(98, 118); ctx.quadraticCurveTo(70, 140, 48, 128); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#d8c8b8'; ctx.beginPath(); ctx.moveTo(150, 104); ctx.quadraticCurveTo(176, 86, 200, 66); ctx.lineTo(190, 60); ctx.quadraticCurveTo(168, 80, 146, 96); ctx.closePath(); ctx.fill();   // pale chest
+    // back legs gripping the post, front paw holding the tooth
+    ctx.fillStyle = '#7a3e2a';
+    ctx.beginPath(); ctx.ellipse(92, 120, 16, 10, 0.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(176, 92); ctx.lineTo(196, 112); ctx.lineTo(206, 108); ctx.lineTo(186, 86); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ece0c4'; ctx.beginPath(); ctx.moveTo(196, 102); ctx.lineTo(212, 100); ctx.lineTo(214, 116); ctx.lineTo(200, 120); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // the head: open jaws full of teeth, a mad pink eye
+    ctx.fillStyle = '#7a3e2a';
+    ctx.beginPath(); ctx.moveTo(190, 36); ctx.quadraticCurveTo(206, 12, 226, 18); ctx.lineTo(250, 30); ctx.lineTo(234, 40); ctx.lineTo(214, 46); ctx.lineTo(240, 52); ctx.lineTo(222, 64); ctx.quadraticCurveTo(204, 66, 196, 56); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5a1a20'; ctx.beginPath(); ctx.moveTo(214, 44); ctx.lineTo(240, 50); ctx.lineTo(234, 40); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#f0e8d8'; for (let k = 0; k < 5; k++) { ctx.beginPath(); ctx.moveTo(218 + k * 4, 42 - k * 0.4); ctx.lineTo(220 + k * 4, 47); ctx.lineTo(222 + k * 4, 42 - k * 0.4); ctx.fill(); }
+    ctx.beginPath(); ctx.moveTo(196, 22); ctx.lineTo(194, 8); ctx.lineTo(206, 16); ctx.closePath(); ctx.fillStyle = '#7a3e2a'; ctx.fill(); ctx.stroke();
+    ctx.shadowColor = '#ff3060'; ctx.shadowBlur = 8; ctx.fillStyle = '#ff5a8a'; ctx.beginPath(); ctx.arc(214, 28, 4, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(215, 27, 1.2, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+Object.assign(SPRITES, {
+  crookedManB: { size: [46, 94], draw: () => paintedTexture(256, 512, CHARACTER_ART.crookedMan, paintStylized({ bands: 5, sat: 0.55 })) },
+  crookedManC: { size: [46, 94], draw: () => inkCrookedMan() },
+  jasperB: { size: [40, 35], draw: () => paintedTexture(256, 224, CHARACTER_ART.jasper, paintStylized({ bands: 5, sat: 0.7 })) },
+  jasperC: { size: [40, 35], draw: () => inkJasper() },
+});
+
 // ─── src/game/js/audio.js ────────────────────────────────────────────
 // Sound. The storm and the music are recordings (MUSIC, below), streamed
 // as they play. Everything else is made in the browser with Web Audio:
