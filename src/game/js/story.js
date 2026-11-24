@@ -700,28 +700,6 @@ async function peacockScene() {
   addDread(2);
 }
 
-async function ovenScene() {
-  const t = THINGS.find(x => x.id === 'oven');
-  // Frightened enough, you see what was hidden on the lock all along.
-  if (game.dread >= 7 && !game.flags.glyphSeen) {
-    game.flags.glyphSeen = true;
-    await ui.say(t.name, 'Your eyes are wide and your heart is hammering, and so you see it: a small coiled glyph scratched into the rusted lock, glowing faintly like a coal. It was always there. It is waiting for someone to force the door.');
-  }
-  if (!game.flags.ovenHeard) {
-    game.flags.ovenHeard = true;
-    await ui.say(t.name, t.text);
-    await ui.say('', 'Then the greasy stench of burning fills the kitchen. Black smoke curls from around the iron door, and from inside comes pounding, and muffled screaming.');
-    addDread(1);
-  }
-  const pick = await ui.say(t.name, 'The screaming goes on behind the iron door.', [{ id: 'lock', text: 'Look closely at the lock' }, { id: 'open', text: 'Force the door open' }, { id: 'leave', text: 'Back away' }]);
-  if (pick === 'lock') {
-    await ui.say('', 'Scratched into the rust, almost too faint to see, a small sigil glows like a coal. Whatever is behind this door, the lock was made to be opened.');
-  } else if (pick === 'open') {
-    ui.flash('#ff8a40', 800);
-    await ui.say('', 'You wrench at the lock and the iron door bursts open in a roar of heat. Shrieking, burning shapes reach for you, and then are gone. The oven is cold. Your eyebrows are not.');
-    addDread(2);
-  }
-}
 
 
 // ─── The hallway: the Crooked Man ─────────────────────────────────────

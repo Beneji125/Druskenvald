@@ -289,6 +289,16 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .keyboard .key.lit { background: linear-gradient(180deg, #fff2c8, #e8c878); box-shadow: 0 0 22px rgba(255,220,140,0.8); }
 .keyboard .key.pressed { background: #a8946a; }
 .keyboard .key.hint { box-shadow: inset 0 0 0 3px rgba(120,170,255,0.75), 0 0 14px rgba(120,170,255,0.5); }
+.glyph-panel { background: rgba(10,6,4,0.9); padding: 16px; border: 1px solid rgba(255,120,40,0.4); border-radius: 4px; }
+.glyph { width: 210px; height: 210px; }
+.glyph .gdot { fill: rgba(255,200,140,0.5); }
+.glyph .gline { fill: none; stroke: rgba(255,120,40,0.35); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.glyph .gmine { fill: none; stroke: #ffe0a0; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.glyph .gpen { fill: #ffd080; filter: drop-shadow(0 0 6px #ff8030); }
+.glyph.flare { animation: flare 0.6s; }
+@keyframes flare { 30% { filter: drop-shadow(0 0 30px #fff) brightness(3); } }
+.glyph-pad { display: grid; grid-template-columns: repeat(4, 48px); gap: 6px; }
+.glyph-pad button { height: 40px; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; font-size: 1rem; }
 .keys-leave { font-family: 'Cinzel', serif; font-size: 0.85rem; padding: 0.35em 0.9em; cursor: pointer; background: var(--panel); border: 1px solid var(--gold-dim); border-radius: 3px; }
 
 #flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; z-index: 9; }
@@ -3113,28 +3123,6 @@ async function peacockScene() {
   addDread(2);
 }
 
-async function ovenScene() {
-  const t = THINGS.find(x => x.id === 'oven');
-  // Frightened enough, you see what was hidden on the lock all along.
-  if (game.dread >= 7 && !game.flags.glyphSeen) {
-    game.flags.glyphSeen = true;
-    await ui.say(t.name, 'Your eyes are wide and your heart is hammering, and so you see it: a small coiled glyph scratched into the rusted lock, glowing faintly like a coal. It was always there. It is waiting for someone to force the door.');
-  }
-  if (!game.flags.ovenHeard) {
-    game.flags.ovenHeard = true;
-    await ui.say(t.name, t.text);
-    await ui.say('', 'Then the greasy stench of burning fills the kitchen. Black smoke curls from around the iron door, and from inside comes pounding, and muffled screaming.');
-    addDread(1);
-  }
-  const pick = await ui.say(t.name, 'The screaming goes on behind the iron door.', [{ id: 'lock', text: 'Look closely at the lock' }, { id: 'open', text: 'Force the door open' }, { id: 'leave', text: 'Back away' }]);
-  if (pick === 'lock') {
-    await ui.say('', 'Scratched into the rust, almost too faint to see, a small sigil glows like a coal. Whatever is behind this door, the lock was made to be opened.');
-  } else if (pick === 'open') {
-    ui.flash('#ff8a40', 800);
-    await ui.say('', 'You wrench at the lock and the iron door bursts open in a roar of heat. Shrieking, burning shapes reach for you, and then are gone. The oven is cold. Your eyebrows are not.');
-    addDread(2);
-  }
-}
 
 
 // ─── The hallway: the Crooked Man ─────────────────────────────────────
@@ -3812,6 +3800,14 @@ async function runEncounter(def) {
   drawArena(arena, st, { x: ARENA_W / 2, y: ARENA_H / 2 }, [], 0);
   try {
     await encSay(def.intro);
+    // A hazard: no choices, just get through each attack once.
+    if (def.hazard) {
+      for (const p of def.patterns) {
+        if ((await dodge(st, arena, p)) === 'broke') { st.result = 'broke'; break; }
+        st.turn++;
+      }
+      if (!st.result) { st.result = 'survived'; await encSay(def.survived); }
+    }
     while (!st.result) {
       const choice = await encMenu(st);
       await encChoose(st, choice);
@@ -4211,6 +4207,168 @@ async function feastScene() {
     giveItem('ring', { quiet: true });
   }
   saveGame();
+}
+
+// ─── The kitchen: the oven ────────────────────────────────────────────
+// The book: smoke and screams from a locked brick oven; a hidden glyph on
+// the lock is a trap. Spot it (flour on the lock, or terrified eyes) and
+// you can disarm it, and the burning souls inside are let go. Force the
+// door and the trap fires: get out of the flames, and the souls burn away.
+// Either way, the oven holds the charred second half of Patrini's tune.
+
+ENCOUNTERS.ovenFire = {
+  name: 'The Oven',
+  art: () => ovenFoeArt(),
+  hazard: true,
+  intro: 'The iron door bursts open with a roar. Shrieking, burning shapes pour out of the oven, and the kitchen fills with fire and black, choking smoke.',
+  survived: 'You stagger clear, coughing. Behind you the shrieking thins, and stops, and the burning shapes are gone. Burned away. The oven ticks as it cools.',
+  calmMax: 1, acts: [], items: {},
+  patterns: [
+    { duration: 6, text: 'Fire! Find the gaps in the flames.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 0.9 : 0.65;
+        const gap = api.rand() * (api.h - 70) + 10;
+        for (let y = 6; y < api.h; y += 18) if (y < gap || y > gap + (api.easy ? 70 : 55)) api.add({ x: api.w + 12, y, vx: -150, vy: 0, r: 8, glyph: '🔥', color: '#ff8a40' });
+      } },
+    { duration: 5, text: 'Burning hands reach for you.',
+      spawn(api, t, dt) {
+        this.next = (this.next ?? 0) - dt;
+        if (this.next > 0) return;
+        this.next = api.easy ? 0.7 : 0.45;
+        const e = api.edge(), v = api.aim(e, 110);
+        api.add({ x: e.x, y: e.y, ...v, r: 7, color: '#ff6a2a' });
+      } },
+  ],
+};
+
+function ovenFoeArt() {
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.drawImage(ovenFrontTexture().image, 28, 40, 200, 200);
+  const g = ctx.createRadialGradient(128, 150, 5, 128, 150, 90);
+  g.addColorStop(0, 'rgba(255,220,120,0.95)'); g.addColorStop(0.5, 'rgba(255,90,20,0.6)'); g.addColorStop(1, 'rgba(255,40,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 256, 256);
+  return c;
+}
+
+async function ovenScene() {
+  const t = THINGS.find(x => x.id === 'oven');
+  const f = game.flags;
+  if (f.ovenDone) {
+    await ui.say(t.name, f.ovenDone === 'killed'
+      ? 'The oven is cold and black inside, and smells of something you will not name. It is quiet now. Too quiet.'
+      : 'The oven door hangs open. Inside there is only clean grey ash, and a feeling, faint as warmth, of something grateful.');
+    return;
+  }
+  // Frightened enough, you see what was hidden on the lock all along.
+  if (game.dread >= 7 && !f.glyphSeen) {
+    f.glyphSeen = true;
+    await ui.say(t.name, 'Your eyes are wide and your heart is hammering, and so you see it: a small coiled glyph scratched into the rusted lock, glowing faintly like a coal. It was always there.');
+  }
+  if (!f.ovenHeard) {
+    f.ovenHeard = true;
+    await ui.say(t.name, t.text);
+    await ui.say('', 'Then the greasy stench of burning fills the kitchen. Black smoke curls from around the iron door, and from inside comes pounding, and muffled screaming.');
+    addDread(1);
+  }
+  const choices = [];
+  if (f.glyphSeen) choices.push({ id: 'trace', text: 'Trace the glyph backwards, to undo it' });
+  else choices.push({ id: 'lock', text: 'Look closely at the lock' });
+  choices.push({ id: 'open', text: 'Force the door open', dark: true }, { id: 'leave', text: 'Back away' });
+  const pick = await ui.say(t.name, 'The screaming goes on behind the iron door.', choices);
+  if (pick === 'lock') {
+    await ui.say('', 'Rust, and a lock heavier than it needs to be. You can’t see anything else, though something about the lock makes your skin crawl. If only you could see it better.');
+  } else if (pick === 'trace') {
+    const ok = await glyphPuzzle();
+    if (ok === null) return;
+    if (ok) {
+      f.ovenDone = 'freed';
+      sound.door(true);
+      await ui.say('', 'The last line of the glyph unravels under your finger, and the lock falls open of its own accord. The door swings wide. The burning shapes inside go still, and the fire goes out of them, and they rise past you like warm air and are gone. One of them, small, touches your hand as it passes.');
+      await ui.say('', 'In the ash at the back of the oven, something didn’t burn: a page of music, charred at the edges.');
+      giveItem('music_b', { quiet: true });
+      addDread(-2);
+    } else {
+      await ui.say('', 'The glyph flares white-hot under your finger. It knows what you were trying to do.');
+      await ovenTrap();
+    }
+  } else if (pick === 'open') {
+    await ovenTrap();
+  }
+  saveGame();
+}
+
+async function ovenTrap() {
+  const r = await runEncounter(ENCOUNTERS.ovenFire);
+  if (r !== 'survived') return;
+  game.flags.ovenDone = 'killed';
+  game.crooked = (game.crooked || 0) + 1;
+  await ui.say('', 'When the smoke clears, the oven is empty but for ash, and a page of music, burned almost black at the edges.');
+  giveItem('music_b', { quiet: true });
+}
+
+// The glyph: a single unbroken line over a grid of dots. It's shown being
+// drawn; to undo it, draw it backwards: from its end to its start, every
+// stroke reversed. Arrow keys / WASD, or the buttons.
+const GLYPH = [[1, 1], [2, 1], [2, 2], [1, 2], [0, 2], [0, 1], [0, 0], [1, 0], [2, 0]];
+function glyphPuzzle() {
+  return new Promise(resolve => {
+    const root = $('keys');
+    const S = 70, O = 35;
+    const dot = ([x, y]) => [O + x * S, O + y * S];
+    root.innerHTML = `<div class="keys-panel glyph-panel">
+      <p class="keys-text">Watch how it was drawn…</p>
+      <svg class="glyph" viewBox="0 0 210 210" aria-label="The glyph">
+        ${[0, 1, 2].flatMap(y => [0, 1, 2].map(x => `<circle cx="${O + x * S}" cy="${O + y * S}" r="5" class="gdot"/>`)).join('')}
+        <polyline class="gline" points=""/><polyline class="gmine" points=""/><circle class="gpen" r="8" cx="-20" cy="-20"/>
+      </svg>
+      <div class="glyph-pad">${['up', 'left', 'down', 'right'].map(d => `<button type="button" data-d="${d}">${{ up: '▲', left: '◀', down: '▼', right: '▶' }[d]}</button>`).join('')}</div>
+      <button type="button" class="keys-leave">Step away</button></div>`;
+    root.hidden = false; ui.overlay = 'keys';
+    const text = root.querySelector('.keys-text'), line = root.querySelector('.gline'), mine = root.querySelector('.gmine'), pen = root.querySelector('.gpen');
+    // The moves that undo it: from the last point back to the first.
+    const back = [...GLYPH].reverse();
+    const need = back.slice(1).map((p, i) => { const q = back[i]; return p[0] > q[0] ? 'right' : p[0] < q[0] ? 'left' : p[1] > q[1] ? 'down' : 'up'; });
+    let pos = 0, live = false, misses = 0;
+    const show = async () => {
+      live = false; mine.setAttribute('points', ''); line.setAttribute('points', ''); line.style.transition = ''; line.style.opacity = '1';
+      text.textContent = 'Watch how it was drawn…';
+      const pts = [];
+      for (const p of GLYPH) { pts.push(dot(p).join(',')); line.setAttribute('points', pts.join(' ')); const [x, y] = dot(p); pen.setAttribute('cx', x); pen.setAttribute('cy', y); await sleep(easyMode() ? 420 : 300); }
+      text.textContent = 'Now undo it: trace it back from the end to the start.';
+      line.style.transition = 'opacity 1.2s'; line.style.opacity = easyMode() ? '1' : '0.12';   // from memory
+      const [x, y] = dot(back[0]); pen.setAttribute('cx', x); pen.setAttribute('cy', y);
+      mine.setAttribute('points', dot(back[0]).join(','));
+      pos = 0; live = true;
+    };
+    const press = d => {
+      if (!live) return;
+      if (d === need[pos]) {
+        pos++;
+        const p = back[pos]; const [x, y] = dot(p);
+        pen.setAttribute('cx', x); pen.setAttribute('cy', y);
+        mine.setAttribute('points', back.slice(0, pos + 1).map(q => dot(q).join(',')).join(' '));
+        sound.pluck(NOTE.E * (1 + pos / 10), 0, 0.3, 0.08);
+        if (pos === need.length) { live = false; setTimeout(() => finish(true), 600); }
+      } else {
+        misses++; live = false;
+        sound.hit(); addDread(1);
+        root.querySelector('.glyph').classList.remove('flare'); void root.querySelector('.glyph').offsetWidth; root.querySelector('.glyph').classList.add('flare');
+        if (misses >= 3 || game.flags.breaking) { setTimeout(() => finish(false), 500); return; }
+        text.textContent = `The glyph flares. ${3 - misses === 1 ? 'Once more and it will fire.' : 'Careful.'}`;
+        setTimeout(show, 1300);
+      }
+    };
+    const KEYS = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right' };
+    const onKey = e => { const d = KEYS[e.key.toLowerCase()]; e.stopImmediatePropagation(); if (d) { e.preventDefault(); press(d); } else if (e.key === 'Escape') { e.preventDefault(); finish(null); } };
+    let done = false;
+    const finish = ok => { if (done) return; done = true; document.removeEventListener('keydown', onKey, true); root.hidden = true; root.innerHTML = ''; ui.overlay = null; lockInput(300); resolve(ok); };
+    root.querySelectorAll('.glyph-pad button').forEach(b => b.addEventListener('click', () => press(b.dataset.d)));
+    root.querySelector('.keys-leave').addEventListener('click', () => finish(null));
+    document.addEventListener('keydown', onKey, true);
+    show();
+  });
 }
 
 // ─── src/game/js/flashback.js ────────────────────────────────────────

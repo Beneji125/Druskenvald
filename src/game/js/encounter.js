@@ -58,6 +58,14 @@ async function runEncounter(def) {
   drawArena(arena, st, { x: ARENA_W / 2, y: ARENA_H / 2 }, [], 0);
   try {
     await encSay(def.intro);
+    // A hazard: no choices, just get through each attack once.
+    if (def.hazard) {
+      for (const p of def.patterns) {
+        if ((await dodge(st, arena, p)) === 'broke') { st.result = 'broke'; break; }
+        st.turn++;
+      }
+      if (!st.result) { st.result = 'survived'; await encSay(def.survived); }
+    }
     while (!st.result) {
       const choice = await encMenu(st);
       await encChoose(st, choice);
