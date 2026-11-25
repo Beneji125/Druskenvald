@@ -115,16 +115,21 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 #oil-fill { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c9873a, #f0c870); transition: width 0.5s; }
 #oil.low #oil-fill { background: #c45a48; animation: oil-low 1s infinite alternate; }
 @keyframes oil-low { to { opacity: 0.4; } }
-/* The waltz's beat: a ring that closes on each beat; flashes on a step in
-   time, shakes on a stumble. */
-#beat { position: absolute; left: 50%; top: max(64px, calc(env(safe-area-inset-top) + 54px)); width: 64px; height: 64px; transform: translateX(-50%); pointer-events: none; }
-#beat::before { content: ''; position: absolute; inset: 22px; border-radius: 50%; background: rgba(240,200,112,0.85); box-shadow: 0 0 14px rgba(240,200,112,0.8); }
-#beat span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(240,200,112,0.8); transform: scale(calc(1 - var(--p, 0) * 0.62)); opacity: calc(0.3 + var(--p, 0) * 0.7); }
-#beat.hit::before { animation: beat-hit 0.3s; }
-#beat.miss { animation: beat-miss 0.3s; }
-@keyframes beat-hit { 50% { transform: scale(1.6); background: #fff2c8; } }
-@keyframes beat-miss { 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
-@keyframes beat-miss-phone { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+/* The waltz's beat bar: the coming beats slide in from the right to the
+   line; step as one crosses it. The gold band is how early or late you
+   can be; the red beats are the ones the weasels move on. */
+#beat { position: absolute; left: 50%; top: max(64px, calc(env(safe-area-inset-top) + 54px)); width: min(26rem, 82vw); transform: translateX(-50%); pointer-events: none; text-align: center; }
+.beat-track { position: relative; height: 1.5rem; border: 1px solid var(--gold-dim); border-radius: 999px; background: var(--frame-bg); overflow: hidden; box-shadow: var(--frame-shadow); }
+.beat-window { position: absolute; top: 0; bottom: 0; left: calc(18% - var(--win, 6%) / 2); width: var(--win, 6%); background: rgba(240,200,112,0.22); }
+.beat-line { position: absolute; top: 2px; bottom: 2px; left: 18%; width: 2px; margin-left: -1px; background: var(--gold); box-shadow: 0 0 8px rgba(240,200,112,0.8); }
+.beat-marks span { position: absolute; top: 50%; width: 0.55rem; height: 0.55rem; border-radius: 50%; transform: translate(-50%, -50%); background: var(--cream); opacity: 0.85; }
+.beat-marks span.strong { width: 0.8rem; height: 0.8rem; background: #e0705a; box-shadow: 0 0 6px rgba(224,112,90,0.8); }
+.beat-say { min-height: 1.2em; margin-top: 0.2rem; font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 6px #000; }
+.beat-say.off { color: #e0a090; }
+#beat.hit .beat-line { animation: beat-hit 0.3s; }
+#beat.miss .beat-track { animation: beat-miss 0.3s; }
+@keyframes beat-hit { 50% { box-shadow: 0 0 22px #fff2c8; background: #fff2c8; } }
+@keyframes beat-miss { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 #dread-veil { position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 35%, rgba(10,0,4,0.75) 80%, rgba(0,0,0,0.95) 100%); }
 @keyframes jolt { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
@@ -299,6 +304,8 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .enc-btn:hover, .enc-btn:focus-visible { border-color: var(--gold); background: rgba(201,169,110,0.1); outline: none; }
 .enc-btn.disabled { opacity: 0.45; }
 .enc-btn.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
+.enc-btn .enc-hint { display: block; flex-basis: 100%; margin-left: 1.9em; font-size: 0.78em; color: var(--cream-dim); font-style: italic; }
+.enc-btn { flex-wrap: wrap; }
 .enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; }
 #sound-panel .opt { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; font-size: 0.9rem; color: var(--cream-dim); }
 
@@ -343,9 +350,8 @@ svg.glyph { width: 210px; height: 210px; }
   #room-card { top: max(112px, calc(env(safe-area-inset-top) + 100px)); padding: 10px 14px; }
   #room-card p { font-size: 0.92rem; }
   #log { bottom: max(290px, calc(env(safe-area-inset-bottom) + 280px)); }
-  /* (on a phone the room card fills the top: the beat sits low on the left) */
-  #beat { top: auto; left: 12px; transform: none; bottom: max(140px, calc(env(safe-area-inset-bottom) + 130px)); }
-  #beat.miss { animation-name: beat-miss-phone; }
+  /* (on a phone the room card fills the top: the beat bar sits lower) */
+  #beat { top: auto; bottom: max(250px, calc(env(safe-area-inset-bottom) + 240px)); }
   #prompt { bottom: max(146px, calc(env(safe-area-inset-bottom) + 136px)); }
   #pad { left: 50%; right: auto; transform: translateX(-50%); }
   #inventory { left: 50%; transform: translateX(-50%); bottom: max(190px, calc(env(safe-area-inset-bottom) + 180px)); max-width: calc(100vw - 24px); align-items: center; }
@@ -404,7 +410,10 @@ svg.glyph { width: 210px; height: 210px; }
   <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
   <div id="held" aria-hidden="true"><img id="held-lantern" alt=""><img id="held-flame" alt=""></div>
   <div id="dread-veil" aria-hidden="true"></div>
-  <div id="beat" hidden aria-hidden="true"><span></span></div>
+  <div id="beat" hidden aria-hidden="true">
+    <div class="beat-track"><div class="beat-window"></div><div class="beat-marks"></div><div class="beat-line"></div></div>
+    <div class="beat-say"></div>
+  </div>
 
   <div id="hud-top">
     <div class="hud-left">
@@ -1281,6 +1290,7 @@ function itemIcon(id) {
       break;
     case 'music_a': page('#e8dcb8', 12, 40, 'right'); break;
     case 'music_b': page('#c8a878', 24, 52, 'left'); ctx.fillStyle = 'rgba(40,20,8,0.5)'; ctx.fillRect(44, 8, 8, 48); break;
+    case 'menu': page('#e8dcb8', 12, 52, null); ctx.fillStyle = 'rgba(40,20,8,0.7)'; [20, 28, 36, 44].forEach(y => ctx.fillRect(22, y, 20, 2)); ctx.fillStyle = '#8a2a1a'; ctx.fillRect(22, 14, 20, 2); break;
     case 'music_full': page('#e8dcb8', 8, 56, null); ctx.strokeStyle = 'rgba(40,20,8,0.6)'; ctx.beginPath(); ctx.moveTo(32, 8); for (let y = 8; y <= 56; y += 6) ctx.lineTo(32 + (y / 6 % 2 ? -2 : 2), y); ctx.stroke(); break;
     case 'ring':
       ctx.lineWidth = 7; ctx.strokeStyle = '#1a120b'; ctx.beginPath(); ctx.ellipse(32, 34, 17, 13, 0, 0, Math.PI * 2); ctx.stroke();
@@ -2226,6 +2236,38 @@ const sound = {
     src.connect(f).connect(g).connect(this.master);
     src.start(t, Math.random()); src.stop(t + dur + 0.02);
     if ((surface === 'wood' || surface === 'boards') && Math.random() < 0.14) this.creak(0, 0.5);
+  },
+
+  // The peacock's gaze, heard with your eyes shut: a hum that swells as the
+  // beam nears (`level` 0–1), from its side (`pan`). hum(0) silences it.
+  hum(level, pan = 0) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (!this.humNode) {
+      if (!level) return;
+      const o = this.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 110;
+      const o2 = this.ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 165.5;
+      const g = this.ctx.createGain(); g.gain.value = 0;
+      const p = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+      o.connect(g); o2.connect(g);
+      if (p) g.connect(p).connect(this.master); else g.connect(this.master);
+      o.start(); o2.start();
+      this.humNode = { o, o2, g, p };
+    }
+    const h = this.humNode;
+    h.g.gain.setTargetAtTime(0.16 * level * level, t, 0.05);
+    h.o.frequency.setTargetAtTime(100 + level * 80, t, 0.05);
+    if (h.p) h.p.pan.setTargetAtTime(pan, t, 0.05);
+    if (!level) { const node = h; this.humNode = null; setTimeout(() => { node.o.stop(); node.o2.stop(); }, 300); }
+  },
+
+  // A soft tick on each beat of the waltz (stronger on the weasels' beats).
+  tick(strong = false) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = strong ? 1320 : 990;
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(strong ? 0.05 : 0.03, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.06);
   },
 
   // A floorboard or a beam giving under weight: a slow, rising groan.
@@ -4509,6 +4551,7 @@ const ITEMS = {
   oil:          { name: 'Lamp oil', text: 'A tin flask of lamp oil. Enough to keep the lantern burning a good while.' },
   shard:        { name: 'Mirror shard', text: 'A long shard of the cracked music-room mirror. In it, the room behind you looks subtly wrong.' },
   music_a:      { name: 'Torn sheet music', text: 'The first half of a page of handwritten music, torn across. The notes climb, then stop mid-phrase. In the corner: “for G., from J.”' },
+  menu:         { name: 'Menu card', text: 'A card in Mrs Patrini’s careful hand, for the Lockwoods’ first dinner in the house: Soup. Fish. The Roast. Sweets. Underlined twice: “IN THAT ORDER.”' },
   music_b:      { name: 'Charred sheet music', text: 'The second half of a page of music, scorched at the edges. The melody falls back down to rest.' },
   music_full:   { name: 'Patrini’s tune', text: 'The two halves of the page, laid edge to edge: a short, gentle melody written by Joseph Patrini for his wife Gail.' },
   ring:         { name: 'Gold ring', text: 'A plain gold ring, found among the food on the feast table. Engraved inside: “E. & P.”' },
@@ -4527,6 +4570,7 @@ const SEARCHES = [
   { id: 'parlor_sofa', room: 'parlor',       x: 312,  y: 590,  h: 30, name: 'The sofa', text: 'You push your hand down between the rotten cushions.' },
   { id: 'cupboard',    room: 'kitchen',      x: 830,  y: 485,  h: 46, prop: 'cupboard', name: 'The cupboard', finds: 'kettle', text: 'Most of the crockery is smashed. One thing has survived.' },
   { id: 'shelf_heap',  room: 'kitchen',      x: 880,  y: 262,  h: 36, name: 'The collapsed shelf', finds: 'flour', text: 'You dig through the wreck of the shelf and the plaster it brought down with it.' },
+  { id: 'menu_nail',   room: 'kitchen',      x: 790,  y: 226,  h: 58, name: 'The card on the nail', finds: 'menu', text: 'A card, pinned to the wall on a bent nail by the cook’s own hand, so she wouldn’t forget.' },
   { id: 'barrel',      room: 'kitchen',      x: 724,  y: 252,  h: 40, name: 'The barrel', finds: 'salt', text: 'A barrel in the corner, its lid half off.' },
   { id: 'sideboard',   room: 'dining',       x: 990,  y: 650,  h: 46, name: 'The sideboard', finds: 'knife', text: 'Drawers of tarnished silver, every fork bent and every spoon twisted.' },
   { id: 'potting',     room: 'conservatory', x: 640,  y: 470,  h: 36, prop: 'pottingBench', name: 'The potting bench', finds: 'oil', text: 'Cracked pots, dead earth, a trowel rusted into a lump.' },
@@ -5120,9 +5164,11 @@ async function runEncounter(def) {
   drawArena(arena, st, { x: ARENA_W / 2, y: ARENA_H / 2 }, [], 0);
   try {
     await encSay(def.intro);
-    // A hazard: no choices, just get through each attack once.
+    // A hazard: no choices, just get through it.
     if (def.hazard) {
-      for (const p of def.patterns) {
+      if (def.round) {
+        if ((await playRound(st, arena)) === 'broke') st.result = 'broke';
+      } else for (const p of def.patterns) {
         if ((await dodge(st, arena, p)) === 'broke') { st.result = 'broke'; break; }
         st.turn++;
       }
@@ -5133,9 +5179,12 @@ async function runEncounter(def) {
       await encChoose(st, choice);
       if (!st.result && game.dread >= DREAD_MAX) st.result = 'broke';   // e.g. from something you did
       if (st.result) break;
-      const outcome = await dodge(st, arena, def.patterns[st.turn % def.patterns.length]);
+      const outcome = def.round ? await playRound(st, arena) : await dodge(st, arena, def.patterns[st.turn % def.patterns.length]);
       if (outcome === 'broke') { st.result = 'broke'; break; }
       st.turn++;
+      if (st.roundEnd) { const r = st.roundEnd; st.roundEnd = null; if (r !== 'continue') st.result = r; }
+      if (st.result) break;
+      if (st.roundLine) { const line = st.roundLine; st.roundLine = null; await encSay(line); }
       if (def.afterTurn) { const line = def.afterTurn(st); if (line) await encSay(line); }
     }
     if (st.result === 'broke') await encSay(def.broke || 'It is too much. You turn and run.');
@@ -5173,6 +5222,7 @@ function encButtons(buttons) {
       el.className = 'enc-btn' + (b.dark ? ' dark' : '') + (b.disabled ? ' disabled' : '');
       el.innerHTML = `<span class="key">${i + 1}</span>`;
       el.appendChild(document.createTextNode(b.text));
+      if (b.hint) { const h = document.createElement('small'); h.className = 'enc-hint'; h.textContent = b.hint; el.appendChild(h); }
       el.addEventListener('click', () => done(b.id));
       menu.appendChild(el);
     });
@@ -5211,11 +5261,11 @@ async function encMenu(st) {
     const pick = await encButtons(top);
     if (pick === 'act') {
       const acts = def.acts.filter(a => !a.when || a.when(st));
-      const sub = await encButtons([...acts.map(a => ({ id: a.id, text: a.text, dark: a.dark })), { id: 'back', text: 'Back' }]);
+      const sub = await encButtons([...acts.map(a => ({ id: a.id, text: a.text, dark: a.dark, hint: a.hint })), { id: 'back', text: 'Back' }]);
       if (sub !== 'back') return { type: 'act', act: acts.find(a => a.id === sub) };
     } else if (pick === 'item') {
       if (!game.items.length) { p.textContent = 'You aren’t carrying anything.'; await encButtons([{ id: 'back', text: 'Back' }]); continue; }
-      const sub = await encButtons([...game.items.map(id => ({ id, text: ITEMS[id].name, dark: !!(def.items[id] && def.items[id].kill) })), { id: 'back', text: 'Back' }]);
+      const sub = await encButtons([...game.items.map(id => ({ id, text: ITEMS[id].name, dark: !!(def.items[id] && def.items[id].kill), hint: def.items[id] && def.items[id].hint })), { id: 'back', text: 'Back' }]);
       if (sub !== 'back') return { type: 'item', id: sub };
     } else if (pick === 'release') {
       if (ready) return { type: 'release' };
@@ -5316,7 +5366,10 @@ function dodge(st, canvas, pattern) {
     const inSalt = s => pad && s.x > pad * 1.6 && s.x < ARENA_W - pad * 1.6 && s.y > pad && s.y < ARENA_H - pad;
     const bounds = { x0: SOUL_R, x1: ARENA_W - SOUL_R, y0: SOUL_R, y1: ARENA_H - SOUL_R };
     const api = {
-      soul, rand, w: ARENA_W, h: ARENA_H, easy,
+      soul, rand, w: ARENA_W, h: ARENA_H, easy, st,
+      end(how = 'done') { finish(how); },
+      say(text) { $('encounter').querySelector('.enc-text').textContent = text; },
+      hurt(n = 1) { if (invuln > 0) return; invuln = easy ? 1.4 : 0.9; sound.hit(); addDread(easy ? n * 0.5 : n); drawEncDread(); if (game.dread >= DREAD_MAX) finish('broke'); },
       add(s) { s.age = 0; if (s.vx) s.vx *= speed; if (s.vy) s.vy *= speed; if (s.hurt === undefined) s.hurt = true; shots.push(s); return s; },
       edge() { const side = Math.floor(rand() * 4); return side === 0 ? { x: rand() * ARENA_W, y: -10 } : side === 1 ? { x: ARENA_W + 10, y: rand() * ARENA_H } : side === 2 ? { x: rand() * ARENA_W, y: ARENA_H + 10 } : { x: -10, y: rand() * ARENA_H }; },
       effect(name, secs) { fx[name] = Math.max(fx[name], easy ? secs * 0.6 : secs); },
@@ -5371,6 +5424,7 @@ function dodge(st, canvas, pattern) {
         s.x += (s.vx || 0) * dt * k; s.y += (s.vy || 0) * dt * k;
         const gone = (s.life && s.age > s.life) || s.x < -60 || s.x > ARENA_W + 60 || s.y < -60 || s.y > ARENA_H + 60;
         if (gone) { shots.splice(i, 1); continue; }
+        if (s.take && Math.hypot(soul.x - s.x, soul.y - s.y) < (s.r || 6) + SOUL_R) { shots.splice(i, 1); s.take(s, api); if (ended) return; continue; }
         if (!s.hurt || invuln > 0 || (s.armed !== undefined && s.age < s.armed)) continue;
         const hit = s.rect
           ? Math.abs(soul.x - s.x) < s.rect[0] / 2 + SOUL_R * 0.6 && Math.abs(soul.y - s.y) < s.rect[1] / 2 + SOUL_R * 0.6
@@ -5393,6 +5447,130 @@ function dodge(st, canvas, pattern) {
   });
 }
 
+// ─── Rounds ───────────────────────────────────────────────────────────
+// Between turns, each encounter plays its own small challenge (its
+// `round(st)`, in rooms.js and challenges.js): either a dodge pattern (as
+// before) or a challenge `{ title, hint, duration, start(api), update(api,
+// dt), draw(ctx, api) }`. First a moment to get ready: the goal, the
+// controls, 3-2-1.
+
+async function playRound(st, canvas) {
+  const spec = st.def.round(st);
+  await getReady(canvas, spec);
+  return spec.spawn ? dodge(st, canvas, spec) : challenge(st, canvas, spec);
+}
+
+function getReady(canvas, spec) {
+  const root = $('encounter');
+  root.querySelector('.enc-text').textContent = spec.text || spec.title || '';
+  root.querySelector('.enc-menu').innerHTML = `<span class="enc-dodge-hint">${spec.hint || 'Move with WASD or the arrow keys · drag on a touch screen'}</span>`;
+  const ctx = canvas.getContext('2d');
+  const t0 = performance.now(), ms = easyMode() ? 2200 : 1700;
+  return new Promise(res => {
+    const frame = now => {
+      const k = (now - t0) / ms;
+      ctx.fillStyle = '#07060a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+      if (spec.preview) spec.preview(ctx);
+      ctx.fillStyle = 'rgba(7,6,10,0.55)'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#c9a96e'; ctx.font = '600 15px Cinzel, Georgia, serif';
+      ctx.fillText(spec.title || 'Get ready', ARENA_W / 2, ARENA_H / 2 - 30);
+      ctx.fillStyle = '#e8d5a3'; ctx.font = '40px Cinzel, Georgia, serif';
+      ctx.fillText(String(Math.max(1, 3 - Math.floor(k * 3))), ARENA_W / 2, ARENA_H / 2 + 14);
+      if (k < 1) requestAnimationFrame(frame); else res();
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+// A challenge: input (keys held and pressed, the pointer), a clock, and an
+// `api` for the round to hurt you, calm them, speak, or end early.
+function challenge(st, canvas, spec) {
+  return new Promise(resolve => {
+    const easy = easyMode();
+    const ctx = canvas.getContext('2d');
+    const keys = new Set(), pressed = [];
+    const pointer = { x: null, y: null, down: false, tapped: false };
+    let ended = false, last = performance.now();
+    const started = performance.now();
+    const api = {
+      st, easy, w: ARENA_W, h: ARENA_H, keys, pressed, pointer, t: 0, invuln: 0,
+      rand: seededRandom(st.turn * 131 + st.def.name.length * 7),
+      hurt(n = 1) {
+        if (api.invuln > 0) return false;
+        api.invuln = easy ? 1.3 : 0.85;
+        sound.hit(); addDread(easy ? n * 0.5 : n); drawEncDread();
+        if (game.dread >= DREAD_MAX) finish('broke');
+        return true;
+      },
+      calm(n) { addCalm(st, n); },
+      say(text) { $('encounter').querySelector('.enc-text').textContent = text; },
+      end(how = 'done') { finish(how); },
+      held: (...ks) => ks.some(k => keys.has(k)),
+      press: (...ks) => pressed.some(k => ks.includes(k)),
+    };
+    $('encounter').querySelector('.enc-text').textContent = spec.text || '';
+    if (spec.start) spec.start(api);
+    const down = e => {
+      const k = e.key.toLowerCase();
+      if (!e.repeat) pressed.push(k);
+      keys.add(k);
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd'].includes(k)) e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    const up = e => { keys.delete(e.key.toLowerCase()); e.stopImmediatePropagation(); };
+    const toArena = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * ARENA_W / r.width, (e.clientY - r.top) * ARENA_H / r.height]; };
+    const pdown = e => { canvas.setPointerCapture(e.pointerId); [pointer.x, pointer.y] = toArena(e); pointer.down = true; pointer.tapped = true; };
+    const pmove = e => { [pointer.x, pointer.y] = toArena(e); };
+    const pup = () => { pointer.down = false; };
+    document.addEventListener('keydown', down, true);
+    document.addEventListener('keyup', up, true);
+    canvas.addEventListener('pointerdown', pdown);
+    canvas.addEventListener('pointermove', pmove);
+    canvas.addEventListener('pointerup', pup);
+    canvas.addEventListener('pointercancel', pup);
+    function finish(how) {
+      if (ended) return;
+      ended = true;
+      document.removeEventListener('keydown', down, true);
+      document.removeEventListener('keyup', up, true);
+      canvas.removeEventListener('pointerdown', pdown);
+      canvas.removeEventListener('pointermove', pmove);
+      canvas.removeEventListener('pointerup', pup);
+      canvas.removeEventListener('pointercancel', pup);
+      if (spec.stop) spec.stop(api, how);
+      resolve(how);
+    }
+    const frame = now => {
+      if (ended) return;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (document.hidden) { requestAnimationFrame(frame); return; }
+      api.t += dt; api.invuln = Math.max(0, api.invuln - dt);
+      api.left = Math.max(0, spec.duration - (now - started) / 1000);
+      spec.update(api, dt);
+      pressed.length = 0; pointer.tapped = false;
+      if (ended) return;
+      ctx.save(); spec.draw(ctx, api); ctx.restore();
+      // time left, as a thin bar along the bottom
+      if (spec.duration) { ctx.fillStyle = 'rgba(232,213,163,0.35)'; ctx.fillRect(0, ARENA_H - 3, ARENA_W * api.left / spec.duration, 3); }
+      if (spec.duration && api.left <= 0) { finish('done'); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+// The lantern flame that stands for you, drawn at (x, y).
+function drawSoul(ctx, x, y, flicker = false) {
+  if (flicker) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, SOUL_R * 2.6);
+  g.addColorStop(0, 'rgba(255,240,200,1)'); g.addColorStop(0.35, 'rgba(255,180,90,0.9)'); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, SOUL_R * 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff4dc';
+  ctx.beginPath(); ctx.moveTo(x, y - SOUL_R * 1.4); ctx.quadraticCurveTo(x + SOUL_R, y, x, y + SOUL_R * 0.8); ctx.quadraticCurveTo(x - SOUL_R, y, x, y - SOUL_R * 1.4); ctx.fill();
+}
+
 function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, ARENA_W, ARENA_H);
@@ -5406,6 +5584,7 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
     ctx.globalAlpha = fade;
     ctx.fillStyle = s.color || '#d8c49a';
     if (s.rect) { ctx.fillRect(s.x - s.rect[0] / 2, s.y - s.rect[1] / 2, s.rect[0], s.rect[1]); }
+    else if (s.draw) s.draw(ctx, s);
     else if (s.glyph) { ctx.font = `${Math.round((s.r || 6) * 2.4)}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.glyph, s.x, s.y); }
     else { ctx.beginPath(); ctx.arc(s.x, s.y, s.r || 6, 0, Math.PI * 2); ctx.fill(); }
     ctx.globalAlpha = 1;
@@ -5425,6 +5604,425 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
   ctx.beginPath(); ctx.moveTo(soul.x, soul.y - SOUL_R * 1.4); ctx.quadraticCurveTo(soul.x + SOUL_R, soul.y, soul.x, soul.y + SOUL_R * 0.8); ctx.quadraticCurveTo(soul.x - SOUL_R, soul.y, soul.x, soul.y - SOUL_R * 1.4); ctx.fill();
 }
 
+// ─── src/game/js/challenges.js ───────────────────────────────────────
+// Each encounter's own challenge, played in the arena between turns (see
+// playRound in encounter.js). What you chose on your turn changes the
+// next round through `st.flags`.
+
+// ─── The Phantom Feast: courses ───────────────────────────────────────
+// Dishes circle you with the cutlery. Take the right course as it passes
+// (soup, fish, roast, sweets: Mrs Patrini's card in the kitchen says so)
+// and nothing else; each right course calms the feast.
+
+const COURSES = [
+  { id: 'soup', name: 'the soup', line: 'You take the soup tureen out of the air, and set it down, and bow. The feast hums, approving.' },
+  { id: 'fish', name: 'the fish', line: 'The fish, next, as it should be. A spoon taps twice against a glass, like applause.' },
+  { id: 'roast', name: 'the roast', line: 'The roast lowers itself into your hands, steaming and heavy. Somewhere, a host is smiling.' },
+  { id: 'sweets', name: 'the sweets', line: 'Last, the sweets: a cake that sighs as you take it. The whole feast settles, contented.' },
+];
+
+function feastRound(st) {
+  const f = st.flags, course = f.course || 0, done = course >= COURSES.length;
+  const card = game.items.includes('menu');
+  const slow = f.grace ? 0.6 : 1, still = f.sit ? 2.5 : 0, onlyRight = !!f.praise;
+  f.grace = f.sit = f.praise = false;
+  return {
+    title: done ? 'The feast is sated' : card ? `Take ${COURSES[course].name}` : 'Take the right course',
+    text: done ? 'Only the cutlery still flies, half-hearted.' : card
+      ? `Mrs Patrini’s card says ${COURSES[course].name} comes next. Take it as it passes; dodge everything else.`
+      : 'Dishes circle you, and one of them is the right course. Take it, and nothing else.',
+    hint: 'Move into the right dish to take it · WASD or the arrow keys · drag on a touch screen',
+    duration: 9,
+    spawn(api, t, dt) {
+      if (t < still) return;
+      if (!done) {
+        this.nd = (this.nd ?? 0.3) - dt;
+        if (this.nd <= 0) {
+          this.nd = api.easy ? 1.0 : 0.8;
+          const pick = onlyRight ? course : (api.rand() < 0.4 ? course : Math.floor(api.rand() * COURSES.length));
+          // across the table, somewhere: you go and take it
+          const e = api.edge(), tx = 40 + api.rand() * (api.w - 80), ty = 30 + api.rand() * (api.h - 60);
+          const d = Math.hypot(tx - e.x, ty - e.y) || 1, sp = (38 + api.rand() * 22) * slow, right = pick === course;
+          api.add({ x: e.x, y: e.y, vx: (tx - e.x) / d * sp, vy: (ty - e.y) / d * sp, r: 11, hurt: false, life: 9,
+            draw: (ctx, s) => drawDish(ctx, s.x, s.y, COURSES[pick].id, card && right),
+            take: (s, a) => {
+              if (right) { f.course = course + 1; sound.pickup(); addCalm(st, 1); st.roundLine = COURSES[course].line; a.end(); }
+              else { a.hurt(1); a.say(pick < course ? 'You’ve had that one already. The feast is offended.' : 'Not yet! Every dish rattles with disgust.'); }
+            } });
+        }
+      }
+      this.nc = (this.nc ?? 0.8) - dt;
+      if (this.nc <= 0) {
+        this.nc = (api.easy ? 0.95 : 0.65) / slow;
+        const e = api.edge(), v = api.aim(e, (105 + api.rand() * 45) * slow);
+        api.add({ x: e.x, y: e.y, ...v, r: 5, draw: (ctx, s) => drawCutlery(ctx, s, Math.atan2(v.vy, v.vx)) });
+      }
+    },
+  };
+}
+
+function drawDish(ctx, x, y, kind, glow) {
+  if (glow) { const g = ctx.createRadialGradient(x, y, 4, x, y, 20); g.addColorStop(0, 'rgba(255,220,140,0.55)'); g.addColorStop(1, 'rgba(255,220,140,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillStyle = '#b8b2a0'; ctx.beginPath(); ctx.ellipse(x, y + 4, 12, 5, 0, 0, Math.PI * 2); ctx.fill();
+  if (kind === 'soup') { ctx.fillStyle = '#d8d2c2'; ctx.beginPath(); ctx.ellipse(x, y, 9, 7, 0, 0, Math.PI); ctx.fill(); ctx.fillStyle = '#9a6a2a'; ctx.beginPath(); ctx.ellipse(x, y, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'rgba(230,230,230,0.5)'; ctx.beginPath(); ctx.moveTo(x - 3, y - 4); ctx.quadraticCurveTo(x - 5, y - 9, x - 2, y - 13); ctx.stroke(); }
+  if (kind === 'fish') { ctx.fillStyle = '#c9874a'; ctx.beginPath(); ctx.ellipse(x - 1, y, 9, 4.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.moveTo(x + 7, y); ctx.lineTo(x + 13, y - 5); ctx.lineTo(x + 13, y + 5); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#1a1008'; ctx.beginPath(); ctx.arc(x - 6, y - 1, 1, 0, Math.PI * 2); ctx.fill(); }
+  if (kind === 'roast') { ctx.fillStyle = '#7a3e1c'; ctx.beginPath(); ctx.ellipse(x, y - 1, 9, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#e8dcc0'; ctx.fillRect(x + 6, y - 6, 6, 2.5); }
+  if (kind === 'sweets') { ctx.fillStyle = '#e8d8c0'; ctx.fillRect(x - 7, y - 6, 14, 8); ctx.fillStyle = '#8a2a3a'; ctx.fillRect(x - 7, y - 7, 14, 2.5); ctx.beginPath(); ctx.arc(x, y - 9, 2, 0, Math.PI * 2); ctx.fill(); }
+}
+function drawCutlery(ctx, s, ang) {
+  ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(ang);
+  ctx.strokeStyle = '#c8c8cc'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(8, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(4, -2.5); ctx.lineTo(9, -2.5); ctx.moveTo(4, 2.5); ctx.lineTo(9, 2.5); ctx.stroke();
+  ctx.restore();
+}
+
+// ─── Petunia: don't spill ─────────────────────────────────────────────
+// You snatched her cup: give it back whole. Her grief comes in waves (a
+// cold glimmer on one side, then the push); lean against them to keep the
+// tea level. The less tea is left, the further the cup can tip. Not a drop
+// spilled, and she softens.
+
+function cupRound(st) {
+  const f = st.flags;
+  const soft = (f.apologised ? 0.75 : 1) * (f.named ? 0.65 : 1);
+  return {
+    title: 'Keep her cup level',
+    text: 'Her grief shakes the room in waves. Keep her teacup level, and don’t spill a drop.',
+    hint: 'Lean against each wave with ← → or A D · or drag left and right on a touch screen',
+    duration: easyMode() ? 10 : 12,
+    preview(ctx) { drawCup(ctx, 0, 1, []); },
+    start(api) { Object.assign(this, { a: 0, v: 0, tea: 1, spills: 0, next: 1.4, warn: 0, side: 0, drops: [] }); },
+    update(api, dt) {
+      this.next -= dt;
+      if (this.next <= 0 && !this.warn) { this.side = api.rand() < 0.5 ? -1 : 1; this.warn = api.easy ? 0.95 : 0.7; }
+      if (this.warn) {
+        this.warn -= dt;
+        if (this.warn <= 0) { this.warn = 0; this.v += this.side * (0.75 + api.rand() * 0.35) * soft * (api.easy ? 0.75 : 1); this.next = (api.easy ? 2.2 : 1.6) + api.rand() * 0.8; sound.whisper(); }
+      }
+      this.v += (Math.sin(api.t * 6.1) * 0.06 + (api.rand() - 0.5) * 0.1) * soft * dt * 4;
+      let input = (api.held('arrowleft', 'a') ? -1 : 0) + (api.held('arrowright', 'd') ? 1 : 0);
+      if (api.pointer.down && api.pointer.x !== null) input = clamp((api.pointer.x - api.w / 2) / 70, -1, 1);
+      this.v += input * 3.2 * dt;
+      this.v *= Math.pow(0.2, dt);
+      this.a = clamp(this.a + this.v * dt, -1.1, 1.1);
+      // does the tea reach the lower rim?
+      if (55 * Math.abs(Math.sin(this.a)) - 70 * Math.cos(this.a) + 14 + 36 * this.tea > 0) {
+        this.spills++; this.tea = Math.max(0, this.tea - 0.2);
+        const s = Math.sign(this.a) || 1;
+        for (let i = 0; i < 9; i++) this.drops.push({ x: 180 + s * 50, y: 120, vx: s * (30 + api.rand() * 50), vy: -20 - api.rand() * 40, life: 1 });
+        this.a = s * 0.12; this.v = -s * 0.2;
+        api.hurt(1);
+        api.say(this.spills === 1 ? 'Tea slops over the rim. Her wail rises.' : 'More spills. The cold bites into your fingers.');
+      }
+      this.drops.forEach(d => { d.vy += 300 * dt; d.x += d.vx * dt; d.y += d.vy * dt; d.life -= dt; });
+      this.drops = this.drops.filter(d => d.life > 0);
+    },
+    stop(api, how) {
+      if (how === 'broke') return;
+      if (!this.spills) { api.calm(1); st.roundLine = 'Not a drop spilled. She watches your careful hands, and something in her face loosens.'; }
+      else st.roundLine = this.spills === 1 ? 'One spill. She looks at the stain on the saucer, and then at you.' : 'The saucer swims with spilt tea. She will not look at you.';
+    },
+    draw(ctx, api) {
+      // cold creeping in from the side the next wave comes from
+      ctx.fillStyle = '#080a10'; ctx.fillRect(0, 0, api.w, api.h);
+      if (this.warn) {
+        const x = this.side < 0 ? 0 : api.w, g = ctx.createLinearGradient(x, 0, x - this.side * 140, 0);
+        g.addColorStop(0, 'rgba(170,200,255,0.55)'); g.addColorStop(1, 'rgba(170,200,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, api.w, api.h);
+        ctx.fillStyle = 'rgba(210,230,255,0.9)'; ctx.font = '22px Georgia, serif'; ctx.textAlign = 'center';
+        ctx.fillText(this.side < 0 ? '⟵' : '⟶', this.side < 0 ? 26 : api.w - 26, 112);
+      }
+      drawCup(ctx, this.a, this.tea, this.drops);
+      ctx.fillStyle = '#e8d5a3'; ctx.font = '12px Georgia, serif'; ctx.textAlign = 'left';
+      ctx.fillText(`Tea: ${'●'.repeat(Math.ceil(this.tea * 5))}${'○'.repeat(5 - Math.ceil(this.tea * 5))}`, 10, 18);
+    },
+  };
+}
+
+// The cup, tipped by `a`, with the tea level in the world (it doesn't tip).
+function drawCup(ctx, a, tea, drops) {
+  const bx = 180, by = 175;
+  ctx.fillStyle = '#d8dce4'; ctx.beginPath(); ctx.ellipse(bx, by + 6, 90, 10, 0, 0, Math.PI * 2); ctx.fill();   // the saucer
+  ctx.save(); ctx.translate(bx, by); ctx.rotate(a);
+  const bowl = () => { ctx.beginPath(); ctx.moveTo(-55, -70); ctx.quadraticCurveTo(-52, -6, -32, 0); ctx.lineTo(32, 0); ctx.quadraticCurveTo(52, -6, 55, -70); ctx.closePath(); };
+  // the tea, level whatever the cup does
+  ctx.save(); bowl(); ctx.clip();
+  ctx.rotate(-a);
+  ctx.fillStyle = '#8a5a22'; ctx.fillRect(-200, -14 - 36 * tea, 400, 200);
+  ctx.fillStyle = 'rgba(255,230,180,0.25)'; ctx.fillRect(-200, -14 - 36 * tea, 400, 2);
+  ctx.restore();
+  ctx.lineWidth = 5; ctx.strokeStyle = '#eef0f4'; bowl(); ctx.stroke();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#3f8a52'; ctx.beginPath(); ctx.moveTo(-54, -60); ctx.quadraticCurveTo(0, -56, 54, -60); ctx.stroke();   // her green band
+  ctx.lineWidth = 6; ctx.strokeStyle = '#eef0f4'; ctx.beginPath(); ctx.arc(64, -40, 14, -Math.PI / 2, Math.PI / 2); ctx.stroke();   // the handle
+  ctx.restore();
+  ctx.fillStyle = '#8a5a22';
+  drops.forEach(d => { ctx.globalAlpha = Math.max(0, d.life); ctx.beginPath(); ctx.arc(d.x, d.y, 2.2, 0, Math.PI * 2); ctx.fill(); });
+  ctx.globalAlpha = 1;
+}
+
+// ─── The peacock: the gaze ────────────────────────────────────────────
+// From above: its red eye sweeps the gallery like a lighthouse. Move from
+// bust to bust (they block the beam) towards the bird; in the beam, stone
+// creeps up your legs. Reach it with the mirror shard and raise it as the
+// eye finds you: it meets its own gaze. With your eyes shut you can't see
+// the beam (or the busts), but it can barely hold you; listen for its hum.
+
+const GAZE = { eye: { x: 180, y: 24 }, busts: [[110, 104], [250, 104], [180, 142], [72, 166], [288, 166]], r: 13 };
+
+function gazeRound(st) {
+  const f = st.flags;
+  const blind = !!f.eyes, slow = f.keziah ? 0.7 : 1, narrow = f.vermin ? 0.6 : 1;
+  f.eyes = false;
+  const shard = game.items.includes('shard');
+  return {
+    title: blind ? 'Eyes shut: listen' : 'Cross the gallery',
+    text: blind ? 'Eyes shut. You can’t see its gaze, but you can hear it: a hum that rises as it nears, louder on its side.' : shard
+      ? 'Get close, keeping the busts between you and its eye. Then raise the mirror as its gaze finds you.'
+      : 'Get close to the bird, keeping the busts between you and its eye.',
+    hint: (shard ? 'Space: raise the mirror · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    duration: 16,
+    preview(ctx) { drawGallery(ctx, f.gx ?? 180, f.gy ?? 204, Math.PI / 2, 0.13 * narrow, false, 0); },
+    start(api) { this.x = f.gx ?? 180; this.y = f.gy ?? 204; this.m = 0; this.touched = false; },
+    beam(api) { return Math.PI / 2 + Math.sin(api.t * (api.easy ? 0.8 : 1.15) * slow + 0.6) * 1.05; },
+    update(api, dt) {
+      const th = this.beam(api), hw = 0.13 * narrow;
+      const sp = 62 * (1 - 0.6 * this.m);
+      let dx = (api.held('arrowright', 'd') ? 1 : 0) - (api.held('arrowleft', 'a') ? 1 : 0), dy = (api.held('arrowdown', 's') ? 1 : 0) - (api.held('arrowup', 'w') ? 1 : 0);
+      if (api.pointer.down && api.pointer.x !== null) { const ddx = api.pointer.x - this.x, ddy = api.pointer.y - this.y, d = Math.hypot(ddx, ddy); if (d > 4) { dx = ddx / d; dy = ddy / d; } }
+      const len = Math.hypot(dx, dy) || 1;
+      this.x = clamp(this.x + dx / len * sp * dt, 14, api.w - 14); this.y = clamp(this.y + dy / len * sp * dt, 40, api.h - 10);
+      GAZE.busts.forEach(([bx, by]) => { const ex = this.x - bx, ey = this.y - by, d = Math.hypot(ex, ey); if (d < GAZE.r + 6) { this.x = bx + ex / d * (GAZE.r + 6); this.y = by + ey / d * (GAZE.r + 6); } });
+      // in the beam, and not behind a bust?
+      const phi = Math.atan2(this.y - GAZE.eye.y, this.x - GAZE.eye.x);
+      const hidden = GAZE.busts.some(([bx, by]) => segDist(GAZE.eye.x, GAZE.eye.y, this.x, this.y, bx, by) < GAZE.r);
+      this.lit = Math.abs(phi - th) < hw && !hidden;
+      this.m = clamp(this.m + (this.lit ? (blind ? 0.45 : 0.95) * (api.easy ? 0.7 : 1) : -0.45) * dt, 0, 1);
+      if (this.m >= 1) { api.hurt(1); this.m = 0.35; this.y = Math.min(api.h - 10, this.y + 30); api.say('Stone creeps up to your knees. You tear free, and stumble back.'); }
+      if (blind) sound.hum(clamp(1 - Math.abs(phi - th) / 0.7, 0, 1), -clamp((th - phi) / 0.7, -1, 1));
+      // at the bird
+      const near = Math.hypot(this.x - GAZE.eye.x, this.y - (GAZE.eye.y + 16)) < 40;
+      if (near && shard && (api.press(' ', 'enter') || api.pointer.tapped)) {
+        if (this.lit || Math.abs(phi - th) < hw * 2.2) {
+          addCalm(st, st.def.calmMax);
+          st.roundLine = 'You raise the mirror shard as its gaze falls on you. Its red eye meets its own reflection, and holds, and cannot look away. Grey creeps back over the white marble like frost, and the great tail stiffens.';
+          api.end(); return;
+        }
+        api.say('Too soon: its eye is elsewhere. Wait for the gaze to find you.');
+      }
+      if (near && !shard && !this.touched) {
+        this.touched = true; addCalm(st, 1);
+        api.say('You lay your hand on its cold neck. It shudders under your palm, and the sweep falters.');
+        this.x = 180; this.y = 204;
+      }
+    },
+    stop(api) { f.gx = this.x; f.gy = this.y; sound.hum(0); },
+    draw(ctx, api) { drawGallery(ctx, this.x, this.y, this.beam(api), 0.13 * narrow, blind, this.m, api.invuln > 0 && Math.floor(api.invuln * 12) % 2); },
+  };
+}
+
+function segDist(ax, ay, bx, by, px, py) {
+  const vx = bx - ax, vy = by - ay, l = vx * vx + vy * vy || 1;
+  const t = clamp(((px - ax) * vx + (py - ay) * vy) / l, 0, 1);
+  return Math.hypot(ax + vx * t - px, ay + vy * t - py);
+}
+
+function drawGallery(ctx, px, py, th, hw, blind, m, flicker) {
+  ctx.fillStyle = '#0c0b0a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  ctx.strokeStyle = 'rgba(200,190,170,0.25)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(180, 120, 172, 112, 0, 0, Math.PI * 2); ctx.stroke();
+  if (!blind) {
+    // the beam, cut short where the busts stand in it
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(GAZE.eye.x, GAZE.eye.y);
+    ctx.arc(GAZE.eye.x, GAZE.eye.y, 420, th - hw, th + hw); ctx.closePath();
+    ctx.fillStyle = 'rgba(200,30,30,0.35)'; ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#0c0b0a';
+    GAZE.busts.forEach(([bx, by]) => {
+      const a = Math.atan2(by - GAZE.eye.y, bx - GAZE.eye.x), d = Math.hypot(bx - GAZE.eye.x, by - GAZE.eye.y), s = Math.asin(Math.min(1, GAZE.r / d));
+      ctx.beginPath(); ctx.moveTo(GAZE.eye.x + Math.cos(a - s) * d, GAZE.eye.y + Math.sin(a - s) * d);
+      ctx.lineTo(GAZE.eye.x + Math.cos(a - s) * 420, GAZE.eye.y + Math.sin(a - s) * 420); ctx.lineTo(GAZE.eye.x + Math.cos(a + s) * 420, GAZE.eye.y + Math.sin(a + s) * 420);
+      ctx.lineTo(GAZE.eye.x + Math.cos(a + s) * d, GAZE.eye.y + Math.sin(a + s) * d); ctx.closePath(); ctx.fill();
+    });
+    ctx.fillStyle = '#8a8478';
+    GAZE.busts.forEach(([bx, by]) => { ctx.beginPath(); ctx.arc(bx, by, GAZE.r, 0, Math.PI * 2); ctx.fill(); });
+  }
+  // the peacock
+  ctx.fillStyle = blind ? 'rgba(220,214,200,0.12)' : '#dcd6c8';
+  ctx.beginPath(); ctx.arc(GAZE.eye.x, GAZE.eye.y - 6, 30, 0, Math.PI); ctx.fill();
+  ctx.fillStyle = '#c4181a'; ctx.beginPath(); ctx.arc(GAZE.eye.x, GAZE.eye.y, 3.5, 0, Math.PI * 2); ctx.fill();
+  if (blind) { const g = ctx.createRadialGradient(px, py, 10, px, py, 46); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.96)'); ctx.fillStyle = g; ctx.fillRect(0, 0, ARENA_W, ARENA_H); }
+  drawSoul(ctx, px, py, flicker);
+  if (m > 0) { ctx.fillStyle = 'rgba(160,160,150,0.85)'; ctx.fillRect(px - 10, py + 12, 20 * m, 3); }    // the stone creeping up
+}
+
+// ─── The boogleswarm: herding ─────────────────────────────────────────
+// From above: the weasels flock, and your lantern's light pushes them
+// away. Drive them into the crack in the wall; any that dart in out of
+// the dark bite. Every third of the swarm herded home calms them a step.
+// (The dark way: stamp on them instead.)
+
+function herdRound(st) {
+  const f = st.flags;
+  const R = (f.lanternHigh ? 80 : 58) + (easyMode() ? 10 : 0), stamps = f.shout ? 3 : 0, lure = !!f.tooth, ring = !!f.salt, crushing = !!f.crushing;
+  f.lanternHigh = f.shout = f.tooth = f.salt = false;
+  const total = f.total ?? (f.total = easyMode() ? 18 : 24);
+  if (f.left === undefined) f.left = total;
+  const crack = { x: 344, y0: 82, y1: 138 };
+  return {
+    title: crushing ? 'Crush them' : 'Herd them into the crack',
+    text: crushing ? 'Bring your heel down on them. All of them.' : 'Your light drives them back. Push the swarm into the crack in the wall.' + (lure ? ' The tooth you threw lies by the crack, and they want it.' : ''),
+    hint: crushing ? 'Space or tap: stamp · move with WASD or the arrow keys' : (stamps ? 'Space: stamp and shout · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    duration: crushing ? 10 : 16,
+    start(api) {
+      this.x = 60; this.y = 110; this.stamps = stamps; this.splats = []; this.ws = [];
+      for (let i = 0; i < f.left; i++) this.ws.push({ x: 120 + api.rand() * 160, y: 30 + api.rand() * 160, vx: 0, vy: 0, dash: 0, warn: 0 });
+      this.herded = 0; this.killed = 0;
+    },
+    update(api, dt) {
+      let dx = (api.held('arrowright', 'd') ? 1 : 0) - (api.held('arrowleft', 'a') ? 1 : 0), dy = (api.held('arrowdown', 's') ? 1 : 0) - (api.held('arrowup', 'w') ? 1 : 0);
+      if (api.pointer.down && api.pointer.x !== null) { const ddx = api.pointer.x - this.x, ddy = api.pointer.y - this.y, d = Math.hypot(ddx, ddy); if (d > 4) { dx = ddx / d; dy = ddy / d; } }
+      const len = Math.hypot(dx, dy) || 1;
+      this.x = clamp(this.x + dx / len * 92 * dt, 8, api.w - 8); this.y = clamp(this.y + dy / len * 92 * dt, 8, api.h - 8);
+      const stomp = api.press(' ') || (crushing && api.pointer.tapped);
+      if (stomp && crushing) {
+        sound.hit();
+        this.ws = this.ws.filter(w => { if (Math.hypot(w.x - this.x, w.y - this.y) < 18) { this.splats.push({ x: w.x, y: w.y }); this.killed++; return false; } return true; });
+      } else if (stomp && this.stamps > 0) {
+        this.stamps--; sound.thunder(0.25);
+        this.ws.forEach(w => { const ex = w.x - this.x, ey = w.y - this.y, d = Math.hypot(ex, ey) || 1; if (d < 80) { w.vx += ex / d * 260; w.vy += ey / d * 260; } });
+      }
+      for (const w of this.ws) {
+        const ex = w.x - this.x, ey = w.y - this.y, d = Math.hypot(ex, ey) || 1;
+        let ax = (api.rand() - 0.5) * 120, ay = (api.rand() - 0.5) * 120;
+        if (!crushing && d < R) { ax += ex / d * 340 * (1 - d / R); ay += ey / d * 340 * (1 - d / R); }
+        else if (d > R * 1.3) { ax -= ex / d * 26; ay -= ey / d * 26; }        // they want you
+        if (lure && api.t < 6) { const lx = crack.x - 14 - w.x, ly = (crack.y0 + crack.y1) / 2 - w.y, ld = Math.hypot(lx, ly) || 1; ax += lx / ld * 90; ay += ly / ld * 90; }
+        for (const o of this.ws) { if (o === w) continue; const sx = w.x - o.x, sy = w.y - o.y, sd = Math.hypot(sx, sy); if (sd < 9 && sd > 0) { ax += sx / sd * 140; ay += sy / sd * 140; } }
+        // now and then one darts in at you out of the dark (eyes flaring first)
+        if (!crushing && !w.dash && !w.warn && d > R * 0.8 && api.rand() < dt * (api.easy ? 0.05 : 0.09)) w.warn = 0.45;
+        if (w.warn) { w.warn -= dt; if (w.warn <= 0) { w.warn = 0; w.dash = 0.55; } }
+        if (w.dash) { w.dash = Math.max(0, w.dash - dt); w.vx = -ex / d * 170; w.vy = -ey / d * 170; if (d < 9) { if (ring) { w.vx = ex / d * 200; w.vy = ey / d * 200; w.dash = 0; } else if (api.hurt(1)) { w.dash = 0; w.vx = ex / d * 220; w.vy = ey / d * 220; } } }
+        else { w.vx += ax * dt; w.vy += ay * dt; }
+        w.vx *= Math.pow(0.25, dt); w.vy *= Math.pow(0.25, dt);
+        const sp = Math.hypot(w.vx, w.vy), max = w.dash ? 170 : 95; if (sp > max) { w.vx *= max / sp; w.vy *= max / sp; }
+        w.x += w.vx * dt; w.y += w.vy * dt;
+        if (w.x < 4 || w.x > api.w - 4) { w.vx *= -0.6; w.x = clamp(w.x, 4, api.w - 4); }
+        if (w.y < 4 || w.y > api.h - 4) { w.vy *= -0.6; w.y = clamp(w.y, 4, api.h - 4); }
+        if (!crushing && w.x > crack.x && w.y > crack.y0 && w.y < crack.y1) { w.home = true; this.herded++; sound.scurry(0.6); }
+      }
+      this.ws = this.ws.filter(w => !w.home);
+      if (!this.ws.length) api.end();
+    },
+    stop(api, how) {
+      f.left = this.ws.length;
+      if (crushing) { f.crushing = false; st.roundEnd = 'killed'; return; }
+      if (how === 'broke') return;
+      const steps = Math.floor((total - f.left) / (total / st.def.calmMax)) - st.calm;
+      if (steps > 0) addCalm(st, steps);
+      st.roundLine = !f.left ? 'The last of them squeezes into the crack, with a backward grin.' : this.herded ? `${this.herded} more of them slink back into the crack. ${f.left} left.` : 'They scatter, and regroup, and none of them goes home.';
+    },
+    draw(ctx, api) {
+      ctx.fillStyle = '#0a0908'; ctx.fillRect(0, 0, api.w, api.h);
+      // the crack
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(api.w, crack.y0 - 10); ctx.lineTo(crack.x + 6, crack.y0 + 8); ctx.lineTo(crack.x + 2, 110); ctx.lineTo(crack.x + 8, crack.y1 - 6); ctx.lineTo(api.w, crack.y1 + 10); ctx.stroke();
+      ctx.strokeStyle = 'rgba(200,180,140,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+      if (lure && api.t < 6) { ctx.fillStyle = '#ece4cc'; ctx.beginPath(); ctx.arc(crack.x - 14, 110, 3, 0, Math.PI * 2); ctx.fill(); }
+      // your light
+      if (!crushing) { const g = ctx.createRadialGradient(this.x, this.y, 4, this.x, this.y, R); g.addColorStop(0, 'rgba(255,210,140,0.28)'); g.addColorStop(1, 'rgba(255,210,140,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, R, 0, Math.PI * 2); ctx.fill(); }
+      if (ring) { ctx.strokeStyle = 'rgba(235,230,215,0.5)'; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(this.x, this.y, 12, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+      ctx.fillStyle = 'rgba(120,10,10,0.6)'; this.splats.forEach(s => { ctx.beginPath(); ctx.ellipse(s.x, s.y, 7, 4, 0.4, 0, Math.PI * 2); ctx.fill(); });
+      this.ws.forEach(w => {
+        const a = Math.atan2(w.vy, w.vx);
+        ctx.save(); ctx.translate(w.x, w.y); ctx.rotate(a);
+        ctx.fillStyle = '#6a5c52'; ctx.beginPath(); ctx.ellipse(0, 0, 6, 2.6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#6a5c52'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(-11, Math.sin(api.t * 9 + w.x) * 2); ctx.stroke();
+        ctx.fillStyle = w.warn || w.dash ? '#ff2a2a' : 'rgba(255,60,60,0.6)'; ctx.beginPath(); ctx.arc(4.5, -1, w.warn ? 1.8 : 1, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      });
+      drawSoul(ctx, this.x, this.y, api.invuln > 0 && Math.floor(api.invuln * 12) % 2);
+      ctx.fillStyle = '#e8d5a3'; ctx.font = '12px Georgia, serif'; ctx.textAlign = 'left';
+      ctx.fillText(crushing ? `Crushed: ${this.killed}` : `Left: ${this.ws.length}${this.stamps ? `   Stamps: ${this.stamps}` : ''}`, 10, 18);
+    },
+  };
+}
+
+// ─── The oven fire: get out ───────────────────────────────────────────
+// The trap fires: the kitchen burns, square by square, out from the oven.
+// Get to the door. The pump fills a bucket that puts out the fire round
+// you, once.
+
+function ovenEscape(st) {
+  const T = 30, C = 12, R = 7;
+  const blocked = new Set(['5,1', '6,1', '7,1', '1,5', '9,4']);   // the fallen shelf, the barrel, the table
+  const pump = [1, 1], door = [0, 6];
+  return {
+    title: 'Get out!',
+    text: 'The kitchen is burning. Get to the door; the pump by the wall will fill a bucket.',
+    hint: 'Step with WASD or the arrow keys · Space: throw the bucket · tap a square beside you',
+    duration: 30,
+    start(api) {
+      this.p = [8, 3]; this.fire = new Map(); this.bucket = false; this.tick = 0; this.hold = 0;
+      [[10, 1], [11, 1], [10, 0], [11, 0], [10, 2]].forEach(([x, y]) => this.fire.set(x + ',' + y, 1));
+    },
+    update(api, dt) {
+      this.tick += dt;
+      const every = api.easy ? 0.75 : 0.5;
+      if (this.tick > every) {
+        this.tick = 0;
+        [...this.fire.keys()].forEach(k => {
+          const [x, y] = k.split(',').map(Number);
+          [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+            const nx = x + dx, ny = y + dy, nk = nx + ',' + ny;
+            if (nx < 0 || ny < 0 || nx >= C || ny >= R || blocked.has(nk) || (nx === door[0] && ny === door[1]) || this.fire.has(nk)) return;
+            if (api.rand() < 0.3) this.fire.set(nk, 1);
+          });
+        });
+      }
+      // stepping, one square at a time (holding a key repeats)
+      let dir = null;
+      const K = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
+      for (const k of api.pressed) if (K[k]) dir = K[k];
+      if (!dir) { this.hold -= dt; if (this.hold <= 0) for (const k of api.keys) if (K[k]) { dir = K[k]; break; } }
+      if (api.pointer.tapped && api.pointer.x !== null) { const tx = Math.floor(api.pointer.x / T), ty = Math.floor(api.pointer.y / T), ddx = tx - this.p[0], ddy = ty - this.p[1]; if (Math.abs(ddx) + Math.abs(ddy) >= 1) dir = Math.abs(ddx) > Math.abs(ddy) ? [Math.sign(ddx), 0] : [0, Math.sign(ddy)]; }
+      if (dir) {
+        this.hold = 0.17;
+        const nx = this.p[0] + dir[0], ny = this.p[1] + dir[1];
+        if (nx >= 0 && ny >= 0 && nx < C && ny < R && !blocked.has(nx + ',' + ny)) { this.p = [nx, ny]; sound.footstep('stone'); }
+      }
+      if (this.p[0] === pump[0] && this.p[1] === pump[1] && !this.bucket) { this.bucket = true; api.say('You work the pump handle and fill a bucket. Space to throw it.'); }
+      if (this.bucket && (api.press(' ') || (api.pointer.tapped && Math.floor(api.pointer.x / T) === this.p[0] && Math.floor(api.pointer.y / T) === this.p[1]))) {
+        this.bucket = false; sound.thunder(0.2);
+        for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) this.fire.delete((this.p[0] + dx) + ',' + (this.p[1] + dy));
+        api.say('Hiss and steam: the fire round you dies back.');
+      }
+      if (this.fire.has(this.p.join(','))) api.hurt(1);
+      if (this.p[0] === door[0] && this.p[1] === door[1]) api.end();
+    },
+    stop(api, how) { if (how === 'done' && !(this.p[0] === door[0] && this.p[1] === door[1])) { addDread(2); drawEncDread(); } },
+    draw(ctx, api) {
+      ctx.fillStyle = '#1a1612'; ctx.fillRect(0, 0, api.w, api.h);
+      for (let y = 0; y < R; y++) for (let x = 0; x < C; x++) {
+        const k = x + ',' + y;
+        ctx.fillStyle = (x + y) % 2 ? '#24201c' : '#201c18'; ctx.fillRect(x * T, y * T, T, T);
+        if (blocked.has(k)) { ctx.fillStyle = '#3a2a1c'; ctx.fillRect(x * T + 2, y * T + 2, T - 4, T - 4); }
+        if (this.fire.has(k)) {
+          const fl = 0.6 + 0.4 * Math.sin(api.t * 12 + x * 3 + y * 5);
+          ctx.fillStyle = `rgba(255,${Math.round(90 + 60 * fl)},30,${0.55 + 0.3 * fl})`; ctx.fillRect(x * T, y * T, T, T);
+        }
+      }
+      ctx.fillStyle = '#4a6a8a'; ctx.fillRect(pump[0] * T + 8, pump[1] * T + 6, T - 16, T - 12);
+      ctx.fillStyle = '#e8d5a3'; ctx.font = '10px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('pump', pump[0] * T + T / 2, pump[1] * T + T - 2);
+      ctx.fillStyle = '#5a3a1c'; ctx.fillRect(door[0] * T + 2, door[1] * T + 2, T - 4, T - 4);
+      ctx.fillStyle = '#e8d5a3'; ctx.fillText('door', door[0] * T + T / 2, door[1] * T + T / 2 + 3);
+      ctx.fillStyle = '#3a1a10'; ctx.fillRect(10 * T, 0, T * 2, T * 2); ctx.fillStyle = '#ff8a40'; ctx.fillText('oven', 11 * T, T);
+      drawSoul(ctx, this.p[0] * T + T / 2, this.p[1] * T + T / 2, api.invuln > 0 && Math.floor(api.invuln * 12) % 2);
+      if (this.bucket) { ctx.fillStyle = '#8ab0d8'; ctx.fillRect(this.p[0] * T + T - 9, this.p[1] * T + 3, 6, 7); }
+    },
+  };
+}
+
 // ─── src/game/js/rooms.js ────────────────────────────────────────────
 // The hauntings you can't simply look at: each room's encounter, as data
 // for the encounter engine (encounter.js), and the scenes that start them.
@@ -5441,54 +6039,27 @@ const ENCOUNTERS = {};
 ENCOUNTERS.feast = {
   name: 'The Phantom Feast',
   art: () => feastFoeArt(),
-  calmMax: 3,
+  calmMax: 4,                 // the four courses
+  round: st => feastRound(st),
   intro: 'As you reach for the table, the cutlery begins to tremble. The tablecloth heaves like something breathing underneath, and every dish on the table rises into the air and turns towards you.',
   prompt: st => ['The feast hangs in the air, dripping, waiting.', 'Plates circle you slowly, like birds.', 'The tablecloth ripples. Somewhere, a chair scrapes back.'][st.turn % 3],
-  calmFull: 'The dishes sink slowly back towards the table. The feast is satisfied. You could let it rest.',
+  calmFull: 'Four courses, taken in order, as a guest should. The dishes sink slowly back towards the table. You could let the feast rest.',
   notReady: 'The feast isn’t done with you yet.',
   flee: 'You back out of the room, and the dishes clatter down behind you.',
   acts: [
-    { id: 'grace', text: 'Say grace', once: true, calm: 1, line: 'You bow your head and say the grace your grandmother used to say. The plates hesitate. A sugar bowl lowers itself an inch, almost politely.' },
-    { id: 'sit', text: 'Take a seat at the table', once: true, calm: 1, line: 'You pull out a chair and sit, as a guest should. For a moment every dish is perfectly still, as though a host somewhere has smiled.' },
-    { id: 'cook', text: 'Praise Mrs Patrini’s cooking', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
-      line: '“Gail Patrini’s roast,” you say, “the best in Wickermoor.” A ladle taps twice against a tureen, delighted, and the gravy boat makes a small, contented bow.' },
+    { id: 'grace', text: 'Say grace', hint: 'next round: everything flies slower', line: 'You bow your head and say the grace your grandmother used to say. The plates hesitate. A sugar bowl lowers itself an inch, almost politely.', run: st => { st.flags.grace = true; } },
+    { id: 'sit', text: 'Take a seat at the table', hint: 'next round: a moment’s stillness first', line: 'You pull out a chair and sit, as a guest should. For a moment every dish is perfectly still, as though a host somewhere has smiled.', run: st => { st.flags.sit = true; } },
+    { id: 'cook', text: 'Praise Mrs Patrini’s cooking', hint: 'next round: only the right course is offered', when: () => game.clues.has('lockwoods'),
+      line: '“Gail Patrini’s roast,” you say, “the best in Wickermoor.” A ladle taps twice against a tureen, delighted, and the gravy boat makes a small, contented bow.', run: st => { st.flags.praise = true; } },
     { id: 'eat', text: 'Eat something', line: 'You snatch a pastry out of the air and bite. It is warm. It moves in your mouth. You spit it out, gagging, and the whole feast laughs.',
       run: () => { addDread(1); drawEncDread(); } },
   ],
   items: {
-    salt: { line: 'You pour a ring of salt around your feet. Whatever crosses it slows, as if wading through something thick.', shrink: 0.35 },
+    salt: { hint: 'things slow down near you', line: 'You pour a ring of salt around your feet. Whatever crosses it slows, as if wading through something thick.', shrink: 0.35 },
+    menu: { line: 'You hold up Mrs Patrini’s menu card. The dishes seem to straighten, as if a list had been read out. (Its order is soup, fish, the roast, the sweets.)' },
     matches: { kill: true, line: 'You strike a match and drop it on the tablecloth. It goes up at once, with a shriek that comes from every dish at the same time. The feast burns. It takes a long time.' },
     knife: { line: 'You wave the carving knife at the floating roast. It ducks, offended, and comes at you twice as hard.' },
   },
-  patterns: [
-    { duration: 7, text: 'Sugar bowls! They fling their sugar as they pass.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.75 : 0.5;
-        const x = 20 + api.rand() * (api.w - 40);
-        api.add({ x, y: -12, vx: (api.rand() - 0.5) * 60, vy: 120 + api.rand() * 50, r: 9, glyph: '◒', color: '#e8e4dc', onHit: (s, a) => a.effect('blind', 2.2) });
-      } },
-    { duration: 7, text: 'Roast fish glide through the air in a shoal.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.3 : 0.95;
-        const fromLeft = api.rand() < 0.5, y0 = 30 + api.rand() * (api.h - 60);
-        for (let i = 0; i < (api.easy ? 3 : 4); i++) {
-          api.add({ x: fromLeft ? -20 - i * 34 : api.w + 20 + i * 34, y: y0, vx: fromLeft ? 130 : -130, vy: 0, r: 8, glyph: '❧', color: '#c9874a',
-            update: (s, d, tt) => { s.y = y0 + Math.sin(tt * 4 + i) * 18; }, onHit: (s, a) => a.effect('slow', 3) });
-        }
-      } },
-    { duration: 7, text: 'Lobster claws snap shut across the table, left and right.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.1 : 0.8;
-        const y = 20 + api.rand() * (api.h - 40), w = api.w * (0.45 + api.rand() * 0.15), left = api.rand() < 0.5;
-        api.add({ x: left ? w / 2 : api.w - w / 2, y, rect: [w, 14], color: '#b8402e', armed: 0.6, life: 0.95 });
-      } },
-  ],
 };
 
 // The feast as you face it: the table, with dishes rising off it.
@@ -5545,24 +6116,7 @@ ENCOUNTERS.ovenFire = {
   intro: 'The iron door bursts open with a roar. Shrieking, burning shapes pour out of the oven, and the kitchen fills with fire and black, choking smoke.',
   survived: 'You stagger clear, coughing. Behind you the shrieking thins, and stops, and the burning shapes are gone. Burned away. The oven ticks as it cools.',
   calmMax: 1, acts: [], items: {},
-  patterns: [
-    { duration: 6, text: 'Fire! Find the gaps in the flames.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.9 : 0.65;
-        const gap = api.rand() * (api.h - 70) + 10;
-        for (let y = 6; y < api.h; y += 18) if (y < gap || y > gap + (api.easy ? 70 : 55)) api.add({ x: api.w + 12, y, vx: -150, vy: 0, r: 8, glyph: '🔥', color: '#ff8a40' });
-      } },
-    { duration: 5, text: 'Burning hands reach for you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.7 : 0.45;
-        const e = api.edge(), v = api.aim(e, 110);
-        api.add({ x: e.x, y: e.y, ...v, r: 7, color: '#ff6a2a' });
-      } },
-  ],
+  round: st => ovenEscape(st),
 };
 
 function ovenFoeArt() {
@@ -5703,15 +6257,16 @@ ENCOUNTERS.petunia = {
   name: 'Petunia Lockwood',
   art: 'petunia',
   calmMax: 3,
+  round: st => cupRound(st),
   intro: 'Petunia’s head snaps round. The green ribbon at her throat slips a finger’s width, and the air turns to ice. She rises from the bench, and the scream that tears out of her is not a sound a living woman could make.',
   prompt: st => ['Her hands reach for you, cold as the grave.', 'She is weeping, and every tear freezes as it falls.', '“Give it back,” she says, in a voice like cracking ice. “It’s all I have.”'][st.turn % 3],
   calmFull: 'Her hands fall to her sides. The ice in the air softens. She looks lost, and tired, and very sad. You could let her be.',
   notReady: 'She’s still too far gone in her grief.',
   flee: 'You stumble back out of the conservatory. Behind you, the weeping goes on.',
   acts: [
-    { id: 'sorry', text: 'Apologise', once: true, calm: 1, line: '“I’m sorry. I shouldn’t have.” For a moment the cold eases. She doesn’t look at you, but she hears you.' },
-    { id: 'names', text: 'Speak of Sally and Arthur', once: true, calm: 2, when: () => game.clues.has('lockwoods'),
-      line: '“Sally,” you say. “Arthur.” Her face crumples. “My babies. Where are my babies?” The reaching hands falter.', run: () => { game.flags.petuniaNamed = true; } },
+    { id: 'sorry', text: 'Apologise', once: true, calm: 1, hint: 'gentler waves from now on', line: '“I’m sorry. I shouldn’t have.” For a moment the cold eases. She doesn’t look at you, but she hears you.', run: st => { st.flags.apologised = true; } },
+    { id: 'names', text: 'Speak of Sally and Arthur', once: true, calm: 2, hint: 'her wails turn to sobs: much gentler waves', when: () => game.clues.has('lockwoods'),
+      line: '“Sally,” you say. “Arthur.” Her face crumples. “My babies. Where are my babies?” The reaching hands falter.', run: st => { game.flags.petuniaNamed = true; st.flags.named = true; } },
     { id: 'ribbon', text: 'Seize the green ribbon', dark: true, line: 'You lunge past her hands and catch the faded green ribbon at her throat, and pull. It comes undone far too easily.',
       run: st => { st.result = 'killed'; } },
   ],
@@ -5721,31 +6276,6 @@ ENCOUNTERS.petunia = {
     bear: { calm: 2, line: 'You hold up Arthur’s blue bear. “He can’t sleep without it,” she says, and the rage goes out of her like a breath.' },
     knife: { line: 'You raise the knife. She doesn’t even flinch. What could it do to her now?' },
   },
-  patterns: [
-    { duration: 6, text: 'Cold hands sweep across the room, reaching for you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.1 : 0.8;
-        const left = api.rand() < 0.5, y = 20 + api.rand() * (api.h - 40);
-        api.add({ x: left ? -40 : api.w + 40, y, vx: left ? 170 : -170, vy: 0, rect: [70, 16], color: '#b8c4d8' });
-      } },
-    { duration: 6, text: 'Her tears freeze as they fall.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.22 : 0.14;
-        api.add({ x: api.rand() * api.w, y: -8, vx: 0, vy: 90 + api.rand() * 70, r: 4, color: '#cfe0ff' });
-      } },
-    { duration: 6, text: 'The teacup shatters in her hands, and the pieces fly.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.4 : 1.0;
-        const n = api.easy ? 8 : 12, off = api.rand() * Math.PI;
-        for (let i = 0; i < n; i++) { const a = off + i / n * Math.PI * 2; api.add({ x: api.w / 2, y: api.h / 2, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, r: 5, color: '#f0f0f4', armed: 0.25 }); }
-      } },
-  ],
 };
 
 async function petuniaForced() {
@@ -5875,49 +6405,25 @@ ENCOUNTERS.peacock = {
   name: 'The Marble Peacock',
   art: 'peacock',
   calmMax: 3,
+  round: st => gazeRound(st),
   intro: 'Marble grinds against marble. The peacock turns its head, and its tail rises and fans across the alcove, every feather an unblinking eye. Its one red eye fixes on you, and your limbs grow heavy and cold. In the paintings on the walls, an old woman’s face is watching too, and smiling.',
   prompt: st => ['Its eye follows you. Your fingertips are going grey.', 'Keziah’s face moves from painting to painting, closer each time.', 'Feathers rattle like knives in a drawer.'][st.turn % 3],
   calmFull: 'The peacock is still. In the nearest painting, Keziah closes her eyes. It’s over, if you let it be.',
   notReady: 'Its eye is still on you.',
   flee: 'You back out of the gallery, keeping your eyes on the floor. The grinding of marble follows you to the door.',
   acts: [
-    { id: 'eyes', text: 'Close your eyes', once: true, calm: 1, line: 'You squeeze your eyes shut and stand very still. The heaviness in your limbs eases. You can feel it looking, but it can’t hold you if you won’t look back.' },
-    { id: 'keziah', text: 'Speak to Keziah', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
-      line: '“Mrs Endicott. Keziah.” In the painting, the old woman starts, as if nobody has said her name in a very long time. Her face softens. She looks, for a moment, only tired.' },
-    { id: 'vermin', text: 'Name what she painted: the weasel, the centipede, the pigeon', once: true, calm: 2, when: () => game.flags.paintingsRead,
-      line: '“You saw them,” you say. “The weasel. The centipede. The pigeon. You tried to warn them.” Keziah’s painted eyes fill. She nods, once, and the peacock’s tail sinks a little.' },
+    { id: 'eyes', text: 'Close your eyes', hint: 'next round: darkness; listen for it. It can barely hold you', line: 'You squeeze your eyes shut and stand very still. The heaviness in your limbs eases. You can feel it looking, but it can’t hold you if you won’t look back.', run: st => { st.flags.eyes = true; } },
+    { id: 'keziah', text: 'Speak to Keziah', once: true, calm: 1, hint: 'its gaze sweeps slower', when: () => game.clues.has('lockwoods'),
+      line: '“Mrs Endicott. Keziah.” In the painting, the old woman starts, as if nobody has said her name in a very long time. Her face softens. She looks, for a moment, only tired.', run: st => { st.flags.keziah = true; } },
+    { id: 'vermin', text: 'Name what she painted: the weasel, the centipede, the pigeon', once: true, calm: 1, hint: 'its gaze narrows', when: () => game.flags.paintingsRead,
+      line: '“You saw them,” you say. “The weasel. The centipede. The pigeon. You tried to warn them.” Keziah’s painted eyes fill. She nods, once, and the peacock’s tail sinks a little.', run: st => { st.flags.vermin = true; } },
   ],
   items: {
-    shard: { calm: 3, line: 'You raise the mirror shard between you and the peacock. Its red eye meets its own reflection, and holds, and cannot look away. Grey creeps back over the white marble like frost, and the great tail stiffens, and the bird is only stone again.' },
+    shard: { hint: 'get close, and raise it as the eye finds you', line: 'You grip the mirror shard. If you can get close enough, and catch its eye with it at the right moment...' },
     hatchet: { kill: true, line: 'You swing the hatchet into the peacock’s neck. Marble cracks, and cracks again, and the bird comes apart in great white chunks. In every painting at once, Keziah screams, and the paint runs.' },
     knife: { kill: true, line: 'You turn from the bird and drive the knife into the nearest painting, through Keziah’s smiling face, and drag it down. The canvas shrieks as it tears. The peacock topples, and shatters on the floor.' },
     salt: { line: 'You throw salt at the peacock. It glances off the marble. Whatever this is, it isn’t afraid of salt.' },
   },
-  patterns: [
-    { duration: 6, text: 'Its gaze sweeps the room: stay out of the beam.',
-      start(api) { this.y = 20; this.dir = 1; },
-      spawn(api, t, dt) {
-        this.beam = this.beam || api.add({ x: api.w / 2, y: 20, rect: [api.w, 22], color: 'rgba(200,40,40,0.55)', life: 999, armed: 0.6 });
-        this.beam.y += this.dir * (api.easy ? 60 : 85) * dt;
-        if (this.beam.y > api.h - 15 || this.beam.y < 15) this.dir *= -1;
-      } },
-    { duration: 6, text: 'Its tail fans, and the feathers fly.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.0 : 0.7;
-        const n = api.easy ? 5 : 7, base = Math.PI * (0.15 + api.rand() * 0.1);
-        for (let i = 0; i < n; i++) { const a = base + i / (n - 1) * Math.PI * 0.7; api.add({ x: api.w / 2, y: -5, vx: Math.cos(a) * 130, vy: Math.sin(a) * 130, r: 5, glyph: '❦', color: '#e8e4dc' }); }
-      } },
-    { duration: 6, text: 'Keziah reaches out of her frames to pull you in.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.2 : 0.85;
-        const x = 30 + api.rand() * (api.w - 60), y = 30 + api.rand() * (api.h - 60);
-        api.add({ x, y, rect: [54, 40], color: 'rgba(160,140,100,0.6)', armed: 0.9, life: 1.6, onHit: (s, a) => a.effect('slow', 2) });
-      } },
-  ],
 };
 
 async function peacockScene() {
@@ -5949,41 +6455,24 @@ async function peacockScene() {
 ENCOUNTERS.swarm = {
   name: 'The Boogleswarm',
   art: () => artImage(CHARACTER_ART.boogleswarm),
-  calmMax: 2,
+  calmMax: 3,                 // a third of the swarm herded home, each
+  round: st => herdRound(st),
   intro: 'A crack in the wallpaper splits wider, and wider, and out of it pours a boogleswarm: grey weasels, dozens of them, red-eyed and grinning, slinking over each other and over the floor towards you. Some of them have human teeth crammed into their mouths. One of them says your name, in your own voice.',
   prompt: 'They swarm and scatter and swarm again.',
   calmFull: 'The swarm hangs back, uncertain, at the edge of the light. One more push and they’ll go.',
   flee: 'You run, and they don’t follow far. The walls swallow them again.',
   acts: [
-    { id: 'lantern', text: 'Hold the lantern high', once: true, calm: 1, line: 'You lift the lantern above your head. The weasels shrink from the light, squealing, and the swarm thins.' },
-    { id: 'shout', text: 'Stamp and shout', once: true, calm: 1, line: 'You stamp and shout at them like a farmer at crows. The swarm breaks and re-forms further off.' },
+    { id: 'lantern', text: 'Hold the lantern high', hint: 'next round: your light reaches further', line: 'You lift the lantern above your head. The weasels shrink from the light, squealing.', run: st => { st.flags.lanternHigh = true; } },
+    { id: 'shout', text: 'Stamp and shout', hint: 'next round: Space stamps, scattering them (3 times)', line: 'You stamp and shout at them like a farmer at crows. The swarm breaks and re-forms further off.', run: st => { st.flags.shout = true; } },
     // Boogleswarms covet teeth above all, and will bargain for them (the book).
-    { id: 'tooth', text: 'Toss them a tooth', once: true, calm: 1, when: () => game.teeth > 0,
-      line: 'You hold up a tooth, and the whole swarm goes still, every red eye on it. You toss it into the corner. They boil after it, fighting over it, and when they come back they come slower, almost polite.',
-      run: () => { game.teeth--; ui.drawInventory(); } },
-    { id: 'crush', text: 'Crush them underfoot', dark: true, line: 'You bring your heel down, and down, and down. They pop like blisters. You keep going long after they’ve stopped moving.', run: st => { st.result = 'killed'; } },
+    { id: 'tooth', text: 'Toss them a tooth', hint: 'next round: they chase it towards the crack', when: () => game.teeth > 0,
+      line: 'You hold up a tooth, and the whole swarm goes still, every red eye on it. You toss it towards the crack.',
+      run: st => { game.teeth--; ui.drawInventory(); st.flags.tooth = true; } },
+    { id: 'crush', text: 'Crush them underfoot', dark: true, line: 'You stop pushing them away. You let them come.', run: st => { st.flags.crushing = true; } },
   ],
   items: {
-    salt: { calm: 2, line: 'You fling a handful of salt across the floor. Where it lands, the weasels shriek and smoke and flee, and none of them will cross the line.' },
+    salt: { hint: 'next round: a ring of salt round you; they can’t bite', line: 'You pour a ring of salt round your feet. The weasels shriek at its edge, and none of them will cross it.', run: st => { st.flags.salt = true; } },
   },
-  patterns: [
-    { duration: 5, text: 'They pour across the floor towards you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.35 : 0.22;
-        const e = api.edge(), v = api.aim(e, 70 + api.rand() * 40);
-        api.add({ x: e.x, y: e.y, ...v, r: 5, glyph: '≈', color: '#9a8a80', update: (s, d, tt) => { s.vx += Math.sin(tt * 9 + s.y) * 6; } });
-      } },
-    { duration: 5, text: 'They scatter, and circle, and close in.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.3 : 0.9;
-        const n = api.easy ? 8 : 12, r = 150, cx = api.soul.x, cy = api.soul.y;
-        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; api.add({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, r: 5, glyph: '≈', color: '#9a8a80', life: 3 }); }
-      } },
-  ],
 };
 
 async function boogleSwarm() {
@@ -6282,9 +6771,9 @@ function inRhythm() { return game.curse && GRID.at(game.cx, game.cy).room === 'm
 function onBeat(at) {
   const b = beatNow(at);
   const win = easyMode() ? BEAT_WINDOW.easy : BEAT_WINDOW.normal;
-  if (b.off <= win && b.index !== rhythm.usedBeat) { rhythm.usedBeat = b.index; pulseBeat(true); return true; }
+  if (b.off <= win && b.index !== rhythm.usedBeat) { rhythm.usedBeat = b.index; pulseBeat(true, b.off < win * 0.4 ? 'Perfect' : 'Good'); return true; }
   rhythm.stumbles++;
-  pulseBeat(false);
+  pulseBeat(false, b.index === rhythm.usedBeat ? 'Too quick' : (b.phase < 0.5 ? 'Late' : 'Early'));
   sound.hit();
   ui.log(b.index === rhythm.usedBeat ? 'Too quick: one step to a beat.' : 'You stumble out of time.', 'scare');
   if (rhythm.stumbles % 2 === 0) addDread(1);
@@ -6297,6 +6786,8 @@ function startRhythm() {
   // Weasels come out of the walls at the room's edges.
   const cells = GRID.cells.filter(c => c.walk && !c.blocked && c.room === 'music' && c.edges.some(e => e === 'wall'));
   const n = easyMode() ? 3 : 5;
+  const win = easyMode() ? BEAT_WINDOW.easy : BEAT_WINDOW.normal;
+  $('beat').style.setProperty('--win', `${(win * 2 / WALTZ.period * BEAT_GAP).toFixed(2)}%`);
   rhythm.weasels = world.weasels.slice(0, n).map((s, i) => {
     const c = cells[(i * 7 + 3) % cells.length];
     s.visible = true; s.position.set(c.x, 0, c.y);
@@ -6313,13 +6804,28 @@ function stopRhythm() {
 
 // Every frame while the waltz plays: weasels move on each new beat, and
 // glide between squares.
+// The beat bar: where the next beats are, as % along the track.
+const BEAT_GAP = 18;       // % of the track between one beat and the next
+const BEAT_LINE = 18;      // % from the left where the line is
+function drawBeatBar() {
+  const marks = $('beat').querySelector('.beat-marks');
+  if (marks.children.length !== 6) { marks.innerHTML = ''; for (let i = 0; i < 6; i++) marks.appendChild(document.createElement('span')); }
+  const x = (waltzTime() - WALTZ.offset) / WALTZ.period, first = Math.floor(x);
+  [...marks.children].forEach((m, k) => {
+    const idx = first + k, pos = BEAT_LINE + (idx - x) * BEAT_GAP;
+    m.style.left = `${pos.toFixed(2)}%`;
+    m.className = idx % 2 === 0 ? 'strong' : '';
+    m.style.opacity = pos < BEAT_LINE - 4 ? '0.25' : '';
+  });
+}
+
 function tickRhythm(dt) {
   if (!game.curse) return;
   const b = beatNow();
-  const ring = $('beat');
-  ring.style.setProperty('--p', b.phase.toFixed(3));
+  drawBeatBar();
   if (b.index !== rhythm.tickBeat && b.phase < 0.5) {
     rhythm.tickBeat = b.index;
+    sound.tick(b.index % 2 === 0);
     // The weasels move every other beat: the waltz's one and three.
     if (b.index % 2 === 0 && !game.busy && !ui.overlay && GRID.at(game.cx, game.cy).room === 'music') weaselsStep();
   }
@@ -6381,10 +6887,12 @@ function stompAt(c) {
   if (!game.flags.stompedWeasel) { game.flags.stompedWeasel = true; game.crooked = (game.crooked || 0) + 1; }
 }
 
-function pulseBeat(ok) {
-  const ring = $('beat');
-  ring.classList.remove('hit', 'miss'); void ring.offsetWidth;
-  ring.classList.add(ok ? 'hit' : 'miss');
+function pulseBeat(ok, word = '') {
+  const bar = $('beat'), say = bar.querySelector('.beat-say');
+  bar.classList.remove('hit', 'miss'); void bar.offsetWidth;
+  bar.classList.add(ok ? 'hit' : 'miss');
+  say.textContent = word; say.classList.toggle('off', !ok);
+  clearTimeout(pulseBeat.timer); pulseBeat.timer = setTimeout(() => { say.textContent = ''; }, 700);
 }
 
 // ─── The dark way to end it: the hatchet ──────────────────────────────
@@ -7753,7 +8261,7 @@ function tickAmbient(dt, cam) {
     for (let i = 0; i < n * 3; i++) pos[i] = (rand() - 0.5) * 160;
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 1.3, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe0b0, opacity: 0.5 }));
+    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 0.55, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe8c8, opacity: 0.35 }));
     dust.frustumCulled = false;
     dust.userData.seeds = Array.from({ length: n }, () => rand() * 6.28);
     world.scene.add(dust);
@@ -7768,7 +8276,7 @@ function tickAmbient(dt, cam) {
   }
   dust.geometry.attributes.position.needsUpdate = true;
   dust.position.set(cam.position.x, cam.position.y, cam.position.z);
-  dust.material.opacity = 0.55 * clamp01(world.lantern.intensity / LANTERN.intensity);
+  dust.material.opacity = 0.32 * clamp01(world.lantern.intensity / LANTERN.intensity);
   dust.visible = !game.inFlashback;
   // candles and fire
   const flick = 1 + Math.sin(clock * 11.3) * 0.08 + Math.sin(clock * 17.9 + 1.3) * 0.06;
@@ -7945,7 +8453,7 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { renderer: () => renderer, addSprite, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { renderer: () => renderer, addSprite, runEncounter, ENCOUNTERS, enc, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
 </script>
 </body>
 </html>

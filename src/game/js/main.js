@@ -429,7 +429,7 @@ function tickAmbient(dt, cam) {
     for (let i = 0; i < n * 3; i++) pos[i] = (rand() - 0.5) * 160;
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 1.3, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe0b0, opacity: 0.5 }));
+    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 0.55, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe8c8, opacity: 0.35 }));
     dust.frustumCulled = false;
     dust.userData.seeds = Array.from({ length: n }, () => rand() * 6.28);
     world.scene.add(dust);
@@ -444,7 +444,7 @@ function tickAmbient(dt, cam) {
   }
   dust.geometry.attributes.position.needsUpdate = true;
   dust.position.set(cam.position.x, cam.position.y, cam.position.z);
-  dust.material.opacity = 0.55 * clamp01(world.lantern.intensity / LANTERN.intensity);
+  dust.material.opacity = 0.32 * clamp01(world.lantern.intensity / LANTERN.intensity);
   dust.visible = !game.inFlashback;
   // candles and fire
   const flick = 1 + Math.sin(clock * 11.3) * 0.08 + Math.sin(clock * 17.9 + 1.3) * 0.06;
@@ -621,4 +621,4 @@ $('btn-new').addEventListener('click', () => startGame(true));
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.
-window.crookedHouse = { renderer: () => renderer, addSprite, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };
+window.crookedHouse = { renderer: () => renderer, addSprite, runEncounter, ENCOUNTERS, enc, arrival, skipArrival, rhythm, beatNow, fb, runFlashback, addDread, jasper, NEST_THING, giveItem, ui, lockUntil: () => inputLockUntil - performance.now(), busyNow: () => busy(), doorAhead: () => doorAhead(), motion, sound, game, act, teleport, useThing, thingAtHand, THINGS, GRID, world: () => world, clock: () => clock };

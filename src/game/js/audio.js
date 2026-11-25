@@ -340,6 +340,38 @@ const sound = {
     if ((surface === 'wood' || surface === 'boards') && Math.random() < 0.14) this.creak(0, 0.5);
   },
 
+  // The peacock's gaze, heard with your eyes shut: a hum that swells as the
+  // beam nears (`level` 0–1), from its side (`pan`). hum(0) silences it.
+  hum(level, pan = 0) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (!this.humNode) {
+      if (!level) return;
+      const o = this.ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 110;
+      const o2 = this.ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 165.5;
+      const g = this.ctx.createGain(); g.gain.value = 0;
+      const p = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+      o.connect(g); o2.connect(g);
+      if (p) g.connect(p).connect(this.master); else g.connect(this.master);
+      o.start(); o2.start();
+      this.humNode = { o, o2, g, p };
+    }
+    const h = this.humNode;
+    h.g.gain.setTargetAtTime(0.16 * level * level, t, 0.05);
+    h.o.frequency.setTargetAtTime(100 + level * 80, t, 0.05);
+    if (h.p) h.p.pan.setTargetAtTime(pan, t, 0.05);
+    if (!level) { const node = h; this.humNode = null; setTimeout(() => { node.o.stop(); node.o2.stop(); }, 300); }
+  },
+
+  // A soft tick on each beat of the waltz (stronger on the weasels' beats).
+  tick(strong = false) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = strong ? 1320 : 990;
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(strong ? 0.05 : 0.03, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.06);
+  },
+
   // A floorboard or a beam giving under weight: a slow, rising groan.
   creak(pan = 0, vol = 1) {
     if (!this.ctx) return;

@@ -58,9 +58,11 @@ async function runEncounter(def) {
   drawArena(arena, st, { x: ARENA_W / 2, y: ARENA_H / 2 }, [], 0);
   try {
     await encSay(def.intro);
-    // A hazard: no choices, just get through each attack once.
+    // A hazard: no choices, just get through it.
     if (def.hazard) {
-      for (const p of def.patterns) {
+      if (def.round) {
+        if ((await playRound(st, arena)) === 'broke') st.result = 'broke';
+      } else for (const p of def.patterns) {
         if ((await dodge(st, arena, p)) === 'broke') { st.result = 'broke'; break; }
         st.turn++;
       }
@@ -71,9 +73,12 @@ async function runEncounter(def) {
       await encChoose(st, choice);
       if (!st.result && game.dread >= DREAD_MAX) st.result = 'broke';   // e.g. from something you did
       if (st.result) break;
-      const outcome = await dodge(st, arena, def.patterns[st.turn % def.patterns.length]);
+      const outcome = def.round ? await playRound(st, arena) : await dodge(st, arena, def.patterns[st.turn % def.patterns.length]);
       if (outcome === 'broke') { st.result = 'broke'; break; }
       st.turn++;
+      if (st.roundEnd) { const r = st.roundEnd; st.roundEnd = null; if (r !== 'continue') st.result = r; }
+      if (st.result) break;
+      if (st.roundLine) { const line = st.roundLine; st.roundLine = null; await encSay(line); }
       if (def.afterTurn) { const line = def.afterTurn(st); if (line) await encSay(line); }
     }
     if (st.result === 'broke') await encSay(def.broke || 'It is too much. You turn and run.');
@@ -111,6 +116,7 @@ function encButtons(buttons) {
       el.className = 'enc-btn' + (b.dark ? ' dark' : '') + (b.disabled ? ' disabled' : '');
       el.innerHTML = `<span class="key">${i + 1}</span>`;
       el.appendChild(document.createTextNode(b.text));
+      if (b.hint) { const h = document.createElement('small'); h.className = 'enc-hint'; h.textContent = b.hint; el.appendChild(h); }
       el.addEventListener('click', () => done(b.id));
       menu.appendChild(el);
     });
@@ -149,11 +155,11 @@ async function encMenu(st) {
     const pick = await encButtons(top);
     if (pick === 'act') {
       const acts = def.acts.filter(a => !a.when || a.when(st));
-      const sub = await encButtons([...acts.map(a => ({ id: a.id, text: a.text, dark: a.dark })), { id: 'back', text: 'Back' }]);
+      const sub = await encButtons([...acts.map(a => ({ id: a.id, text: a.text, dark: a.dark, hint: a.hint })), { id: 'back', text: 'Back' }]);
       if (sub !== 'back') return { type: 'act', act: acts.find(a => a.id === sub) };
     } else if (pick === 'item') {
       if (!game.items.length) { p.textContent = 'You aren’t carrying anything.'; await encButtons([{ id: 'back', text: 'Back' }]); continue; }
-      const sub = await encButtons([...game.items.map(id => ({ id, text: ITEMS[id].name, dark: !!(def.items[id] && def.items[id].kill) })), { id: 'back', text: 'Back' }]);
+      const sub = await encButtons([...game.items.map(id => ({ id, text: ITEMS[id].name, dark: !!(def.items[id] && def.items[id].kill), hint: def.items[id] && def.items[id].hint })), { id: 'back', text: 'Back' }]);
       if (sub !== 'back') return { type: 'item', id: sub };
     } else if (pick === 'release') {
       if (ready) return { type: 'release' };
@@ -254,7 +260,10 @@ function dodge(st, canvas, pattern) {
     const inSalt = s => pad && s.x > pad * 1.6 && s.x < ARENA_W - pad * 1.6 && s.y > pad && s.y < ARENA_H - pad;
     const bounds = { x0: SOUL_R, x1: ARENA_W - SOUL_R, y0: SOUL_R, y1: ARENA_H - SOUL_R };
     const api = {
-      soul, rand, w: ARENA_W, h: ARENA_H, easy,
+      soul, rand, w: ARENA_W, h: ARENA_H, easy, st,
+      end(how = 'done') { finish(how); },
+      say(text) { $('encounter').querySelector('.enc-text').textContent = text; },
+      hurt(n = 1) { if (invuln > 0) return; invuln = easy ? 1.4 : 0.9; sound.hit(); addDread(easy ? n * 0.5 : n); drawEncDread(); if (game.dread >= DREAD_MAX) finish('broke'); },
       add(s) { s.age = 0; if (s.vx) s.vx *= speed; if (s.vy) s.vy *= speed; if (s.hurt === undefined) s.hurt = true; shots.push(s); return s; },
       edge() { const side = Math.floor(rand() * 4); return side === 0 ? { x: rand() * ARENA_W, y: -10 } : side === 1 ? { x: ARENA_W + 10, y: rand() * ARENA_H } : side === 2 ? { x: rand() * ARENA_W, y: ARENA_H + 10 } : { x: -10, y: rand() * ARENA_H }; },
       effect(name, secs) { fx[name] = Math.max(fx[name], easy ? secs * 0.6 : secs); },
@@ -309,6 +318,7 @@ function dodge(st, canvas, pattern) {
         s.x += (s.vx || 0) * dt * k; s.y += (s.vy || 0) * dt * k;
         const gone = (s.life && s.age > s.life) || s.x < -60 || s.x > ARENA_W + 60 || s.y < -60 || s.y > ARENA_H + 60;
         if (gone) { shots.splice(i, 1); continue; }
+        if (s.take && Math.hypot(soul.x - s.x, soul.y - s.y) < (s.r || 6) + SOUL_R) { shots.splice(i, 1); s.take(s, api); if (ended) return; continue; }
         if (!s.hurt || invuln > 0 || (s.armed !== undefined && s.age < s.armed)) continue;
         const hit = s.rect
           ? Math.abs(soul.x - s.x) < s.rect[0] / 2 + SOUL_R * 0.6 && Math.abs(soul.y - s.y) < s.rect[1] / 2 + SOUL_R * 0.6
@@ -331,6 +341,130 @@ function dodge(st, canvas, pattern) {
   });
 }
 
+// ─── Rounds ───────────────────────────────────────────────────────────
+// Between turns, each encounter plays its own small challenge (its
+// `round(st)`, in rooms.js and challenges.js): either a dodge pattern (as
+// before) or a challenge `{ title, hint, duration, start(api), update(api,
+// dt), draw(ctx, api) }`. First a moment to get ready: the goal, the
+// controls, 3-2-1.
+
+async function playRound(st, canvas) {
+  const spec = st.def.round(st);
+  await getReady(canvas, spec);
+  return spec.spawn ? dodge(st, canvas, spec) : challenge(st, canvas, spec);
+}
+
+function getReady(canvas, spec) {
+  const root = $('encounter');
+  root.querySelector('.enc-text').textContent = spec.text || spec.title || '';
+  root.querySelector('.enc-menu').innerHTML = `<span class="enc-dodge-hint">${spec.hint || 'Move with WASD or the arrow keys · drag on a touch screen'}</span>`;
+  const ctx = canvas.getContext('2d');
+  const t0 = performance.now(), ms = easyMode() ? 2200 : 1700;
+  return new Promise(res => {
+    const frame = now => {
+      const k = (now - t0) / ms;
+      ctx.fillStyle = '#07060a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+      if (spec.preview) spec.preview(ctx);
+      ctx.fillStyle = 'rgba(7,6,10,0.55)'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#c9a96e'; ctx.font = '600 15px Cinzel, Georgia, serif';
+      ctx.fillText(spec.title || 'Get ready', ARENA_W / 2, ARENA_H / 2 - 30);
+      ctx.fillStyle = '#e8d5a3'; ctx.font = '40px Cinzel, Georgia, serif';
+      ctx.fillText(String(Math.max(1, 3 - Math.floor(k * 3))), ARENA_W / 2, ARENA_H / 2 + 14);
+      if (k < 1) requestAnimationFrame(frame); else res();
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+// A challenge: input (keys held and pressed, the pointer), a clock, and an
+// `api` for the round to hurt you, calm them, speak, or end early.
+function challenge(st, canvas, spec) {
+  return new Promise(resolve => {
+    const easy = easyMode();
+    const ctx = canvas.getContext('2d');
+    const keys = new Set(), pressed = [];
+    const pointer = { x: null, y: null, down: false, tapped: false };
+    let ended = false, last = performance.now();
+    const started = performance.now();
+    const api = {
+      st, easy, w: ARENA_W, h: ARENA_H, keys, pressed, pointer, t: 0, invuln: 0,
+      rand: seededRandom(st.turn * 131 + st.def.name.length * 7),
+      hurt(n = 1) {
+        if (api.invuln > 0) return false;
+        api.invuln = easy ? 1.3 : 0.85;
+        sound.hit(); addDread(easy ? n * 0.5 : n); drawEncDread();
+        if (game.dread >= DREAD_MAX) finish('broke');
+        return true;
+      },
+      calm(n) { addCalm(st, n); },
+      say(text) { $('encounter').querySelector('.enc-text').textContent = text; },
+      end(how = 'done') { finish(how); },
+      held: (...ks) => ks.some(k => keys.has(k)),
+      press: (...ks) => pressed.some(k => ks.includes(k)),
+    };
+    $('encounter').querySelector('.enc-text').textContent = spec.text || '';
+    if (spec.start) spec.start(api);
+    const down = e => {
+      const k = e.key.toLowerCase();
+      if (!e.repeat) pressed.push(k);
+      keys.add(k);
+      if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd'].includes(k)) e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    const up = e => { keys.delete(e.key.toLowerCase()); e.stopImmediatePropagation(); };
+    const toArena = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * ARENA_W / r.width, (e.clientY - r.top) * ARENA_H / r.height]; };
+    const pdown = e => { canvas.setPointerCapture(e.pointerId); [pointer.x, pointer.y] = toArena(e); pointer.down = true; pointer.tapped = true; };
+    const pmove = e => { [pointer.x, pointer.y] = toArena(e); };
+    const pup = () => { pointer.down = false; };
+    document.addEventListener('keydown', down, true);
+    document.addEventListener('keyup', up, true);
+    canvas.addEventListener('pointerdown', pdown);
+    canvas.addEventListener('pointermove', pmove);
+    canvas.addEventListener('pointerup', pup);
+    canvas.addEventListener('pointercancel', pup);
+    function finish(how) {
+      if (ended) return;
+      ended = true;
+      document.removeEventListener('keydown', down, true);
+      document.removeEventListener('keyup', up, true);
+      canvas.removeEventListener('pointerdown', pdown);
+      canvas.removeEventListener('pointermove', pmove);
+      canvas.removeEventListener('pointerup', pup);
+      canvas.removeEventListener('pointercancel', pup);
+      if (spec.stop) spec.stop(api, how);
+      resolve(how);
+    }
+    const frame = now => {
+      if (ended) return;
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (document.hidden) { requestAnimationFrame(frame); return; }
+      api.t += dt; api.invuln = Math.max(0, api.invuln - dt);
+      api.left = Math.max(0, spec.duration - (now - started) / 1000);
+      spec.update(api, dt);
+      pressed.length = 0; pointer.tapped = false;
+      if (ended) return;
+      ctx.save(); spec.draw(ctx, api); ctx.restore();
+      // time left, as a thin bar along the bottom
+      if (spec.duration) { ctx.fillStyle = 'rgba(232,213,163,0.35)'; ctx.fillRect(0, ARENA_H - 3, ARENA_W * api.left / spec.duration, 3); }
+      if (spec.duration && api.left <= 0) { finish('done'); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+// The lantern flame that stands for you, drawn at (x, y).
+function drawSoul(ctx, x, y, flicker = false) {
+  if (flicker) return;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, SOUL_R * 2.6);
+  g.addColorStop(0, 'rgba(255,240,200,1)'); g.addColorStop(0.35, 'rgba(255,180,90,0.9)'); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, SOUL_R * 2.6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff4dc';
+  ctx.beginPath(); ctx.moveTo(x, y - SOUL_R * 1.4); ctx.quadraticCurveTo(x + SOUL_R, y, x, y + SOUL_R * 0.8); ctx.quadraticCurveTo(x - SOUL_R, y, x, y - SOUL_R * 1.4); ctx.fill();
+}
+
 function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, ARENA_W, ARENA_H);
@@ -344,6 +478,7 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
     ctx.globalAlpha = fade;
     ctx.fillStyle = s.color || '#d8c49a';
     if (s.rect) { ctx.fillRect(s.x - s.rect[0] / 2, s.y - s.rect[1] / 2, s.rect[0], s.rect[1]); }
+    else if (s.draw) s.draw(ctx, s);
     else if (s.glyph) { ctx.font = `${Math.round((s.r || 6) * 2.4)}px Georgia, serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.glyph, s.x, s.y); }
     else { ctx.beginPath(); ctx.arc(s.x, s.y, s.r || 6, 0, Math.PI * 2); ctx.fill(); }
     ctx.globalAlpha = 1;

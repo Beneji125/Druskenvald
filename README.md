@@ -195,14 +195,25 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   the game: click an item or press 1–9 to pick it up, pick a second to
   combine them, Space to use it on what you face, X to examine it.
 - **Encounters:** when a haunting turns on you (`encounter.js`). No
-  fighting: you steer a lantern flame round an arena dodging its attacks,
-  every hit adds Dread, and between attacks you pick Act, Item, Release
-  (once Calm is full: the peaceful end) or Flee. Some items are the dark
-  way out, and raise Crookedness. Full Dread breaks your nerve: back to the
-  porch, and the encounter starts over next time. Each encounter is data in
-  `ENCOUNTERS` (`rooms.js`): its art, lines, Acts, Items and attack
-  patterns. "Gentler encounters" in the 🔊 panel slows attacks and halves
-  the Dread they cost. So far: the dining room's Phantom Feast.
+  fighting: you take turns. On yours you pick Act, Item, Release (once Calm
+  is full: the peaceful end) or Flee; Acts and items say in small print
+  what they do to the next round. Then, after a moment to get ready, a
+  short round of that encounter's own challenge (`challenges.js`): the
+  Feast's courses (take the right dish, in Mrs Patrini's order, which the
+  menu card in the kitchen gives), Petunia's teacup (keep it level through
+  the waves of her grief), the peacock's gaze (cross the gallery behind
+  the busts, and raise the mirror as its eye finds you; with your eyes shut
+  you go by the hum), the boogleswarm (herd them into the crack with your
+  light), and the oven fire (get to the door; the pump fills a bucket).
+  Every hit adds Dread; some items and acts are the dark way out, and
+  raise Crookedness. Full Dread breaks your nerve: back to the porch, and
+  the encounter starts over next time. Each encounter is data in
+  `ENCOUNTERS` (`rooms.js`) with a `round(st)`; what you did on your turn
+  reaches the round through `st.flags`. "Gentler encounters" in the 🔊
+  panel slows things down and halves the Dread they cost. The music room's
+  waltz has a beat bar at the top (the coming beats, the timing window,
+  the weasels' beats in red), a soft tick on each beat, and says how close
+  each step was.
 - **Dread** (`dread.js`) is how you see the house, not just a meter: Calm
   (0–3) is safe and blind to its secrets, Uneasy (4–6) brings whispers and
   starts to show what's hidden, Terrified (7–9) shows its true face, and 10

@@ -13,54 +13,27 @@ const ENCOUNTERS = {};
 ENCOUNTERS.feast = {
   name: 'The Phantom Feast',
   art: () => feastFoeArt(),
-  calmMax: 3,
+  calmMax: 4,                 // the four courses
+  round: st => feastRound(st),
   intro: 'As you reach for the table, the cutlery begins to tremble. The tablecloth heaves like something breathing underneath, and every dish on the table rises into the air and turns towards you.',
   prompt: st => ['The feast hangs in the air, dripping, waiting.', 'Plates circle you slowly, like birds.', 'The tablecloth ripples. Somewhere, a chair scrapes back.'][st.turn % 3],
-  calmFull: 'The dishes sink slowly back towards the table. The feast is satisfied. You could let it rest.',
+  calmFull: 'Four courses, taken in order, as a guest should. The dishes sink slowly back towards the table. You could let the feast rest.',
   notReady: 'The feast isn’t done with you yet.',
   flee: 'You back out of the room, and the dishes clatter down behind you.',
   acts: [
-    { id: 'grace', text: 'Say grace', once: true, calm: 1, line: 'You bow your head and say the grace your grandmother used to say. The plates hesitate. A sugar bowl lowers itself an inch, almost politely.' },
-    { id: 'sit', text: 'Take a seat at the table', once: true, calm: 1, line: 'You pull out a chair and sit, as a guest should. For a moment every dish is perfectly still, as though a host somewhere has smiled.' },
-    { id: 'cook', text: 'Praise Mrs Patrini’s cooking', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
-      line: '“Gail Patrini’s roast,” you say, “the best in Wickermoor.” A ladle taps twice against a tureen, delighted, and the gravy boat makes a small, contented bow.' },
+    { id: 'grace', text: 'Say grace', hint: 'next round: everything flies slower', line: 'You bow your head and say the grace your grandmother used to say. The plates hesitate. A sugar bowl lowers itself an inch, almost politely.', run: st => { st.flags.grace = true; } },
+    { id: 'sit', text: 'Take a seat at the table', hint: 'next round: a moment’s stillness first', line: 'You pull out a chair and sit, as a guest should. For a moment every dish is perfectly still, as though a host somewhere has smiled.', run: st => { st.flags.sit = true; } },
+    { id: 'cook', text: 'Praise Mrs Patrini’s cooking', hint: 'next round: only the right course is offered', when: () => game.clues.has('lockwoods'),
+      line: '“Gail Patrini’s roast,” you say, “the best in Wickermoor.” A ladle taps twice against a tureen, delighted, and the gravy boat makes a small, contented bow.', run: st => { st.flags.praise = true; } },
     { id: 'eat', text: 'Eat something', line: 'You snatch a pastry out of the air and bite. It is warm. It moves in your mouth. You spit it out, gagging, and the whole feast laughs.',
       run: () => { addDread(1); drawEncDread(); } },
   ],
   items: {
-    salt: { line: 'You pour a ring of salt around your feet. Whatever crosses it slows, as if wading through something thick.', shrink: 0.35 },
+    salt: { hint: 'things slow down near you', line: 'You pour a ring of salt around your feet. Whatever crosses it slows, as if wading through something thick.', shrink: 0.35 },
+    menu: { line: 'You hold up Mrs Patrini’s menu card. The dishes seem to straighten, as if a list had been read out. (Its order is soup, fish, the roast, the sweets.)' },
     matches: { kill: true, line: 'You strike a match and drop it on the tablecloth. It goes up at once, with a shriek that comes from every dish at the same time. The feast burns. It takes a long time.' },
     knife: { line: 'You wave the carving knife at the floating roast. It ducks, offended, and comes at you twice as hard.' },
   },
-  patterns: [
-    { duration: 7, text: 'Sugar bowls! They fling their sugar as they pass.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.75 : 0.5;
-        const x = 20 + api.rand() * (api.w - 40);
-        api.add({ x, y: -12, vx: (api.rand() - 0.5) * 60, vy: 120 + api.rand() * 50, r: 9, glyph: '◒', color: '#e8e4dc', onHit: (s, a) => a.effect('blind', 2.2) });
-      } },
-    { duration: 7, text: 'Roast fish glide through the air in a shoal.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.3 : 0.95;
-        const fromLeft = api.rand() < 0.5, y0 = 30 + api.rand() * (api.h - 60);
-        for (let i = 0; i < (api.easy ? 3 : 4); i++) {
-          api.add({ x: fromLeft ? -20 - i * 34 : api.w + 20 + i * 34, y: y0, vx: fromLeft ? 130 : -130, vy: 0, r: 8, glyph: '❧', color: '#c9874a',
-            update: (s, d, tt) => { s.y = y0 + Math.sin(tt * 4 + i) * 18; }, onHit: (s, a) => a.effect('slow', 3) });
-        }
-      } },
-    { duration: 7, text: 'Lobster claws snap shut across the table, left and right.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.1 : 0.8;
-        const y = 20 + api.rand() * (api.h - 40), w = api.w * (0.45 + api.rand() * 0.15), left = api.rand() < 0.5;
-        api.add({ x: left ? w / 2 : api.w - w / 2, y, rect: [w, 14], color: '#b8402e', armed: 0.6, life: 0.95 });
-      } },
-  ],
 };
 
 // The feast as you face it: the table, with dishes rising off it.
@@ -117,24 +90,7 @@ ENCOUNTERS.ovenFire = {
   intro: 'The iron door bursts open with a roar. Shrieking, burning shapes pour out of the oven, and the kitchen fills with fire and black, choking smoke.',
   survived: 'You stagger clear, coughing. Behind you the shrieking thins, and stops, and the burning shapes are gone. Burned away. The oven ticks as it cools.',
   calmMax: 1, acts: [], items: {},
-  patterns: [
-    { duration: 6, text: 'Fire! Find the gaps in the flames.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.9 : 0.65;
-        const gap = api.rand() * (api.h - 70) + 10;
-        for (let y = 6; y < api.h; y += 18) if (y < gap || y > gap + (api.easy ? 70 : 55)) api.add({ x: api.w + 12, y, vx: -150, vy: 0, r: 8, glyph: '🔥', color: '#ff8a40' });
-      } },
-    { duration: 5, text: 'Burning hands reach for you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.7 : 0.45;
-        const e = api.edge(), v = api.aim(e, 110);
-        api.add({ x: e.x, y: e.y, ...v, r: 7, color: '#ff6a2a' });
-      } },
-  ],
+  round: st => ovenEscape(st),
 };
 
 function ovenFoeArt() {
@@ -275,15 +231,16 @@ ENCOUNTERS.petunia = {
   name: 'Petunia Lockwood',
   art: 'petunia',
   calmMax: 3,
+  round: st => cupRound(st),
   intro: 'Petunia’s head snaps round. The green ribbon at her throat slips a finger’s width, and the air turns to ice. She rises from the bench, and the scream that tears out of her is not a sound a living woman could make.',
   prompt: st => ['Her hands reach for you, cold as the grave.', 'She is weeping, and every tear freezes as it falls.', '“Give it back,” she says, in a voice like cracking ice. “It’s all I have.”'][st.turn % 3],
   calmFull: 'Her hands fall to her sides. The ice in the air softens. She looks lost, and tired, and very sad. You could let her be.',
   notReady: 'She’s still too far gone in her grief.',
   flee: 'You stumble back out of the conservatory. Behind you, the weeping goes on.',
   acts: [
-    { id: 'sorry', text: 'Apologise', once: true, calm: 1, line: '“I’m sorry. I shouldn’t have.” For a moment the cold eases. She doesn’t look at you, but she hears you.' },
-    { id: 'names', text: 'Speak of Sally and Arthur', once: true, calm: 2, when: () => game.clues.has('lockwoods'),
-      line: '“Sally,” you say. “Arthur.” Her face crumples. “My babies. Where are my babies?” The reaching hands falter.', run: () => { game.flags.petuniaNamed = true; } },
+    { id: 'sorry', text: 'Apologise', once: true, calm: 1, hint: 'gentler waves from now on', line: '“I’m sorry. I shouldn’t have.” For a moment the cold eases. She doesn’t look at you, but she hears you.', run: st => { st.flags.apologised = true; } },
+    { id: 'names', text: 'Speak of Sally and Arthur', once: true, calm: 2, hint: 'her wails turn to sobs: much gentler waves', when: () => game.clues.has('lockwoods'),
+      line: '“Sally,” you say. “Arthur.” Her face crumples. “My babies. Where are my babies?” The reaching hands falter.', run: st => { game.flags.petuniaNamed = true; st.flags.named = true; } },
     { id: 'ribbon', text: 'Seize the green ribbon', dark: true, line: 'You lunge past her hands and catch the faded green ribbon at her throat, and pull. It comes undone far too easily.',
       run: st => { st.result = 'killed'; } },
   ],
@@ -293,31 +250,6 @@ ENCOUNTERS.petunia = {
     bear: { calm: 2, line: 'You hold up Arthur’s blue bear. “He can’t sleep without it,” she says, and the rage goes out of her like a breath.' },
     knife: { line: 'You raise the knife. She doesn’t even flinch. What could it do to her now?' },
   },
-  patterns: [
-    { duration: 6, text: 'Cold hands sweep across the room, reaching for you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.1 : 0.8;
-        const left = api.rand() < 0.5, y = 20 + api.rand() * (api.h - 40);
-        api.add({ x: left ? -40 : api.w + 40, y, vx: left ? 170 : -170, vy: 0, rect: [70, 16], color: '#b8c4d8' });
-      } },
-    { duration: 6, text: 'Her tears freeze as they fall.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.22 : 0.14;
-        api.add({ x: api.rand() * api.w, y: -8, vx: 0, vy: 90 + api.rand() * 70, r: 4, color: '#cfe0ff' });
-      } },
-    { duration: 6, text: 'The teacup shatters in her hands, and the pieces fly.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.4 : 1.0;
-        const n = api.easy ? 8 : 12, off = api.rand() * Math.PI;
-        for (let i = 0; i < n; i++) { const a = off + i / n * Math.PI * 2; api.add({ x: api.w / 2, y: api.h / 2, vx: Math.cos(a) * 110, vy: Math.sin(a) * 110, r: 5, color: '#f0f0f4', armed: 0.25 }); }
-      } },
-  ],
 };
 
 async function petuniaForced() {
@@ -447,49 +379,25 @@ ENCOUNTERS.peacock = {
   name: 'The Marble Peacock',
   art: 'peacock',
   calmMax: 3,
+  round: st => gazeRound(st),
   intro: 'Marble grinds against marble. The peacock turns its head, and its tail rises and fans across the alcove, every feather an unblinking eye. Its one red eye fixes on you, and your limbs grow heavy and cold. In the paintings on the walls, an old woman’s face is watching too, and smiling.',
   prompt: st => ['Its eye follows you. Your fingertips are going grey.', 'Keziah’s face moves from painting to painting, closer each time.', 'Feathers rattle like knives in a drawer.'][st.turn % 3],
   calmFull: 'The peacock is still. In the nearest painting, Keziah closes her eyes. It’s over, if you let it be.',
   notReady: 'Its eye is still on you.',
   flee: 'You back out of the gallery, keeping your eyes on the floor. The grinding of marble follows you to the door.',
   acts: [
-    { id: 'eyes', text: 'Close your eyes', once: true, calm: 1, line: 'You squeeze your eyes shut and stand very still. The heaviness in your limbs eases. You can feel it looking, but it can’t hold you if you won’t look back.' },
-    { id: 'keziah', text: 'Speak to Keziah', once: true, calm: 1, when: () => game.clues.has('lockwoods'),
-      line: '“Mrs Endicott. Keziah.” In the painting, the old woman starts, as if nobody has said her name in a very long time. Her face softens. She looks, for a moment, only tired.' },
-    { id: 'vermin', text: 'Name what she painted: the weasel, the centipede, the pigeon', once: true, calm: 2, when: () => game.flags.paintingsRead,
-      line: '“You saw them,” you say. “The weasel. The centipede. The pigeon. You tried to warn them.” Keziah’s painted eyes fill. She nods, once, and the peacock’s tail sinks a little.' },
+    { id: 'eyes', text: 'Close your eyes', hint: 'next round: darkness; listen for it. It can barely hold you', line: 'You squeeze your eyes shut and stand very still. The heaviness in your limbs eases. You can feel it looking, but it can’t hold you if you won’t look back.', run: st => { st.flags.eyes = true; } },
+    { id: 'keziah', text: 'Speak to Keziah', once: true, calm: 1, hint: 'its gaze sweeps slower', when: () => game.clues.has('lockwoods'),
+      line: '“Mrs Endicott. Keziah.” In the painting, the old woman starts, as if nobody has said her name in a very long time. Her face softens. She looks, for a moment, only tired.', run: st => { st.flags.keziah = true; } },
+    { id: 'vermin', text: 'Name what she painted: the weasel, the centipede, the pigeon', once: true, calm: 1, hint: 'its gaze narrows', when: () => game.flags.paintingsRead,
+      line: '“You saw them,” you say. “The weasel. The centipede. The pigeon. You tried to warn them.” Keziah’s painted eyes fill. She nods, once, and the peacock’s tail sinks a little.', run: st => { st.flags.vermin = true; } },
   ],
   items: {
-    shard: { calm: 3, line: 'You raise the mirror shard between you and the peacock. Its red eye meets its own reflection, and holds, and cannot look away. Grey creeps back over the white marble like frost, and the great tail stiffens, and the bird is only stone again.' },
+    shard: { hint: 'get close, and raise it as the eye finds you', line: 'You grip the mirror shard. If you can get close enough, and catch its eye with it at the right moment...' },
     hatchet: { kill: true, line: 'You swing the hatchet into the peacock’s neck. Marble cracks, and cracks again, and the bird comes apart in great white chunks. In every painting at once, Keziah screams, and the paint runs.' },
     knife: { kill: true, line: 'You turn from the bird and drive the knife into the nearest painting, through Keziah’s smiling face, and drag it down. The canvas shrieks as it tears. The peacock topples, and shatters on the floor.' },
     salt: { line: 'You throw salt at the peacock. It glances off the marble. Whatever this is, it isn’t afraid of salt.' },
   },
-  patterns: [
-    { duration: 6, text: 'Its gaze sweeps the room: stay out of the beam.',
-      start(api) { this.y = 20; this.dir = 1; },
-      spawn(api, t, dt) {
-        this.beam = this.beam || api.add({ x: api.w / 2, y: 20, rect: [api.w, 22], color: 'rgba(200,40,40,0.55)', life: 999, armed: 0.6 });
-        this.beam.y += this.dir * (api.easy ? 60 : 85) * dt;
-        if (this.beam.y > api.h - 15 || this.beam.y < 15) this.dir *= -1;
-      } },
-    { duration: 6, text: 'Its tail fans, and the feathers fly.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.3) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.0 : 0.7;
-        const n = api.easy ? 5 : 7, base = Math.PI * (0.15 + api.rand() * 0.1);
-        for (let i = 0; i < n; i++) { const a = base + i / (n - 1) * Math.PI * 0.7; api.add({ x: api.w / 2, y: -5, vx: Math.cos(a) * 130, vy: Math.sin(a) * 130, r: 5, glyph: '❦', color: '#e8e4dc' }); }
-      } },
-    { duration: 6, text: 'Keziah reaches out of her frames to pull you in.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.2 : 0.85;
-        const x = 30 + api.rand() * (api.w - 60), y = 30 + api.rand() * (api.h - 60);
-        api.add({ x, y, rect: [54, 40], color: 'rgba(160,140,100,0.6)', armed: 0.9, life: 1.6, onHit: (s, a) => a.effect('slow', 2) });
-      } },
-  ],
 };
 
 async function peacockScene() {
@@ -521,41 +429,24 @@ async function peacockScene() {
 ENCOUNTERS.swarm = {
   name: 'The Boogleswarm',
   art: () => artImage(CHARACTER_ART.boogleswarm),
-  calmMax: 2,
+  calmMax: 3,                 // a third of the swarm herded home, each
+  round: st => herdRound(st),
   intro: 'A crack in the wallpaper splits wider, and wider, and out of it pours a boogleswarm: grey weasels, dozens of them, red-eyed and grinning, slinking over each other and over the floor towards you. Some of them have human teeth crammed into their mouths. One of them says your name, in your own voice.',
   prompt: 'They swarm and scatter and swarm again.',
   calmFull: 'The swarm hangs back, uncertain, at the edge of the light. One more push and they’ll go.',
   flee: 'You run, and they don’t follow far. The walls swallow them again.',
   acts: [
-    { id: 'lantern', text: 'Hold the lantern high', once: true, calm: 1, line: 'You lift the lantern above your head. The weasels shrink from the light, squealing, and the swarm thins.' },
-    { id: 'shout', text: 'Stamp and shout', once: true, calm: 1, line: 'You stamp and shout at them like a farmer at crows. The swarm breaks and re-forms further off.' },
+    { id: 'lantern', text: 'Hold the lantern high', hint: 'next round: your light reaches further', line: 'You lift the lantern above your head. The weasels shrink from the light, squealing.', run: st => { st.flags.lanternHigh = true; } },
+    { id: 'shout', text: 'Stamp and shout', hint: 'next round: Space stamps, scattering them (3 times)', line: 'You stamp and shout at them like a farmer at crows. The swarm breaks and re-forms further off.', run: st => { st.flags.shout = true; } },
     // Boogleswarms covet teeth above all, and will bargain for them (the book).
-    { id: 'tooth', text: 'Toss them a tooth', once: true, calm: 1, when: () => game.teeth > 0,
-      line: 'You hold up a tooth, and the whole swarm goes still, every red eye on it. You toss it into the corner. They boil after it, fighting over it, and when they come back they come slower, almost polite.',
-      run: () => { game.teeth--; ui.drawInventory(); } },
-    { id: 'crush', text: 'Crush them underfoot', dark: true, line: 'You bring your heel down, and down, and down. They pop like blisters. You keep going long after they’ve stopped moving.', run: st => { st.result = 'killed'; } },
+    { id: 'tooth', text: 'Toss them a tooth', hint: 'next round: they chase it towards the crack', when: () => game.teeth > 0,
+      line: 'You hold up a tooth, and the whole swarm goes still, every red eye on it. You toss it towards the crack.',
+      run: st => { game.teeth--; ui.drawInventory(); st.flags.tooth = true; } },
+    { id: 'crush', text: 'Crush them underfoot', dark: true, line: 'You stop pushing them away. You let them come.', run: st => { st.flags.crushing = true; } },
   ],
   items: {
-    salt: { calm: 2, line: 'You fling a handful of salt across the floor. Where it lands, the weasels shriek and smoke and flee, and none of them will cross the line.' },
+    salt: { hint: 'next round: a ring of salt round you; they can’t bite', line: 'You pour a ring of salt round your feet. The weasels shriek at its edge, and none of them will cross it.', run: st => { st.flags.salt = true; } },
   },
-  patterns: [
-    { duration: 5, text: 'They pour across the floor towards you.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 0.35 : 0.22;
-        const e = api.edge(), v = api.aim(e, 70 + api.rand() * 40);
-        api.add({ x: e.x, y: e.y, ...v, r: 5, glyph: '≈', color: '#9a8a80', update: (s, d, tt) => { s.vx += Math.sin(tt * 9 + s.y) * 6; } });
-      } },
-    { duration: 5, text: 'They scatter, and circle, and close in.',
-      spawn(api, t, dt) {
-        this.next = (this.next ?? 0.2) - dt;
-        if (this.next > 0) return;
-        this.next = api.easy ? 1.3 : 0.9;
-        const n = api.easy ? 8 : 12, r = 150, cx = api.soul.x, cy = api.soul.y;
-        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; api.add({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, vx: -Math.cos(a) * 60, vy: -Math.sin(a) * 60, r: 5, glyph: '≈', color: '#9a8a80', life: 3 }); }
-      } },
-  ],
 };
 
 async function boogleSwarm() {

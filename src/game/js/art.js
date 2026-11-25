@@ -606,6 +606,7 @@ function itemIcon(id) {
       break;
     case 'music_a': page('#e8dcb8', 12, 40, 'right'); break;
     case 'music_b': page('#c8a878', 24, 52, 'left'); ctx.fillStyle = 'rgba(40,20,8,0.5)'; ctx.fillRect(44, 8, 8, 48); break;
+    case 'menu': page('#e8dcb8', 12, 52, null); ctx.fillStyle = 'rgba(40,20,8,0.7)'; [20, 28, 36, 44].forEach(y => ctx.fillRect(22, y, 20, 2)); ctx.fillStyle = '#8a2a1a'; ctx.fillRect(22, 14, 20, 2); break;
     case 'music_full': page('#e8dcb8', 8, 56, null); ctx.strokeStyle = 'rgba(40,20,8,0.6)'; ctx.beginPath(); ctx.moveTo(32, 8); for (let y = 8; y <= 56; y += 6) ctx.lineTo(32 + (y / 6 % 2 ? -2 : 2), y); ctx.stroke(); break;
     case 'ring':
       ctx.lineWidth = 7; ctx.strokeStyle = '#1a120b'; ctx.beginPath(); ctx.ellipse(32, 34, 17, 13, 0, 0, Math.PI * 2); ctx.stroke();

@@ -38,9 +38,9 @@ function inRhythm() { return game.curse && GRID.at(game.cx, game.cy).room === 'm
 function onBeat(at) {
   const b = beatNow(at);
   const win = easyMode() ? BEAT_WINDOW.easy : BEAT_WINDOW.normal;
-  if (b.off <= win && b.index !== rhythm.usedBeat) { rhythm.usedBeat = b.index; pulseBeat(true); return true; }
+  if (b.off <= win && b.index !== rhythm.usedBeat) { rhythm.usedBeat = b.index; pulseBeat(true, b.off < win * 0.4 ? 'Perfect' : 'Good'); return true; }
   rhythm.stumbles++;
-  pulseBeat(false);
+  pulseBeat(false, b.index === rhythm.usedBeat ? 'Too quick' : (b.phase < 0.5 ? 'Late' : 'Early'));
   sound.hit();
   ui.log(b.index === rhythm.usedBeat ? 'Too quick: one step to a beat.' : 'You stumble out of time.', 'scare');
   if (rhythm.stumbles % 2 === 0) addDread(1);
@@ -53,6 +53,8 @@ function startRhythm() {
   // Weasels come out of the walls at the room's edges.
   const cells = GRID.cells.filter(c => c.walk && !c.blocked && c.room === 'music' && c.edges.some(e => e === 'wall'));
   const n = easyMode() ? 3 : 5;
+  const win = easyMode() ? BEAT_WINDOW.easy : BEAT_WINDOW.normal;
+  $('beat').style.setProperty('--win', `${(win * 2 / WALTZ.period * BEAT_GAP).toFixed(2)}%`);
   rhythm.weasels = world.weasels.slice(0, n).map((s, i) => {
     const c = cells[(i * 7 + 3) % cells.length];
     s.visible = true; s.position.set(c.x, 0, c.y);
@@ -69,13 +71,28 @@ function stopRhythm() {
 
 // Every frame while the waltz plays: weasels move on each new beat, and
 // glide between squares.
+// The beat bar: where the next beats are, as % along the track.
+const BEAT_GAP = 18;       // % of the track between one beat and the next
+const BEAT_LINE = 18;      // % from the left where the line is
+function drawBeatBar() {
+  const marks = $('beat').querySelector('.beat-marks');
+  if (marks.children.length !== 6) { marks.innerHTML = ''; for (let i = 0; i < 6; i++) marks.appendChild(document.createElement('span')); }
+  const x = (waltzTime() - WALTZ.offset) / WALTZ.period, first = Math.floor(x);
+  [...marks.children].forEach((m, k) => {
+    const idx = first + k, pos = BEAT_LINE + (idx - x) * BEAT_GAP;
+    m.style.left = `${pos.toFixed(2)}%`;
+    m.className = idx % 2 === 0 ? 'strong' : '';
+    m.style.opacity = pos < BEAT_LINE - 4 ? '0.25' : '';
+  });
+}
+
 function tickRhythm(dt) {
   if (!game.curse) return;
   const b = beatNow();
-  const ring = $('beat');
-  ring.style.setProperty('--p', b.phase.toFixed(3));
+  drawBeatBar();
   if (b.index !== rhythm.tickBeat && b.phase < 0.5) {
     rhythm.tickBeat = b.index;
+    sound.tick(b.index % 2 === 0);
     // The weasels move every other beat: the waltz's one and three.
     if (b.index % 2 === 0 && !game.busy && !ui.overlay && GRID.at(game.cx, game.cy).room === 'music') weaselsStep();
   }
@@ -137,10 +154,12 @@ function stompAt(c) {
   if (!game.flags.stompedWeasel) { game.flags.stompedWeasel = true; game.crooked = (game.crooked || 0) + 1; }
 }
 
-function pulseBeat(ok) {
-  const ring = $('beat');
-  ring.classList.remove('hit', 'miss'); void ring.offsetWidth;
-  ring.classList.add(ok ? 'hit' : 'miss');
+function pulseBeat(ok, word = '') {
+  const bar = $('beat'), say = bar.querySelector('.beat-say');
+  bar.classList.remove('hit', 'miss'); void bar.offsetWidth;
+  bar.classList.add(ok ? 'hit' : 'miss');
+  say.textContent = word; say.classList.toggle('off', !ok);
+  clearTimeout(pulseBeat.timer); pulseBeat.timer = setTimeout(() => { say.textContent = ''; }, 700);
 }
 
 // ─── The dark way to end it: the hatchet ──────────────────────────────
