@@ -1619,31 +1619,109 @@ function fireTexture() {
 
 // ─── Pictures on the walls (world.js hangs them) ──────────────────────
 
-// A family portrait, each one different: someone in dark clothes against a
-// darker ground, eyes a little too wide.
+// A '#rrggbb' colour lightened (k > 0) or darkened (k < 0) by a fraction.
+function shadeHex(hex, k) {
+  const n = parseInt(hex.slice(1), 16), f = v => Math.round(clamp(k >= 0 ? v + (255 - v) * k : v * (1 + k), 0, 255));
+  return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`;
+}
+
+// A family portrait, each one different, painted the way the house's own
+// portraits are: light from one side, a lighter ground behind the head,
+// dark period clothes, brush dabs, cracked varnish; eyes a little too wide.
 function portraitTexture(seed) {
-  const [c, ctx] = artCanvas(96, 128);
+  const W = 192, H = 256;
+  const [c, ctx] = artCanvas(W, H);
   const rand = seededRandom(seed * 19 + 3);
-  const bg = ctx.createRadialGradient(48, 50, 4, 48, 60, 80);
-  bg.addColorStop(0, ['#3a3226', '#2a2e28', '#36282a', '#2c2a34'][seed % 4]); bg.addColorStop(1, '#0e0c0a');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, 96, 128);
-  const skin = ['#9a826a', '#a88c70', '#8a7460', '#b09478'][Math.floor(rand() * 4)];
-  const coat = ['#1e1a18', '#2a1e1a', '#1a2026', '#2a2620', '#3a2a2a'][Math.floor(rand() * 5)];
-  const hair = ['#1a1410', '#3a2a1a', '#6a6258', '#4a3020', '#2a2220'][Math.floor(rand() * 5)];
-  const woman = rand() < 0.5, child = rand() < 0.2;
-  const hx = 48, hy = child ? 58 : 48, hr = child ? 12 : 14;
-  ctx.fillStyle = coat; ctx.beginPath(); ctx.ellipse(48, 128, child ? 26 : 36, child ? 44 : 52, 0, Math.PI, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = woman ? '#cfc6b0' : '#d8d0c0'; ctx.beginPath(); ctx.moveTo(42, hy + hr + 4); ctx.lineTo(48, hy + hr + 14); ctx.lineTo(54, hy + hr + 4); ctx.fill();   // collar
-  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(hx, hy, hr * 0.85, hr, 0, 0, Math.PI * 2); ctx.fill();
+  const pick = arr => arr[Math.floor(rand() * arr.length)];
+  const woman = rand() < 0.5, child = rand() < 0.18, old = !child && rand() < 0.3;
+  const ground = ['#4a3e2c', '#34392f', '#43302f', '#373442'][seed % 4];
+  const bg = ctx.createRadialGradient(W * 0.42, H * 0.36, 8, W * 0.5, H * 0.5, H * 0.75);
+  bg.addColorStop(0, ground); bg.addColorStop(1, '#0b0907');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // a heavy drape in one corner, sometimes
+  if (rand() < 0.5) { const dx = rand() < 0.5 ? 0 : W; ctx.fillStyle = 'rgba(70,20,24,0.55)'; ctx.beginPath(); ctx.moveTo(dx, 0); ctx.quadraticCurveTo(Math.abs(dx - 60), 90, Math.abs(dx - 30), H); ctx.lineTo(dx, H); ctx.fill(); }
+  const skin = pick(['#b8987a', '#c4a284', '#a88a6e', '#caa88a']);
+  const skinDark = shadeHex(skin, -0.32);
+  const hair = old ? pick(['#8a8478', '#a8a296', '#6a645a']) : pick(['#1c1510', '#3a2818', '#4e3420', '#2a2018', '#6a4a2a']);
+  const coat = pick(['#17141a', '#211816', '#141a20', '#24201a', '#2a1a1e']);
+  const cx = 96, hy = child ? 118 : 100, hw = child ? 24 : 27, hh = child ? 30 : 35;
+  // shoulders and clothes
+  const sw = child ? 58 : 78, top = hy + hh + 18;
+  ctx.fillStyle = coat;
+  ctx.beginPath(); ctx.moveTo(cx - sw, H); ctx.quadraticCurveTo(cx - sw + 4, top + 6, cx - 18, top - 6); ctx.lineTo(cx + 18, top - 6); ctx.quadraticCurveTo(cx + sw - 4, top + 6, cx + sw, H); ctx.closePath(); ctx.fill();
+  // the light catching the left shoulder
+  const sh = ctx.createLinearGradient(cx - sw, 0, cx + sw, 0); sh.addColorStop(0, 'rgba(255,240,210,0.10)'); sh.addColorStop(0.5, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = sh; ctx.fill();
+  // the neck
+  ctx.fillStyle = skinDark; ctx.fillRect(cx - 10, hy + hh - 10, 20, 26);
+  if (woman) {
+    // a high lace collar and a brooch
+    ctx.fillStyle = '#d8cfbc'; ctx.beginPath(); ctx.moveTo(cx - 15, hy + hh + 4); ctx.quadraticCurveTo(cx, hy + hh + 12, cx + 15, hy + hh + 4); ctx.lineTo(cx + 13, hy + hh + 24); ctx.quadraticCurveTo(cx, hy + hh + 30, cx - 13, hy + hh + 24); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,110,90,0.6)'; ctx.lineWidth = 1; for (let i = -12; i <= 12; i += 4) { ctx.beginPath(); ctx.arc(cx + i, hy + hh + 26, 2, 0, Math.PI); ctx.stroke(); }
+    ctx.fillStyle = pick(['#8a2a22', '#2a4a5a', '#3a5a32']); ctx.beginPath(); ctx.ellipse(cx, hy + hh + 38, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#c9a96e'; ctx.lineWidth = 1.5; ctx.stroke();
+  } else {
+    // a white shirt, a dark cravat, lapels
+    ctx.fillStyle = '#d8d0c0'; ctx.beginPath(); ctx.moveTo(cx - 16, top - 4); ctx.lineTo(cx, top + 34); ctx.lineTo(cx + 16, top - 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = pick(['#1a1414', '#3a1a1a', '#1a2230']); ctx.beginPath(); ctx.moveTo(cx - 8, top - 2); ctx.lineTo(cx + 8, top - 2); ctx.lineTo(cx + 4, top + 12); ctx.lineTo(cx - 4, top + 12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 18, top - 4); ctx.lineTo(cx - 6, top + 44); ctx.moveTo(cx + 18, top - 4); ctx.lineTo(cx + 6, top + 44); ctx.stroke();
+  }
+  // hair behind the head
   ctx.fillStyle = hair;
-  if (woman) { ctx.beginPath(); ctx.ellipse(hx, hy - 4, hr * 0.95, hr * 0.8, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.fill(); ctx.beginPath(); ctx.arc(hx, hy - hr - 2, 6, 0, Math.PI * 2); ctx.fill(); }
-  else { ctx.beginPath(); ctx.ellipse(hx, hy - 6, hr * 0.9, hr * 0.6, 0, Math.PI, Math.PI * 2); ctx.fill(); if (rand() < 0.4) { ctx.beginPath(); ctx.ellipse(hx, hy + hr * 0.6, hr * 0.55, hr * 0.4, 0, 0, Math.PI); ctx.fill(); } }
-  ctx.fillStyle = '#f0e8d8'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx, hy - 1, 2.6, 0, Math.PI * 2); ctx.fill(); });   // the whites of the eyes
-  ctx.fillStyle = '#0a0806'; [-5, 5].forEach(dx => { ctx.beginPath(); ctx.arc(hx + dx + (rand() - 0.5), hy - 1, 1.2, 0, Math.PI * 2); ctx.fill(); });
-  ctx.strokeStyle = 'rgba(30,20,14,0.7)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(hx - 3, hy + 7); ctx.lineTo(hx + 3, hy + 7); ctx.stroke();
-  artGrime(ctx, 96, 128, rand, 0.4);
-  // old varnish
-  ctx.fillStyle = 'rgba(80,60,20,0.18)'; ctx.fillRect(0, 0, 96, 128);
+  if (woman) { ctx.beginPath(); ctx.ellipse(cx, hy - 4, hw + 5, hh + 3, 0, Math.PI * 0.9, Math.PI * 2.1); ctx.fill(); }
+  // the face: a tapering jaw, lit from the left
+  const face = new Path2D();
+  face.moveTo(cx - hw, hy - 6);
+  face.quadraticCurveTo(cx - hw, hy - hh, cx, hy - hh);
+  face.quadraticCurveTo(cx + hw, hy - hh, cx + hw, hy - 6);
+  face.quadraticCurveTo(cx + hw - 2, hy + hh * 0.55, cx, hy + hh);
+  face.quadraticCurveTo(cx - hw + 2, hy + hh * 0.55, cx - hw, hy - 6);
+  const fg = ctx.createLinearGradient(cx - hw, 0, cx + hw, 0); fg.addColorStop(0, shadeHex(skin, 0.08)); fg.addColorStop(0.55, skin); fg.addColorStop(1, skinDark);
+  ctx.fillStyle = fg; ctx.fill(face);
+  ctx.fillStyle = 'rgba(170,70,60,0.16)'; [[-13, 12], [13, 12]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.ellipse(cx + dx, hy + dy, 7, 5, 0, 0, Math.PI * 2); ctx.fill(); });
+  if (old) { ctx.strokeStyle = 'rgba(70,45,30,0.35)'; ctx.lineWidth = 1; [[-14, 18, -8, 24], [14, 18, 8, 24], [-10, -16, 10, -16]].forEach(([a, b, c2, d]) => { ctx.beginPath(); ctx.moveTo(cx + a, hy + b); ctx.lineTo(cx + c2, hy + d); ctx.stroke(); }); }
+  // hair on top
+  ctx.fillStyle = hair;
+  if (woman) {
+    ctx.beginPath(); ctx.moveTo(cx - hw - 2, hy - 2); ctx.quadraticCurveTo(cx - hw - 4, hy - hh - 8, cx, hy - hh - 6); ctx.quadraticCurveTo(cx + hw + 4, hy - hh - 8, cx + hw + 2, hy - 2); ctx.quadraticCurveTo(cx + 10, hy - hh + 4, cx, hy - hh + 8); ctx.quadraticCurveTo(cx - 10, hy - hh + 4, cx - hw - 2, hy - 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx, hy - hh - 10, 13, 10, 0, 0, Math.PI * 2); ctx.fill();    // a bun
+  } else if (!old || rand() < 0.6) {
+    ctx.beginPath(); ctx.moveTo(cx - hw - 1, hy - 4); ctx.quadraticCurveTo(cx - hw, hy - hh - 6, cx + 4, hy - hh - 5); ctx.quadraticCurveTo(cx + hw + 2, hy - hh - 2, cx + hw + 1, hy - 4); ctx.quadraticCurveTo(cx + hw - 4, hy - hh + 8, cx - 6, hy - hh + 10); ctx.quadraticCurveTo(cx - hw + 2, hy - hh + 12, cx - hw - 1, hy - 4); ctx.fill();
+    if (rand() < 0.5) { ctx.fillRect(cx - hw, hy - 6, 5, 22); ctx.fillRect(cx + hw - 5, hy - 6, 5, 22); }   // side-whiskers
+  }
+  // a little light in the hair
+  ctx.strokeStyle = 'rgba(255,240,210,0.12)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx - 6, hy - hh + 2, hw * 0.7, Math.PI * 1.1, Math.PI * 1.5); ctx.stroke();
+  // eyes, a little too wide; brows; a nose in shadow; a thin mouth
+  const ey = hy - 3, ex = 11;
+  [-1, 1].forEach(k => {
+    ctx.fillStyle = 'rgba(60,40,30,0.35)'; ctx.beginPath(); ctx.ellipse(cx + k * ex, ey - 1, 8, 5, 0, 0, Math.PI * 2); ctx.fill();   // the socket
+    ctx.fillStyle = '#efe6d4'; ctx.beginPath(); ctx.ellipse(cx + k * ex, ey, 5.6, 3.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = pick(['#3a2a1a', '#2a3a4a', '#3a4a2a']); ctx.beginPath(); ctx.arc(cx + k * ex + (rand() - 0.5) * 1.5, ey, 2.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#080605'; ctx.beginPath(); ctx.arc(cx + k * ex, ey, 1.1, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,24,16,0.85)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(cx + k * ex, ey + 0.5, 6, 4, 0, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();   // the lid
+    ctx.strokeStyle = shadeHex(hair, -0.2); ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(cx + k * (ex - 6), ey - 8); ctx.quadraticCurveTo(cx + k * ex, ey - 11 - rand() * 2, cx + k * (ex + 7), ey - 7); ctx.stroke();
+  });
+  ctx.fillStyle = 'rgba(60,36,24,0.4)'; ctx.beginPath(); ctx.moveTo(cx + 1, ey + 2); ctx.lineTo(cx + 5, ey + 15); ctx.lineTo(cx - 2, ey + 16); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(60,30,24,0.75)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(cx - 7, hy + 22); ctx.quadraticCurveTo(cx, hy + 23 + (rand() - 0.6) * 3, cx + 7, hy + 22); ctx.stroke();
+  if (!woman && !child && rand() < 0.45) {   // a moustache, or a full beard
+    ctx.fillStyle = hair;
+    if (rand() < 0.5) { ctx.beginPath(); ctx.moveTo(cx - 11, hy + 21); ctx.quadraticCurveTo(cx, hy + 13, cx + 11, hy + 21); ctx.quadraticCurveTo(cx, hy + 18, cx - 11, hy + 21); ctx.fill(); }
+    else { ctx.beginPath(); ctx.moveTo(cx - hw + 1, hy + 4); ctx.quadraticCurveTo(cx - hw + 4, hy + hh + 14, cx, hy + hh + 16); ctx.quadraticCurveTo(cx + hw - 4, hy + hh + 14, cx + hw - 1, hy + 4); ctx.quadraticCurveTo(cx + 8, hy + 20, cx, hy + 26); ctx.quadraticCurveTo(cx - 8, hy + 20, cx - hw + 1, hy + 4); ctx.fill(); }
+  }
+  // brush dabs over everything, the paint's own texture
+  for (let i = 0; i < 900; i++) {
+    const x = rand() * W, y = rand() * H, l = rand() < 0.5;
+    ctx.fillStyle = l ? 'rgba(255,240,210,0.035)' : 'rgba(0,0,0,0.05)';
+    ctx.beginPath(); ctx.ellipse(x, y, 2 + rand() * 5, 1 + rand() * 1.5, rand() * Math.PI, 0, Math.PI * 2); ctx.fill();
+  }
+  // craquelure: fine cracks in the old paint
+  ctx.strokeStyle = 'rgba(10,8,6,0.12)'; ctx.lineWidth = 0.5;
+  for (let i = 0; i < 40; i++) { let x = rand() * W, y = rand() * H; ctx.beginPath(); ctx.moveTo(x, y); for (let k = 0; k < 4; k++) { x += (rand() - 0.5) * 12; y += (rand() - 0.5) * 12; ctx.lineTo(x, y); } ctx.stroke(); }
+  artGrime(ctx, W, H, rand, 0.35);
+  // old varnish, darker towards the edges
+  ctx.fillStyle = 'rgba(90,64,20,0.2)'; ctx.fillRect(0, 0, W, H);
+  const vg = ctx.createRadialGradient(W / 2, H * 0.45, H * 0.25, W / 2, H / 2, H * 0.7); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   return artTexture(c);
 }
 
