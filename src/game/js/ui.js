@@ -183,7 +183,7 @@ const ui = {
   },
 
   open(id) {
-    ['journal', 'map'].forEach(o => { if (o !== id) $(o).hidden = true; });
+    ['journal', 'map', 'pause'].forEach(o => { if (o !== id) $(o).hidden = true; });
     $(id).hidden = false;
     ui.overlay = id;
     if (id === 'journal') ui.drawJournal();
@@ -191,11 +191,14 @@ const ui = {
     $(id).querySelector('.close')?.focus({ preventScroll: true });
   },
   close() {
-    if (ui.overlay === 'journal' || ui.overlay === 'map') { $(ui.overlay).hidden = true; ui.overlay = null; lockInput(150); }
+    if (ui.overlay === 'journal' || ui.overlay === 'map' || ui.overlay === 'pause') { $(ui.overlay).hidden = true; ui.overlay = null; lockInput(150); }
   },
   toggle(id) { if (ui.overlay === id) ui.close(); else if (!ui.overlay) ui.open(id); },
 
   drawJournal() {
+    const goals = $('goal-list');
+    goals.innerHTML = '';
+    currentGoals().forEach(g => { const li = document.createElement('li'); li.textContent = g; goals.appendChild(li); });
     const slots = $('memento-slots');
     slots.innerHTML = '';
     const known = game.clues.has('mementos');

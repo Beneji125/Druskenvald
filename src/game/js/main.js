@@ -253,6 +253,8 @@ function loop(now) {
   last = now;
   clock += dt;
 
+  // Paused: the house holds still (only drawn, for the picture behind).
+  if (ui.overlay === 'pause') { drawFrame(renderer, world.scene, world.camera); return; }
   // The arrival (arrival.js) has the camera to itself.
   if (arrival.active) {
     tickArrival(now, dt);
@@ -268,7 +270,7 @@ function loop(now) {
     const k = Math.min(1, (now - motion.t0) / motion.ms), e = 1 - (1 - k) ** 3;
     px = lerp(motion.from.x, motion.to.x, e); pz = lerp(motion.from.y, motion.to.y, e);
     yaw = lerp(motion.yawFrom, motion.yawTo, e);
-    if (!motion.turning) bob = Math.sin(k * Math.PI) * 3;
+    if (!motion.turning) bob = Math.sin(k * Math.PI) * 3 * (prefs.calm ? 0.25 : 1);
     if (k >= 1) {
       const from = motion.from, wasStep = !motion.turning;
       motion.from = motion.to = null; motion.turning = false;
@@ -287,11 +289,12 @@ function loop(now) {
   cam.rotation.y = yaw;
   // Never quite level, in a house with no right angles. The cursed waltz
   // sets the room swaying.
-  const sway = game.curse ? Math.sin(clock * 2.1) * 0.06 : 0;
+  const sway = game.curse && !prefs.calm ? Math.sin(clock * 2.1) * 0.06 : 0;
   // Crookedness: the more you've destroyed, the more the house leans.
   const lean = Math.min(5, game.crooked || 0) * 0.012;
-  cam.rotation.z = Math.sin(clock * 0.37) * 0.018 + Math.sin(clock * 0.13) * 0.012 + sway + lean;
-  cam.rotation.x = -0.04 + Math.sin(clock * 0.29) * 0.01 + (game.curse ? Math.sin(clock * 1.3) * 0.03 : 0);
+  const drift = prefs.calm ? 0 : 1;
+  cam.rotation.z = (Math.sin(clock * 0.37) * 0.018 + Math.sin(clock * 0.13) * 0.012) * drift + sway + lean * (prefs.calm ? 0.5 : 1);
+  cam.rotation.x = -0.04 + (Math.sin(clock * 0.29) * 0.01 + (game.curse ? Math.sin(clock * 1.3) * 0.03 : 0)) * drift;
 
   // The lantern, held a little to the right and below the eye.
   const rx = Math.cos(yaw), rz = -Math.sin(yaw);
@@ -411,6 +414,7 @@ function tickHeld(now) {
   if (motion.to && motion.turning) tx += (motion.yawTo - yaw) * hh * 0.3;
   if (game.lanternLow) ty += hh * 0.12;
   // eased, so it has weight
+  if (prefs.calm) { tx *= 0.3; ty *= 0.3; tr *= 0.3; if (game.lanternLow) ty += hh * 0.08; }
   const e = Math.min(1, realDt * 10);
   h.x += (tx - h.x) * e; h.y += (ty - h.y) * e; h.r += (tr - h.r) * e;
   h.el.style.transform = `translate(${h.x.toFixed(1)}px, ${h.y.toFixed(1)}px) rotate(${h.r.toFixed(2)}deg)`;
@@ -549,8 +553,14 @@ document.addEventListener('keydown', e => {
     else if ((k === ' ' || k === 'enter') && !ui.overlay) { e.preventDefault(); [...arrival.wakers].forEach(w => w()); }
     return;
   }
-  if (e.target.closest && e.target.closest('input')) return;     // a slider's arrow keys move the slider
-  if (k === 'escape') { if (ui.overlay === 'journal' || ui.overlay === 'map') { e.preventDefault(); ui.close(); } return; }
+  // (a slider's arrow keys move the slider; Escape still closes things)
+  if (e.target.closest && e.target.closest('input') && k !== 'escape') return;
+  if (k === 'escape' || k === 'p') {
+    if (ui.overlay === 'journal' || ui.overlay === 'map' || ui.overlay === 'pause') { e.preventDefault(); ui.close(); return; }
+    if (k === 'escape' && ui.selected) { e.preventDefault(); ui.select(null); return; }
+    if (!ui.overlay && !game.busy) { e.preventDefault(); ui.open('pause'); }
+    return;
+  }
   if (k === 'm') { e.preventDefault(); ui.toggle('map'); return; }
   if (k === 'j') { e.preventDefault(); ui.toggle('journal'); return; }
   if (k === 'l' && !ui.overlay && !game.busy) { e.preventDefault(); toggleLantern(); return; }
@@ -564,7 +574,6 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (k === 'x' && ui.selected) { e.preventDefault(); examineItem(ui.selected); return; }
-  if (k === 'escape' && ui.selected) { e.preventDefault(); ui.select(null); return; }
   const cmd = KEYMAP[k];
   if (cmd) { e.preventDefault(); if (!e.repeat || cmd !== 'use') act(cmd, e.timeStamp); }
 });
@@ -601,6 +610,20 @@ musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.val
 const easyBox = $('opt-easy');
 easyBox.checked = easyMode();
 easyBox.addEventListener('change', () => store.set(EASY_KEY, easyBox.checked ? 'on' : 'off'));
+// Comfort options (the pause menu): reduced motion and larger text.
+const MOTION_KEY = 'crooked_house_motion', TEXT_KEY = 'crooked_house_text';
+const prefs = {
+  calm: store.get(MOTION_KEY) ? store.get(MOTION_KEY) === 'reduced' : !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches),
+  big: store.get(TEXT_KEY) === 'big',
+};
+document.documentElement.classList.toggle('big-text', prefs.big);
+$('opt-motion').checked = prefs.calm;
+$('opt-motion').addEventListener('change', e => { prefs.calm = e.target.checked; store.set(MOTION_KEY, prefs.calm ? 'reduced' : 'full'); });
+$('opt-bigtext').checked = prefs.big;
+$('opt-bigtext').addEventListener('change', e => { prefs.big = e.target.checked; store.set(TEXT_KEY, prefs.big ? 'big' : 'normal'); document.documentElement.classList.toggle('big-text', prefs.big); if (renderer) resize(); });
+$('btn-pause').addEventListener('click', () => { if (!game.busy) ui.toggle('pause'); });
+$('btn-resume').addEventListener('click', () => ui.close());
+$('btn-title').addEventListener('click', () => { saveGame(); location.reload(); });
 const filmBox = $('opt-film');
 filmBox.checked = finish.on;
 filmBox.addEventListener('change', () => { finish.on = filmBox.checked && !!finish.target; store.set(FINISH_KEY, filmBox.checked ? 'on' : 'off'); });

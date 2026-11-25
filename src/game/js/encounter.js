@@ -262,6 +262,7 @@ function dodge(st, canvas, pattern) {
     const api = {
       soul, rand, w: ARENA_W, h: ARENA_H, easy, st,
       end(how = 'done') { finish(how); },
+      calm(n) { addCalm(st, n); },
       say(text) { $('encounter').querySelector('.enc-text').textContent = text; },
       hurt(n = 1) { if (invuln > 0) return; invuln = easy ? 1.4 : 0.9; sound.hit(); addDread(easy ? n * 0.5 : n); drawEncDread(); if (game.dread >= DREAD_MAX) finish('broke'); },
       add(s) { s.age = 0; if (s.vx) s.vx *= speed; if (s.vy) s.vy *= speed; if (s.hurt === undefined) s.hurt = true; shots.push(s); return s; },

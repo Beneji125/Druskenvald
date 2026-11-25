@@ -53,6 +53,7 @@
       </div>
     </div>
     <div class="hud-right">
+      <button type="button" id="btn-pause" title="Pause (Esc)" aria-label="Pause">☰</button>
       <button type="button" id="btn-map" title="Map (M)">Map</button>
       <button type="button" id="btn-journal" title="Journal (J)">Journal</button>
       <button type="button" id="btn-sound" aria-expanded="false" aria-controls="sound-panel">🔊</button>
@@ -66,8 +67,6 @@
     <label for="vol-music">Music</label>
     <input type="range" id="vol-music" min="0" max="100" step="1">
     <button type="button" id="btn-mute" aria-pressed="false">Mute</button>
-    <label class="opt"><input type="checkbox" id="opt-easy"> Gentler encounters</label>
-    <label class="opt"><input type="checkbox" id="opt-film"> Film look (ink, grain)</label>
   </div>
 
   <div id="room-card" hidden>
@@ -111,10 +110,39 @@
   <div id="journal" class="overlay" hidden role="dialog" aria-label="Journal">
     <div class="sheet">
       <button type="button" class="close" aria-label="Close">×</button>
+      <h2>What to do next</h2>
+      <ul id="goal-list"></ul>
       <h2>Mementos</h2>
       <ul id="memento-slots"></ul>
       <h2>What you’ve learned</h2>
       <ul id="clue-list"></ul>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay" hidden role="dialog" aria-label="Paused">
+    <div class="sheet pause-sheet">
+      <button type="button" class="close" aria-label="Resume">×</button>
+      <h2>Paused</h2>
+      <div class="pause-buttons"><button type="button" class="big" id="btn-resume">Resume</button></div>
+      <h2>Controls</h2>
+      <dl class="controls">
+        <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows</dt><dd>walk; <kbd>Q</kbd> <kbd>E</kbd> or <kbd>←</kbd> <kbd>→</kbd> turn</dd>
+        <dt><kbd>Space</kbd> <kbd>Enter</kbd></dt><dd>look at or use what's in front of you</dd>
+        <dt><kbd>1</kbd>–<kbd>9</kbd></dt><dd>pick up an item; pick another to combine them; <kbd>Space</kbd> to use it; <kbd>X</kbd> to examine; <kbd>Esc</kbd> to put it down</dd>
+        <dt><kbd>L</kbd></dt><dd>turn the lantern up or down</dd>
+        <dt><kbd>M</kbd> <kbd>J</kbd></dt><dd>map, journal (with what to do next)</dd>
+        <dt>Encounters</dt><dd>number keys choose; move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrows (or drag); the round says what <kbd>Space</kbd> does</dd>
+        <dt><kbd>Esc</kbd> <kbd>P</kbd></dt><dd>pause</dd>
+      </dl>
+      <h2>Options</h2>
+      <div class="options">
+        <label class="opt"><input type="checkbox" id="opt-easy"> Gentler encounters</label>
+        <label class="opt"><input type="checkbox" id="opt-motion"> Reduced motion</label>
+        <label class="opt"><input type="checkbox" id="opt-bigtext"> Larger text</label>
+        <label class="opt"><input type="checkbox" id="opt-film"> Film look (ink, grain)</label>
+      </div>
+      <p class="note">Volume is the 🔊 button. Your progress saves as you go.</p>
+      <div class="pause-buttons"><button type="button" class="big" id="btn-title">Back to the title screen</button></div>
     </div>
   </div>
 

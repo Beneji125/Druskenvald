@@ -39,7 +39,7 @@ function feastRound(st) {
           api.add({ x: e.x, y: e.y, vx: (tx - e.x) / d * sp, vy: (ty - e.y) / d * sp, r: 11, hurt: false, life: 9,
             draw: (ctx, s) => drawDish(ctx, s.x, s.y, COURSES[pick].id, card && right),
             take: (s, a) => {
-              if (right) { f.course = course + 1; sound.pickup(); addCalm(st, 1); st.roundLine = COURSES[course].line; a.end(); }
+              if (right) { f.course = course + 1; sound.pickup(); a.calm(1); st.roundLine = COURSES[course].line; a.end(); }
               else { a.hurt(1); a.say(pick < course ? 'You’ve had that one already. The feast is offended.' : 'Not yet! Every dish rattles with disgust.'); }
             } });
         }
@@ -91,9 +91,9 @@ function cupRound(st) {
       if (this.next <= 0 && !this.warn) { this.side = api.rand() < 0.5 ? -1 : 1; this.warn = api.easy ? 0.95 : 0.7; }
       if (this.warn) {
         this.warn -= dt;
-        if (this.warn <= 0) { this.warn = 0; this.v += this.side * (0.75 + api.rand() * 0.35) * soft * (api.easy ? 0.75 : 1); this.next = (api.easy ? 2.2 : 1.6) + api.rand() * 0.8; sound.whisper(); }
+        if (this.warn <= 0) { this.warn = 0; this.v += this.side * (0.75 + api.rand() * 0.35) * soft * (api.easy ? 0.55 : 1); this.next = (api.easy ? 2.2 : 1.6) + api.rand() * 0.8; sound.whisper(); }
       }
-      this.v += (Math.sin(api.t * 6.1) * 0.06 + (api.rand() - 0.5) * 0.1) * soft * dt * 4;
+      this.v += (Math.sin(api.t * 6.1) * 0.06 + (api.rand() - 0.5) * 0.1) * soft * dt * (api.easy ? 2 : 4);
       let input = (api.held('arrowleft', 'a') ? -1 : 0) + (api.held('arrowright', 'd') ? 1 : 0);
       if (api.pointer.down && api.pointer.x !== null) input = clamp((api.pointer.x - api.w / 2) / 70, -1, 1);
       this.v += input * 3.2 * dt;
@@ -175,12 +175,12 @@ function gazeRound(st) {
       : 'Get close to the bird, keeping the busts between you and its eye.',
     hint: (shard ? 'Space: raise the mirror · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
     duration: 16,
-    preview(ctx) { drawGallery(ctx, f.gx ?? 180, f.gy ?? 204, Math.PI / 2, 0.13 * narrow, false, 0); },
+    preview(ctx) { drawGallery(ctx, f.gx ?? 180, f.gy ?? 204, Math.PI / 2, 0.17 * narrow, false, 0); },
     start(api) { this.x = f.gx ?? 180; this.y = f.gy ?? 204; this.m = 0; this.touched = false; },
-    beam(api) { return Math.PI / 2 + Math.sin(api.t * (api.easy ? 0.8 : 1.15) * slow + 0.6) * 1.05; },
+    beam(api) { return Math.PI / 2 + Math.sin(api.t * (api.easy ? 0.85 : 1.3) * slow + 0.6) * 1.1; },
     update(api, dt) {
-      const th = this.beam(api), hw = 0.13 * narrow;
-      const sp = 62 * (1 - 0.6 * this.m);
+      const th = this.beam(api), hw = 0.17 * narrow;
+      const sp = 52 * (1 - 0.6 * this.m);
       let dx = (api.held('arrowright', 'd') ? 1 : 0) - (api.held('arrowleft', 'a') ? 1 : 0), dy = (api.held('arrowdown', 's') ? 1 : 0) - (api.held('arrowup', 'w') ? 1 : 0);
       if (api.pointer.down && api.pointer.x !== null) { const ddx = api.pointer.x - this.x, ddy = api.pointer.y - this.y, d = Math.hypot(ddx, ddy); if (d > 4) { dx = ddx / d; dy = ddy / d; } }
       const len = Math.hypot(dx, dy) || 1;
@@ -190,27 +190,27 @@ function gazeRound(st) {
       const phi = Math.atan2(this.y - GAZE.eye.y, this.x - GAZE.eye.x);
       const hidden = GAZE.busts.some(([bx, by]) => segDist(GAZE.eye.x, GAZE.eye.y, this.x, this.y, bx, by) < GAZE.r);
       this.lit = Math.abs(phi - th) < hw && !hidden;
-      this.m = clamp(this.m + (this.lit ? (blind ? 0.45 : 0.95) * (api.easy ? 0.7 : 1) : -0.45) * dt, 0, 1);
+      this.m = clamp(this.m + (this.lit ? (blind ? 1.6 : 4.5) * (api.easy ? 0.6 : 1) : -0.3) * dt, 0, 1);
       if (this.m >= 1) { api.hurt(1); this.m = 0.35; this.y = Math.min(api.h - 10, this.y + 30); api.say('Stone creeps up to your knees. You tear free, and stumble back.'); }
       if (blind) sound.hum(clamp(1 - Math.abs(phi - th) / 0.7, 0, 1), -clamp((th - phi) / 0.7, -1, 1));
       // at the bird
       const near = Math.hypot(this.x - GAZE.eye.x, this.y - (GAZE.eye.y + 16)) < 40;
       if (near && shard && (api.press(' ', 'enter') || api.pointer.tapped)) {
         if (this.lit || Math.abs(phi - th) < hw * 2.2) {
-          addCalm(st, st.def.calmMax);
+          api.calm(st.def.calmMax);
           st.roundLine = 'You raise the mirror shard as its gaze falls on you. Its red eye meets its own reflection, and holds, and cannot look away. Grey creeps back over the white marble like frost, and the great tail stiffens.';
           api.end(); return;
         }
         api.say('Too soon: its eye is elsewhere. Wait for the gaze to find you.');
       }
       if (near && !shard && !this.touched) {
-        this.touched = true; addCalm(st, 1);
+        this.touched = true; api.calm(1);
         api.say('You lay your hand on its cold neck. It shudders under your palm, and the sweep falters.');
         this.x = 180; this.y = 204;
       }
     },
     stop(api) { f.gx = this.x; f.gy = this.y; sound.hum(0); },
-    draw(ctx, api) { drawGallery(ctx, this.x, this.y, this.beam(api), 0.13 * narrow, blind, this.m, api.invuln > 0 && Math.floor(api.invuln * 12) % 2); },
+    draw(ctx, api) { drawGallery(ctx, this.x, this.y, this.beam(api), 0.17 * narrow, blind, this.m, api.invuln > 0 && Math.floor(api.invuln * 12) % 2); },
   };
 }
 
@@ -262,7 +262,7 @@ function herdRound(st) {
   f.lanternHigh = f.shout = f.tooth = f.salt = false;
   const total = f.total ?? (f.total = easyMode() ? 18 : 24);
   if (f.left === undefined) f.left = total;
-  const crack = { x: 344, y0: 82, y1: 138 };
+  const crack = { x: 334, y0: 68, y1: 152 };
   return {
     title: crushing ? 'Crush them' : 'Herd them into the crack',
     text: crushing ? 'Bring your heel down on them. All of them.' : 'Your light drives them back. Push the swarm into the crack in the wall.' + (lure ? ' The tooth you threw lies by the crack, and they want it.' : ''),
@@ -286,20 +286,29 @@ function herdRound(st) {
         this.stamps--; sound.thunder(0.25);
         this.ws.forEach(w => { const ex = w.x - this.x, ey = w.y - this.y, d = Math.hypot(ex, ey) || 1; if (d < 80) { w.vx += ex / d * 260; w.vy += ey / d * 260; } });
       }
+      // They flock (keeping together, moving together, not crowding), flee
+      // your light, and edge back towards you when you're far off.
       for (const w of this.ws) {
         const ex = w.x - this.x, ey = w.y - this.y, d = Math.hypot(ex, ey) || 1;
-        let ax = (api.rand() - 0.5) * 120, ay = (api.rand() - 0.5) * 120;
-        if (!crushing && d < R) { ax += ex / d * 340 * (1 - d / R); ay += ey / d * 340 * (1 - d / R); }
-        else if (d > R * 1.3) { ax -= ex / d * 26; ay -= ey / d * 26; }        // they want you
+        let ax = (api.rand() - 0.5) * 50, ay = (api.rand() - 0.5) * 50;
+        let cx = 0, cy = 0, vx = 0, vy = 0, n = 0;
+        for (const o of this.ws) {
+          if (o === w) continue;
+          const sx = w.x - o.x, sy = w.y - o.y, sd = Math.hypot(sx, sy);
+          if (sd < 10 && sd > 0) { ax += sx / sd * 150; ay += sy / sd * 150; }
+          if (sd < 55) { cx += o.x; cy += o.y; vx += o.vx; vy += o.vy; n++; }
+        }
+        if (n) { ax += (cx / n - w.x) * 0.9; ay += (cy / n - w.y) * 0.9; ax += (vx / n - w.vx) * 1.2; ay += (vy / n - w.vy) * 1.2; }
+        if (!crushing && d < R) { ax += ex / d * 460 * (1 - d / R); ay += ey / d * 460 * (1 - d / R); }
+        else if (d > R * 1.7) { ax -= ex / d * 16; ay -= ey / d * 16; }
         if (lure && api.t < 6) { const lx = crack.x - 14 - w.x, ly = (crack.y0 + crack.y1) / 2 - w.y, ld = Math.hypot(lx, ly) || 1; ax += lx / ld * 90; ay += ly / ld * 90; }
-        for (const o of this.ws) { if (o === w) continue; const sx = w.x - o.x, sy = w.y - o.y, sd = Math.hypot(sx, sy); if (sd < 9 && sd > 0) { ax += sx / sd * 140; ay += sy / sd * 140; } }
-        // now and then one darts in at you out of the dark (eyes flaring first)
-        if (!crushing && !w.dash && !w.warn && d > R * 0.8 && api.rand() < dt * (api.easy ? 0.05 : 0.09)) w.warn = 0.45;
-        if (w.warn) { w.warn -= dt; if (w.warn <= 0) { w.warn = 0; w.dash = 0.55; } }
-        if (w.dash) { w.dash = Math.max(0, w.dash - dt); w.vx = -ex / d * 170; w.vy = -ey / d * 170; if (d < 9) { if (ring) { w.vx = ex / d * 200; w.vy = ey / d * 200; w.dash = 0; } else if (api.hurt(1)) { w.dash = 0; w.vx = ex / d * 220; w.vy = ey / d * 220; } } }
+        // now and then one darts in at you out of the dark (its eyes flare first)
+        if (!crushing && !w.dash && !w.warn && d > R * 0.9 && d < R * 2 && api.rand() < dt * (api.easy ? 0.005 : 0.009)) w.warn = 0.5;
+        if (w.warn) { w.warn -= dt; if (w.warn <= 0) { w.warn = 0; w.dash = 0.6; } }
+        if (w.dash) { w.dash = Math.max(0, w.dash - dt); w.vx = -ex / d * 160; w.vy = -ey / d * 160; if (d < 9) { if (ring) { w.vx = ex / d * 200; w.vy = ey / d * 200; w.dash = 0; } else if (api.hurt(1)) { w.dash = 0; w.vx = ex / d * 220; w.vy = ey / d * 220; } } }
         else { w.vx += ax * dt; w.vy += ay * dt; }
-        w.vx *= Math.pow(0.25, dt); w.vy *= Math.pow(0.25, dt);
-        const sp = Math.hypot(w.vx, w.vy), max = w.dash ? 170 : 95; if (sp > max) { w.vx *= max / sp; w.vy *= max / sp; }
+        w.vx *= Math.pow(0.4, dt); w.vy *= Math.pow(0.4, dt);
+        const sp = Math.hypot(w.vx, w.vy), max = w.dash ? 160 : 85; if (sp > max) { w.vx *= max / sp; w.vy *= max / sp; }
         w.x += w.vx * dt; w.y += w.vy * dt;
         if (w.x < 4 || w.x > api.w - 4) { w.vx *= -0.6; w.x = clamp(w.x, 4, api.w - 4); }
         if (w.y < 4 || w.y > api.h - 4) { w.vy *= -0.6; w.y = clamp(w.y, 4, api.h - 4); }
@@ -313,7 +322,7 @@ function herdRound(st) {
       if (crushing) { f.crushing = false; st.roundEnd = 'killed'; return; }
       if (how === 'broke') return;
       const steps = Math.floor((total - f.left) / (total / st.def.calmMax)) - st.calm;
-      if (steps > 0) addCalm(st, steps);
+      if (steps > 0) api.calm(steps);
       st.roundLine = !f.left ? 'The last of them squeezes into the crack, with a backward grin.' : this.herded ? `${this.herded} more of them slink back into the crack. ${f.left} left.` : 'They scatter, and regroup, and none of them goes home.';
     },
     draw(ctx, api) {
@@ -348,7 +357,8 @@ function herdRound(st) {
 
 function ovenEscape(st) {
   const T = 30, C = 12, R = 7;
-  const blocked = new Set(['5,1', '6,1', '7,1', '1,5', '9,4']);   // the fallen shelf, the barrel, the table
+  // the fallen shelf, the kitchen table, the barrel, the cupboard
+  const blocked = new Set(['4,1', '5,1', '6,1', '4,3', '5,3', '6,3', '4,4', '5,4', '6,4', '1,4', '2,6', '3,6']);
   const pump = [1, 1], door = [0, 6];
   return {
     title: 'Get out!',
@@ -356,12 +366,12 @@ function ovenEscape(st) {
     hint: 'Step with WASD or the arrow keys · Space: throw the bucket · tap a square beside you',
     duration: 30,
     start(api) {
-      this.p = [8, 3]; this.fire = new Map(); this.bucket = false; this.tick = 0; this.hold = 0;
+      this.p = [9, 3]; this.fire = new Map(); this.bucket = false; this.tick = 0; this.hold = 0; this.debris = []; this.nextDebris = 1.2;
       [[10, 1], [11, 1], [10, 0], [11, 0], [10, 2]].forEach(([x, y]) => this.fire.set(x + ',' + y, 1));
     },
     update(api, dt) {
       this.tick += dt;
-      const every = api.easy ? 0.75 : 0.5;
+      const every = api.easy ? 0.6 : 0.4;
       if (this.tick > every) {
         this.tick = 0;
         [...this.fire.keys()].forEach(k => {
@@ -369,10 +379,20 @@ function ovenEscape(st) {
           [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
             const nx = x + dx, ny = y + dy, nk = nx + ',' + ny;
             if (nx < 0 || ny < 0 || nx >= C || ny >= R || blocked.has(nk) || (nx === door[0] && ny === door[1]) || this.fire.has(nk)) return;
-            if (api.rand() < 0.3) this.fire.set(nk, 1);
+            if (api.rand() < 0.34) this.fire.set(nk, 1);
           });
         });
       }
+      // burning debris from the ceiling: a square near you glows, then
+      // catches
+      this.nextDebris -= dt;
+      if (this.nextDebris <= 0) {
+        this.nextDebris = (api.easy ? 1.6 : 1.05) + api.rand() * 0.6;
+        const x = clamp(this.p[0] + Math.round((api.rand() - 0.5) * 4), 0, C - 1), y = clamp(this.p[1] + Math.round((api.rand() - 0.5) * 4), 0, R - 1);
+        if (!blocked.has(x + ',' + y) && !(x === door[0] && y === door[1])) this.debris.push({ x, y, t: api.easy ? 0.9 : 0.65 });
+      }
+      this.debris.forEach(d => { d.t -= dt; if (d.t <= 0) this.fire.set(d.x + ',' + d.y, 1); });
+      this.debris = this.debris.filter(d => d.t > 0);
       // stepping, one square at a time (holding a key repeats)
       let dir = null;
       const K = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
@@ -405,6 +425,7 @@ function ovenEscape(st) {
           ctx.fillStyle = `rgba(255,${Math.round(90 + 60 * fl)},30,${0.55 + 0.3 * fl})`; ctx.fillRect(x * T, y * T, T, T);
         }
       }
+      this.debris.forEach(d => { ctx.strokeStyle = `rgba(255,180,80,${(0.5 + 0.5 * Math.sin(api.t * 20)).toFixed(2)})`; ctx.lineWidth = 2; ctx.strokeRect(d.x * T + 3, d.y * T + 3, T - 6, T - 6); });
       ctx.fillStyle = '#4a6a8a'; ctx.fillRect(pump[0] * T + 8, pump[1] * T + 6, T - 16, T - 12);
       ctx.fillStyle = '#e8d5a3'; ctx.font = '10px Georgia, serif'; ctx.textAlign = 'center'; ctx.fillText('pump', pump[0] * T + T / 2, pump[1] * T + T - 2);
       ctx.fillStyle = '#5a3a1c'; ctx.fillRect(door[0] * T + 2, door[1] * T + 2, T - 4, T - 4);

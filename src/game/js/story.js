@@ -434,6 +434,7 @@ function openOuija() {
         <p class="ouija-spelled" aria-live="polite"></p>
         <p class="ouija-text" aria-live="polite"></p>
         <div class="ouija-choices"></div>
+        <p class="ouija-hurry" hidden>Space or click: hurry the spirit</p>
       </div>
     </div>`;
   root.hidden = false;
@@ -450,9 +451,24 @@ function openOuija() {
   };
   let at = [770, 1000];
   place(at[0], at[1], 0);
+  // A long answer can be hurried along (Space, Enter or a click on the
+  // board) for players who have read it before; it lasts for that answer.
+  let hurry = false, spelling = false;
+  const hurryNote = root.querySelector('.ouija-hurry');
+  const speed = ms => hurry ? ms * 0.22 : ms;
+  const wait = ms => sleep(speed(ms));
+  const onHurry = e => {
+    if (!spelling || (e.type === 'keydown' && e.key !== ' ' && e.key !== 'Enter')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    hurry = true;
+  };
+  document.addEventListener('keydown', onHurry, true);
+  root.querySelector('.ob-stage').addEventListener('pointerdown', onHurry);
+  root._offHurry = () => document.removeEventListener('keydown', onHurry, true);
   const pos = OUIJA_SPOTS;
   const moveTo = (to, ms) => new Promise(res => {
     const from = at.slice(), t0 = performance.now();
+    ms = speed(ms);
     const tick = now => {
       const k = Math.min(1, (now - t0) / ms), e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
       const wob = Math.sin(now / 90) * 6 * (1 - k);
@@ -474,23 +490,27 @@ function openOuija() {
     say(text) { root.querySelector('.ouija-text').textContent = text; },
     async spell(answer) {
       spelled.textContent = '';
+      hurry = false; spelling = true;
+      hurryNote.hidden = answer.length < 5;
+      try {
       if (OUIJA_WORDS.includes(answer)) {
         sound.scrape();
         await moveTo(pos[answer], 1100); glow(answer); spelled.textContent = answer;
-        await sleep(900);
+        await wait(900);
         return;
       }
       for (const ch of answer) {
-        if (ch === ' ') { spelled.textContent += ' '; await sleep(350); continue; }
+        if (ch === ' ') { spelled.textContent += ' '; await wait(350); continue; }
         sound.scrape();
         // The same letter twice: lift away a little and come back down.
         if (Math.hypot(at[0] - pos[ch][0], at[1] - pos[ch][1]) < 30) await moveTo([pos[ch][0] + 70, pos[ch][1] + 50], 260);
         await moveTo(pos[ch], 620);
         glow(ch);
         spelled.textContent += ch;
-        await sleep(260);
+        await wait(260);
       }
-      await sleep(900);
+      await wait(900);
+      } finally { spelling = false; hurry = false; hurryNote.hidden = true; }
     },
     async thrash() {
       for (let i = 0; i < 6; i++) { sound.scrape(); await moveTo([250 + Math.random() * 1040, 350 + Math.random() * 1400], 140); }
@@ -519,6 +539,7 @@ function openOuija() {
 }
 
 function closeOuija() {
+  $('ouija')._offHurry?.();
   $('ouija').hidden = true;
   $('ouija').innerHTML = '';
   if (ui.overlay === 'ouija') ui.overlay = null;
@@ -787,4 +808,27 @@ function fadeSprite(kind) {
   const t0 = performance.now();
   const tick = now => { const k = (now - t0) / 1500; s.material.opacity = Math.max(0, 1 - k); if (k < 1) requestAnimationFrame(tick); else s.visible = false; };
   requestAnimationFrame(tick);
+}
+
+
+// ─── What to do next (the journal) ────────────────────────────────────
+// A few nudges, from what you've done and what you know, so nobody is left
+// wandering: the most pressing first, at most four.
+function currentGoals() {
+  const f = game.flags, m = game.mementos, has = id => game.items.includes(id), know = id => game.clues.has(id);
+  const goals = [];
+  if (m.has('gem') && m.has('key') && m.has('cup')) goals.push('You have the bloodstone, the ivory key and the teacup. The stairs in the foyer will let you up now.');
+  if (game.oil < 0.2) goals.push('Your lantern is nearly dry. Oil turns up in old lamps, and on the conservatory’s potting bench.');
+  if (!f.seanceDone) goals.push('The spirit board on the parlour table: somebody in this house wants to talk.');
+  if (!f.petuniaGone) {
+    if (!know('lockwoods')) goals.push('A woman in grey sits under the tree in the conservatory. Find out who she was.');
+    else if (!has('tea') && !f.petuniaTea) goals.push('Petunia wants her tea: bergamot from her tree, water from the kitchen pump, heated on the parlour fire.');
+    else goals.push('Bring Petunia her tea, and speak to her of her children.');
+  }
+  if (!f.musicSolved) goals.push(f.seanceDone ? 'The harpsichord in the music room: Joseph Patrini’s tune would end the waltz. Two halves of his sheet music are in the house.' : 'The music room’s floor belongs to a cursed waltz. Something at the harpsichord could end it.');
+  if (!f.ovenDone) goals.push(f.glyphSeen ? 'There’s a glyph on the oven’s lock. Undo it the way it was drawn, backwards.' : 'Something is screaming inside the kitchen oven. Look at its lock with frightened eyes, or flour.');
+  if (!f.peacockDone) goals.push(f.paintingsRead ? 'The peacock in the gallery: you know what Keziah painted. A mirror might turn its gaze.' : 'The marble peacock in the gallery has a bloodstone eye. Keziah’s paintings hide something, if you look closely.');
+  if (!f.feastDone) goals.push(has('menu') ? 'The feast in the dining room: take the courses in Mrs Patrini’s order.' : 'The feast in the dining room wants a guest with manners. The cook may have left a menu in the kitchen.');
+  if (f.portraitCurse) goals.push('The portraits have marked you. When your Dread climbs to six, they’ll come. Keep calm, or keep salt.');
+  return goals.slice(0, 4);
 }

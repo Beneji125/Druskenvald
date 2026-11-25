@@ -141,8 +141,11 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   any lore text, e.g. Wickermoor Village's panel. It becomes a link to the
   game page (the text after `|` is optional).
 - **Controls:** WASD or the arrow keys to walk, Q/E or ←/→ to turn, Space to
-  look at or use what's in front of you, M for the map, J for the journal.
-  On a phone, the on-screen buttons. Doors start closed (except the front
+  look at or use what's in front of you, M for the map, J for the journal,
+  Escape or P to pause (the pause menu lists the controls and holds the
+  options: Gentler encounters, Film look, reduced motion, larger text).
+  The journal's "What now" lists up to four goals worked out from what
+  you've found (`currentGoals()` in story.js). On a phone, the on-screen buttons. Doors start closed (except the front
   door): walk into one or press Space to open it, Space again to close it.
   Every doorway on the plan gets a door automatically (`DOORS` in
   `core.js`); two doorways side by side become a double door. Each door
@@ -209,11 +212,16 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   raise Crookedness. Full Dread breaks your nerve: back to the porch, and
   the encounter starts over next time. Each encounter is data in
   `ENCOUNTERS` (`rooms.js`) with a `round(st)`; what you did on your turn
-  reaches the round through `st.flags`. "Gentler encounters" in the 🔊
-  panel slows things down and halves the Dread they cost. The music room's
+  reaches the round through `st.flags`. "Gentler encounters" in the pause
+  menu slows things down and halves the Dread they cost. The music room's
   waltz has a beat bar at the top (the coming beats, the timing window,
   the weasels' beats in red), a soft tick on each beat, and says how close
   each step was.
+- **The séance** spells its answers a letter at a time; Space, Enter or a
+  click on the board hurries the current answer along.
+- **Tuning:** the encounter rounds were tuned by running them at 60 fps
+  with simple bot players: a careful player gets through each with a hit
+  or two, and Gentler mode roughly halves what a slow reaction costs.
 - **Dread** (`dread.js`) is how you see the house, not just a meter: Calm
   (0–3) is safe and blind to its secrets, Uneasy (4–6) brings whispers and
   starts to show what's hidden, Terrified (7–9) shows its true face, and 10
@@ -235,7 +243,7 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   finishing pass that gives everything the characters' inked look (ink
   lines where shapes meet, a few tones, film grain, a vignette, a grade that
   goes cold with Dread); it's off on low-powered devices and can be turned
-  off in the volume panel ("Film look"). Floors, wood, plaster, stone,
+  off in the pause menu ("Film look"). Floors, wood, plaster, stone,
   fabric, the roof and the weatherboards are photographs from Poly Haven
   (polyhaven.com, CC0) in `docs/explore/textures/`, recoloured to each
   room's palette (`FLOOR_PHOTOS`, `photoAs`, `photoGrime`); until one has

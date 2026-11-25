@@ -5,7 +5,7 @@
 // a vignette, and a colour grade that goes cold and grey as Dread rises.
 //
 // It costs one extra full-screen draw. It's skipped on low-powered devices
-// and can be turned off in the volume panel ("Film look").
+// and can be turned off in the pause menu ("Film look").
 
 const FINISH_KEY = 'crooked_house_finish';
 const finish = {
