@@ -292,12 +292,22 @@ function buildWorld(renderer, quality) {
     });
     if (!best) return;
     const [a, b] = best;
-    const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
-    const nx = dz / len, nz = -dx / len;
-    const plane = new THREE.Mesh(new THREE.PlaneGeometry(CELL, WALL_H), winMat);
-    plane.position.set((a[0] + b[0]) / 2 + nx * (WALL_T / 2 + 0.6), WALL_H / 2, (a[1] + b[1]) / 2 + nz * (WALL_T / 2 + 0.6));
-    plane.rotation.y = Math.atan2(nx, nz);
-    scene.add(plane);
+    scene.add(wallPane(a, b, WALL_T / 2 + 0.8, winMat));
+  });
+  // The conservatory is glass on every side that faces outdoors.
+  const glaze = glazedWallTextures();
+  const glazeMat = new THREE.MeshStandardMaterial({ map: glaze.map, emissive: 0xaec4ee, emissiveMap: glaze.glow, emissiveIntensity: 0.05, roughness: 0.3 });
+  w.windowMats.push(glazeMat);
+  GRID.cells.forEach(c => {
+    if (!c.walk || c.room !== 'conservatory') return;
+    c.edges.forEach((e, dir) => {
+      if (e !== 'wall') return;
+      const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+      if (n && n.walk) return;                    // a wall to another room
+      const [a, b] = edgeOf(c, dir);
+      const pane = wallPane(a, b, WALL_T / 2 + 0.7, glazeMat);
+      scene.add(pane); fixtures.push(pane);
+    });
   });
 
   // ── Furniture ──
@@ -383,6 +393,32 @@ function buildWorld(renderer, quality) {
 }
 
 // Leaning tops: depends only on position, so joined walls lean together.
+// A pane laid on a wall's face (a window, the conservatory's glass), `off`
+// out from the wall's middle line on the side the edge a→b faces, its top
+// leaning just as the wall's does so the plaster never pokes through.
+function wallPane(a, b, off, mat) {
+  const dx = b[0] - a[0], dz = b[1] - a[1], len = Math.hypot(dx, dz);
+  const nx = dz / len, nz = -dx / len;
+  const la = wallLean(a[0], a[1]), lb = wallLean(b[0], b[1]);
+  const pos = [
+    b[0] + nx * off, 0, b[1] + nz * off,
+    a[0] + nx * off, 0, a[1] + nz * off,
+    b[0] + nx * off + lb[0], WALL_H, b[1] + nz * off + lb[1],
+    a[0] + nx * off + la[0], WALL_H, a[1] + nz * off + la[1],
+  ];
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 0, 1, 1, 1], 2));
+  geo.setIndex([0, 1, 2, 2, 1, 3]);
+  geo.computeVertexNormals();
+  // facing the room whichever way round the corners went
+  const nrm = geo.attributes.normal;
+  if (nrm.getX(0) * nx + nrm.getZ(0) * nz < 0) { geo.setIndex([0, 2, 1, 2, 3, 1]); geo.computeVertexNormals(); }
+  const m = new THREE.Mesh(geo, mat);
+  m.receiveShadow = true;
+  return m;
+}
+
 function wallLean(x, z) {
   return [Math.sin(x * 0.013 + z * 0.007) * 3 + Math.sin(z * 0.031) * 1.2, Math.cos(z * 0.011 - x * 0.005) * 3 + Math.sin(x * 0.027) * 1.2];
 }

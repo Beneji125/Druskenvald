@@ -180,6 +180,42 @@ function windowTextures() {
   return { map: artTexture(c), glow: artTexture(m, { srgb: false }) };
 }
 
+// The conservatory's outer walls: glass from a low brick wall up to the
+// roof, in thin iron glazing bars, the garden dark beyond and rain running
+// down. `glow` is the glass, for the lightning.
+function glazedWallTextures() {
+  const [c, ctx] = artCanvas(128, 256);
+  const [m, mctx] = artCanvas(128, 256);
+  const rand = seededRandom(41);
+  const knee = 200;                                   // the brick below the glass
+  const sky = ctx.createLinearGradient(0, 0, 0, knee);
+  sky.addColorStop(0, '#1a2230'); sky.addColorStop(0.6, '#223040'); sky.addColorStop(1, '#141a14');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, 128, knee);
+  // the garden outside: shrubs and a far hedge against the sky
+  ctx.fillStyle = '#0c120c';
+  for (let x = -10; x < 140; x += 14 + rand() * 10) { ctx.beginPath(); ctx.ellipse(x, knee - 22 + rand() * 10, 14 + rand() * 10, 20 + rand() * 18, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.fillRect(0, knee - 20, 128, 20);
+  // rain on the glass
+  ctx.strokeStyle = 'rgba(170,190,220,0.22)'; ctx.lineWidth = 1;
+  for (let i = 0; i < 60; i++) { const x = rand() * 128, y = rand() * knee; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (rand() - 0.5) * 3, y + 8, x + (rand() - 0.5) * 2, y + 6 + rand() * 18); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(190,210,235,0.18)'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(rand() * 128, rand() * knee, 0.8 + rand() * 1.4, 0, Math.PI * 2); ctx.fill(); }
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, 128, 256);
+  mctx.fillStyle = '#fff'; mctx.fillRect(0, 0, 128, knee);
+  // iron glazing bars: two lights across, five up, a heavier transom
+  const bar = (x, y, w, h) => { ctx.fillRect(x, y, w, h); mctx.fillRect(x, y, w, h); };
+  ctx.fillStyle = '#1c221e'; mctx.fillStyle = '#000';
+  bar(0, 0, 5, knee); bar(123, 0, 5, knee); bar(62, 0, 4, knee);
+  for (let k = 1; k < 5; k++) bar(0, knee * k / 5 - 1.5, 128, k === 2 ? 5 : 3);
+  ctx.fillStyle = 'rgba(160,170,150,0.18)'; ctx.fillRect(1, 0, 1.5, knee); ctx.fillRect(63, 0, 1, knee);   // light on the bars
+  // the brick knee wall and its stone sill
+  ctx.fillStyle = '#3a2a22'; ctx.fillRect(0, knee, 128, 256 - knee);
+  ctx.strokeStyle = 'rgba(20,12,8,0.6)'; ctx.lineWidth = 1;
+  for (let y = knee + 10, r = 0; y < 256; y += 9, r++) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(128, y); ctx.stroke(); for (let x = r % 2 ? 0 : 12; x < 128; x += 24) { ctx.beginPath(); ctx.moveTo(x, y - 9); ctx.lineTo(x, y); ctx.stroke(); } }
+  ctx.fillStyle = '#5a554c'; ctx.fillRect(0, knee, 128, 7);
+  artGrime(ctx, 128, 256, rand, 0.5);
+  return { map: artTexture(c), glow: artTexture(m, { srgb: false }) };
+}
+
 // ─── Floors and ceilings ──────────────────────────────────────────────
 // Each tiles every two squares, in floor-plan coordinates, so it runs on
 // unbroken from square to square.
