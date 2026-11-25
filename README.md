@@ -261,7 +261,14 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   furniture.js; candle and hearth flicker, the chandelier's sway and the
   dust in the lantern light are `tickAmbient` in main.js. Footsteps change
   with the floor (`FLOOR_SOUND`), the house creaks now and then, and
-  Jasper's scurrying comes from his side (`panTo`).
+  Jasper's scurrying comes from his side (`panTo`). Pieces with no official
+  art are built or painted to match: Keziah's marble peacock and the
+  gallery busts are sculpted in 3D (`marblePeacock`, `bustOnPedestal`; the
+  peacock turns grey or lies in rubble once its encounter is over,
+  `setPeacock`), the family portraits are painted in code
+  (`portraitTexture`), Petunia is drawn as a veiled widow, and the
+  conservatory's outer walls are glass (`glazedWallTextures`; windows and
+  glass lean with the walls, `wallPane`).
 - **The official artwork** (`docs/explore/characters/`, full-size masters
   in `source-assets/originals/explore/characters/`): the painting of the
   house (title screen), the Crooked Man (the full figure wherever he stands
