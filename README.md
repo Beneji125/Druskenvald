@@ -225,6 +225,11 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
 - **Tuning:** the encounter rounds were tuned by running them at 60 fps
   with simple bot players: a careful player gets through each with a hit
   or two, and Gentler mode roughly halves what a slow reaction costs.
+- **Performance:** the static house is baked into one mesh per material
+  (`mergeStatic`), the room lights draw their shadows once, and the
+  lantern's shadow is redrawn only when the lantern or a door moves
+  (`lanternShadow` in finish.js), which roughly halves the drawing while
+  you stand and look.
 - **Dread** (`dread.js`) is how you see the house, not just a meter: Calm
   (0–3) is safe and blind to its secrets, Uneasy (4–6) brings whispers and
   starts to show what's hidden, Terrified (7–9) shows its true face, and 10

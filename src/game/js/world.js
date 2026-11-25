@@ -355,6 +355,7 @@ function buildWorld(renderer, quality) {
   lantern.castShadow = true;
   lantern.shadow.mapSize.set(quality === 'low' ? 256 : 512, quality === 'low' ? 256 : 512);
   lantern.shadow.camera.near = 2; lantern.shadow.camera.far = 460; lantern.shadow.bias = -0.003;
+  lantern.shadow.autoUpdate = false; lantern.shadow.needsUpdate = true;   // see lanternShadow() in finish.js
   scene.add(lantern);
   w.lantern = lantern;
   FLOOR.lights.forEach((l, i) => {

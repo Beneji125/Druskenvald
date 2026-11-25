@@ -372,17 +372,32 @@ const SPRITES = {
     ctx.fillStyle = '#121212'; ctx.fillRect(40, 94, 16, 8);       // a worn name plate
   }) },
   peacock: { size: [110, 110], draw: () => inkSprite(256, 256, (ctx) => {
-    ctx.fillStyle = '#cfc8b8';
-    for (let i = 0; i < 13; i++) {
-      const a = Math.PI * (1.05 + i * 0.07);
-      ctx.beginPath(); ctx.moveTo(128, 170); ctx.lineTo(128 + Math.cos(a) * 118, 170 + Math.sin(a) * 118); ctx.lineTo(128 + Math.cos(a + 0.06) * 112, 170 + Math.sin(a + 0.06) * 112); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#9b9584'; ctx.beginPath(); ctx.arc(128 + Math.cos(a + 0.03) * 98, 170 + Math.sin(a + 0.03) * 98, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#cfc8b8';
+    // the marble peacock as the encounter shows it: tail fanned, carved
+    // feathers each ending in a stone eye, its one bloodstone eye lit
+    const marble = (x0, y0, x1, y1) => { const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#ebe5d8'); g.addColorStop(1, '#9d968a'); return g; };
+    const fx = 128, fy = 176;
+    for (let i = 0; i < 17; i++) {
+      const a = Math.PI * (1.06 + i * 0.055), len = 92 + Math.sin(i / 16 * Math.PI) * 22;
+      const tx = fx + Math.cos(a) * len, ty = fy + Math.sin(a) * len;
+      const nx = -Math.sin(a), ny = Math.cos(a);
+      ctx.fillStyle = marble(fx, fy, tx, ty); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(fx + nx * 2, fy + ny * 2); ctx.lineTo(tx + nx * 4 - Math.cos(a) * 10, ty + ny * 4 - Math.sin(a) * 10); ctx.lineTo(tx - nx * 4 - Math.cos(a) * 10, ty - ny * 4 - Math.sin(a) * 10); ctx.lineTo(fx - nx * 2, fy - ny * 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e4ddd0'; ctx.beginPath(); ctx.ellipse(tx - Math.cos(a) * 4, ty - Math.sin(a) * 4, 9, 7, a, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#7a7266'; ctx.beginPath(); ctx.ellipse(tx - Math.cos(a) * 4, ty - Math.sin(a) * 4, 4, 3, a, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.fillStyle = '#dcd6c8';
-    ctx.beginPath(); ctx.ellipse(128, 200, 30, 44, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(118, 168); ctx.quadraticCurveTo(108, 120, 126, 100); ctx.quadraticCurveTo(140, 96, 138, 110); ctx.quadraticCurveTo(130, 130, 138, 168); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#a3201a'; ctx.beginPath(); ctx.arc(131, 106, 3.2, 0, Math.PI * 2); ctx.fill();  // the bloodstone eye
-    ctx.fillStyle = '#6a6458'; ctx.fillRect(96, 236, 64, 20); ctx.strokeRect(96, 236, 64, 20);
+    // the plinth, legs, body
+    ctx.fillStyle = '#5a554c'; ctx.fillRect(84, 232, 88, 22); ctx.strokeRect(84, 232, 88, 22);
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(118, 214); ctx.lineTo(116, 234); ctx.moveTo(138, 214); ctx.lineTo(140, 234); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.fillStyle = marble(100, 160, 160, 230);
+    ctx.beginPath(); ctx.ellipse(128, 192, 28, 32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // the neck in an S, the head, beak and crest
+    ctx.beginPath(); ctx.moveTo(116, 170); ctx.bezierCurveTo(108, 140, 136, 132, 126, 104); ctx.lineTo(140, 104); ctx.bezierCurveTo(150, 134, 124, 142, 140, 170); ctx.closePath(); ctx.fillStyle = marble(110, 100, 150, 170); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(133, 98, 11, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#c8c0b2'; ctx.beginPath(); ctx.moveTo(142, 96); ctx.lineTo(156, 101); ctx.lineTo(142, 104); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 1.5; [[-8, -22], [0, -26], [8, -22]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.moveTo(133, 89); ctx.lineTo(133 + dx, 89 + dy * 0.7); ctx.stroke(); ctx.fillStyle = '#ddd6c8'; ctx.beginPath(); ctx.arc(133 + dx, 89 + dy * 0.7, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+    const glow = ctx.createRadialGradient(136, 96, 0, 136, 96, 14); glow.addColorStop(0, 'rgba(255,60,40,0.8)'); glow.addColorStop(1, 'rgba(255,30,20,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(136, 96, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#b01c14'; ctx.beginPath(); ctx.arc(136, 96, 3.4, 0, Math.PI * 2); ctx.fill();   // the bloodstone eye
   }) },
   harp: { size: [36, 64], draw: () => inkSprite(96, 170, (ctx) => {
     ctx.strokeStyle = '#8a6a30'; ctx.lineWidth = 6;

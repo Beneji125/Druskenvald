@@ -371,7 +371,7 @@ function bustOnPedestal(g) {
 // Keziah's marble peacock, on its plinth in the gallery's alcove: tail
 // raised, one bloodstone eye and one empty socket. setPeacock() changes
 // it once its encounter is over: grey stone with the eye gone (freed), or
-// a heap of white rubble (destroyed). Kept out of mergeStatic for that.
+// a heap of white rubble (destroyed).
 function marblePeacock(g, w) {
   const st = plainM(0x4e4a44, 0.9), m = plainM(0xa29c90, 0.45, 0);
   blk(g, 40, 10, 30, st, 0, 5, 0);
@@ -414,15 +414,21 @@ function marblePeacock(g, w) {
     c.rotation.set(rand() * 0.6, rand() * 3, rand() * 0.6);
     if (i >= 7) { c.position.y = r / 2; c.position.x += Math.sign(c.position.x || 1) * 24; }
   }
-  g.userData.keep = true;
-  w.peacock = { bird, rubble, eye, marble: m };
+  // Baked into a few meshes each (it's dozens of parts), apart from the
+  // eye, so that setPeacock can still swap them.
+  const bake = grp => { const b = new THREE.Group(); w.scene.add(b); mergeStatic(b, [grp]); return b; };
+  eye.userData.keep = true;
+  const birdBaked = bake(bird), rubbleBaked = bake(rubble);
+  rubbleBaked.visible = false;
+  bird.userData.keep = true;   // all that's left in it is the eye
+  w.peacock = { bird: birdBaked, eyeGroup: bird, rubble: rubbleBaked, marble: m };
 }
 function setPeacock(state) {
   const p = world.peacock;
   if (!p) return;
   p.bird.visible = state !== 'killed';
   p.rubble.visible = state === 'killed';
-  p.eye.visible = !state;
+  p.eyeGroup.visible = !state;
   p.marble.color.set(state === 'freed' ? 0x7a766e : 0xa29c90);
 }
 

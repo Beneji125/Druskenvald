@@ -93,8 +93,24 @@ function resizeFinish(r) {
   finish.material.uniforms.res.value.copy(size);
 }
 
+// The lantern's shadow (six views of the house, about half of each frame's
+// drawing) is only redrawn when something it lights has moved: the
+// lantern itself, or a door swinging. While it keeps moving, every other
+// frame, which nobody can see; it always catches up once things stop.
+const shadowState = { sig: NaN, pending: true, frame: 0 };
+function lanternShadow() {
+  const L = world.lantern;
+  if (!L || !L.castShadow) return;
+  let sig = L.position.x * 1.3 + L.position.y * 7.1 + L.position.z * 13.7;
+  for (const id in world.doors) sig += world.doors[id].amount * (id.length + 3);
+  if (Math.abs(sig - shadowState.sig) > 0.02 || Number.isNaN(shadowState.sig)) { shadowState.pending = true; shadowState.sig = sig; shadowState.still = 0; }
+  else shadowState.still = (shadowState.still || 0) + 1;
+  if (shadowState.pending && (++shadowState.frame % 2 === 0 || shadowState.still > 0)) { L.shadow.needsUpdate = true; shadowState.pending = false; }
+}
+
 // Draws a frame: straight to the screen, or through the finishing pass.
 function drawFrame(r, scene, cam) {
+  lanternShadow();
   if (!finish.on || !finish.target) { r.render(scene, cam); return; }
   const u = finish.material.uniforms;
   u.near.value = cam.near; u.far.value = cam.far;

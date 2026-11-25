@@ -1108,17 +1108,32 @@ const SPRITES = {
     ctx.fillStyle = '#121212'; ctx.fillRect(40, 94, 16, 8);       // a worn name plate
   }) },
   peacock: { size: [110, 110], draw: () => inkSprite(256, 256, (ctx) => {
-    ctx.fillStyle = '#cfc8b8';
-    for (let i = 0; i < 13; i++) {
-      const a = Math.PI * (1.05 + i * 0.07);
-      ctx.beginPath(); ctx.moveTo(128, 170); ctx.lineTo(128 + Math.cos(a) * 118, 170 + Math.sin(a) * 118); ctx.lineTo(128 + Math.cos(a + 0.06) * 112, 170 + Math.sin(a + 0.06) * 112); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#9b9584'; ctx.beginPath(); ctx.arc(128 + Math.cos(a + 0.03) * 98, 170 + Math.sin(a + 0.03) * 98, 7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#cfc8b8';
+    // the marble peacock as the encounter shows it: tail fanned, carved
+    // feathers each ending in a stone eye, its one bloodstone eye lit
+    const marble = (x0, y0, x1, y1) => { const g = ctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, '#ebe5d8'); g.addColorStop(1, '#9d968a'); return g; };
+    const fx = 128, fy = 176;
+    for (let i = 0; i < 17; i++) {
+      const a = Math.PI * (1.06 + i * 0.055), len = 92 + Math.sin(i / 16 * Math.PI) * 22;
+      const tx = fx + Math.cos(a) * len, ty = fy + Math.sin(a) * len;
+      const nx = -Math.sin(a), ny = Math.cos(a);
+      ctx.fillStyle = marble(fx, fy, tx, ty); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(fx + nx * 2, fy + ny * 2); ctx.lineTo(tx + nx * 4 - Math.cos(a) * 10, ty + ny * 4 - Math.sin(a) * 10); ctx.lineTo(tx - nx * 4 - Math.cos(a) * 10, ty - ny * 4 - Math.sin(a) * 10); ctx.lineTo(fx - nx * 2, fy - ny * 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e4ddd0'; ctx.beginPath(); ctx.ellipse(tx - Math.cos(a) * 4, ty - Math.sin(a) * 4, 9, 7, a, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#7a7266'; ctx.beginPath(); ctx.ellipse(tx - Math.cos(a) * 4, ty - Math.sin(a) * 4, 4, 3, a, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.fillStyle = '#dcd6c8';
-    ctx.beginPath(); ctx.ellipse(128, 200, 30, 44, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(118, 168); ctx.quadraticCurveTo(108, 120, 126, 100); ctx.quadraticCurveTo(140, 96, 138, 110); ctx.quadraticCurveTo(130, 130, 138, 168); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#a3201a'; ctx.beginPath(); ctx.arc(131, 106, 3.2, 0, Math.PI * 2); ctx.fill();  // the bloodstone eye
-    ctx.fillStyle = '#6a6458'; ctx.fillRect(96, 236, 64, 20); ctx.strokeRect(96, 236, 64, 20);
+    // the plinth, legs, body
+    ctx.fillStyle = '#5a554c'; ctx.fillRect(84, 232, 88, 22); ctx.strokeRect(84, 232, 88, 22);
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(118, 214); ctx.lineTo(116, 234); ctx.moveTo(138, 214); ctx.lineTo(140, 234); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.fillStyle = marble(100, 160, 160, 230);
+    ctx.beginPath(); ctx.ellipse(128, 192, 28, 32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // the neck in an S, the head, beak and crest
+    ctx.beginPath(); ctx.moveTo(116, 170); ctx.bezierCurveTo(108, 140, 136, 132, 126, 104); ctx.lineTo(140, 104); ctx.bezierCurveTo(150, 134, 124, 142, 140, 170); ctx.closePath(); ctx.fillStyle = marble(110, 100, 150, 170); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(133, 98, 11, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#c8c0b2'; ctx.beginPath(); ctx.moveTo(142, 96); ctx.lineTo(156, 101); ctx.lineTo(142, 104); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = 1.5; [[-8, -22], [0, -26], [8, -22]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.moveTo(133, 89); ctx.lineTo(133 + dx, 89 + dy * 0.7); ctx.stroke(); ctx.fillStyle = '#ddd6c8'; ctx.beginPath(); ctx.arc(133 + dx, 89 + dy * 0.7, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); });
+    const glow = ctx.createRadialGradient(136, 96, 0, 136, 96, 14); glow.addColorStop(0, 'rgba(255,60,40,0.8)'); glow.addColorStop(1, 'rgba(255,30,20,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(136, 96, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#b01c14'; ctx.beginPath(); ctx.arc(136, 96, 3.4, 0, Math.PI * 2); ctx.fill();   // the bloodstone eye
   }) },
   harp: { size: [36, 64], draw: () => inkSprite(96, 170, (ctx) => {
     ctx.strokeStyle = '#8a6a30'; ctx.lineWidth = 6;
@@ -2858,7 +2873,7 @@ function bustOnPedestal(g) {
 // Keziah's marble peacock, on its plinth in the gallery's alcove: tail
 // raised, one bloodstone eye and one empty socket. setPeacock() changes
 // it once its encounter is over: grey stone with the eye gone (freed), or
-// a heap of white rubble (destroyed). Kept out of mergeStatic for that.
+// a heap of white rubble (destroyed).
 function marblePeacock(g, w) {
   const st = plainM(0x4e4a44, 0.9), m = plainM(0xa29c90, 0.45, 0);
   blk(g, 40, 10, 30, st, 0, 5, 0);
@@ -2901,15 +2916,21 @@ function marblePeacock(g, w) {
     c.rotation.set(rand() * 0.6, rand() * 3, rand() * 0.6);
     if (i >= 7) { c.position.y = r / 2; c.position.x += Math.sign(c.position.x || 1) * 24; }
   }
-  g.userData.keep = true;
-  w.peacock = { bird, rubble, eye, marble: m };
+  // Baked into a few meshes each (it's dozens of parts), apart from the
+  // eye, so that setPeacock can still swap them.
+  const bake = grp => { const b = new THREE.Group(); w.scene.add(b); mergeStatic(b, [grp]); return b; };
+  eye.userData.keep = true;
+  const birdBaked = bake(bird), rubbleBaked = bake(rubble);
+  rubbleBaked.visible = false;
+  bird.userData.keep = true;   // all that's left in it is the eye
+  w.peacock = { bird: birdBaked, eyeGroup: bird, rubble: rubbleBaked, marble: m };
 }
 function setPeacock(state) {
   const p = world.peacock;
   if (!p) return;
   p.bird.visible = state !== 'killed';
   p.rubble.visible = state === 'killed';
-  p.eye.visible = !state;
+  p.eyeGroup.visible = !state;
   p.marble.color.set(state === 'freed' ? 0x7a766e : 0xa29c90);
 }
 
@@ -3523,6 +3544,7 @@ function buildWorld(renderer, quality) {
   lantern.castShadow = true;
   lantern.shadow.mapSize.set(quality === 'low' ? 256 : 512, quality === 'low' ? 256 : 512);
   lantern.shadow.camera.near = 2; lantern.shadow.camera.far = 460; lantern.shadow.bias = -0.003;
+  lantern.shadow.autoUpdate = false; lantern.shadow.needsUpdate = true;   // see lanternShadow() in finish.js
   scene.add(lantern);
   w.lantern = lantern;
   FLOOR.lights.forEach((l, i) => {
@@ -8167,8 +8189,24 @@ function resizeFinish(r) {
   finish.material.uniforms.res.value.copy(size);
 }
 
+// The lantern's shadow (six views of the house, about half of each frame's
+// drawing) is only redrawn when something it lights has moved: the
+// lantern itself, or a door swinging. While it keeps moving, every other
+// frame, which nobody can see; it always catches up once things stop.
+const shadowState = { sig: NaN, pending: true, frame: 0 };
+function lanternShadow() {
+  const L = world.lantern;
+  if (!L || !L.castShadow) return;
+  let sig = L.position.x * 1.3 + L.position.y * 7.1 + L.position.z * 13.7;
+  for (const id in world.doors) sig += world.doors[id].amount * (id.length + 3);
+  if (Math.abs(sig - shadowState.sig) > 0.02 || Number.isNaN(shadowState.sig)) { shadowState.pending = true; shadowState.sig = sig; shadowState.still = 0; }
+  else shadowState.still = (shadowState.still || 0) + 1;
+  if (shadowState.pending && (++shadowState.frame % 2 === 0 || shadowState.still > 0)) { L.shadow.needsUpdate = true; shadowState.pending = false; }
+}
+
 // Draws a frame: straight to the screen, or through the finishing pass.
 function drawFrame(r, scene, cam) {
+  lanternShadow();
   if (!finish.on || !finish.target) { r.render(scene, cam); return; }
   const u = finish.material.uniforms;
   u.near.value = cam.near; u.far.value = cam.far;
