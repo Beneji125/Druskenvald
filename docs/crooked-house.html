@@ -1047,15 +1047,29 @@ const SPRITES = {
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.moveTo(96, 50); ctx.lineTo(96, 88); ctx.stroke();
   }) },
   chandelier: { size: [60, 40], lift: 72, unlit: true, draw: () => inkSprite(160, 140, (ctx) => {
+    // chain, a tarnished ring, six arms; thin candles with small cold
+    // flames (the foyer's ghost-light), and crystal drops beneath
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(80, 0); ctx.lineTo(80, 60); ctx.stroke();
-    ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(80, 84, 64, 14, 0.06, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(80, 86, 62, 12, 0.06, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(190,160,100,0.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(80, 85, 62, 12, 0.06, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+    ctx.strokeStyle = ART_INK;
+    for (let i = 0; i < 7; i++) {
+      const x = 26 + i * 18, y = 100 + Math.sin(i / 6 * Math.PI) * 6;
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(200,210,240,0.75)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1.6, y + 3.5); ctx.lineTo(x, y + 7); ctx.lineTo(x - 1.6, y + 3.5); ctx.closePath(); ctx.fill();
+    }
     for (let i = 0; i < 6; i++) {
       const x = 20 + i * 24, y = 82 - Math.sin(i / 5 * Math.PI) * 6;
-      ctx.beginPath(); ctx.moveTo(80, 60); ctx.lineTo(x, y); ctx.stroke();
-      ctx.fillStyle = '#d8cfb8'; ctx.fillRect(x - 3, y - 18, 6, 16);
-      const g = ctx.createRadialGradient(x, y - 24, 0, x, y - 24, 12);
-      g.addColorStop(0, 'rgba(235,225,255,1)'); g.addColorStop(1, 'rgba(200,180,255,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(80, 60); ctx.quadraticCurveTo((80 + x) / 2, 66, x, y); ctx.stroke();
+      // the cup and the candle, wax run down one side
+      ctx.fillStyle = '#3a2c20'; ctx.beginPath(); ctx.ellipse(x, y, 6, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c9bfa6'; ctx.fillRect(x - 2, y - 14, 4, 13);
+      ctx.fillStyle = '#e4dcc6'; ctx.fillRect(x - 2, y - 14, 1.5, 9);
+      // halo, then a small teardrop flame
+      const g = ctx.createRadialGradient(x, y - 19, 0, x, y - 19, 9);
+      g.addColorStop(0, 'rgba(200,190,255,0.55)'); g.addColorStop(1, 'rgba(160,140,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 19, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f2eeff'; ctx.beginPath(); ctx.moveTo(x, y - 25); ctx.quadraticCurveTo(x + 3, y - 18, x, y - 15); ctx.quadraticCurveTo(x - 3, y - 18, x, y - 25); ctx.fill();
     }
   }) },
   tree: { size: [150, 150], draw: () => inkSprite(256, 256, (ctx) => {
@@ -1929,17 +1943,24 @@ function cobwebTexture() {
   return artTexture(c);
 }
 
-// A worn rug: a border, a faded field, a medallion; round or oblong.
-function rugTexture(base, round) {
-  const [c, ctx] = artCanvas(256, 256);
+// A worn rug: a border, a faded field, a medallion; round or oblong. An
+// oblong one is drawn at its own proportions (`aspect`, length over
+// width), as a runner: a row of medallions down its length.
+function rugTexture(base, round, aspect = 1) {
+  const W = 256, H = Math.round(256 * clamp(aspect, 1, 3));
+  const [c, ctx] = artCanvas(W, H);
   const rand = seededRandom(base.charCodeAt(2) * 3 + (round ? 1 : 0));
-  ctx.fillStyle = base; ctx.fillRect(0, 0, 256, 256);
-  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, 256 - inset * 2, 256 - inset * 2); };
+  ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, W - inset * 2, H - inset * 2); };
   ring(10, 'rgba(160,120,60,0.45)', 6); ring(22, 'rgba(20,12,8,0.5)', 10); ring(34, 'rgba(160,120,60,0.3)', 3);
-  ctx.fillStyle = 'rgba(150,110,60,0.28)';
-  ctx.beginPath(); ctx.moveTo(128, 64); ctx.lineTo(176, 128); ctx.lineTo(128, 192); ctx.lineTo(80, 128); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(128, 128, 18, 0, Math.PI * 2); ctx.fill();
-  artGrime(ctx, 256, 256, rand, 1.4);
+  const medallion = (cx, cy, r) => {
+    ctx.fillStyle = 'rgba(150,110,60,0.28)';
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.75, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r * 0.75, cy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.28, 0, Math.PI * 2); ctx.fill();
+  };
+  const n = Math.max(1, Math.round(H / W));
+  for (let i = 0; i < n; i++) medallion(W / 2, H * (i + 0.5) / n, Math.min(64, H / n * 0.3));
+  artGrime(ctx, W, H, rand, 1.4);
   if (round) { ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(128, 128, 127, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
   const tex = artTexture(c);
   return withPhoto(tex, 'velour_velvet', (cx, img, w, h) => photoGrime(cx, img, 0, 0, w, h, 0.35));
@@ -2454,6 +2475,8 @@ function mesh(g, geo, mat, x, y, z, shadow = true) {
 const blk = (g, w, h, d, mat, x, y, z, shadow) => mesh(g, new THREE.BoxGeometry(w, h, d), mat, x, y, z, shadow);
 const cyl = (g, rt, rb, h, mat, x, y, z, seg = 14, shadow) => mesh(g, new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z, shadow);
 const ball = (g, r, mat, x, y, z, s = [1, 1, 1]) => { const m = mesh(g, new THREE.SphereGeometry(r, 14, 10), mat, x, y, z); m.scale.set(...s); return m; };
+// A turned shape: `pts` are [radius, height] pairs from the bottom up.
+const lathe = (g, pts, mat, x, y, z, s = [1, 1, 1], seg = 18) => { const m = mesh(g, new THREE.LatheGeometry(pts.map(([r, h]) => new THREE.Vector2(r, h)), seg), mat, x, y, z); m.scale.set(...s); return m; };
 
 // Every part of every piece is its own mesh while it's built; once the
 // house is furnished, mergeStatic() bakes all the parts that never move
@@ -2741,10 +2764,73 @@ function bustOnPedestal(g) {
   blk(g, 16, 3, 16, st, 0, 38.5, 0);
   blk(g, 6, 2, 0.6, plainM(0x1a1814, 0.6, 0.4), 0, 30, 6.9);    // the worn name plate
   const m = marbleM();
-  ball(g, 9, m, 0, 44, 0, [1, 0.55, 0.62]);                   // shoulders
-  cyl(g, 2.6, 3, 6, m, 0, 49.5, 0, 10);                       // neck
-  ball(g, 4.6, m, 0, 56, 0.4, [0.85, 1.12, 0.95]);            // head
-  ball(g, 1.1, m, 0, 55.6, 4.6, [0.8, 1.4, 0.9]);              // nose
+  // a round socle, then the chest and shoulders, turned and flattened
+  lathe(g, [[0, 0], [4.6, 0], [4.6, 0.8], [3.4, 1.6], [3, 2.6], [5.5, 3.4], [8, 5.2], [9.4, 7.6], [9.2, 9.6], [7.4, 11.2], [4.4, 12.2], [2.6, 12.6], [0, 12.7]], m, 0, 40, 0, [1, 1, 0.62]);
+  cyl(g, 2.5, 2.9, 5, m, 0, 54.5, 0.3, 10);                    // neck
+  ball(g, 4.5, m, 0, 59.6, 0.5, [0.86, 1.1, 0.98]);           // head
+  ball(g, 4.6, m, 0, 61, -0.6, [0.92, 1.0, 0.95]);            // hair, swept back
+  ball(g, 1.0, m, 0, 59.4, 4.8, [0.75, 1.5, 1.0]);            // nose
+  blk(g, 5, 0.9, 1.4, m, 0, 61, 4.1);                         // brow
+  ball(g, 0.9, m, 3.8, 59.4, 0.2, [0.5, 1.2, 0.9]);           // ears
+  ball(g, 0.9, m, -3.8, 59.4, 0.2, [0.5, 1.2, 0.9]);
+}
+
+// Keziah's marble peacock, on its plinth in the gallery's alcove: tail
+// raised, one bloodstone eye and one empty socket. setPeacock() changes
+// it once its encounter is over: grey stone with the eye gone (freed), or
+// a heap of white rubble (destroyed). Kept out of mergeStatic for that.
+function marblePeacock(g, w) {
+  const st = plainM(0x4e4a44, 0.9), m = plainM(0xa29c90, 0.45, 0);
+  blk(g, 40, 10, 30, st, 0, 5, 0);
+  blk(g, 34, 4, 26, st, 0, 12, 0);
+  const bird = new THREE.Group(); g.add(bird);
+  // legs and body
+  cyl(bird, 0.9, 1.1, 10, m, -3, 19, 2, 6); cyl(bird, 0.9, 1.1, 10, m, 3, 19, 2, 6);
+  blk(bird, 14, 1.5, 6, m, 0, 14.8, 3);
+  const body = ball(bird, 10, m, 0, 30, 2, [0.78, 0.86, 1.25]); body.rotation.x = -0.35;
+  // the neck in an S, then the head, beak and crest
+  const neck = [[35, 9, 4.4], [39, 11, 3.6], [43, 11.6, 3.0], [47, 11.2, 2.6], [51, 11.4, 2.4], [54.5, 12.4, 2.5]];
+  for (let i = 0; i < neck.length - 1; i++) for (let k = 0; k < 3; k++) {   // close-set, so it reads as one smooth neck
+    const a = neck[i], b = neck[i + 1], t = k / 3;
+    ball(bird, lerp(a[2], b[2], t), m, 0, lerp(a[0], b[0], t), lerp(a[1], b[1], t));
+  }
+  ball(bird, 3.3, m, 0, 57, 13.6, [0.9, 1, 1.15]);
+  const beak = mesh(bird, new THREE.ConeGeometry(1.1, 4, 8), m, 0, 56.4, 17.6); beak.rotation.x = Math.PI / 2;
+  for (let i = -1; i <= 1; i++) {
+    const a = i * 0.32;
+    const stalk = cyl(bird, 0.22, 0.22, 5, m, Math.sin(a) * 2.5, 62.5, 12.4, 4); stalk.rotation.z = -a;
+    ball(bird, 0.8, m, Math.sin(a) * 5, 65, 12.2);
+  }
+  const eye = ball(bird, 0.8, new THREE.MeshStandardMaterial({ color: 0x8a1410, roughness: 0.2, emissive: 0x6a0806, emissiveIntensity: 0.6 }), 2.7, 57.8, 15);
+  ball(bird, 0.5, plainM(0x3a342c, 0.9), -2.55, 57.8, 14.9);       // the socket never filled
+  // the tail: carved feathers fanned up behind, each ending in an eye
+  const fan = new THREE.Group(); fan.position.set(0, 26, -9); fan.rotation.x = -0.28; bird.add(fan);
+  const eyeM = plainM(0x6e685e, 0.5, 0);
+  for (let i = 0; i < 17; i++) {
+    const a = Math.PI * (0.06 + i * 0.055), len = 34 + Math.sin(i / 16 * Math.PI) * 10;
+    const f = new THREE.Group(); f.rotation.z = a - Math.PI / 2; fan.add(f);
+    blk(f, 2.6, len, 1.2, m, 0, len / 2, -i % 2 * 0.6);
+    ball(f, 2.6, m, 0, len - 1, -i % 2 * 0.6, [1, 1.35, 0.5]);
+    ball(f, 1.1, eyeM, 0, len - 1, 0.9 - i % 2 * 0.6, [1, 1.3, 0.4]);
+  }
+  // what's left if it's destroyed
+  const rubble = new THREE.Group(); rubble.visible = false; g.add(rubble);
+  const rand = seededRandom(19);
+  for (let i = 0; i < 14; i++) {
+    const r = 2 + rand() * 5, c = blk(rubble, r * 1.4, r, r * 1.1, m, (rand() - 0.5) * 34, 14 + r / 2 + (i < 4 ? 0 : -14 * rand() * 0), (rand() - 0.5) * 24);
+    c.rotation.set(rand() * 0.6, rand() * 3, rand() * 0.6);
+    if (i >= 7) { c.position.y = r / 2; c.position.x += Math.sign(c.position.x || 1) * 24; }
+  }
+  g.userData.keep = true;
+  w.peacock = { bird, rubble, eye, marble: m };
+}
+function setPeacock(state) {
+  const p = world.peacock;
+  if (!p) return;
+  p.bird.visible = state !== 'killed';
+  p.rubble.visible = state === 'killed';
+  p.eye.visible = !state;
+  p.marble.color.set(state === 'freed' ? 0x7a766e : 0xa29c90);
 }
 
 // The spirit board and its planchette, lying on the parlour table: the
@@ -2868,6 +2954,7 @@ function addScenery(w, p) {
     return g;
   }
   if (p.kind === 'shrub') { const g = piece(scene, p.x, p.y); w.sprites.push(pottedShrub(g, scene, p.x, p.y)); return g; }
+  if (p.kind === 'peacock') { const g = piece(scene, p.x, p.y, p.rot || 0); marblePeacock(g, w); return g; }   // (its sprite is the encounter's picture)
   if (SPRITES[p.kind]) { w.sprites.push(addSprite(scene, p.kind, p.x, p.y)); return null; }
   switch (p.kind) {
     case 'diningTable': {
@@ -2968,7 +3055,7 @@ function addDetails(w, fixtures) {
   // Rugs: under the séance table, the dining table, along the foyer.
   const rug = (x, z, wd, dp, base, round = false) => {
     const geo = round ? new THREE.CircleGeometry(wd / 2, 40) : new THREE.PlaneGeometry(wd, dp);
-    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round, round ? 1 : dp / wd), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
     m.rotation.x = -Math.PI / 2; m.position.set(x, 0.35, z); m.receiveShadow = true;
     scene.add(m); fixtures.push(m);
   };
@@ -3027,7 +3114,7 @@ const SCENERY = [
   { kind: 'stairs', x: 652, y: 896, block: { rect: [60, 110], at: [640, 845] } },
   // Gallery
   ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y, rot: faceTowards(x, y, 270, 905) })),
-  { kind: 'peacock', x: 152, y: 930, block: { r: 20 } },
+  { kind: 'peacock', x: 152, y: 930, rot: faceTowards(152, 930, 270, 905), block: { r: 20 } },
   // Music room
   { kind: 'harpsichord', x: 965, y: 845, rot: faceTowards(965, 845, 850, 925), block: { r: 30 } },
   { kind: 'mirror', x: 845, y: 802, wall: 0 },
@@ -3817,7 +3904,7 @@ const CLUES = [
 
 // How high each thing's glint hangs (world units; the ceiling is WALL_H).
 const THING_HEIGHTS = {
-  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 95, oven: 62, feast: 38,
+  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 62, oven: 62, feast: 38,
   staircase: 60, front_door: 72, chandelier: 92, fireplace: 50, landscapes: 80, mirror: 70,
   collapsed_shelf: 30, tree: 80, bench: 22,
 };
@@ -6622,6 +6709,7 @@ async function peacockScene() {
     giveMemento('gem');
     await runFlashback('keziah', { corrupt: true });
   }
+  setPeacock(f.peacockDone);
   saveGame();
 }
 
@@ -7812,7 +7900,16 @@ function finishArrival() {
   lockInput(500);
   enteredCell(null);
   $('view').focus({ preventScroll: true });
+  // The first time in, how to move (once per browser).
+  if (!store.get(HINT_KEY)) {
+    store.set(HINT_KEY, '1');
+    const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    setTimeout(() => ui.log(touch
+      ? 'The arrows at the bottom right walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
+      : 'WASD or the arrow keys walk, Q and E turn, Space looks at or uses what’s in front of you. Escape pauses (and lists every control).', 'note'), 1400);
+  }
 }
+const HINT_KEY = 'crooked_house_hinted';
 
 // The front door: shut until the Crooked Man has gone. `instant` sets it
 // without the creak.
@@ -8390,6 +8487,7 @@ function loop(now) {
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : game.inFlashback ? 0.7 : 1);
   if (game.flags.feastDone) setFeast(game.flags.feastDone);
+  setPeacock(game.inFlashback ? null : game.flags.peacockDone);   // whole again in Keziah's memory
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {

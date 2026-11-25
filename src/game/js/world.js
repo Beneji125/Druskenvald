@@ -26,7 +26,7 @@ const SCENERY = [
   { kind: 'stairs', x: 652, y: 896, block: { rect: [60, 110], at: [640, 845] } },
   // Gallery
   ...[[300, 800], [236, 816], [186, 860], [196, 968], [252, 992], [322, 990]].map(([x, y]) => ({ kind: 'bustOnPedestal', x, y, rot: faceTowards(x, y, 270, 905) })),
-  { kind: 'peacock', x: 152, y: 930, block: { r: 20 } },
+  { kind: 'peacock', x: 152, y: 930, rot: faceTowards(152, 930, 270, 905), block: { r: 20 } },
   // Music room
   { kind: 'harpsichord', x: 965, y: 845, rot: faceTowards(965, 845, 850, 925), block: { r: 30 } },
   { kind: 'mirror', x: 845, y: 802, wall: 0 },

@@ -34,7 +34,7 @@ const CLUES = [
 
 // How high each thing's glint hangs (world units; the ceiling is WALL_H).
 const THING_HEIGHTS = {
-  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 95, oven: 62, feast: 38,
+  petunia: 70, spirit_board: 34, harpsichord: 44, portraits: 70, peacock: 62, oven: 62, feast: 38,
   staircase: 60, front_door: 72, chandelier: 92, fireplace: 50, landscapes: 80, mirror: 70,
   collapsed_shelf: 30, tree: 80, bench: 22,
 };

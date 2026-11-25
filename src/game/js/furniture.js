@@ -68,6 +68,8 @@ function mesh(g, geo, mat, x, y, z, shadow = true) {
 const blk = (g, w, h, d, mat, x, y, z, shadow) => mesh(g, new THREE.BoxGeometry(w, h, d), mat, x, y, z, shadow);
 const cyl = (g, rt, rb, h, mat, x, y, z, seg = 14, shadow) => mesh(g, new THREE.CylinderGeometry(rt, rb, h, seg), mat, x, y, z, shadow);
 const ball = (g, r, mat, x, y, z, s = [1, 1, 1]) => { const m = mesh(g, new THREE.SphereGeometry(r, 14, 10), mat, x, y, z); m.scale.set(...s); return m; };
+// A turned shape: `pts` are [radius, height] pairs from the bottom up.
+const lathe = (g, pts, mat, x, y, z, s = [1, 1, 1], seg = 18) => { const m = mesh(g, new THREE.LatheGeometry(pts.map(([r, h]) => new THREE.Vector2(r, h)), seg), mat, x, y, z); m.scale.set(...s); return m; };
 
 // Every part of every piece is its own mesh while it's built; once the
 // house is furnished, mergeStatic() bakes all the parts that never move
@@ -355,10 +357,73 @@ function bustOnPedestal(g) {
   blk(g, 16, 3, 16, st, 0, 38.5, 0);
   blk(g, 6, 2, 0.6, plainM(0x1a1814, 0.6, 0.4), 0, 30, 6.9);    // the worn name plate
   const m = marbleM();
-  ball(g, 9, m, 0, 44, 0, [1, 0.55, 0.62]);                   // shoulders
-  cyl(g, 2.6, 3, 6, m, 0, 49.5, 0, 10);                       // neck
-  ball(g, 4.6, m, 0, 56, 0.4, [0.85, 1.12, 0.95]);            // head
-  ball(g, 1.1, m, 0, 55.6, 4.6, [0.8, 1.4, 0.9]);              // nose
+  // a round socle, then the chest and shoulders, turned and flattened
+  lathe(g, [[0, 0], [4.6, 0], [4.6, 0.8], [3.4, 1.6], [3, 2.6], [5.5, 3.4], [8, 5.2], [9.4, 7.6], [9.2, 9.6], [7.4, 11.2], [4.4, 12.2], [2.6, 12.6], [0, 12.7]], m, 0, 40, 0, [1, 1, 0.62]);
+  cyl(g, 2.5, 2.9, 5, m, 0, 54.5, 0.3, 10);                    // neck
+  ball(g, 4.5, m, 0, 59.6, 0.5, [0.86, 1.1, 0.98]);           // head
+  ball(g, 4.6, m, 0, 61, -0.6, [0.92, 1.0, 0.95]);            // hair, swept back
+  ball(g, 1.0, m, 0, 59.4, 4.8, [0.75, 1.5, 1.0]);            // nose
+  blk(g, 5, 0.9, 1.4, m, 0, 61, 4.1);                         // brow
+  ball(g, 0.9, m, 3.8, 59.4, 0.2, [0.5, 1.2, 0.9]);           // ears
+  ball(g, 0.9, m, -3.8, 59.4, 0.2, [0.5, 1.2, 0.9]);
+}
+
+// Keziah's marble peacock, on its plinth in the gallery's alcove: tail
+// raised, one bloodstone eye and one empty socket. setPeacock() changes
+// it once its encounter is over: grey stone with the eye gone (freed), or
+// a heap of white rubble (destroyed). Kept out of mergeStatic for that.
+function marblePeacock(g, w) {
+  const st = plainM(0x4e4a44, 0.9), m = plainM(0xa29c90, 0.45, 0);
+  blk(g, 40, 10, 30, st, 0, 5, 0);
+  blk(g, 34, 4, 26, st, 0, 12, 0);
+  const bird = new THREE.Group(); g.add(bird);
+  // legs and body
+  cyl(bird, 0.9, 1.1, 10, m, -3, 19, 2, 6); cyl(bird, 0.9, 1.1, 10, m, 3, 19, 2, 6);
+  blk(bird, 14, 1.5, 6, m, 0, 14.8, 3);
+  const body = ball(bird, 10, m, 0, 30, 2, [0.78, 0.86, 1.25]); body.rotation.x = -0.35;
+  // the neck in an S, then the head, beak and crest
+  const neck = [[35, 9, 4.4], [39, 11, 3.6], [43, 11.6, 3.0], [47, 11.2, 2.6], [51, 11.4, 2.4], [54.5, 12.4, 2.5]];
+  for (let i = 0; i < neck.length - 1; i++) for (let k = 0; k < 3; k++) {   // close-set, so it reads as one smooth neck
+    const a = neck[i], b = neck[i + 1], t = k / 3;
+    ball(bird, lerp(a[2], b[2], t), m, 0, lerp(a[0], b[0], t), lerp(a[1], b[1], t));
+  }
+  ball(bird, 3.3, m, 0, 57, 13.6, [0.9, 1, 1.15]);
+  const beak = mesh(bird, new THREE.ConeGeometry(1.1, 4, 8), m, 0, 56.4, 17.6); beak.rotation.x = Math.PI / 2;
+  for (let i = -1; i <= 1; i++) {
+    const a = i * 0.32;
+    const stalk = cyl(bird, 0.22, 0.22, 5, m, Math.sin(a) * 2.5, 62.5, 12.4, 4); stalk.rotation.z = -a;
+    ball(bird, 0.8, m, Math.sin(a) * 5, 65, 12.2);
+  }
+  const eye = ball(bird, 0.8, new THREE.MeshStandardMaterial({ color: 0x8a1410, roughness: 0.2, emissive: 0x6a0806, emissiveIntensity: 0.6 }), 2.7, 57.8, 15);
+  ball(bird, 0.5, plainM(0x3a342c, 0.9), -2.55, 57.8, 14.9);       // the socket never filled
+  // the tail: carved feathers fanned up behind, each ending in an eye
+  const fan = new THREE.Group(); fan.position.set(0, 26, -9); fan.rotation.x = -0.28; bird.add(fan);
+  const eyeM = plainM(0x6e685e, 0.5, 0);
+  for (let i = 0; i < 17; i++) {
+    const a = Math.PI * (0.06 + i * 0.055), len = 34 + Math.sin(i / 16 * Math.PI) * 10;
+    const f = new THREE.Group(); f.rotation.z = a - Math.PI / 2; fan.add(f);
+    blk(f, 2.6, len, 1.2, m, 0, len / 2, -i % 2 * 0.6);
+    ball(f, 2.6, m, 0, len - 1, -i % 2 * 0.6, [1, 1.35, 0.5]);
+    ball(f, 1.1, eyeM, 0, len - 1, 0.9 - i % 2 * 0.6, [1, 1.3, 0.4]);
+  }
+  // what's left if it's destroyed
+  const rubble = new THREE.Group(); rubble.visible = false; g.add(rubble);
+  const rand = seededRandom(19);
+  for (let i = 0; i < 14; i++) {
+    const r = 2 + rand() * 5, c = blk(rubble, r * 1.4, r, r * 1.1, m, (rand() - 0.5) * 34, 14 + r / 2 + (i < 4 ? 0 : -14 * rand() * 0), (rand() - 0.5) * 24);
+    c.rotation.set(rand() * 0.6, rand() * 3, rand() * 0.6);
+    if (i >= 7) { c.position.y = r / 2; c.position.x += Math.sign(c.position.x || 1) * 24; }
+  }
+  g.userData.keep = true;
+  w.peacock = { bird, rubble, eye, marble: m };
+}
+function setPeacock(state) {
+  const p = world.peacock;
+  if (!p) return;
+  p.bird.visible = state !== 'killed';
+  p.rubble.visible = state === 'killed';
+  p.eye.visible = !state;
+  p.marble.color.set(state === 'freed' ? 0x7a766e : 0xa29c90);
 }
 
 // The spirit board and its planchette, lying on the parlour table: the
@@ -482,6 +547,7 @@ function addScenery(w, p) {
     return g;
   }
   if (p.kind === 'shrub') { const g = piece(scene, p.x, p.y); w.sprites.push(pottedShrub(g, scene, p.x, p.y)); return g; }
+  if (p.kind === 'peacock') { const g = piece(scene, p.x, p.y, p.rot || 0); marblePeacock(g, w); return g; }   // (its sprite is the encounter's picture)
   if (SPRITES[p.kind]) { w.sprites.push(addSprite(scene, p.kind, p.x, p.y)); return null; }
   switch (p.kind) {
     case 'diningTable': {
@@ -582,7 +648,7 @@ function addDetails(w, fixtures) {
   // Rugs: under the séance table, the dining table, along the foyer.
   const rug = (x, z, wd, dp, base, round = false) => {
     const geo = round ? new THREE.CircleGeometry(wd / 2, 40) : new THREE.PlaneGeometry(wd, dp);
-    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round, round ? 1 : dp / wd), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
     m.rotation.x = -Math.PI / 2; m.position.set(x, 0.35, z); m.receiveShadow = true;
     scene.add(m); fixtures.push(m);
   };

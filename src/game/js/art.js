@@ -313,15 +313,29 @@ const SPRITES = {
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.moveTo(96, 50); ctx.lineTo(96, 88); ctx.stroke();
   }) },
   chandelier: { size: [60, 40], lift: 72, unlit: true, draw: () => inkSprite(160, 140, (ctx) => {
+    // chain, a tarnished ring, six arms; thin candles with small cold
+    // flames (the foyer's ghost-light), and crystal drops beneath
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(80, 0); ctx.lineTo(80, 60); ctx.stroke();
-    ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(80, 84, 64, 14, 0.06, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#2a2018'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(80, 86, 62, 12, 0.06, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(190,160,100,0.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(80, 85, 62, 12, 0.06, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+    ctx.strokeStyle = ART_INK;
+    for (let i = 0; i < 7; i++) {
+      const x = 26 + i * 18, y = 100 + Math.sin(i / 6 * Math.PI) * 6;
+      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.lineTo(x, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(200,210,240,0.75)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1.6, y + 3.5); ctx.lineTo(x, y + 7); ctx.lineTo(x - 1.6, y + 3.5); ctx.closePath(); ctx.fill();
+    }
     for (let i = 0; i < 6; i++) {
       const x = 20 + i * 24, y = 82 - Math.sin(i / 5 * Math.PI) * 6;
-      ctx.beginPath(); ctx.moveTo(80, 60); ctx.lineTo(x, y); ctx.stroke();
-      ctx.fillStyle = '#d8cfb8'; ctx.fillRect(x - 3, y - 18, 6, 16);
-      const g = ctx.createRadialGradient(x, y - 24, 0, x, y - 24, 12);
-      g.addColorStop(0, 'rgba(235,225,255,1)'); g.addColorStop(1, 'rgba(200,180,255,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 24, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(80, 60); ctx.quadraticCurveTo((80 + x) / 2, 66, x, y); ctx.stroke();
+      // the cup and the candle, wax run down one side
+      ctx.fillStyle = '#3a2c20'; ctx.beginPath(); ctx.ellipse(x, y, 6, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c9bfa6'; ctx.fillRect(x - 2, y - 14, 4, 13);
+      ctx.fillStyle = '#e4dcc6'; ctx.fillRect(x - 2, y - 14, 1.5, 9);
+      // halo, then a small teardrop flame
+      const g = ctx.createRadialGradient(x, y - 19, 0, x, y - 19, 9);
+      g.addColorStop(0, 'rgba(200,190,255,0.55)'); g.addColorStop(1, 'rgba(160,140,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y - 19, 9, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f2eeff'; ctx.beginPath(); ctx.moveTo(x, y - 25); ctx.quadraticCurveTo(x + 3, y - 18, x, y - 15); ctx.quadraticCurveTo(x - 3, y - 18, x, y - 25); ctx.fill();
     }
   }) },
   tree: { size: [150, 150], draw: () => inkSprite(256, 256, (ctx) => {
@@ -1195,17 +1209,24 @@ function cobwebTexture() {
   return artTexture(c);
 }
 
-// A worn rug: a border, a faded field, a medallion; round or oblong.
-function rugTexture(base, round) {
-  const [c, ctx] = artCanvas(256, 256);
+// A worn rug: a border, a faded field, a medallion; round or oblong. An
+// oblong one is drawn at its own proportions (`aspect`, length over
+// width), as a runner: a row of medallions down its length.
+function rugTexture(base, round, aspect = 1) {
+  const W = 256, H = Math.round(256 * clamp(aspect, 1, 3));
+  const [c, ctx] = artCanvas(W, H);
   const rand = seededRandom(base.charCodeAt(2) * 3 + (round ? 1 : 0));
-  ctx.fillStyle = base; ctx.fillRect(0, 0, 256, 256);
-  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, 256 - inset * 2, 256 - inset * 2); };
+  ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, W - inset * 2, H - inset * 2); };
   ring(10, 'rgba(160,120,60,0.45)', 6); ring(22, 'rgba(20,12,8,0.5)', 10); ring(34, 'rgba(160,120,60,0.3)', 3);
-  ctx.fillStyle = 'rgba(150,110,60,0.28)';
-  ctx.beginPath(); ctx.moveTo(128, 64); ctx.lineTo(176, 128); ctx.lineTo(128, 192); ctx.lineTo(80, 128); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(128, 128, 18, 0, Math.PI * 2); ctx.fill();
-  artGrime(ctx, 256, 256, rand, 1.4);
+  const medallion = (cx, cy, r) => {
+    ctx.fillStyle = 'rgba(150,110,60,0.28)';
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.75, cy); ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r * 0.75, cy); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.28, 0, Math.PI * 2); ctx.fill();
+  };
+  const n = Math.max(1, Math.round(H / W));
+  for (let i = 0; i < n; i++) medallion(W / 2, H * (i + 0.5) / n, Math.min(64, H / n * 0.3));
+  artGrime(ctx, W, H, rand, 1.4);
   if (round) { ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(128, 128, 127, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
   const tex = artTexture(c);
   return withPhoto(tex, 'velour_velvet', (cx, img, w, h) => photoGrime(cx, img, 0, 0, w, h, 0.35));

@@ -421,6 +421,7 @@ async function peacockScene() {
     giveMemento('gem');
     await runFlashback('keziah', { corrupt: true });
   }
+  setPeacock(f.peacockDone);
   saveGame();
 }
 

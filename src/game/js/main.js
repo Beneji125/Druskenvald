@@ -383,6 +383,7 @@ function loop(now) {
   // so you can hear the tune you're playing.
   sound.duck(ui.overlay === 'ouija' ? 0.15 : ui.overlay === 'keys' ? 0.3 : game.inFlashback ? 0.7 : 1);
   if (game.flags.feastDone) setFeast(game.flags.feastDone);
+  setPeacock(game.inFlashback ? null : game.flags.peacockDone);   // whole again in Keziah's memory
 
   if (busy()) ui.setPrompt(null);
   else if (ui.selected) {

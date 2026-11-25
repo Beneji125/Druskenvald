@@ -722,7 +722,16 @@ function finishArrival() {
   lockInput(500);
   enteredCell(null);
   $('view').focus({ preventScroll: true });
+  // The first time in, how to move (once per browser).
+  if (!store.get(HINT_KEY)) {
+    store.set(HINT_KEY, '1');
+    const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    setTimeout(() => ui.log(touch
+      ? 'The arrows at the bottom right walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
+      : 'WASD or the arrow keys walk, Q and E turn, Space looks at or uses what’s in front of you. Escape pauses (and lists every control).', 'note'), 1400);
+  }
 }
+const HINT_KEY = 'crooked_house_hinted';
 
 // The front door: shut until the Crooked Man has gone. `instant` sets it
 // without the creak.
