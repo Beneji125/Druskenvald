@@ -28,7 +28,8 @@ function quality() {
 }
 
 function startGame(fresh) {
-  if (fresh || !loadGame()) newGame();
+  const resumed = !fresh && loadGame();
+  if (!resumed) newGame();
   game.echoesPlaying = false;
   sound.start();
   $('start').hidden = true;
@@ -81,7 +82,10 @@ function startGame(fresh) {
   enteredCell(null);
   $('view').focus({ preventScroll: true });
   // A new game starts outside, at the gate (arrival.js).
-  if (fresh) runArrival();
+  if (fresh || !resumed) { runArrival(); return; }
+  // Back in a saved game: where you'd got to (the journal has the rest).
+  const goal = currentGoals()[0];
+  if (goal) setTimeout(() => ui.log(`Where you were: ${goal}`, 'note'), 1200);
 }
 
 // The people (and weasels) of the house: sprites that come and go.

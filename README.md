@@ -147,7 +147,9 @@ The foyer stairs end the chapter: the floors above come later.
   Escape or P to pause (the pause menu lists the controls and holds the
   options: Gentler encounters, Film look, reduced motion, larger text).
   The journal's "What now" lists up to four goals worked out from what
-  you've found (`currentGoals()` in story.js). On a phone, the on-screen buttons. Doors start closed (except the front
+  you've found (`currentGoals()` in story.js); the first of them is shown
+  when you continue a saved game. A new player is told the controls once,
+  and after their first nerve break, where Gentler encounters is. On a phone, the on-screen buttons. Doors start closed (except the front
   door): walk into one or press Space to open it, Space again to close it.
   Every doorway on the plan gets a door automatically (`DOORS` in
   `core.js`); two doorways side by side become a double door. Each door
