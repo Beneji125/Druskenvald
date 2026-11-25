@@ -34,6 +34,7 @@
 
 <section id="game" hidden>
   <canvas id="view" tabindex="-1" aria-label="The view ahead, by lantern light"></canvas>
+  <div id="held" aria-hidden="true"><img id="held-lantern" alt=""><img id="held-flame" alt=""></div>
   <div id="dread-veil" aria-hidden="true"></div>
   <div id="beat" hidden aria-hidden="true"><span></span></div>
 
@@ -63,6 +64,7 @@
     <input type="range" id="vol-music" min="0" max="100" step="1">
     <button type="button" id="btn-mute" aria-pressed="false">Mute</button>
     <label class="opt"><input type="checkbox" id="opt-easy"> Gentler encounters</label>
+    <label class="opt"><input type="checkbox" id="opt-film"> Film look (ink, grain)</label>
   </div>
 
   <div id="room-card" hidden>

@@ -218,6 +218,8 @@ function buildGrounds() {
   g.skinCanvas = artCanvas(128, 256)[0];
   houseSkin(g.skinCanvas, 1);
   g.skinTex = artTexture(g.skinCanvas, { repeat: true });
+  // (repainted from the weatherboard photograph once it has loaded)
+  whenArt(photoSrc('weathered_plank_siding'), () => { houseSkin(g.skinCanvas, Math.max(0, g.skinAt)); g.skinTex.needsUpdate = true; });
   g.skinMat = new THREE.MeshStandardMaterial({ map: g.skinTex, roughness: 0.95, side: THREE.DoubleSide });
   add(warpable(walls.geo()), g.skinMat);
   const ext = world.wallMats.exterior;

@@ -50,6 +50,7 @@ function startGame(fresh) {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     buildWorld(renderer, q);
+    setupFinish(renderer, q);
     moodColor = new THREE.Color(ROOM_MOOD.porch.sky);
     addCharacters();
     buildGrounds();
@@ -118,6 +119,7 @@ function addCharacters() {
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
+  resizeFinish(renderer);
   world.camera.aspect = w / h;
   world.camera.fov = w < h ? 82 : 72;
   world.camera.updateProjectionMatrix();
@@ -245,7 +247,7 @@ function loop(now) {
   if (arrival.active) {
     tickArrival(now, dt);
     tickDoors(now);
-    renderer.render(world.scene, world.camera);
+    drawFrame(renderer, world.scene, world.camera);
     return;
   }
 
@@ -285,6 +287,7 @@ function loop(now) {
   const rx = Math.cos(yaw), rz = -Math.sin(yaw);
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
   world.lantern.intensity = LANTERN.intensity * tickDread(dt, here) * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
+  tickHeld(now);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
@@ -375,7 +378,32 @@ function loop(now) {
     const door = doorAhead(), t = thingAtHand();
     ui.setPrompt(door && !door.open ? { verb: 'Open', name: 'the door' } : t || (door ? { verb: 'Close', name: 'the door' } : null));
   }
-  renderer.render(world.scene, cam);
+  drawFrame(renderer, world.scene, cam);
+}
+
+// The lantern in your hand: it swings a little with each step, lags
+// behind when you turn, breathes when you stand still, hangs lower when
+// turned down, and its glass glows with whatever light is left.
+const held = { el: $('held'), parity: 1, lastStep: null, x: 0, y: 0, r: 0 };
+$('held-lantern').src = heldLanternArt();
+$('held-flame').src = heldFlameArt();
+function tickHeld(now) {
+  const h = held, hh = h.el.offsetHeight || 300;
+  let tx = 0, ty = Math.sin(clock * 1.3) * hh * 0.008, tr = Math.sin(clock * 0.9) * 1.2;
+  if (motion.to && !motion.turning) {
+    if (h.lastStep !== motion.t0) { h.lastStep = motion.t0; h.parity = -h.parity; }
+    const k = Math.min(1, (now - motion.t0) / motion.ms), sw = Math.sin(k * Math.PI);
+    tx += h.parity * sw * hh * 0.025; ty += sw * hh * 0.03; tr += h.parity * sw * 3;
+  }
+  if (motion.to && motion.turning) tx += (motion.yawTo - yaw) * hh * 0.3;
+  if (game.lanternLow) ty += hh * 0.12;
+  // eased, so it has weight
+  const e = Math.min(1, realDt * 10);
+  h.x += (tx - h.x) * e; h.y += (ty - h.y) * e; h.r += (tr - h.r) * e;
+  h.el.style.transform = `translate(${h.x.toFixed(1)}px, ${h.y.toFixed(1)}px) rotate(${h.r.toFixed(2)}deg)`;
+  const lit = clamp01(world.lantern.intensity / LANTERN.intensity);
+  h.el.style.setProperty('--lit', (0.32 + 0.75 * lit).toFixed(3));
+  h.el.style.setProperty('--flame', (lit * (0.85 + Math.sin(clock * 13.1) * 0.08 + Math.sin(clock * 7.3) * 0.07)).toFixed(3));
 }
 
 // Doors swinging.
@@ -524,6 +552,9 @@ musicSlider.addEventListener('input', () => sound.setMusicVolume(musicSlider.val
 const easyBox = $('opt-easy');
 easyBox.checked = easyMode();
 easyBox.addEventListener('change', () => store.set(EASY_KEY, easyBox.checked ? 'on' : 'off'));
+const filmBox = $('opt-film');
+filmBox.checked = finish.on;
+filmBox.addEventListener('change', () => { finish.on = filmBox.checked && !!finish.target; store.set(FINISH_KEY, filmBox.checked ? 'on' : 'off'); });
 $('btn-mute').addEventListener('click', () => { sound.setOn(!sound.on); showSound(); });
 const toggleSoundPanel = open => {
   soundPanel.hidden = open === undefined ? !soundPanel.hidden : !open;

@@ -220,6 +220,16 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   soul (Crookedness). When your nerve breaks he steals something you carry,
   mementos included; his nest under the foyer stairs (visible only when
   you're terrified, until you've found it) has everything he took.
+- **The look** (`finish.js`, art.js): the house is drawn through one
+  finishing pass that gives everything the characters' inked look (ink
+  lines where shapes meet, a few tones, film grain, a vignette, a grade that
+  goes cold with Dread); it's off on low-powered devices and can be turned
+  off in the volume panel ("Film look"). Floors, wood, plaster, stone,
+  fabric, the roof and the weatherboards are photographs from Poly Haven
+  (polyhaven.com, CC0) in `docs/explore/textures/`, recoloured to each
+  room's palette (`FLOOR_PHOTOS`, `photoAs`, `photoGrime`); until one has
+  loaded, the drawn version shows. The lantern in your hand is drawn
+  (`heldLanternArt`) and swayed by `tickHeld` in main.js.
 - **The official artwork** (`docs/explore/characters/`, full-size masters
   in `source-assets/originals/explore/characters/`): the painting of the
   house (title screen), the Crooked Man (the full figure wherever he stands

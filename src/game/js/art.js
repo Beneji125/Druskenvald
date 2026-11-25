@@ -31,6 +31,58 @@ function artGrime(ctx, w, h, rand, amount = 1) {
   }
 }
 
+// ─── Photographs of real surfaces ─────────────────────────────────────
+// Free (CC0) textures from Poly Haven (polyhaven.com), in
+// docs/explore/textures/. Each texture is first drawn in code, as before;
+// when its photograph arrives it's repainted from it, recoloured to the
+// same colour, so the house keeps its palette and gains real wood grain,
+// stone, plaster and wear.
+const photoSrc = name => `explore/textures/${name}.webp`;
+const PHOTO_LUM = new Map();
+function photoLum(img) {     // the photograph's average brightness
+  if (!PHOTO_LUM.has(img)) {
+    const [c, ctx] = artCanvas(8, 8);
+    ctx.filter = 'grayscale(1)'; ctx.drawImage(img, 0, 0, 8, 8);
+    const d = ctx.getImageData(0, 0, 8, 8).data;
+    let t = 0; for (let i = 0; i < d.length; i += 4) t += d[i];
+    PHOTO_LUM.set(img, Math.max(0.05, t / 64 / 255));
+  }
+  return PHOTO_LUM.get(img);
+}
+function hexLum(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+}
+// When the photograph `name` has loaded, repaint `tex` with `paint`.
+function withPhoto(tex, name, paint) {
+  whenArt(photoSrc(name), img => {
+    const c = tex.image, ctx = c.getContext('2d');
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    paint(ctx, img, c.width, c.height);
+    ctx.restore();
+    tex.needsUpdate = true;
+  });
+  return tex;
+}
+// The photograph's light and shade in `base`'s colour and brightness.
+function photoAs(ctx, img, x, y, w, h, base, contrast = 1.15) {
+  ctx.save();
+  ctx.filter = `grayscale(1) brightness(${(hexLum(base) / photoLum(img)).toFixed(3)}) contrast(${contrast})`;
+  ctx.drawImage(img, x, y, w, h);
+  ctx.filter = 'none';
+  ctx.globalCompositeOperation = 'color';
+  ctx.fillStyle = base; ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+// The photograph laid over what's there as grime: its darks darken.
+function photoGrime(ctx, img, x, y, w, h, strength = 0.5) {
+  ctx.save();
+  ctx.globalAlpha = strength; ctx.globalCompositeOperation = 'multiply';
+  ctx.filter = `grayscale(1) brightness(${(0.82 / photoLum(img)).toFixed(3)}) contrast(1.4)`;
+  ctx.drawImage(img, x, y, w, h);
+  ctx.restore();
+}
+
 // ─── Walls ────────────────────────────────────────────────────────────
 // One square's worth of wall, floor (bottom of the canvas) to ceiling:
 // wallpaper above a panelled dado, a skirting board and a cornice. Each
@@ -85,7 +137,11 @@ function wallTexture(roomId, variant = 0) {
   const damp = ctx.createLinearGradient(0, 0, 0, 90);
   damp.addColorStop(0, 'rgba(8,6,4,0.45)'); damp.addColorStop(1, 'rgba(8,6,4,0)');
   ctx.fillStyle = damp; ctx.fillRect(0, 0, 128, 90);
-  return artTexture(c);
+  const tex = artTexture(c);
+  // the paper stained and worn, the panelling real wood
+  withPhoto(tex, 'decrepit_wallpaper', (cx, img) => photoGrime(cx, img, 0, 0, 128, 170, 0.42));
+  withPhoto(tex, 'wood_table_worn', (cx, img) => photoGrime(cx, img, 0, 170, 128, 86, 0.4));
+  return tex;
 }
 
 // The outside of the house, seen from the porch: grey weatherboards.
@@ -128,8 +184,16 @@ function windowTextures() {
 // Each tiles every two squares, in floor-plan coordinates, so it runs on
 // unbroken from square to square.
 
+// Which photograph each room's floor is, and in what colour.
+const FLOOR_PHOTOS = {
+  foyer: ['checkered_pavement_tiles', '#3c3632', 1.5], conservatory: ['stone_tiles', '#3e4038', 1.2],
+  kitchen: ['monastery_stone_floor', '#3a3630', 1.2], porch: ['dark_wooden_planks', '#2b231c', 1.2],
+  music: ['old_wooden_floor_02', '#2c2018', 1.2], gallery: ['stone_floor', '#4a463f', 1.2],
+  dining: ['herringbone_parquet', '#3a2818', 1.3], other: ['old_wood_floor', '#33241a', 1.25],
+};
 function floorTexture(roomId) {
-  const [c, ctx] = artCanvas(256, 256);
+  const [c, ctx] = artCanvas(512, 512);
+  ctx.scale(2, 2);
   const rand = seededRandom(roomId.length * 31 + 7);
   const tiles = (a, b, n = 8) => {
     const s = 256 / n;
@@ -165,7 +229,8 @@ function floorTexture(roomId) {
   else if (roomId === 'gallery') tiles('#4a463f', '#433f39', 4);
   else boards(roomId === 'dining' ? '#3a2818' : '#33241a');
   artGrime(ctx, 256, 256, rand, 1.2);
-  return artTexture(c, { repeat: true });
+  const [photo, base, contrast] = FLOOR_PHOTOS[roomId] || FLOOR_PHOTOS.other;
+  return withPhoto(artTexture(c, { repeat: true }), photo, (cx, img, w, h) => photoAs(cx, img, 0, 0, w, h, base, contrast));
 }
 
 // The blackened ring of the music room's dance floor, laid over its boards.
@@ -213,7 +278,10 @@ function ceilingTexture(kind) {
   ctx.fillStyle = '#140f0b';
   for (let x = 0; x < 256; x += 128) ctx.fillRect(x, 0, 22, 256);
   artGrime(ctx, 256, 256, rand, 2);
-  return artTexture(c, { repeat: true });
+  return withPhoto(artTexture(c, { repeat: true }), kind === 'porch' ? 'dark_wooden_planks' : 'plastered_wall', (cx, img, w, h) => {
+    photoAs(cx, img, 0, 0, w, h, kind === 'porch' ? '#1d1712' : '#25201b', 1.3);
+    cx.fillStyle = '#140f0b'; for (let x = 0; x < w; x += w / 2) cx.fillRect(x, 0, w * 0.086, h);    // the beams
+  });
 }
 
 // ─── Upright figures and furniture (sprites) ──────────────────────────
@@ -351,12 +419,16 @@ function spriteTexture(kind) {
 // ─── Faces of furniture (for boxes) ───────────────────────────────────
 
 function woodTexture(base = '#3b2616') {
-  const [c, ctx] = artCanvas(128, 128);
+  const [c, ctx] = artCanvas(256, 256);
+  ctx.scale(2, 2);
   const rand = seededRandom(base.length + base.charCodeAt(2));
   ctx.fillStyle = base; ctx.fillRect(0, 0, 128, 128);
   for (let i = 0; i < 40; i++) { ctx.fillStyle = `rgba(0,0,0,${(rand() * 0.18).toFixed(2)})`; ctx.fillRect(0, rand() * 128, 128, 1 + rand() * 2); }
   ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 3; ctx.strokeRect(1, 1, 126, 126);
-  return artTexture(c);
+  return withPhoto(artTexture(c), 'wood_table_worn', (cx, img, w, h) => {
+    photoAs(cx, img, 0, 0, w, h, base, 1.25);
+    cx.strokeStyle = 'rgba(0,0,0,0.6)'; cx.lineWidth = 6; cx.strokeRect(2, 2, w - 4, h - 4);
+  });
 }
 
 function brickTexture() {
@@ -388,7 +460,7 @@ function doorTexture() {
   ctx.fillStyle = '#c9a050'; ctx.beginPath(); ctx.arc(110, 120, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#111'; ctx.fillRect(110, 132, 4, 8);                 // keyhole
   artGrime(ctx, 128, 256, rand, 0.8);
-  return artTexture(c);
+  return withPhoto(artTexture(c), 'wood_table_worn', (cx, img, w, h) => photoGrime(cx, img, 0, 0, w, h, 0.45));
 }
 
 // Words scratched through the hallway wallpaper by a child's hand.
@@ -642,7 +714,12 @@ function houseSkin(canvas, rot) {
   const mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * rot));
   const [r, g, b] = mix([196, 186, 166], [46, 48, 42]);
   ctx.fillStyle = `rgb(${r},${g},${b})`; ctx.fillRect(0, 0, W, H);
-  for (let y = 0; y < H; y += 12) {
+  const siding = artImage(photoSrc('weathered_plank_siding'));
+  if (siding.complete && siding.naturalWidth) {
+    // weatherboards from the photograph, painted pale, then stripped dark
+    const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+    photoAs(ctx, siding, 0, 0, W, H / 2, hex, 1.3); photoAs(ctx, siding, 0, H / 2, W, H / 2, hex, 1.3);
+  } else for (let y = 0; y < H; y += 12) {
     ctx.fillStyle = `rgba(0,0,0,${0.12 + rot * 0.18 + rand() * 0.1})`; ctx.fillRect(0, y, W, 2);
     ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(0, y + 2, W, 2);
   }
@@ -675,7 +752,7 @@ function slateTexture() {
     const v = 34 + rand() * 18;
     ctx.fillStyle = `rgb(${v},${v},${v + 6})`; ctx.fillRect(x + 1, y + 1, 14, 14);
   }
-  return artTexture(c, { repeat: true });
+  return withPhoto(artTexture(c, { repeat: true }), 'roof_slates_02', (cx, img, w, h) => photoAs(cx, img, 0, 0, w, h, '#2e2e34', 1.3));
 }
 
 function grassTexture() {
@@ -736,7 +813,7 @@ function fabricTexture(base) {
   ctx.fillStyle = base; ctx.fillRect(0, 0, 64, 64);
   for (let y = 0; y < 64; y += 2) { ctx.fillStyle = `rgba(0,0,0,${(0.05 + rand() * 0.06).toFixed(3)})`; ctx.fillRect(0, y, 64, 1); }
   for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(255,240,220,0.05)'; ctx.beginPath(); ctx.ellipse(rand() * 64, rand() * 64, 6 + rand() * 10, 4 + rand() * 6, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
-  return artTexture(c, { repeat: true });
+  return withPhoto(artTexture(c, { repeat: true }), 'velour_velvet', (cx, img, w, h) => photoAs(cx, img, 0, 0, w, h, base, 1.6));
 }
 
 // Grey dressed stone, in blocks; with moss, for the garden bench.
@@ -750,8 +827,12 @@ function stoneTexture(moss = false) {
     ctx.fillStyle = `rgb(${v},${v - 4},${v - 10})`; ctx.fillRect(x + ((y / 32) % 2) * 32 + 1, y + 1, 62, 30);
   }
   artGrime(ctx, 128, 128, rand, 0.8);
-  if (moss) for (let i = 0; i < 26; i++) { ctx.fillStyle = `rgba(${50 + rand() * 20},${74 + rand() * 20},${36},0.45)`; ctx.beginPath(); ctx.ellipse(rand() * 128, rand() * 128, 4 + rand() * 14, 3 + rand() * 8, rand() * 3, 0, Math.PI * 2); ctx.fill(); }
-  return artTexture(c, { repeat: true });
+  const mossy = cx => { const r2 = seededRandom(45); for (let i = 0; i < 26; i++) { cx.fillStyle = `rgba(${50 + r2() * 20},${74 + r2() * 20},${36},0.45)`; cx.beginPath(); cx.ellipse(r2() * cx.canvas.width, r2() * cx.canvas.height, 4 + r2() * 14, 3 + r2() * 8, r2() * 3, 0, Math.PI * 2); cx.fill(); } };
+  if (moss) mossy(ctx);
+  return withPhoto(artTexture(c, { repeat: true }), moss ? 'castle_wall_slates' : 'stone_tile_wall', (cx, img, w, h) => {
+    photoAs(cx, img, 0, 0, w, h, moss ? '#58544c' : '#5a564e', 1.2);
+    if (moss) mossy(cx);
+  });
 }
 
 // The dining table's cloth: old linen, yellowed, with wine stains.
@@ -1040,3 +1121,56 @@ function moonTexture() {
   return artTexture(c);
 }
 
+
+// ─── The lantern in your hand ─────────────────────────────────────────
+// Drawn once, in the same inked style as the rest: your sleeve and hand
+// reaching up from the bottom right, holding the lantern by its ring. The
+// flame is drawn separately (heldFlameArt) so it can flicker and dim.
+function heldLanternArt() {
+  const [c, ctx] = artCanvas(400, 600);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = ART_INK; ctx.lineWidth = 5;
+  const path = (pts, fill) => { ctx.fillStyle = fill; ctx.beginPath(); ctx.moveTo(...pts[0]); pts.slice(1).forEach(p => p.length === 4 ? ctx.quadraticCurveTo(...p) : ctx.lineTo(...p)); ctx.closePath(); ctx.fill(); ctx.stroke(); };
+  // the sleeve: dark wool, a turned-back cuff
+  path([[420, 610], [282, 236], [210, 250], [250, 330], [330, 610]], '#2a2420');
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 3;
+  [[300, 610, 240, 330], [370, 610, 270, 300]].forEach(([a, b, x, y]) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.quadraticCurveTo(x + 20, y + 120, x, y); ctx.stroke(); });
+  ctx.strokeStyle = ART_INK; ctx.lineWidth = 5;
+  path([[200, 240], [292, 224], [306, 262], [214, 284]], '#3a3028');
+  // the lantern's ring, held up, and its chain of light
+  ctx.lineWidth = 6; ctx.strokeStyle = '#1a1612';
+  ctx.beginPath(); ctx.ellipse(190, 178, 26, 20, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.stroke();
+  ctx.lineWidth = 5; ctx.strokeStyle = ART_INK;
+  // the cap: a little iron chimney and a cone
+  path([[178, 196], [202, 196], [206, 214], [174, 214]], '#2a2622');
+  path([[150, 250], [168, 214], [212, 214], [230, 250]], '#3a342c');
+  // the frame and the glass (the glass is clear: the flame shows through)
+  ctx.fillStyle = 'rgba(255,214,150,0.18)'; ctx.fillRect(152, 252, 76, 132);
+  ctx.strokeStyle = '#2a2622'; ctx.lineWidth = 7;
+  [[152, 252, 152, 384], [228, 252, 228, 384], [190, 252, 190, 384]].forEach(([a, b, x, y]) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(x, y); ctx.stroke(); });
+  ctx.strokeStyle = ART_INK; ctx.lineWidth = 5; ctx.strokeRect(152, 252, 76, 132);
+  ctx.strokeStyle = 'rgba(255,240,210,0.35)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(160, 262); ctx.lineTo(160, 330); ctx.stroke();      // a glint on the glass
+  ctx.strokeStyle = ART_INK; ctx.lineWidth = 5;
+  // the base: the oil font
+  path([[144, 384], [236, 384], [242, 404], [224, 424], [156, 424], [138, 404]], '#3a342c');
+  ctx.fillStyle = '#5a4a30'; ctx.fillRect(150, 400, 80, 4);
+  // the hand, closed round the ring
+  path([[214, 158], [250, 150], [278, 170], [300, 232], [252, 256], [218, 236], [200, 196]], '#b89478');
+  ctx.strokeStyle = 'rgba(60,30,20,0.55)'; ctx.lineWidth = 3;
+  [[222, 176, 246, 172], [226, 196, 254, 192], [230, 214, 258, 212]].forEach(([a, b, x, y]) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.quadraticCurveTo((a + x) / 2, b - 6, x, y); ctx.stroke(); });
+  ctx.fillStyle = 'rgba(40,20,10,0.25)'; ctx.beginPath(); ctx.moveTo(262, 170); ctx.lineTo(300, 232); ctx.lineTo(268, 246); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = ART_INK; ctx.lineWidth = 5;
+  path([[206, 186], [192, 166], [204, 154], [222, 166]], '#c8a488');   // the thumb over the ring
+  return c.toDataURL();
+}
+// The flame and its glow, drawn on their own so they can flicker.
+function heldFlameArt() {
+  const [c, ctx] = artCanvas(160, 220);
+  const g = ctx.createRadialGradient(80, 140, 4, 80, 130, 80);
+  g.addColorStop(0, 'rgba(255,230,170,0.95)'); g.addColorStop(0.35, 'rgba(255,170,80,0.45)'); g.addColorStop(1, 'rgba(255,140,60,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 160, 220);
+  const f = ctx.createLinearGradient(0, 100, 0, 160);
+  f.addColorStop(0, '#fff6d8'); f.addColorStop(1, '#ffb050');
+  ctx.fillStyle = f; ctx.beginPath(); ctx.moveTo(80, 96); ctx.quadraticCurveTo(96, 132, 88, 152); ctx.quadraticCurveTo(80, 162, 72, 152); ctx.quadraticCurveTo(64, 132, 80, 96); ctx.fill();
+  return c.toDataURL();
+}
