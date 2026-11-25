@@ -229,7 +229,12 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   (polyhaven.com, CC0) in `docs/explore/textures/`, recoloured to each
   room's palette (`FLOOR_PHOTOS`, `photoAs`, `photoGrime`); until one has
   loaded, the drawn version shows. The lantern in your hand is drawn
-  (`heldLanternArt`) and swayed by `tickHeld` in main.js.
+  (`heldLanternArt`) and swayed by `tickHeld` in main.js. Skirting,
+  cornices, cobwebs, rugs and small objects are `addDetails` in
+  furniture.js; candle and hearth flicker, the chandelier's sway and the
+  dust in the lantern light are `tickAmbient` in main.js. Footsteps change
+  with the floor (`FLOOR_SOUND`), the house creaks now and then, and
+  Jasper's scurrying comes from his side (`panTo`).
 - **The official artwork** (`docs/explore/characters/`, full-size masters
   in `source-assets/originals/explore/characters/`): the painting of the
   house (title screen), the Crooked Man (the full figure wherever he stands

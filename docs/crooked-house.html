@@ -1850,6 +1850,41 @@ function heldFlameArt() {
   return c.toDataURL();
 }
 
+
+// A cobweb, spun across a corner: threads from the corner (bottom middle
+// of the picture is the corner's lowest point) and the spiral between.
+function cobwebTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  ctx.strokeStyle = 'rgba(220,215,200,0.55)'; ctx.lineWidth = 1;
+  const ox = 64, oy = 4;        // where the threads meet (the top corner)
+  const rand = seededRandom(74);
+  const spokes = [];
+  for (let i = 0; i <= 7; i++) { const a = Math.PI * (0.1 + i / 7 * 0.8); spokes.push(a); ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(a) * 140, oy + Math.sin(a) * 140); ctx.stroke(); }
+  for (let r = 14; r < 130; r += 10 + rand() * 6) {
+    ctx.beginPath();
+    spokes.forEach((a, i) => { const rr = r + (rand() - 0.5) * 4, x = ox + Math.cos(a) * rr, y = oy + Math.sin(a) * rr; i ? ctx.quadraticCurveTo(ox + Math.cos(a - 0.06) * rr * 0.96, oy + Math.sin(a - 0.06) * rr * 0.96, x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(200,195,180,0.12)'; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(0, 128); ctx.lineTo(128, 128); ctx.closePath(); ctx.fill();
+  return artTexture(c);
+}
+
+// A worn rug: a border, a faded field, a medallion; round or oblong.
+function rugTexture(base, round) {
+  const [c, ctx] = artCanvas(256, 256);
+  const rand = seededRandom(base.charCodeAt(2) * 3 + (round ? 1 : 0));
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 256, 256);
+  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, 256 - inset * 2, 256 - inset * 2); };
+  ring(10, 'rgba(160,120,60,0.45)', 6); ring(22, 'rgba(20,12,8,0.5)', 10); ring(34, 'rgba(160,120,60,0.3)', 3);
+  ctx.fillStyle = 'rgba(150,110,60,0.28)';
+  ctx.beginPath(); ctx.moveTo(128, 64); ctx.lineTo(176, 128); ctx.lineTo(128, 192); ctx.lineTo(80, 128); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(128, 128, 18, 0, Math.PI * 2); ctx.fill();
+  artGrime(ctx, 256, 256, rand, 1.4);
+  if (round) { ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(128, 128, 127, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+  const tex = artTexture(c);
+  return withPhoto(tex, 'velour_velvet', (cx, img, w, h) => photoGrime(cx, img, 0, 0, w, h, 0.35));
+}
+
 // ─── src/game/js/audio.js ────────────────────────────────────────────
 // Sound. The storm and the music are recordings (MUSIC, below), streamed
 // as they play. Everything else is made in the browser with Web Audio:
@@ -2171,8 +2206,47 @@ const sound = {
     src.start(t, Math.random()); src.stop(t + dur + 0.05);
   },
 
-  // Jasper: a quick skitter of claws on boards.
-  scurry() {
+  // A sound from one side: -1 left to 1 right (or the middle).
+  panned(node, pan = 0) {
+    if (!pan || !this.ctx.createStereoPanner) return node.connect(this.master);
+    const p = this.ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan));
+    return node.connect(p).connect(this.master);
+  },
+
+  // Footsteps, by what's underfoot: 'wood' (a dull knock), 'boards' (the
+  // porch: hollow), 'tile' (a sharp tap) or 'stone' (a gritty scuff).
+  footstep(surface = 'wood') {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime + Math.random() * 0.02;
+    const spec = { wood: [380, 0.9, 0.16, 0.1], boards: [240, 1.4, 0.2, 0.14], tile: [2400, 0.6, 0.07, 0.07], stone: [1200, 0.5, 0.11, 0.09] }[surface] || [380, 0.9, 0.16, 0.1];
+    const [freq, q, vol, dur] = spec;
+    const src = ctx.createBufferSource(); src.buffer = this.noise;
+    const f = ctx.createBiquadFilter(); f.type = surface === 'tile' ? 'highpass' : 'bandpass'; f.frequency.value = freq * (0.9 + Math.random() * 0.2); f.Q.value = q;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(this.master);
+    src.start(t, Math.random()); src.stop(t + dur + 0.02);
+    if ((surface === 'wood' || surface === 'boards') && Math.random() < 0.14) this.creak(0, 0.5);
+  },
+
+  // A floorboard or a beam giving under weight: a slow, rising groan.
+  creak(pan = 0, vol = 1) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime + 0.05, dur = 0.5 + Math.random() * 0.7;
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    const f0 = 90 + Math.random() * 120;
+    o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * (1.2 + Math.random() * 0.5), t + dur);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 9; bp.frequency.setValueAtTime(700 + Math.random() * 500, t);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045 * vol, t + dur * 0.3); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    // a stuttering grain, like wood fibres catching
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 18 + Math.random() * 20;
+    const depth = ctx.createGain(); depth.gain.value = 0.03 * vol;
+    lfo.connect(depth).connect(g.gain);
+    this.panned(o.connect(bp).connect(g), pan);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  },
+
+  // Jasper: a quick skitter of claws on boards (from his side, if `pan`).
+  scurry(pan = 0) {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
     for (let i = 0; i < 7; i++) {
@@ -2180,7 +2254,7 @@ const sound = {
       const src = this.ctx.createBufferSource(); src.buffer = this.noise;
       const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
       const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-      src.connect(hp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.04);
+      this.panned(src.connect(hp).connect(g), pan); src.start(t, Math.random()); src.stop(t + 0.04);
     }
   },
 
@@ -2753,6 +2827,85 @@ function addScenery(w, p) {
   return null;
 }
 
+// ─── Small detail: skirting and cornices, cobwebs, rugs, odds and ends ──
+// All static: added to `fixtures` and merged with the furniture, except the
+// cobwebs (see-through), which are gathered into one mesh of their own.
+function addDetails(w, fixtures) {
+  const { scene } = w;
+  const skirt = woodM(WOOD.dark), cornice = plainM(0x2a2420, 1);
+  const strip = (len, h, d, mat, x, y, z, rot) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len, h, d), mat);
+    m.position.set(x, y, z); m.rotation.y = rot; m.receiveShadow = true;
+    scene.add(m); fixtures.push(m);
+  };
+  const inside = c => c && c.walk && c.room && c.room !== 'porch';
+  GRID.cells.forEach(c => {
+    if (!inside(c)) return;
+    c.edges.forEach((e, d) => {
+      if (e !== 'wall') return;
+      const [dx, dy] = DIRS[d], ex = c.x + dx * CELL / 2, ez = c.y + dy * CELL / 2;
+      const rot = d % 2 ? Math.PI / 2 : 0, len = CELL + 1;
+      const off = WALL_T / 2 + 0.8;
+      // skirting board at the floor, cornice under the ceiling (which
+      // leans with the wall)
+      strip(len, 5, 1.6, skirt, ex - dx * off, 2.5, ez - dy * off, rot);
+      const [lx, lz] = wallLean(ex, ez);
+      strip(len, 4, 3, cornice, ex - dx * (off + 0.7) + lx * 0.97, WALL_H - 2, ez - dy * (off + 0.7) + lz * 0.97, rot);
+    });
+  });
+
+  // Cobwebs, in some of the ceiling corners.
+  const webs = quadBuilder(), rand = seededRandom(73);
+  GRID.cells.forEach(c => {
+    if (!inside(c) || c.room === 'conservatory') return;
+    for (let d = 0; d < 4; d++) {
+      const d2 = (d + 1) % 4;
+      if (c.edges[d] !== 'wall' || c.edges[d2] !== 'wall' || rand() > 0.55) continue;
+      // the corner, just off both walls
+      const cx = c.x + (DIRS[d][0] + DIRS[d2][0]) * (CELL / 2 - WALL_T / 2 - 0.5), cz = c.y + (DIRS[d][1] + DIRS[d2][1]) * (CELL / 2 - WALL_T / 2 - 0.5);
+      const s = 14 + rand() * 12, y = WALL_H - 1;
+      const a = [cx - DIRS[d2][0] * s, y, cz - DIRS[d2][1] * s], b = [cx - DIRS[d][0] * s, y, cz - DIRS[d][1] * s], down = [cx, y - s * 0.9, cz];
+      webs.tri([a, b, down], [[0, 1], [1, 1], [0.5, 0]]);
+    }
+  });
+  if (!webs.empty()) {
+    const m = new THREE.Mesh(webs.geo(), new THREE.MeshStandardMaterial({ map: cobwebTexture(), transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 1 }));
+    scene.add(m);
+  }
+
+  // Rugs: under the séance table, the dining table, along the foyer.
+  const rug = (x, z, wd, dp, base, round = false) => {
+    const geo = round ? new THREE.CircleGeometry(wd / 2, 40) : new THREE.PlaneGeometry(wd, dp);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, 0.35, z); m.receiveShadow = true;
+    scene.add(m); fixtures.push(m);
+  };
+  rug(505, 630, 150, 150, '#4a2224', true);
+  rug(865, 650, 120, 230, '#3a2a40');
+  rug(540, 960, 70, 200, '#1c2620');
+
+  // Odds and ends: decanters on the sideboard, jars by the kitchen pump,
+  // books and a candlestick on the foyer console.
+  const glass = c => plainM(c, 0.25, 0.1);
+  const sb = SCENERY.find(p => p.kind === 'sideboard');
+  if (sb) {
+    const g = piece(scene, sb.x, sb.y, sb.rot || 0); fixtures.push(g);
+    [[-16, '#3a1418'], [-8, '#2a3020'], [8, '#4a3a18']].forEach(([x, col]) => { cyl(g, 3, 3.4, 9, glass(new THREE.Color(col).getHex()), x, 38, -2, 10); cyl(g, 1, 1.4, 4, glass(new THREE.Color(col).getHex()), x, 44, -2, 8); });
+    blk(g, 22, 1, 12, plainM(0x8a8a88, 0.35, 0.7), 22, 34, 0);   // a silver tray
+  }
+  const pumpSpot = PUMP.wallDir === undefined ? null : PUMP;
+  if (pumpSpot) {
+    const g = piece(scene, pumpSpot.x, pumpSpot.y, faceAway(pumpSpot.wallDir)); fixtures.push(g);
+    [[-20, 5, '#6a5a40'], [-26, 4, '#4a4a3a'], [21, 6, '#5a3a2a']].forEach(([x, r, col]) => cyl(g, r, r + 0.6, r * 2.2, plainM(new THREE.Color(col).getHex(), 0.8), x, 45 + r * 1.1, -2, 10));
+  }
+  const con = SEARCHES.find(s => s.prop === 'console');
+  if (con && con.wallDir !== undefined) {
+    const g = piece(scene, con.x, con.y, faceAway(con.wallDir)); fixtures.push(g);
+    [[-14, '#4a2a20'], [-10, '#2a3a2a'], [-6, '#3a2a40']].forEach(([x, col], i) => blk(g, 3.4, 11 - i, 10, plainM(new THREE.Color(col).getHex(), 0.9), x, 37 - i / 2, -1));
+    cyl(g, 1.4, 2.6, 9, brassM(), 14, 36, -1); cyl(g, 0.9, 0.9, 6, plainM(0x9a927c), 14, 43.5, -1, 8);
+  }
+}
+
 // ─── src/game/js/world.js ────────────────────────────────────────────
 // Builds the 3D house from the grid: a wall on every walled edge (papered on
 // the room's side), floors and ceilings square by square, door frames,
@@ -3073,6 +3226,7 @@ function buildWorld(renderer, quality) {
     }
   });
   fixtures.push(...hangPictures(w));
+  addDetails(w, fixtures);
   mergeStatic(scene, fixtures);
 
   // Things drawn straight onto a wall (e.g. the hallway scratches). Shown
@@ -4741,7 +4895,7 @@ function tickJasper(dt, here, now) {
   if (quiet && (band === 'terrified')) {
     if (jasper.mode !== 'present' || jasper.room !== here.room) {
       const c = jasperSpot(1, 2, 0) || jasperSpot(1, 1, 1);
-      if (c) { place(s, c, 16); jasper.mode = 'present'; jasper.room = here.room; sound.scurry(); }
+      if (c) { place(s, c, 16); jasper.mode = 'present'; jasper.room = here.room; sound.scurry(panTo(s.position)); }
     }
   } else if (jasper.mode === 'present') hide(s);
   // Uneasy: a glimpse at the edge of sight, now and then.
@@ -4753,7 +4907,7 @@ function tickJasper(dt, here, now) {
     if (jasper.nextGlimpse <= 0) {
       jasper.nextGlimpse = 18 + Math.random() * 22;
       const c = jasperSpot(2, 3, 1);
-      if (c) { place(s, c); jasper.mode = 'glimpse'; jasper.until = now + 900; jasper.yawAt = yaw; sound.scurry(); }
+      if (c) { place(s, c); jasper.mode = 'glimpse'; jasper.until = now + 900; jasper.yawAt = yaw; sound.scurry(panTo(s.position)); }
     }
   }
   if (s.visible) s.position.y = Math.abs(Math.sin(now / 140)) * 1.5;   // twitching
@@ -7107,7 +7261,9 @@ const FINISH_SHADER = {
       // a few tones: brightness pulled towards bands, softly
       float bands = 7.0;
       float lq = (floor(l0 * bands) + 0.5) / bands;
-      col = mix(col, col * (lq / max(l0, 0.002)), 0.3);
+      // (never lifting the darkest pixels, which would blow up their noise)
+      float ratio = clamp(lq / max(l0, 0.02), 0.75, 1.25);
+      col = mix(col, col * ratio, 0.3 * smoothstep(0.03, 0.12, l0));
       // Dread: colour drains, the shadows go cold
       float d = dread;
       col = mix(col, vec3(luma(col)), d * 0.55);
@@ -7177,9 +7333,9 @@ const CAM_BACK = 17;
 let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
-let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+let yaw = 0, nextStrike = 4, strikes = [], clock = 0, nextCreak = 12;
 let moodLevel = 1, moodColor = null, snapMood = true, realDt = 0;
-const DOOR_SWING = 1.75, DOOR_MS = 550;   // how far doors swing open (radians), and how fast
+const DOOR_SWING = 1.75, DOOR_MS = 750;   // how far doors swing open (radians), and how slowly (they creak)
 
 // After a dialogue, an overlay or a scene ends, input is ignored for a
 // moment, so the key press that closed it (or a quick double-tap) can't
@@ -7361,10 +7517,20 @@ function swingDoor(door, open) {
   saveGame();
 }
 
+// What's underfoot, by room, for the footsteps.
+const FLOOR_SOUND = { foyer: 'tile', conservatory: 'tile', kitchen: 'stone', gallery: 'stone', porch: 'boards' };
+// Where something is, left (-1) to right (1), from where you're facing.
+function panTo(p) {
+  const cam = world.camera, dx = p.x - cam.position.x, dz = p.z - cam.position.z;
+  const rx = Math.cos(yaw), rz = -Math.sin(yaw);
+  return (dx * rx + dz * rz) / Math.max(1, Math.hypot(dx, dz));
+}
+
 function step(dir) {
   const c = GRID.at(game.cx, game.cy);
   if (!canStep(c, dir)) { motion.bump = performance.now(); return; }
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  sound.footstep(FLOOR_SOUND[n.room] || 'wood');
   if (game.curse) stompAt(n);        // a weasel in the way, crushed (the dark way)
   motion.from = c; motion.to = n; motion.t0 = performance.now(); motion.ms = STEP_MS;
   motion.yawFrom = motion.yawTo = yaw;
@@ -7456,11 +7622,14 @@ function loop(now) {
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
   world.lantern.intensity = LANTERN.intensity * tickDread(dt, here) * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
   tickHeld(now);
+  tickAmbient(dt, cam);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
   });
 
+  // The house settling: a creak from somewhere, now and then.
+  if (clock > nextCreak) { if (!game.inFlashback) sound.creak(Math.random() * 2 - 1, 0.7 + Math.random() * 0.5); nextCreak = clock + 14 + Math.random() * 26; }
   // The storm.
   if (clock > nextStrike) { strike(0.4 + Math.random() * 0.6); nextStrike = clock + 8 + Math.random() * 12; }
   strikes = strikes.filter(s => clock - s < 1.5);
@@ -7572,6 +7741,42 @@ function tickHeld(now) {
   const lit = clamp01(world.lantern.intensity / LANTERN.intensity);
   h.el.style.setProperty('--lit', (0.32 + 0.75 * lit).toFixed(3));
   h.el.style.setProperty('--flame', (lit * (0.85 + Math.sin(clock * 13.1) * 0.08 + Math.sin(clock * 7.3) * 0.07)).toFixed(3));
+}
+
+// Small movements that make the house feel alive: candle flames and the
+// hearth flicker, the chandelier sways on its chain, and dust drifts
+// through the lantern's light.
+let dust = null;
+function tickAmbient(dt, cam) {
+  if (!dust) {
+    const n = 140, pos = new Float32Array(n * 3), rand = seededRandom(91);
+    for (let i = 0; i < n * 3; i++) pos[i] = (rand() - 0.5) * 160;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 1.3, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe0b0, opacity: 0.5 }));
+    dust.frustumCulled = false;
+    dust.userData.seeds = Array.from({ length: n }, () => rand() * 6.28);
+    world.scene.add(dust);
+  }
+  // the motes hang round you, drifting and slowly falling, each wrapping
+  // back into the box when it leaves
+  const p = dust.geometry.attributes.position.array, sd = dust.userData.seeds;
+  for (let i = 0; i < sd.length; i++) {
+    const o = i * 3;
+    p[o] += Math.sin(clock * 0.3 + sd[i]) * dt * 2.2; p[o + 1] -= dt * (0.6 + (sd[i] % 1)); p[o + 2] += Math.cos(clock * 0.25 + sd[i] * 1.7) * dt * 2.2;
+    for (let k = 0; k < 3; k++) { if (p[o + k] > 80) p[o + k] -= 160; else if (p[o + k] < -80) p[o + k] += 160; }
+  }
+  dust.geometry.attributes.position.needsUpdate = true;
+  dust.position.set(cam.position.x, cam.position.y, cam.position.z);
+  dust.material.opacity = 0.55 * clamp01(world.lantern.intensity / LANTERN.intensity);
+  dust.visible = !game.inFlashback;
+  // candles and fire
+  const flick = 1 + Math.sin(clock * 11.3) * 0.08 + Math.sin(clock * 17.9 + 1.3) * 0.06;
+  if (world.feast) world.feast.flames.forEach((f, i) => { f.scale.set(1, flick + Math.sin(clock * 9 + i) * 0.1, 1); });
+  if (game.flags.hearthLit) world.hearthMats.forEach(m => { m.emissiveIntensity = 1.6 * (0.85 + 0.15 * flick + Math.sin(clock * 3.1) * 0.08); });
+  // the chandelier, on its long chain
+  const ch = world.chandelier ??= world.sprites.find(s => s.userData.kind === 'chandelier');
+  if (ch) { ch.userData.x0 ??= ch.position.x; ch.position.x = ch.userData.x0 + Math.sin(clock * 0.7) * 1.6 + (game.dread >= 7 ? Math.sin(clock * 2.3) * 1.2 : 0); }
 }
 
 // Doors swinging.

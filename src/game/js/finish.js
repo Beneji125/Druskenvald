@@ -47,7 +47,9 @@ const FINISH_SHADER = {
       // a few tones: brightness pulled towards bands, softly
       float bands = 7.0;
       float lq = (floor(l0 * bands) + 0.5) / bands;
-      col = mix(col, col * (lq / max(l0, 0.002)), 0.3);
+      // (never lifting the darkest pixels, which would blow up their noise)
+      float ratio = clamp(lq / max(l0, 0.02), 0.75, 1.25);
+      col = mix(col, col * ratio, 0.3 * smoothstep(0.03, 0.12, l0));
       // Dread: colour drains, the shadows go cold
       float d = dread;
       col = mix(col, vec3(luma(col)), d * 0.55);

@@ -1174,3 +1174,38 @@ function heldFlameArt() {
   ctx.fillStyle = f; ctx.beginPath(); ctx.moveTo(80, 96); ctx.quadraticCurveTo(96, 132, 88, 152); ctx.quadraticCurveTo(80, 162, 72, 152); ctx.quadraticCurveTo(64, 132, 80, 96); ctx.fill();
   return c.toDataURL();
 }
+
+
+// A cobweb, spun across a corner: threads from the corner (bottom middle
+// of the picture is the corner's lowest point) and the spiral between.
+function cobwebTexture() {
+  const [c, ctx] = artCanvas(128, 128);
+  ctx.strokeStyle = 'rgba(220,215,200,0.55)'; ctx.lineWidth = 1;
+  const ox = 64, oy = 4;        // where the threads meet (the top corner)
+  const rand = seededRandom(74);
+  const spokes = [];
+  for (let i = 0; i <= 7; i++) { const a = Math.PI * (0.1 + i / 7 * 0.8); spokes.push(a); ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(a) * 140, oy + Math.sin(a) * 140); ctx.stroke(); }
+  for (let r = 14; r < 130; r += 10 + rand() * 6) {
+    ctx.beginPath();
+    spokes.forEach((a, i) => { const rr = r + (rand() - 0.5) * 4, x = ox + Math.cos(a) * rr, y = oy + Math.sin(a) * rr; i ? ctx.quadraticCurveTo(ox + Math.cos(a - 0.06) * rr * 0.96, oy + Math.sin(a - 0.06) * rr * 0.96, x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(200,195,180,0.12)'; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(0, 128); ctx.lineTo(128, 128); ctx.closePath(); ctx.fill();
+  return artTexture(c);
+}
+
+// A worn rug: a border, a faded field, a medallion; round or oblong.
+function rugTexture(base, round) {
+  const [c, ctx] = artCanvas(256, 256);
+  const rand = seededRandom(base.charCodeAt(2) * 3 + (round ? 1 : 0));
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 256, 256);
+  const ring = (inset, col, wdt) => { ctx.strokeStyle = col; ctx.lineWidth = wdt; if (round) { ctx.beginPath(); ctx.arc(128, 128, 128 - inset, 0, Math.PI * 2); ctx.stroke(); } else ctx.strokeRect(inset, inset, 256 - inset * 2, 256 - inset * 2); };
+  ring(10, 'rgba(160,120,60,0.45)', 6); ring(22, 'rgba(20,12,8,0.5)', 10); ring(34, 'rgba(160,120,60,0.3)', 3);
+  ctx.fillStyle = 'rgba(150,110,60,0.28)';
+  ctx.beginPath(); ctx.moveTo(128, 64); ctx.lineTo(176, 128); ctx.lineTo(128, 192); ctx.lineTo(80, 128); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(20,12,8,0.35)'; ctx.beginPath(); ctx.arc(128, 128, 18, 0, Math.PI * 2); ctx.fill();
+  artGrime(ctx, 256, 256, rand, 1.4);
+  if (round) { ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(128, 128, 127, 0, Math.PI * 2); ctx.fill(); ctx.globalCompositeOperation = 'source-over'; }
+  const tex = artTexture(c);
+  return withPhoto(tex, 'velour_velvet', (cx, img, w, h) => photoGrime(cx, img, 0, 0, w, h, 0.35));
+}

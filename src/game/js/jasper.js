@@ -37,7 +37,7 @@ function tickJasper(dt, here, now) {
   if (quiet && (band === 'terrified')) {
     if (jasper.mode !== 'present' || jasper.room !== here.room) {
       const c = jasperSpot(1, 2, 0) || jasperSpot(1, 1, 1);
-      if (c) { place(s, c, 16); jasper.mode = 'present'; jasper.room = here.room; sound.scurry(); }
+      if (c) { place(s, c, 16); jasper.mode = 'present'; jasper.room = here.room; sound.scurry(panTo(s.position)); }
     }
   } else if (jasper.mode === 'present') hide(s);
   // Uneasy: a glimpse at the edge of sight, now and then.
@@ -49,7 +49,7 @@ function tickJasper(dt, here, now) {
     if (jasper.nextGlimpse <= 0) {
       jasper.nextGlimpse = 18 + Math.random() * 22;
       const c = jasperSpot(2, 3, 1);
-      if (c) { place(s, c); jasper.mode = 'glimpse'; jasper.until = now + 900; jasper.yawAt = yaw; sound.scurry(); }
+      if (c) { place(s, c); jasper.mode = 'glimpse'; jasper.until = now + 900; jasper.yawAt = yaw; sound.scurry(panTo(s.position)); }
     }
   }
   if (s.visible) s.position.y = Math.abs(Math.sin(now / 140)) * 1.5;   // twitching

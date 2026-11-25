@@ -317,6 +317,7 @@ function buildWorld(renderer, quality) {
     }
   });
   fixtures.push(...hangPictures(w));
+  addDetails(w, fixtures);
   mergeStatic(scene, fixtures);
 
   // Things drawn straight onto a wall (e.g. the hallway scratches). Shown

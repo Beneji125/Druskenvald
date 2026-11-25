@@ -532,3 +532,82 @@ function addScenery(w, p) {
   }
   return null;
 }
+
+// ─── Small detail: skirting and cornices, cobwebs, rugs, odds and ends ──
+// All static: added to `fixtures` and merged with the furniture, except the
+// cobwebs (see-through), which are gathered into one mesh of their own.
+function addDetails(w, fixtures) {
+  const { scene } = w;
+  const skirt = woodM(WOOD.dark), cornice = plainM(0x2a2420, 1);
+  const strip = (len, h, d, mat, x, y, z, rot) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len, h, d), mat);
+    m.position.set(x, y, z); m.rotation.y = rot; m.receiveShadow = true;
+    scene.add(m); fixtures.push(m);
+  };
+  const inside = c => c && c.walk && c.room && c.room !== 'porch';
+  GRID.cells.forEach(c => {
+    if (!inside(c)) return;
+    c.edges.forEach((e, d) => {
+      if (e !== 'wall') return;
+      const [dx, dy] = DIRS[d], ex = c.x + dx * CELL / 2, ez = c.y + dy * CELL / 2;
+      const rot = d % 2 ? Math.PI / 2 : 0, len = CELL + 1;
+      const off = WALL_T / 2 + 0.8;
+      // skirting board at the floor, cornice under the ceiling (which
+      // leans with the wall)
+      strip(len, 5, 1.6, skirt, ex - dx * off, 2.5, ez - dy * off, rot);
+      const [lx, lz] = wallLean(ex, ez);
+      strip(len, 4, 3, cornice, ex - dx * (off + 0.7) + lx * 0.97, WALL_H - 2, ez - dy * (off + 0.7) + lz * 0.97, rot);
+    });
+  });
+
+  // Cobwebs, in some of the ceiling corners.
+  const webs = quadBuilder(), rand = seededRandom(73);
+  GRID.cells.forEach(c => {
+    if (!inside(c) || c.room === 'conservatory') return;
+    for (let d = 0; d < 4; d++) {
+      const d2 = (d + 1) % 4;
+      if (c.edges[d] !== 'wall' || c.edges[d2] !== 'wall' || rand() > 0.55) continue;
+      // the corner, just off both walls
+      const cx = c.x + (DIRS[d][0] + DIRS[d2][0]) * (CELL / 2 - WALL_T / 2 - 0.5), cz = c.y + (DIRS[d][1] + DIRS[d2][1]) * (CELL / 2 - WALL_T / 2 - 0.5);
+      const s = 14 + rand() * 12, y = WALL_H - 1;
+      const a = [cx - DIRS[d2][0] * s, y, cz - DIRS[d2][1] * s], b = [cx - DIRS[d][0] * s, y, cz - DIRS[d][1] * s], down = [cx, y - s * 0.9, cz];
+      webs.tri([a, b, down], [[0, 1], [1, 1], [0.5, 0]]);
+    }
+  });
+  if (!webs.empty()) {
+    const m = new THREE.Mesh(webs.geo(), new THREE.MeshStandardMaterial({ map: cobwebTexture(), transparent: true, depthWrite: false, side: THREE.DoubleSide, roughness: 1 }));
+    scene.add(m);
+  }
+
+  // Rugs: under the séance table, the dining table, along the foyer.
+  const rug = (x, z, wd, dp, base, round = false) => {
+    const geo = round ? new THREE.CircleGeometry(wd / 2, 40) : new THREE.PlaneGeometry(wd, dp);
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: rugTexture(base, round), roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, 0.35, z); m.receiveShadow = true;
+    scene.add(m); fixtures.push(m);
+  };
+  rug(505, 630, 150, 150, '#4a2224', true);
+  rug(865, 650, 120, 230, '#3a2a40');
+  rug(540, 960, 70, 200, '#1c2620');
+
+  // Odds and ends: decanters on the sideboard, jars by the kitchen pump,
+  // books and a candlestick on the foyer console.
+  const glass = c => plainM(c, 0.25, 0.1);
+  const sb = SCENERY.find(p => p.kind === 'sideboard');
+  if (sb) {
+    const g = piece(scene, sb.x, sb.y, sb.rot || 0); fixtures.push(g);
+    [[-16, '#3a1418'], [-8, '#2a3020'], [8, '#4a3a18']].forEach(([x, col]) => { cyl(g, 3, 3.4, 9, glass(new THREE.Color(col).getHex()), x, 38, -2, 10); cyl(g, 1, 1.4, 4, glass(new THREE.Color(col).getHex()), x, 44, -2, 8); });
+    blk(g, 22, 1, 12, plainM(0x8a8a88, 0.35, 0.7), 22, 34, 0);   // a silver tray
+  }
+  const pumpSpot = PUMP.wallDir === undefined ? null : PUMP;
+  if (pumpSpot) {
+    const g = piece(scene, pumpSpot.x, pumpSpot.y, faceAway(pumpSpot.wallDir)); fixtures.push(g);
+    [[-20, 5, '#6a5a40'], [-26, 4, '#4a4a3a'], [21, 6, '#5a3a2a']].forEach(([x, r, col]) => cyl(g, r, r + 0.6, r * 2.2, plainM(new THREE.Color(col).getHex(), 0.8), x, 45 + r * 1.1, -2, 10));
+  }
+  const con = SEARCHES.find(s => s.prop === 'console');
+  if (con && con.wallDir !== undefined) {
+    const g = piece(scene, con.x, con.y, faceAway(con.wallDir)); fixtures.push(g);
+    [[-14, '#4a2a20'], [-10, '#2a3a2a'], [-6, '#3a2a40']].forEach(([x, col], i) => blk(g, 3.4, 11 - i, 10, plainM(new THREE.Color(col).getHex(), 0.9), x, 37 - i / 2, -1));
+    cyl(g, 1.4, 2.6, 9, brassM(), 14, 36, -1); cyl(g, 0.9, 0.9, 6, plainM(0x9a927c), 14, 43.5, -1, 8);
+  }
+}

@@ -318,8 +318,47 @@ const sound = {
     src.start(t, Math.random()); src.stop(t + dur + 0.05);
   },
 
-  // Jasper: a quick skitter of claws on boards.
-  scurry() {
+  // A sound from one side: -1 left to 1 right (or the middle).
+  panned(node, pan = 0) {
+    if (!pan || !this.ctx.createStereoPanner) return node.connect(this.master);
+    const p = this.ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan));
+    return node.connect(p).connect(this.master);
+  },
+
+  // Footsteps, by what's underfoot: 'wood' (a dull knock), 'boards' (the
+  // porch: hollow), 'tile' (a sharp tap) or 'stone' (a gritty scuff).
+  footstep(surface = 'wood') {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime + Math.random() * 0.02;
+    const spec = { wood: [380, 0.9, 0.16, 0.1], boards: [240, 1.4, 0.2, 0.14], tile: [2400, 0.6, 0.07, 0.07], stone: [1200, 0.5, 0.11, 0.09] }[surface] || [380, 0.9, 0.16, 0.1];
+    const [freq, q, vol, dur] = spec;
+    const src = ctx.createBufferSource(); src.buffer = this.noise;
+    const f = ctx.createBiquadFilter(); f.type = surface === 'tile' ? 'highpass' : 'bandpass'; f.frequency.value = freq * (0.9 + Math.random() * 0.2); f.Q.value = q;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(this.master);
+    src.start(t, Math.random()); src.stop(t + dur + 0.02);
+    if ((surface === 'wood' || surface === 'boards') && Math.random() < 0.14) this.creak(0, 0.5);
+  },
+
+  // A floorboard or a beam giving under weight: a slow, rising groan.
+  creak(pan = 0, vol = 1) {
+    if (!this.ctx) return;
+    const ctx = this.ctx, t = ctx.currentTime + 0.05, dur = 0.5 + Math.random() * 0.7;
+    const o = ctx.createOscillator(); o.type = 'sawtooth';
+    const f0 = 90 + Math.random() * 120;
+    o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * (1.2 + Math.random() * 0.5), t + dur);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 9; bp.frequency.setValueAtTime(700 + Math.random() * 500, t);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045 * vol, t + dur * 0.3); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    // a stuttering grain, like wood fibres catching
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 18 + Math.random() * 20;
+    const depth = ctx.createGain(); depth.gain.value = 0.03 * vol;
+    lfo.connect(depth).connect(g.gain);
+    this.panned(o.connect(bp).connect(g), pan);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  },
+
+  // Jasper: a quick skitter of claws on boards (from his side, if `pan`).
+  scurry(pan = 0) {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
     for (let i = 0; i < 7; i++) {
@@ -327,7 +366,7 @@ const sound = {
       const src = this.ctx.createBufferSource(); src.buffer = this.noise;
       const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
       const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-      src.connect(hp).connect(g).connect(this.master); src.start(t, Math.random()); src.stop(t + 0.04);
+      this.panned(src.connect(hp).connect(g), pan); src.start(t, Math.random()); src.stop(t + 0.04);
     }
   },
 

@@ -9,9 +9,9 @@ const CAM_BACK = 17;
 let renderer = null;
 const motion = { from: null, to: null, t0: 0, ms: 0, yawFrom: 0, yawTo: 0, bump: 0 };
 const queued = [];
-let yaw = 0, nextStrike = 4, strikes = [], clock = 0;
+let yaw = 0, nextStrike = 4, strikes = [], clock = 0, nextCreak = 12;
 let moodLevel = 1, moodColor = null, snapMood = true, realDt = 0;
-const DOOR_SWING = 1.75, DOOR_MS = 550;   // how far doors swing open (radians), and how fast
+const DOOR_SWING = 1.75, DOOR_MS = 750;   // how far doors swing open (radians), and how slowly (they creak)
 
 // After a dialogue, an overlay or a scene ends, input is ignored for a
 // moment, so the key press that closed it (or a quick double-tap) can't
@@ -193,10 +193,20 @@ function swingDoor(door, open) {
   saveGame();
 }
 
+// What's underfoot, by room, for the footsteps.
+const FLOOR_SOUND = { foyer: 'tile', conservatory: 'tile', kitchen: 'stone', gallery: 'stone', porch: 'boards' };
+// Where something is, left (-1) to right (1), from where you're facing.
+function panTo(p) {
+  const cam = world.camera, dx = p.x - cam.position.x, dz = p.z - cam.position.z;
+  const rx = Math.cos(yaw), rz = -Math.sin(yaw);
+  return (dx * rx + dz * rz) / Math.max(1, Math.hypot(dx, dz));
+}
+
 function step(dir) {
   const c = GRID.at(game.cx, game.cy);
   if (!canStep(c, dir)) { motion.bump = performance.now(); return; }
   const n = GRID.at(c.cx + DIRS[dir][0], c.cy + DIRS[dir][1]);
+  sound.footstep(FLOOR_SOUND[n.room] || 'wood');
   if (game.curse) stompAt(n);        // a weasel in the way, crushed (the dark way)
   motion.from = c; motion.to = n; motion.t0 = performance.now(); motion.ms = STEP_MS;
   motion.yawFrom = motion.yawTo = yaw;
@@ -288,11 +298,14 @@ function loop(now) {
   world.lantern.position.set(cam.position.x + rx * 9 + fx * 8, EYE_H - 14 + bob, cam.position.z + rz * 9 + fz * 8);
   world.lantern.intensity = LANTERN.intensity * tickDread(dt, here) * (1 + Math.sin(clock * 13.1) * 0.04 + Math.sin(clock * 7.3 + 1) * 0.05);
   tickHeld(now);
+  tickAmbient(dt, cam);
   world.fixedLights.forEach(l => {
     const u = l.userData;
     l.intensity = u.base * u.boost * (1 + u.flicker * (Math.sin(clock * 2.3 + u.phase) * 0.6 + Math.sin(clock * 5.9 + u.phase * 2) * 0.4));
   });
 
+  // The house settling: a creak from somewhere, now and then.
+  if (clock > nextCreak) { if (!game.inFlashback) sound.creak(Math.random() * 2 - 1, 0.7 + Math.random() * 0.5); nextCreak = clock + 14 + Math.random() * 26; }
   // The storm.
   if (clock > nextStrike) { strike(0.4 + Math.random() * 0.6); nextStrike = clock + 8 + Math.random() * 12; }
   strikes = strikes.filter(s => clock - s < 1.5);
@@ -404,6 +417,42 @@ function tickHeld(now) {
   const lit = clamp01(world.lantern.intensity / LANTERN.intensity);
   h.el.style.setProperty('--lit', (0.32 + 0.75 * lit).toFixed(3));
   h.el.style.setProperty('--flame', (lit * (0.85 + Math.sin(clock * 13.1) * 0.08 + Math.sin(clock * 7.3) * 0.07)).toFixed(3));
+}
+
+// Small movements that make the house feel alive: candle flames and the
+// hearth flicker, the chandelier sways on its chain, and dust drifts
+// through the lantern's light.
+let dust = null;
+function tickAmbient(dt, cam) {
+  if (!dust) {
+    const n = 140, pos = new Float32Array(n * 3), rand = seededRandom(91);
+    for (let i = 0; i < n * 3; i++) pos[i] = (rand() - 0.5) * 160;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    dust = new THREE.Points(geo, new THREE.PointsMaterial({ map: lampGlowTexture(), size: 1.3, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffe0b0, opacity: 0.5 }));
+    dust.frustumCulled = false;
+    dust.userData.seeds = Array.from({ length: n }, () => rand() * 6.28);
+    world.scene.add(dust);
+  }
+  // the motes hang round you, drifting and slowly falling, each wrapping
+  // back into the box when it leaves
+  const p = dust.geometry.attributes.position.array, sd = dust.userData.seeds;
+  for (let i = 0; i < sd.length; i++) {
+    const o = i * 3;
+    p[o] += Math.sin(clock * 0.3 + sd[i]) * dt * 2.2; p[o + 1] -= dt * (0.6 + (sd[i] % 1)); p[o + 2] += Math.cos(clock * 0.25 + sd[i] * 1.7) * dt * 2.2;
+    for (let k = 0; k < 3; k++) { if (p[o + k] > 80) p[o + k] -= 160; else if (p[o + k] < -80) p[o + k] += 160; }
+  }
+  dust.geometry.attributes.position.needsUpdate = true;
+  dust.position.set(cam.position.x, cam.position.y, cam.position.z);
+  dust.material.opacity = 0.55 * clamp01(world.lantern.intensity / LANTERN.intensity);
+  dust.visible = !game.inFlashback;
+  // candles and fire
+  const flick = 1 + Math.sin(clock * 11.3) * 0.08 + Math.sin(clock * 17.9 + 1.3) * 0.06;
+  if (world.feast) world.feast.flames.forEach((f, i) => { f.scale.set(1, flick + Math.sin(clock * 9 + i) * 0.1, 1); });
+  if (game.flags.hearthLit) world.hearthMats.forEach(m => { m.emissiveIntensity = 1.6 * (0.85 + 0.15 * flick + Math.sin(clock * 3.1) * 0.08); });
+  // the chandelier, on its long chain
+  const ch = world.chandelier ??= world.sprites.find(s => s.userData.kind === 'chandelier');
+  if (ch) { ch.userData.x0 ??= ch.position.x; ch.position.x = ch.userData.x0 + Math.sin(clock * 0.7) * 1.6 + (game.dread >= 7 ? Math.sin(clock * 2.3) * 1.2 : 0); }
 }
 
 // Doors swinging.
