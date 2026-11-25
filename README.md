@@ -220,7 +220,7 @@ The foyer stairs end the chapter: the floors above come later.
   touch screens. "Gentler encounters" in the pause
   menu slows things down and halves the Dread they cost. The music room's
   waltz has a beat bar at the top (the coming beats, the timing window,
-  the weasels' beats in red), a soft tick on each beat, and says how close
+  the weasels' beats as red diamonds), a soft tick on each beat, and says how close
   each step was.
 - **The séance** spells its answers a letter at a time; Space, Enter or a
   click on the board hurries the current answer along.

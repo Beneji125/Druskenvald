@@ -109,7 +109,7 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .beat-window { position: absolute; top: 0; bottom: 0; left: calc(18% - var(--win, 6%) / 2); width: var(--win, 6%); background: rgba(240,200,112,0.22); }
 .beat-line { position: absolute; top: 2px; bottom: 2px; left: 18%; width: 2px; margin-left: -1px; background: var(--gold); box-shadow: 0 0 8px rgba(240,200,112,0.8); }
 .beat-marks span { position: absolute; top: 50%; width: 0.55rem; height: 0.55rem; border-radius: 50%; transform: translate(-50%, -50%); background: var(--cream); opacity: 0.85; }
-.beat-marks span.strong { width: 0.8rem; height: 0.8rem; background: #e0705a; box-shadow: 0 0 6px rgba(224,112,90,0.8); }
+.beat-marks span.strong { width: 0.7rem; height: 0.7rem; border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); background: #e0705a; box-shadow: 0 0 6px rgba(224,112,90,0.8); }   /* the weasels move on these: a diamond, not just a colour */
 .beat-say { min-height: 1.2em; margin-top: 0.2rem; font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 0.08em; color: var(--gold); text-shadow: 0 0 6px #000; }
 .beat-say.off { color: #e0a090; }
 #beat.hit .beat-line { animation: beat-hit 0.3s; }
