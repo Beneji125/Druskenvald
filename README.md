@@ -212,7 +212,10 @@ and the feast are teasers for the next chapter; the stairs don't go up yet.
   raise Crookedness. Full Dread breaks your nerve: back to the porch, and
   the encounter starts over next time. Each encounter is data in
   `ENCOUNTERS` (`rooms.js`) with a `round(st)`; what you did on your turn
-  reaches the round through `st.flags`. "Gentler encounters" in the pause
+  reaches the round through `st.flags`. A round can be paused (Escape, P,
+  or its Pause button; it pauses itself if you switch tabs), and a round
+  with an action key (`action` on its spec) gets a button for it, for
+  touch screens. "Gentler encounters" in the pause
   menu slows things down and halves the Dread they cost. The music room's
   waltz has a beat bar at the top (the coming beats, the timing window,
   the weasels' beats in red), a soft tick on each beat, and says how close

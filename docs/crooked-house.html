@@ -309,7 +309,15 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .enc-btn.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
 .enc-btn .enc-hint { display: block; flex-basis: 100%; margin-left: 1.9em; font-size: 0.78em; color: var(--cream-dim); font-style: italic; }
 .enc-btn { flex-wrap: wrap; }
-.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; }
+.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; flex: 1 1 14rem; }
+.enc-round-buttons { display: flex; gap: 6px; margin-left: auto; }
+.enc-action, .enc-pause { font-size: 0.95rem; padding: 0.45em 0.9em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.enc-action { border-color: var(--gold); color: var(--gold); min-width: 8rem; }
+.enc-action:active { background: rgba(201,169,110,0.25); }
+.enc-pause { color: var(--cream-dim); }
+.enc-action:hover, .enc-pause:hover, .enc-action:focus-visible, .enc-pause:focus-visible { border-color: var(--gold); outline: none; }
+/* On a keyboard the action button is a reminder; on touch it's how you act. */
+@media (pointer: coarse) { .enc-action { font-size: 1.1rem; padding: 0.7em 1.2em; min-width: 10rem; } }
 /* ── The pause menu ── */
 .pause-sheet { width: min(36rem, 100%); }
 .pause-buttons { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.2em 0 1em; }
@@ -5445,7 +5453,6 @@ function dodge(st, canvas, pattern) {
     // shots); the attack ends by the real clock, so a slow device doesn't
     // stretch it out.
     let t = 0, last = performance.now(), invuln = 0, ended = false;
-    const started = performance.now();
     const rand = seededRandom(st.turn * 101 + st.def.name.length);
     // Lingering effects from what hit you: `blind` (the arena goes dark
     // but for a little light round the flame) and `slow` (sluggish).
@@ -5466,14 +5473,20 @@ function dodge(st, canvas, pattern) {
       aim(from, sp) { const dx = soul.x - from.x, dy = soul.y - from.y, d = Math.hypot(dx, dy) || 1; return { vx: dx / d * sp, vy: dy / d * sp }; },
     };
     $('encounter').querySelector('.enc-text').textContent = pattern.text || '';
-    $('encounter').querySelector('.enc-menu').innerHTML = '<span class="enc-dodge-hint">Move with WASD or the arrow keys · drag on a touch screen</span>';
+    let paused = false, elapsed = 0;
+    const togglePause = () => { paused = !paused; held.clear(); drag = null; if (paused) drawRoundPaused(canvas); };
+    roundMenu(pattern, null, togglePause);
     if (pattern.start) pattern.start(api);
     const KEYS = { w: 'u', arrowup: 'u', s: 'd', arrowdown: 'd', a: 'l', arrowleft: 'l', d: 'r', arrowright: 'r' };
-    const down = e => { const k = KEYS[e.key.toLowerCase()]; if (k) { held.add(k); e.preventDefault(); } e.stopImmediatePropagation(); };
+    const down = e => {
+      e.stopImmediatePropagation();
+      if (isPauseKey(e)) { e.preventDefault(); if (!e.repeat) togglePause(); return; }
+      const k = KEYS[e.key.toLowerCase()]; if (k && !paused) { held.add(k); e.preventDefault(); }
+    };
     const up = e => { const k = KEYS[e.key.toLowerCase()]; if (k) held.delete(k); e.stopImmediatePropagation(); };
     let drag = null;
     const rect = () => canvas.getBoundingClientRect();
-    const pdown = e => { canvas.setPointerCapture(e.pointerId); const r = rect(); drag = { x: e.clientX, y: e.clientY, sx: soul.x, sy: soul.y, k: ARENA_W / r.width }; };
+    const pdown = e => { if (paused) { togglePause(); return; } canvas.setPointerCapture(e.pointerId); const r = rect(); drag = { x: e.clientX, y: e.clientY, sx: soul.x, sy: soul.y, k: ARENA_W / r.width }; };
     const pmove = e => { if (!drag) return; soul.x = drag.sx + (e.clientX - drag.x) * drag.k; soul.y = drag.sy + (e.clientY - drag.y) * drag.k; };
     const pup = () => { drag = null; };
     document.addEventListener('keydown', down, true);
@@ -5498,8 +5511,9 @@ function dodge(st, canvas, pattern) {
       if (ended) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (document.hidden) { requestAnimationFrame(frame); return; }
-      t += dt;
+      if (document.hidden && !paused) togglePause();
+      if (paused) { requestAnimationFrame(frame); return; }
+      t += dt; elapsed += dt;
       const v = 140 * dt * (fx.slow > 0 ? 0.45 : 1);
       fx.blind = Math.max(0, fx.blind - dt); fx.slow = Math.max(0, fx.slow - dt);
       if (held.has('u')) soul.y -= v; if (held.has('d')) soul.y += v;
@@ -5530,7 +5544,7 @@ function dodge(st, canvas, pattern) {
       }
       invuln = Math.max(0, invuln - dt);
       drawArena(canvas, st, soul, shots, invuln, pad, fx);
-      if ((now - started) / 1000 >= pattern.duration) { finish('done'); return; }
+      if (elapsed >= pattern.duration) { finish('done'); return; }
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
@@ -5544,6 +5558,49 @@ function dodge(st, canvas, pattern) {
 // dt), draw(ctx, api) }`. First a moment to get ready: the goal, the
 // controls, 3-2-1.
 
+// Shared by both kinds of round. The line under the arena: how to play,
+// an on-screen button for the round's action key (for touch screens; the
+// key still works), and a pause button.
+function roundMenu(spec, onAction, onPause) {
+  const menu = $('encounter').querySelector('.enc-menu');
+  menu.innerHTML = '';
+  const hint = document.createElement('span');
+  hint.className = 'enc-dodge-hint';
+  hint.textContent = spec.hint || 'Move with WASD or the arrow keys · drag on a touch screen';
+  menu.appendChild(hint);
+  const row = document.createElement('div');
+  row.className = 'enc-round-buttons';
+  if (spec.action && onAction) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'enc-action'; b.textContent = spec.action;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); onAction(); });
+    b.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+    row.appendChild(b);
+  }
+  if (onPause) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'enc-pause'; b.textContent = 'Pause';
+    b.setAttribute('aria-label', 'Pause the round (Escape or P)');
+    b.addEventListener('click', () => { b.blur(); onPause(); });
+    row.appendChild(b);
+  }
+  menu.appendChild(row);
+}
+
+// A paused round: the arena dimmed, and how to go on.
+function drawRoundPaused(canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.fillStyle = 'rgba(7,6,10,0.72)'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#e8d5a3'; ctx.font = '600 22px Cinzel, Georgia, serif';
+  ctx.fillText('Paused', ARENA_W / 2, ARENA_H / 2 - 12);
+  ctx.fillStyle = '#c9a96e'; ctx.font = '13px Georgia, serif';
+  ctx.fillText('Escape, P or a tap to go on', ARENA_W / 2, ARENA_H / 2 + 16);
+  ctx.restore();
+}
+const isPauseKey = e => e.key === 'Escape' || e.key.toLowerCase() === 'p';
+
 async function playRound(st, canvas) {
   const spec = st.def.round(st);
   await getReady(canvas, spec);
@@ -5553,7 +5610,7 @@ async function playRound(st, canvas) {
 function getReady(canvas, spec) {
   const root = $('encounter');
   root.querySelector('.enc-text').textContent = spec.text || spec.title || '';
-  root.querySelector('.enc-menu').innerHTML = `<span class="enc-dodge-hint">${spec.hint || 'Move with WASD or the arrow keys · drag on a touch screen'}</span>`;
+  roundMenu(spec);
   const ctx = canvas.getContext('2d');
   const t0 = performance.now(), ms = easyMode() ? 2200 : 1700;
   return new Promise(res => {
@@ -5581,8 +5638,8 @@ function challenge(st, canvas, spec) {
     const ctx = canvas.getContext('2d');
     const keys = new Set(), pressed = [];
     const pointer = { x: null, y: null, down: false, tapped: false };
-    let ended = false, last = performance.now();
-    const started = performance.now();
+    let ended = false, last = performance.now(), paused = false, elapsed = 0;
+    const togglePause = () => { paused = !paused; keys.clear(); pointer.down = false; if (paused) drawRoundPaused(canvas); };
     const api = {
       st, easy, w: ARENA_W, h: ARENA_H, keys, pressed, pointer, t: 0, invuln: 0,
       rand: seededRandom(st.turn * 131 + st.def.name.length * 7),
@@ -5600,8 +5657,11 @@ function challenge(st, canvas, spec) {
       press: (...ks) => pressed.some(k => ks.includes(k)),
     };
     $('encounter').querySelector('.enc-text').textContent = spec.text || '';
+    roundMenu(spec, () => { if (!paused) pressed.push(spec.actionKey || ' '); }, togglePause);
     if (spec.start) spec.start(api);
     const down = e => {
+      if (isPauseKey(e)) { e.preventDefault(); e.stopImmediatePropagation(); if (!e.repeat) togglePause(); return; }
+      if (paused) { e.stopImmediatePropagation(); return; }
       const k = e.key.toLowerCase();
       if (!e.repeat) pressed.push(k);
       keys.add(k);
@@ -5610,7 +5670,7 @@ function challenge(st, canvas, spec) {
     };
     const up = e => { keys.delete(e.key.toLowerCase()); e.stopImmediatePropagation(); };
     const toArena = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * ARENA_W / r.width, (e.clientY - r.top) * ARENA_H / r.height]; };
-    const pdown = e => { canvas.setPointerCapture(e.pointerId); [pointer.x, pointer.y] = toArena(e); pointer.down = true; pointer.tapped = true; };
+    const pdown = e => { if (paused) { togglePause(); return; } canvas.setPointerCapture(e.pointerId); [pointer.x, pointer.y] = toArena(e); pointer.down = true; pointer.tapped = true; };
     const pmove = e => { [pointer.x, pointer.y] = toArena(e); };
     const pup = () => { pointer.down = false; };
     document.addEventListener('keydown', down, true);
@@ -5635,9 +5695,10 @@ function challenge(st, canvas, spec) {
       if (ended) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (document.hidden) { requestAnimationFrame(frame); return; }
-      api.t += dt; api.invuln = Math.max(0, api.invuln - dt);
-      api.left = Math.max(0, spec.duration - (now - started) / 1000);
+      if (document.hidden && !paused) togglePause();
+      if (paused) { requestAnimationFrame(frame); return; }
+      api.t += dt; elapsed += dt; api.invuln = Math.max(0, api.invuln - dt);
+      api.left = Math.max(0, spec.duration - elapsed);
       spec.update(api, dt);
       pressed.length = 0; pointer.tapped = false;
       if (ended) return;
@@ -5871,6 +5932,7 @@ function gazeRound(st) {
       ? 'Get close, keeping the busts between you and its eye. Then raise the mirror as its gaze finds you.'
       : 'Get close to the bird, keeping the busts between you and its eye.',
     hint: (shard ? 'Space: raise the mirror · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    action: shard ? 'Raise the mirror' : null,
     duration: 16,
     preview(ctx) { drawGallery(ctx, f.gx ?? 180, f.gy ?? 204, Math.PI / 2, 0.17 * narrow, false, 0); },
     start(api) { this.x = f.gx ?? 180; this.y = f.gy ?? 204; this.m = 0; this.touched = false; },
@@ -5964,6 +6026,7 @@ function herdRound(st) {
     title: crushing ? 'Crush them' : 'Herd them into the crack',
     text: crushing ? 'Bring your heel down on them. All of them.' : 'Your light drives them back. Push the swarm into the crack in the wall.' + (lure ? ' The tooth you threw lies by the crack, and they want it.' : ''),
     hint: crushing ? 'Space or tap: stamp · move with WASD or the arrow keys' : (stamps ? 'Space: stamp and shout · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    action: crushing || stamps ? 'Stamp' : null,
     duration: crushing ? 10 : 16,
     start(api) {
       this.x = 60; this.y = 110; this.stamps = stamps; this.splats = []; this.ws = [];
@@ -6061,6 +6124,7 @@ function ovenEscape(st) {
     title: 'Get out!',
     text: 'The kitchen is burning. Get to the door; the pump by the wall will fill a bucket.',
     hint: 'Step with WASD or the arrow keys · Space: throw the bucket · tap a square beside you',
+    action: 'Throw the bucket',
     duration: 30,
     start(api) {
       this.p = [9, 3]; this.fire = new Map(); this.bucket = false; this.tick = 0; this.hold = 0; this.debris = []; this.nextDebris = 1.2;

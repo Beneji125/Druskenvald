@@ -295,7 +295,15 @@ kbd { font-family: 'Cinzel', serif; font-size: 0.75em; border: 1px solid var(--g
 .enc-btn.dark { border-color: rgba(160,60,50,0.7); color: #e0a090; }
 .enc-btn .enc-hint { display: block; flex-basis: 100%; margin-left: 1.9em; font-size: 0.78em; color: var(--cream-dim); font-style: italic; }
 .enc-btn { flex-wrap: wrap; }
-.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; }
+.enc-dodge-hint { font-size: 0.85rem; color: var(--cream-dim); align-self: center; flex: 1 1 14rem; }
+.enc-round-buttons { display: flex; gap: 6px; margin-left: auto; }
+.enc-action, .enc-pause { font-size: 0.95rem; padding: 0.45em 0.9em; cursor: pointer; background: rgba(255,255,255,0.03); border: 1px solid rgba(138,110,66,0.6); border-radius: 3px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.enc-action { border-color: var(--gold); color: var(--gold); min-width: 8rem; }
+.enc-action:active { background: rgba(201,169,110,0.25); }
+.enc-pause { color: var(--cream-dim); }
+.enc-action:hover, .enc-pause:hover, .enc-action:focus-visible, .enc-pause:focus-visible { border-color: var(--gold); outline: none; }
+/* On a keyboard the action button is a reminder; on touch it's how you act. */
+@media (pointer: coarse) { .enc-action { font-size: 1.1rem; padding: 0.7em 1.2em; min-width: 10rem; } }
 /* ── The pause menu ── */
 .pause-sheet { width: min(36rem, 100%); }
 .pause-buttons { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 0.2em 0 1em; }

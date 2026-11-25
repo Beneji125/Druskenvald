@@ -174,6 +174,7 @@ function gazeRound(st) {
       ? 'Get close, keeping the busts between you and its eye. Then raise the mirror as its gaze finds you.'
       : 'Get close to the bird, keeping the busts between you and its eye.',
     hint: (shard ? 'Space: raise the mirror · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    action: shard ? 'Raise the mirror' : null,
     duration: 16,
     preview(ctx) { drawGallery(ctx, f.gx ?? 180, f.gy ?? 204, Math.PI / 2, 0.17 * narrow, false, 0); },
     start(api) { this.x = f.gx ?? 180; this.y = f.gy ?? 204; this.m = 0; this.touched = false; },
@@ -267,6 +268,7 @@ function herdRound(st) {
     title: crushing ? 'Crush them' : 'Herd them into the crack',
     text: crushing ? 'Bring your heel down on them. All of them.' : 'Your light drives them back. Push the swarm into the crack in the wall.' + (lure ? ' The tooth you threw lies by the crack, and they want it.' : ''),
     hint: crushing ? 'Space or tap: stamp · move with WASD or the arrow keys' : (stamps ? 'Space: stamp and shout · ' : '') + 'Move with WASD or the arrow keys · drag on a touch screen',
+    action: crushing || stamps ? 'Stamp' : null,
     duration: crushing ? 10 : 16,
     start(api) {
       this.x = 60; this.y = 110; this.stamps = stamps; this.splats = []; this.ws = [];
@@ -364,6 +366,7 @@ function ovenEscape(st) {
     title: 'Get out!',
     text: 'The kitchen is burning. Get to the door; the pump by the wall will fill a bucket.',
     hint: 'Step with WASD or the arrow keys · Space: throw the bucket · tap a square beside you',
+    action: 'Throw the bucket',
     duration: 30,
     start(api) {
       this.p = [9, 3]; this.fire = new Map(); this.bucket = false; this.tick = 0; this.hold = 0; this.debris = []; this.nextDebris = 1.2;
