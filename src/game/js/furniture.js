@@ -429,7 +429,7 @@ function setPeacock(state) {
   p.bird.visible = state !== 'killed';
   p.rubble.visible = state === 'killed';
   p.eyeGroup.visible = !state;
-  p.marble.color.set(state === 'freed' ? 0x7a766e : 0xa29c90);
+  p.marble.color.set(state === 'freed' ? 0x5c5852 : 0xa29c90);   // freed: dull grey stone
 }
 
 // The spirit board and its planchette, lying on the parlour table: the
