@@ -727,7 +727,7 @@ function finishArrival() {
     store.set(HINT_KEY, '1');
     const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
     setTimeout(() => ui.log(touch
-      ? 'The arrows at the bottom right walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
+      ? 'The arrows at the bottom of the screen walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
       : 'WASD or the arrow keys walk, Q and E turn, Space looks at or uses what’s in front of you. Escape pauses (and lists every control).', 'note'), 1400);
   }
 }

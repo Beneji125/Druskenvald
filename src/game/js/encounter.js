@@ -253,7 +253,7 @@ function dodge(st, canvas, pattern) {
     const rand = seededRandom(st.turn * 101 + st.def.name.length);
     // Lingering effects from what hit you: `blind` (the arena goes dark
     // but for a little light round the flame) and `slow` (sluggish).
-    const fx = { blind: 0, slow: 0 };
+    const fx = { blind: 0, slow: 0, backdrop: pattern.backdrop };
     // The salt line: a ring inside which shots crawl.
     const pad = st.shrink * 60;
     const inSalt = s => pad && s.x > pad * 1.6 && s.x < ARENA_W - pad * 1.6 && s.y > pad && s.y < ARENA_H - pad;
@@ -523,6 +523,7 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, ARENA_W, ARENA_H);
   ctx.fillStyle = '#07060a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  if (fx.backdrop) fx.backdrop(ctx);
   if (pad) {                                   // the salt line: a pale ring keeping things out
     ctx.strokeStyle = 'rgba(235,230,215,0.55)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 2;
     ctx.strokeRect(pad * 1.6, pad, ARENA_W - pad * 3.2, ARENA_H - pad * 2); ctx.setLineDash([]);

@@ -1182,16 +1182,62 @@ const SPRITES = {
     ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; [20, 56, 92].forEach(y => { ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(86, y); ctx.stroke(); });
   }) },
   // ─── People and things that move ───
-  petunia: { size: [46, 74], ghost: true, draw: () => inkSprite(128, 206, (ctx) => {
-    ctx.fillStyle = 'rgba(16,14,20,0.92)';
-    ctx.beginPath(); ctx.moveTo(40, 64); ctx.quadraticCurveTo(26, 120, 18, 206); ctx.lineTo(110, 206); ctx.quadraticCurveTo(100, 120, 88, 64); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#d9dde6'; ctx.beginPath(); ctx.ellipse(64, 40, 17, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#4a4e5c'; ctx.beginPath(); ctx.ellipse(57, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.ellipse(71, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.fill();   // downcast eyes
-    ctx.strokeStyle = '#8a8e9a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(59, 53); ctx.quadraticCurveTo(64, 51, 69, 53); ctx.stroke();
-    ctx.fillStyle = '#2a2a33'; ctx.beginPath(); ctx.ellipse(64, 26, 20, 14, 0, Math.PI, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#3f8a52'; ctx.fillRect(48, 60, 32, 6);                       // the green ribbon
-    ctx.fillStyle = '#e8ecf2'; ctx.beginPath(); ctx.ellipse(64, 112, 12, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(54, 104, 20, 10);  // the teacup
-    ctx.fillStyle = '#c8ccd6'; ctx.beginPath(); ctx.arc(50, 116, 7, 0, Math.PI * 2); ctx.arc(78, 116, 7, 0, Math.PI * 2); ctx.fill();
+  // Petunia Lockwood: a young widow in mourning black, a sheer veil, the
+  // green ribbon at her throat, holding her teacup; faded out towards the
+  // hem like the house's other ghosts.
+  petunia: { size: [46, 74], ghost: true, draw: () => inkSprite(256, 412, (ctx, W, H) => {
+    ctx.lineWidth = 2.2;
+    // the skirt, full, in folds
+    const sk = ctx.createLinearGradient(40, 0, 216, 0);
+    sk.addColorStop(0, '#2a2632'); sk.addColorStop(0.45, '#16131c'); sk.addColorStop(1, '#0c0a10');
+    ctx.fillStyle = sk;
+    ctx.beginPath(); ctx.moveTo(98, 196); ctx.quadraticCurveTo(70, 280, 34, 412); ctx.lineTo(222, 412); ctx.quadraticCurveTo(186, 280, 158, 196); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,110,140,0.25)'; ctx.lineWidth = 2;
+    [[110, 60], [128, 128], [146, 196]].forEach(([x0, x1]) => { ctx.beginPath(); ctx.moveTo(x0, 214); ctx.quadraticCurveTo((x0 + x1) / 2 + 6, 320, x1, 412); ctx.stroke(); });
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 2.2;
+    // the bodice: narrow-waisted, buttoned, long sleeves
+    ctx.fillStyle = '#1c1922';
+    ctx.beginPath(); ctx.moveTo(104, 112); ctx.quadraticCurveTo(84, 118, 82, 140); ctx.lineTo(98, 200); ctx.lineTo(158, 200); ctx.lineTo(174, 140); ctx.quadraticCurveTo(172, 118, 152, 112); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,140,170,0.5)'; for (let y = 126; y < 196; y += 12) { ctx.beginPath(); ctx.arc(128, y, 1.8, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#1a1720';
+    ctx.beginPath(); ctx.moveTo(84, 128); ctx.quadraticCurveTo(70, 170, 92, 212); ctx.lineTo(106, 206); ctx.quadraticCurveTo(94, 170, 100, 134); ctx.closePath(); ctx.fill(); ctx.stroke();   // left arm
+    ctx.beginPath(); ctx.moveTo(172, 128); ctx.quadraticCurveTo(186, 170, 164, 212); ctx.lineTo(150, 206); ctx.quadraticCurveTo(162, 170, 156, 134); ctx.closePath(); ctx.fill(); ctx.stroke();  // right arm
+    // pale hands round the saucer, and the cup
+    ctx.fillStyle = '#dde2ea'; ctx.beginPath(); ctx.ellipse(128, 214, 34, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#eef1f5'; ctx.beginPath(); ctx.moveTo(112, 196); ctx.lineTo(144, 196); ctx.quadraticCurveTo(142, 212, 128, 212); ctx.quadraticCurveTo(114, 212, 112, 196); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(148, 202, 5, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+    ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(128, 197, 15, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.ellipse(100, 214, 9, 6, -0.3, 0, Math.PI * 2); ctx.ellipse(156, 214, 9, 6, 0.3, 0, Math.PI * 2); ctx.fill();
+    // the neck, the green ribbon
+    ctx.fillStyle = '#cfd5df'; ctx.fillRect(118, 92, 20, 22);
+    ctx.fillStyle = '#3f8a52'; ctx.fillRect(116, 102, 24, 7); ctx.strokeRect(116, 102, 24, 7);
+    ctx.beginPath(); ctx.moveTo(140, 106); ctx.lineTo(150, 122); ctx.lineTo(144, 124); ctx.closePath(); ctx.fill();
+    // the veil falling behind, sheer
+    ctx.fillStyle = 'rgba(14,12,20,0.55)';
+    ctx.beginPath(); ctx.moveTo(100, 40); ctx.quadraticCurveTo(80, 120, 70, 196); ctx.lineTo(186, 196); ctx.quadraticCurveTo(176, 120, 156, 40); ctx.closePath(); ctx.fill();
+    // hair, parted, drawn back
+    ctx.fillStyle = '#231e1c'; ctx.beginPath(); ctx.ellipse(128, 58, 30, 34, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(128, 88, 18, 10, 0, 0, Math.PI * 2); ctx.fill();   // the low bun behind
+    // the face: pale, bluish, eyes cast down
+    const fg = ctx.createLinearGradient(104, 0, 152, 0); fg.addColorStop(0, '#e6eaf0'); fg.addColorStop(1, '#b9c0cc');
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.moveTo(105, 54); ctx.quadraticCurveTo(105, 30, 128, 30); ctx.quadraticCurveTo(151, 30, 151, 54); ctx.quadraticCurveTo(149, 82, 128, 92); ctx.quadraticCurveTo(107, 82, 105, 54); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#231e1c'; ctx.beginPath(); ctx.moveTo(104, 52); ctx.quadraticCurveTo(108, 26, 128, 28); ctx.quadraticCurveTo(116, 34, 112, 54); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(152, 52); ctx.quadraticCurveTo(148, 26, 128, 28); ctx.quadraticCurveTo(140, 34, 144, 54); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,36,50,0.85)'; ctx.lineWidth = 1.8;
+    [[117, 58], [139, 58]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y - 3, 6, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke(); });   // lids, lowered
+    ctx.lineWidth = 1.4; [[117, 50], [139, 50]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 6, y + 1); ctx.quadraticCurveTo(x, y - 2, x + 6, y + 2); ctx.stroke(); });   // brows, sorrowful
+    ctx.fillStyle = 'rgba(70,80,110,0.25)'; [[117, 63], [139, 63]].forEach(([x, y]) => { ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill(); });   // shadows under the eyes
+    ctx.strokeStyle = 'rgba(80,80,100,0.6)'; ctx.beginPath(); ctx.moveTo(129, 60); ctx.lineTo(131, 72); ctx.lineTo(127, 73); ctx.stroke();
+    ctx.strokeStyle = 'rgba(110,70,90,0.8)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(121, 80); ctx.quadraticCurveTo(128, 78, 135, 80); ctx.stroke();
+    // a tear, catching the light
+    ctx.fillStyle = 'rgba(220,235,255,0.85)'; ctx.beginPath(); ctx.ellipse(142, 70, 1.4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
+    // fading out towards the hem
+    ctx.globalCompositeOperation = 'destination-in';
+    const fade = ctx.createLinearGradient(0, 0, 0, H);
+    fade.addColorStop(0, '#000'); fade.addColorStop(0.62, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fade; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
   }) },
   // (coloured like the official boogleswarm: grey-brown, pale-bellied,
   // red-eyed)
@@ -5717,7 +5763,7 @@ function dodge(st, canvas, pattern) {
     const rand = seededRandom(st.turn * 101 + st.def.name.length);
     // Lingering effects from what hit you: `blind` (the arena goes dark
     // but for a little light round the flame) and `slow` (sluggish).
-    const fx = { blind: 0, slow: 0 };
+    const fx = { blind: 0, slow: 0, backdrop: pattern.backdrop };
     // The salt line: a ring inside which shots crawl.
     const pad = st.shrink * 60;
     const inSalt = s => pad && s.x > pad * 1.6 && s.x < ARENA_W - pad * 1.6 && s.y > pad && s.y < ARENA_H - pad;
@@ -5987,6 +6033,7 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, ARENA_W, ARENA_H);
   ctx.fillStyle = '#07060a'; ctx.fillRect(0, 0, ARENA_W, ARENA_H);
+  if (fx.backdrop) fx.backdrop(ctx);
   if (pad) {                                   // the salt line: a pale ring keeping things out
     ctx.strokeStyle = 'rgba(235,230,215,0.55)'; ctx.setLineDash([3, 4]); ctx.lineWidth = 2;
     ctx.strokeRect(pad * 1.6, pad, ARENA_W - pad * 3.2, ARENA_H - pad * 2); ctx.setLineDash([]);
@@ -6026,6 +6073,59 @@ function drawArena(canvas, st, soul, shots, invuln, pad = 0, fx = {}) {
 // (soup, fish, roast, sweets: Mrs Patrini's card in the kitchen says so)
 // and nothing else; each right course calms the feast.
 
+// A backdrop painted once and kept (the rounds redraw every frame).
+const BACKDROPS = {};
+function backdrop(key, paint) {
+  let c = BACKDROPS[key];
+  if (!c) {
+    c = BACKDROPS[key] = document.createElement('canvas');
+    c.width = ARENA_W * 2; c.height = ARENA_H * 2;
+    const ctx = c.getContext('2d'); ctx.scale(2, 2);
+    paint(ctx, seededRandom(key.length * 977));
+  }
+  return c;
+}
+
+// The feast's table from above: a long cloth, the places laid, candles.
+function feastBackdrop(ctx) {
+  ctx.drawImage(backdrop('feast', (b, rand) => {
+    b.fillStyle = '#0a0806'; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const x0 = 22, y0 = 36, w = ARENA_W - 44, h = ARENA_H - 72;
+    b.fillStyle = '#1e1a16'; b.fillRect(x0 - 6, y0 - 6, w + 12, h + 12);           // the table's edge
+    b.fillStyle = '#2c2822'; b.fillRect(x0, y0, w, h);                              // the cloth
+    b.strokeStyle = 'rgba(70,64,54,0.5)'; b.lineWidth = 1;
+    for (let x = x0 + 18; x < x0 + w; x += 36) for (let y = y0 + 18; y < y0 + h; y += 36) { b.beginPath(); b.moveTo(x, y - 7); b.lineTo(x + 7, y); b.lineTo(x, y + 7); b.lineTo(x - 7, y); b.closePath(); b.stroke(); }   // damask
+    for (let x = x0 + 34; x < x0 + w - 20; x += 58) [y0 - 2, y0 + h + 2].forEach(y => {   // places laid, chairs drawn up
+      b.fillStyle = '#1a1410'; b.fillRect(x - 13, y < ARENA_H / 2 ? y - 30 : y + 8, 26, 22);
+      b.strokeStyle = 'rgba(200,196,184,0.22)'; b.lineWidth = 1.5; b.beginPath(); b.arc(x, y < ARENA_H / 2 ? y + 12 : y - 12, 8, 0, Math.PI * 2); b.stroke();
+    });
+    [[ARENA_W * 0.3, ARENA_H / 2], [ARENA_W * 0.7, ARENA_H / 2]].forEach(([x, y]) => {   // candle glow
+      const g = b.createRadialGradient(x, y, 0, x, y, 70); g.addColorStop(0, 'rgba(255,200,120,0.16)'); g.addColorStop(1, 'rgba(255,200,120,0)');
+      b.fillStyle = g; b.fillRect(0, 0, ARENA_W, ARENA_H);
+      b.fillStyle = 'rgba(255,220,150,0.6)'; b.beginPath(); b.arc(x, y, 2, 0, Math.PI * 2); b.fill();
+    });
+  }), 0, 0, ARENA_W, ARENA_H);
+}
+
+// Petunia's tea table: dark wood, a lace doily, one candle's light.
+function teaBackdrop(ctx) {
+  ctx.drawImage(backdrop('tea', (b, rand) => {
+    b.fillStyle = '#080a10'; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const g = b.createRadialGradient(70, 40, 0, 70, 40, 260); g.addColorStop(0, 'rgba(255,200,130,0.12)'); g.addColorStop(1, 'rgba(255,200,130,0)');
+    b.fillStyle = g; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const top = 168;
+    const wood = b.createLinearGradient(0, top, 0, ARENA_H); wood.addColorStop(0, '#2a1a10'); wood.addColorStop(1, '#140c08');
+    b.fillStyle = wood; b.fillRect(0, top, ARENA_W, ARENA_H - top);
+    b.strokeStyle = 'rgba(0,0,0,0.35)'; b.lineWidth = 1;
+    for (let i = 0; i < 9; i++) { const y = top + 6 + i * 6 + rand() * 3; b.beginPath(); b.moveTo(0, y); b.bezierCurveTo(120, y + rand() * 4 - 2, 240, y + rand() * 4 - 2, ARENA_W, y); b.stroke(); }
+    b.fillStyle = 'rgba(255,220,170,0.08)'; b.fillRect(0, top, ARENA_W, 2);
+    // the doily under the saucer
+    b.fillStyle = 'rgba(220,214,200,0.22)'; b.beginPath(); b.ellipse(180, 183, 120, 15, 0, 0, Math.PI * 2); b.fill();
+    b.strokeStyle = 'rgba(230,224,210,0.3)';
+    for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; b.beginPath(); b.arc(180 + Math.cos(a) * 118, 183 + Math.sin(a) * 14, 3, 0, Math.PI * 2); b.stroke(); }
+  }), 0, 0, ARENA_W, ARENA_H);
+}
+
 const COURSES = [
   { id: 'soup', name: 'the soup', line: 'You take the soup tureen out of the air, and set it down, and bow. The feast hums, approving.' },
   { id: 'fish', name: 'the fish', line: 'The fish, next, as it should be. A spoon taps twice against a glass, like applause.' },
@@ -6045,6 +6145,8 @@ function feastRound(st) {
       : 'Dishes circle you, and one of them is the right course. Take it, and nothing else.',
     hint: 'Move into the right dish to take it · WASD or the arrow keys · drag on a touch screen',
     duration: 9,
+    backdrop: feastBackdrop,
+    preview: feastBackdrop,
     spawn(api, t, dt) {
       if (t < still) return;
       if (!done) {
@@ -6103,7 +6205,7 @@ function cupRound(st) {
     text: 'Her grief shakes the room in waves. Keep her teacup level, and don’t spill a drop.',
     hint: 'Lean against each wave with ← → or A D · or drag left and right on a touch screen',
     duration: easyMode() ? 10 : 12,
-    preview(ctx) { drawCup(ctx, 0, 1, []); },
+    preview(ctx) { teaBackdrop(ctx); drawCup(ctx, 0, 1, []); },
     start(api) { Object.assign(this, { a: 0, v: 0, tea: 1, spills: 0, next: 1.4, warn: 0, side: 0, drops: [] }); },
     update(api, dt) {
       this.next -= dt;
@@ -6137,7 +6239,7 @@ function cupRound(st) {
     },
     draw(ctx, api) {
       // cold creeping in from the side the next wave comes from
-      ctx.fillStyle = '#080a10'; ctx.fillRect(0, 0, api.w, api.h);
+      teaBackdrop(ctx);
       if (this.warn) {
         const x = this.side < 0 ? 0 : api.w, g = ctx.createLinearGradient(x, 0, x - this.side * 140, 0);
         g.addColorStop(0, 'rgba(170,200,255,0.55)'); g.addColorStop(1, 'rgba(170,200,255,0)');
@@ -8079,7 +8181,7 @@ function finishArrival() {
     store.set(HINT_KEY, '1');
     const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
     setTimeout(() => ui.log(touch
-      ? 'The arrows at the bottom right walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
+      ? 'The arrows at the bottom of the screen walk and turn; Use looks at or uses what’s in front of you. ☰ pauses.'
       : 'WASD or the arrow keys walk, Q and E turn, Space looks at or uses what’s in front of you. Escape pauses (and lists every control).', 'note'), 1400);
   }
 }

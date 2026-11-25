@@ -7,6 +7,59 @@
 // (soup, fish, roast, sweets: Mrs Patrini's card in the kitchen says so)
 // and nothing else; each right course calms the feast.
 
+// A backdrop painted once and kept (the rounds redraw every frame).
+const BACKDROPS = {};
+function backdrop(key, paint) {
+  let c = BACKDROPS[key];
+  if (!c) {
+    c = BACKDROPS[key] = document.createElement('canvas');
+    c.width = ARENA_W * 2; c.height = ARENA_H * 2;
+    const ctx = c.getContext('2d'); ctx.scale(2, 2);
+    paint(ctx, seededRandom(key.length * 977));
+  }
+  return c;
+}
+
+// The feast's table from above: a long cloth, the places laid, candles.
+function feastBackdrop(ctx) {
+  ctx.drawImage(backdrop('feast', (b, rand) => {
+    b.fillStyle = '#0a0806'; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const x0 = 22, y0 = 36, w = ARENA_W - 44, h = ARENA_H - 72;
+    b.fillStyle = '#1e1a16'; b.fillRect(x0 - 6, y0 - 6, w + 12, h + 12);           // the table's edge
+    b.fillStyle = '#2c2822'; b.fillRect(x0, y0, w, h);                              // the cloth
+    b.strokeStyle = 'rgba(70,64,54,0.5)'; b.lineWidth = 1;
+    for (let x = x0 + 18; x < x0 + w; x += 36) for (let y = y0 + 18; y < y0 + h; y += 36) { b.beginPath(); b.moveTo(x, y - 7); b.lineTo(x + 7, y); b.lineTo(x, y + 7); b.lineTo(x - 7, y); b.closePath(); b.stroke(); }   // damask
+    for (let x = x0 + 34; x < x0 + w - 20; x += 58) [y0 - 2, y0 + h + 2].forEach(y => {   // places laid, chairs drawn up
+      b.fillStyle = '#1a1410'; b.fillRect(x - 13, y < ARENA_H / 2 ? y - 30 : y + 8, 26, 22);
+      b.strokeStyle = 'rgba(200,196,184,0.22)'; b.lineWidth = 1.5; b.beginPath(); b.arc(x, y < ARENA_H / 2 ? y + 12 : y - 12, 8, 0, Math.PI * 2); b.stroke();
+    });
+    [[ARENA_W * 0.3, ARENA_H / 2], [ARENA_W * 0.7, ARENA_H / 2]].forEach(([x, y]) => {   // candle glow
+      const g = b.createRadialGradient(x, y, 0, x, y, 70); g.addColorStop(0, 'rgba(255,200,120,0.16)'); g.addColorStop(1, 'rgba(255,200,120,0)');
+      b.fillStyle = g; b.fillRect(0, 0, ARENA_W, ARENA_H);
+      b.fillStyle = 'rgba(255,220,150,0.6)'; b.beginPath(); b.arc(x, y, 2, 0, Math.PI * 2); b.fill();
+    });
+  }), 0, 0, ARENA_W, ARENA_H);
+}
+
+// Petunia's tea table: dark wood, a lace doily, one candle's light.
+function teaBackdrop(ctx) {
+  ctx.drawImage(backdrop('tea', (b, rand) => {
+    b.fillStyle = '#080a10'; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const g = b.createRadialGradient(70, 40, 0, 70, 40, 260); g.addColorStop(0, 'rgba(255,200,130,0.12)'); g.addColorStop(1, 'rgba(255,200,130,0)');
+    b.fillStyle = g; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    const top = 168;
+    const wood = b.createLinearGradient(0, top, 0, ARENA_H); wood.addColorStop(0, '#2a1a10'); wood.addColorStop(1, '#140c08');
+    b.fillStyle = wood; b.fillRect(0, top, ARENA_W, ARENA_H - top);
+    b.strokeStyle = 'rgba(0,0,0,0.35)'; b.lineWidth = 1;
+    for (let i = 0; i < 9; i++) { const y = top + 6 + i * 6 + rand() * 3; b.beginPath(); b.moveTo(0, y); b.bezierCurveTo(120, y + rand() * 4 - 2, 240, y + rand() * 4 - 2, ARENA_W, y); b.stroke(); }
+    b.fillStyle = 'rgba(255,220,170,0.08)'; b.fillRect(0, top, ARENA_W, 2);
+    // the doily under the saucer
+    b.fillStyle = 'rgba(220,214,200,0.22)'; b.beginPath(); b.ellipse(180, 183, 120, 15, 0, 0, Math.PI * 2); b.fill();
+    b.strokeStyle = 'rgba(230,224,210,0.3)';
+    for (let k = 0; k < 40; k++) { const a = k / 40 * Math.PI * 2; b.beginPath(); b.arc(180 + Math.cos(a) * 118, 183 + Math.sin(a) * 14, 3, 0, Math.PI * 2); b.stroke(); }
+  }), 0, 0, ARENA_W, ARENA_H);
+}
+
 const COURSES = [
   { id: 'soup', name: 'the soup', line: 'You take the soup tureen out of the air, and set it down, and bow. The feast hums, approving.' },
   { id: 'fish', name: 'the fish', line: 'The fish, next, as it should be. A spoon taps twice against a glass, like applause.' },
@@ -26,6 +79,8 @@ function feastRound(st) {
       : 'Dishes circle you, and one of them is the right course. Take it, and nothing else.',
     hint: 'Move into the right dish to take it · WASD or the arrow keys · drag on a touch screen',
     duration: 9,
+    backdrop: feastBackdrop,
+    preview: feastBackdrop,
     spawn(api, t, dt) {
       if (t < still) return;
       if (!done) {
@@ -84,7 +139,7 @@ function cupRound(st) {
     text: 'Her grief shakes the room in waves. Keep her teacup level, and don’t spill a drop.',
     hint: 'Lean against each wave with ← → or A D · or drag left and right on a touch screen',
     duration: easyMode() ? 10 : 12,
-    preview(ctx) { drawCup(ctx, 0, 1, []); },
+    preview(ctx) { teaBackdrop(ctx); drawCup(ctx, 0, 1, []); },
     start(api) { Object.assign(this, { a: 0, v: 0, tea: 1, spills: 0, next: 1.4, warn: 0, side: 0, drops: [] }); },
     update(api, dt) {
       this.next -= dt;
@@ -118,7 +173,7 @@ function cupRound(st) {
     },
     draw(ctx, api) {
       // cold creeping in from the side the next wave comes from
-      ctx.fillStyle = '#080a10'; ctx.fillRect(0, 0, api.w, api.h);
+      teaBackdrop(ctx);
       if (this.warn) {
         const x = this.side < 0 ? 0 : api.w, g = ctx.createLinearGradient(x, 0, x - this.side * 140, 0);
         g.addColorStop(0, 'rgba(170,200,255,0.55)'); g.addColorStop(1, 'rgba(170,200,255,0)');

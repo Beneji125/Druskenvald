@@ -446,16 +446,62 @@ const SPRITES = {
     ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 4; [20, 56, 92].forEach(y => { ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(86, y); ctx.stroke(); });
   }) },
   // ─── People and things that move ───
-  petunia: { size: [46, 74], ghost: true, draw: () => inkSprite(128, 206, (ctx) => {
-    ctx.fillStyle = 'rgba(16,14,20,0.92)';
-    ctx.beginPath(); ctx.moveTo(40, 64); ctx.quadraticCurveTo(26, 120, 18, 206); ctx.lineTo(110, 206); ctx.quadraticCurveTo(100, 120, 88, 64); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#d9dde6'; ctx.beginPath(); ctx.ellipse(64, 40, 17, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#4a4e5c'; ctx.beginPath(); ctx.ellipse(57, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.ellipse(71, 40, 4, 2.2, 0, 0, Math.PI * 2); ctx.fill();   // downcast eyes
-    ctx.strokeStyle = '#8a8e9a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(59, 53); ctx.quadraticCurveTo(64, 51, 69, 53); ctx.stroke();
-    ctx.fillStyle = '#2a2a33'; ctx.beginPath(); ctx.ellipse(64, 26, 20, 14, 0, Math.PI, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#3f8a52'; ctx.fillRect(48, 60, 32, 6);                       // the green ribbon
-    ctx.fillStyle = '#e8ecf2'; ctx.beginPath(); ctx.ellipse(64, 112, 12, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(54, 104, 20, 10);  // the teacup
-    ctx.fillStyle = '#c8ccd6'; ctx.beginPath(); ctx.arc(50, 116, 7, 0, Math.PI * 2); ctx.arc(78, 116, 7, 0, Math.PI * 2); ctx.fill();
+  // Petunia Lockwood: a young widow in mourning black, a sheer veil, the
+  // green ribbon at her throat, holding her teacup; faded out towards the
+  // hem like the house's other ghosts.
+  petunia: { size: [46, 74], ghost: true, draw: () => inkSprite(256, 412, (ctx, W, H) => {
+    ctx.lineWidth = 2.2;
+    // the skirt, full, in folds
+    const sk = ctx.createLinearGradient(40, 0, 216, 0);
+    sk.addColorStop(0, '#2a2632'); sk.addColorStop(0.45, '#16131c'); sk.addColorStop(1, '#0c0a10');
+    ctx.fillStyle = sk;
+    ctx.beginPath(); ctx.moveTo(98, 196); ctx.quadraticCurveTo(70, 280, 34, 412); ctx.lineTo(222, 412); ctx.quadraticCurveTo(186, 280, 158, 196); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,110,140,0.25)'; ctx.lineWidth = 2;
+    [[110, 60], [128, 128], [146, 196]].forEach(([x0, x1]) => { ctx.beginPath(); ctx.moveTo(x0, 214); ctx.quadraticCurveTo((x0 + x1) / 2 + 6, 320, x1, 412); ctx.stroke(); });
+    ctx.strokeStyle = ART_INK; ctx.lineWidth = 2.2;
+    // the bodice: narrow-waisted, buttoned, long sleeves
+    ctx.fillStyle = '#1c1922';
+    ctx.beginPath(); ctx.moveTo(104, 112); ctx.quadraticCurveTo(84, 118, 82, 140); ctx.lineTo(98, 200); ctx.lineTo(158, 200); ctx.lineTo(174, 140); ctx.quadraticCurveTo(172, 118, 152, 112); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(150,140,170,0.5)'; for (let y = 126; y < 196; y += 12) { ctx.beginPath(); ctx.arc(128, y, 1.8, 0, Math.PI * 2); ctx.fill(); }
+    ctx.fillStyle = '#1a1720';
+    ctx.beginPath(); ctx.moveTo(84, 128); ctx.quadraticCurveTo(70, 170, 92, 212); ctx.lineTo(106, 206); ctx.quadraticCurveTo(94, 170, 100, 134); ctx.closePath(); ctx.fill(); ctx.stroke();   // left arm
+    ctx.beginPath(); ctx.moveTo(172, 128); ctx.quadraticCurveTo(186, 170, 164, 212); ctx.lineTo(150, 206); ctx.quadraticCurveTo(162, 170, 156, 134); ctx.closePath(); ctx.fill(); ctx.stroke();  // right arm
+    // pale hands round the saucer, and the cup
+    ctx.fillStyle = '#dde2ea'; ctx.beginPath(); ctx.ellipse(128, 214, 34, 7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#eef1f5'; ctx.beginPath(); ctx.moveTo(112, 196); ctx.lineTo(144, 196); ctx.quadraticCurveTo(142, 212, 128, 212); ctx.quadraticCurveTo(114, 212, 112, 196); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(148, 202, 5, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+    ctx.fillStyle = '#7a5a3a'; ctx.beginPath(); ctx.ellipse(128, 197, 15, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c9ced8'; ctx.beginPath(); ctx.ellipse(100, 214, 9, 6, -0.3, 0, Math.PI * 2); ctx.ellipse(156, 214, 9, 6, 0.3, 0, Math.PI * 2); ctx.fill();
+    // the neck, the green ribbon
+    ctx.fillStyle = '#cfd5df'; ctx.fillRect(118, 92, 20, 22);
+    ctx.fillStyle = '#3f8a52'; ctx.fillRect(116, 102, 24, 7); ctx.strokeRect(116, 102, 24, 7);
+    ctx.beginPath(); ctx.moveTo(140, 106); ctx.lineTo(150, 122); ctx.lineTo(144, 124); ctx.closePath(); ctx.fill();
+    // the veil falling behind, sheer
+    ctx.fillStyle = 'rgba(14,12,20,0.55)';
+    ctx.beginPath(); ctx.moveTo(100, 40); ctx.quadraticCurveTo(80, 120, 70, 196); ctx.lineTo(186, 196); ctx.quadraticCurveTo(176, 120, 156, 40); ctx.closePath(); ctx.fill();
+    // hair, parted, drawn back
+    ctx.fillStyle = '#231e1c'; ctx.beginPath(); ctx.ellipse(128, 58, 30, 34, 0, Math.PI * 0.95, Math.PI * 2.05); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(128, 88, 18, 10, 0, 0, Math.PI * 2); ctx.fill();   // the low bun behind
+    // the face: pale, bluish, eyes cast down
+    const fg = ctx.createLinearGradient(104, 0, 152, 0); fg.addColorStop(0, '#e6eaf0'); fg.addColorStop(1, '#b9c0cc');
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.moveTo(105, 54); ctx.quadraticCurveTo(105, 30, 128, 30); ctx.quadraticCurveTo(151, 30, 151, 54); ctx.quadraticCurveTo(149, 82, 128, 92); ctx.quadraticCurveTo(107, 82, 105, 54); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#231e1c'; ctx.beginPath(); ctx.moveTo(104, 52); ctx.quadraticCurveTo(108, 26, 128, 28); ctx.quadraticCurveTo(116, 34, 112, 54); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(152, 52); ctx.quadraticCurveTo(148, 26, 128, 28); ctx.quadraticCurveTo(140, 34, 144, 54); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,36,50,0.85)'; ctx.lineWidth = 1.8;
+    [[117, 58], [139, 58]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y - 3, 6, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke(); });   // lids, lowered
+    ctx.lineWidth = 1.4; [[117, 50], [139, 50]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 6, y + 1); ctx.quadraticCurveTo(x, y - 2, x + 6, y + 2); ctx.stroke(); });   // brows, sorrowful
+    ctx.fillStyle = 'rgba(70,80,110,0.25)'; [[117, 63], [139, 63]].forEach(([x, y]) => { ctx.beginPath(); ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2); ctx.fill(); });   // shadows under the eyes
+    ctx.strokeStyle = 'rgba(80,80,100,0.6)'; ctx.beginPath(); ctx.moveTo(129, 60); ctx.lineTo(131, 72); ctx.lineTo(127, 73); ctx.stroke();
+    ctx.strokeStyle = 'rgba(110,70,90,0.8)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(121, 80); ctx.quadraticCurveTo(128, 78, 135, 80); ctx.stroke();
+    // a tear, catching the light
+    ctx.fillStyle = 'rgba(220,235,255,0.85)'; ctx.beginPath(); ctx.ellipse(142, 70, 1.4, 2.4, 0, 0, Math.PI * 2); ctx.fill();
+    // fading out towards the hem
+    ctx.globalCompositeOperation = 'destination-in';
+    const fade = ctx.createLinearGradient(0, 0, 0, H);
+    fade.addColorStop(0, '#000'); fade.addColorStop(0.62, '#000'); fade.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = fade; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
   }) },
   // (coloured like the official boogleswarm: grey-brown, pale-bellied,
   // red-eyed)
