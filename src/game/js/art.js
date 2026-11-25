@@ -321,7 +321,7 @@ const SPRITES = {
     ctx.strokeStyle = ART_INK;
     for (let i = 0; i < 7; i++) {
       const x = 26 + i * 18, y = 100 + Math.sin(i / 6 * Math.PI) * 6;
-      ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 14); ctx.lineTo(x, y); ctx.stroke();
+      ctx.strokeStyle = 'rgba(150,140,120,0.9)'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x, y - 16); ctx.lineTo(x, y); ctx.stroke(); ctx.strokeStyle = ART_INK;
       ctx.fillStyle = 'rgba(200,210,240,0.75)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1.6, y + 3.5); ctx.lineTo(x, y + 7); ctx.lineTo(x - 1.6, y + 3.5); ctx.closePath(); ctx.fill();
     }
     for (let i = 0; i < 6; i++) {

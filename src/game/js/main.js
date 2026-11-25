@@ -625,6 +625,11 @@ $('opt-bigtext').addEventListener('change', e => { prefs.big = e.target.checked;
 $('btn-pause').addEventListener('click', () => { if (!game.busy) ui.toggle('pause'); });
 $('btn-resume').addEventListener('click', () => ui.close());
 $('btn-title').addEventListener('click', () => { saveGame(); location.reload(); });
+// Closing the tab, leaving for the map or switching away keeps where you
+// were standing and how much oil is left (the story saves as it goes).
+const saveOnLeave = () => { if (!$('game').hidden && !arrival.active) saveGame(); };
+window.addEventListener('pagehide', saveOnLeave);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveOnLeave(); });
 const filmBox = $('opt-film');
 filmBox.checked = finish.on;
 filmBox.addEventListener('change', () => { finish.on = filmBox.checked && !!finish.target; store.set(FINISH_KEY, filmBox.checked ? 'on' : 'off'); });
@@ -641,7 +646,16 @@ showSound();
 
 $('btn-continue').hidden = !hasSave();
 $('btn-continue').addEventListener('click', () => startGame(false));
-$('btn-new').addEventListener('click', () => startGame(true));
+// Starting again over a saved game asks once more first (the save is lost).
+let armedNew = null;
+$('btn-new').addEventListener('click', () => {
+  const b = $('btn-new');
+  if (!hasSave() || armedNew) { clearTimeout(armedNew); armedNew = null; startGame(true); return; }
+  const was = b.textContent;
+  b.textContent = 'Start again? Your progress will be lost: click again';
+  b.classList.add('armed');
+  armedNew = setTimeout(() => { armedNew = null; b.textContent = was; b.classList.remove('armed'); }, 5000);
+});
 if (!hasSave()) $('btn-new').textContent = 'Enter the house';
 
 // A handle for testing and debugging from the browser console.

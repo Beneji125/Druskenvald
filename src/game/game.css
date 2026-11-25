@@ -395,3 +395,5 @@ svg.glyph { width: 210px; height: 210px; }
 @media (max-width: 640px) {
   #arrival-cap { font-size: 1rem; bottom: calc(7vh + 64px); }
 }
+
+#btn-new.armed { border-color: #c0604a; color: #f0b0a0; }
