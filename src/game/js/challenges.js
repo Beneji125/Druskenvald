@@ -41,6 +41,25 @@ function feastBackdrop(ctx) {
   }), 0, 0, ARENA_W, ARENA_H);
 }
 
+// The hall floor the swarm pours across: old boards, a skirting along the
+// wall where the crack is.
+function hallBackdrop(ctx) {
+  ctx.drawImage(backdrop('hall', (b, rand) => {
+    b.fillStyle = '#0d0a08'; b.fillRect(0, 0, ARENA_W, ARENA_H);
+    for (let y = 0; y < ARENA_H; y += 16) {
+      b.fillStyle = `rgba(${40 + rand() * 14},${28 + rand() * 8},${18 + rand() * 6},0.55)`; b.fillRect(0, y, ARENA_W, 15);
+      b.fillStyle = 'rgba(0,0,0,0.55)'; b.fillRect(0, y + 15, ARENA_W, 1);
+      for (let x = rand() * 90; x < ARENA_W; x += 70 + rand() * 60) b.fillRect(x, y, 1, 15);   // board ends
+      b.strokeStyle = 'rgba(0,0,0,0.18)'; b.lineWidth = 0.7;
+      for (let k = 0; k < 2; k++) { const yy = y + 4 + rand() * 8; b.beginPath(); b.moveTo(0, yy); b.bezierCurveTo(120, yy + rand() * 2 - 1, 240, yy + rand() * 2 - 1, ARENA_W, yy); b.stroke(); }
+    }
+    // the skirting and the wall
+    b.fillStyle = '#16100c'; b.fillRect(ARENA_W - 22, 0, 22, ARENA_H);
+    b.fillStyle = '#2a1c14'; b.fillRect(ARENA_W - 26, 0, 6, ARENA_H);
+    b.fillStyle = 'rgba(255,220,170,0.08)'; b.fillRect(ARENA_W - 26, 0, 1.5, ARENA_H);
+  }), 0, 0, ARENA_W, ARENA_H);
+}
+
 // Petunia's tea table: dark wood, a lace doily, one candle's light.
 function teaBackdrop(ctx) {
   ctx.drawImage(backdrop('tea', (b, rand) => {
@@ -383,7 +402,7 @@ function herdRound(st) {
       st.roundLine = !f.left ? 'The last of them squeezes into the crack, with a backward grin.' : this.herded ? `${this.herded} more of them slink back into the crack. ${f.left} left.` : 'They scatter, and regroup, and none of them goes home.';
     },
     draw(ctx, api) {
-      ctx.fillStyle = '#0a0908'; ctx.fillRect(0, 0, api.w, api.h);
+      hallBackdrop(ctx);
       // the crack
       ctx.strokeStyle = '#000'; ctx.lineWidth = 9; ctx.beginPath(); ctx.moveTo(api.w, crack.y0 - 10); ctx.lineTo(crack.x + 6, crack.y0 + 8); ctx.lineTo(crack.x + 2, 110); ctx.lineTo(crack.x + 8, crack.y1 - 6); ctx.lineTo(api.w, crack.y1 + 10); ctx.stroke();
       ctx.strokeStyle = 'rgba(200,180,140,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();

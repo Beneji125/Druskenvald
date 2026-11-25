@@ -130,12 +130,14 @@ scares add **Dread**, and when it fills your nerve breaks and you flee to
 the porch (nothing is lost). It's the same for every group, and progress
 is kept in the player's browser.
 
-What's in it so far: the séance (the spirit board's questions fill the
-journal), Petunia and her teacup (speak of her children, which the foyer's
-portraits name), the music room's cursed waltz (play Patrini's tune back on
-the harpsichord for the black ivory key), the Crooked Man in the hall, No
-Escape on the porch steps, the map and the journal. The peacock, the oven
-and the feast are teasers for the next chapter; the stairs don't go up yet.
+What's in it so far: the whole first floor. The arrival at the house, the
+séance (the spirit board's questions fill the journal), Petunia and her
+teacup (speak of her children, which the foyer's portraits name), the
+music room's cursed waltz (play Patrini's tune back on the harpsichord for
+the black ivory key), Keziah's marble peacock, the Phantom Feast, the
+boogleswarm, the burning oven, the Crooked Man in the hall, No Escape on
+the porch steps, Filthy Jasper, three memories, the map and the journal.
+The foyer stairs end the chapter: the floors above come later.
 
 - **The way in:** put `{{explore:crooked_house|Enter the Crooked House}}` in
   any lore text, e.g. Wickermoor Village's panel. It becomes a link to the

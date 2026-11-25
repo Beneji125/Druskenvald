@@ -505,12 +505,27 @@ const SPRITES = {
   }) },
   // (coloured like the official boogleswarm: grey-brown, pale-bellied,
   // red-eyed)
-  weasel: { size: [30, 16], draw: () => inkSprite(128, 64, (ctx) => {
+  weasel: { size: [30, 16], draw: () => inkSprite(256, 128, (ctx) => {
+    // low and long, back arched mid-scurry, tail out behind; grey-brown
+    // over a pale belly, red-eyed, teeth showing
+    ctx.lineWidth = 3;
     ctx.fillStyle = '#5a4c44';
-    ctx.beginPath(); ctx.moveTo(6, 50); ctx.quadraticCurveTo(30, 30, 70, 34); ctx.quadraticCurveTo(100, 26, 118, 38); ctx.lineTo(122, 44); ctx.quadraticCurveTo(100, 50, 76, 52); ctx.quadraticCurveTo(40, 58, 6, 50); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#b8aca0'; ctx.beginPath(); ctx.moveTo(60, 50); ctx.quadraticCurveTo(90, 50, 112, 44); ctx.lineTo(100, 48); ctx.quadraticCurveTo(80, 54, 60, 52); ctx.fill();
-    ctx.fillStyle = '#5a4c44'; ctx.fillRect(40, 50, 4, 12); ctx.fillRect(84, 50, 4, 12);
-    ctx.shadowColor = '#ff2020'; ctx.shadowBlur = 6; ctx.fillStyle = '#ff3a3a'; ctx.beginPath(); ctx.arc(108, 36, 2.8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(10, 88); ctx.quadraticCurveTo(34, 70, 62, 74);                        // the tail
+    ctx.quadraticCurveTo(96, 40, 150, 52); ctx.quadraticCurveTo(190, 50, 214, 66);                       // the arched back, the neck
+    ctx.quadraticCurveTo(236, 70, 248, 82); ctx.lineTo(244, 88); ctx.quadraticCurveTo(224, 92, 206, 92);   // the snout
+    ctx.quadraticCurveTo(170, 102, 130, 98); ctx.quadraticCurveTo(92, 100, 66, 86); ctx.quadraticCurveTo(38, 86, 10, 88); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#b8aca0';                                                                            // the pale belly and throat
+    ctx.beginPath(); ctx.moveTo(110, 96); ctx.quadraticCurveTo(170, 100, 214, 88); ctx.lineTo(240, 86); ctx.quadraticCurveTo(210, 96, 170, 100); ctx.quadraticCurveTo(140, 102, 110, 96); ctx.fill();
+    ctx.fillStyle = '#5a4c44';                                                                            // legs, mid-stride
+    [[96, 92, -0.4], [118, 96, 0.3], [176, 96, -0.3], [196, 92, 0.4]].forEach(([x, y, r]) => { ctx.save(); ctx.translate(x, y); ctx.rotate(r); ctx.fillRect(-4, 0, 8, 22); ctx.strokeRect(-4, 0, 8, 22); ctx.restore(); });
+    ctx.beginPath(); ctx.ellipse(206, 56, 7, 9, -0.3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();       // the ear
+    ctx.strokeStyle = 'rgba(30,22,18,0.55)'; ctx.lineWidth = 1.5;                                          // fur
+    for (let x = 80; x < 200; x += 9) { ctx.beginPath(); ctx.moveTo(x, 62 + Math.abs(x - 140) * 0.12); ctx.lineTo(x - 6, 70 + Math.abs(x - 140) * 0.12); ctx.stroke(); }
+    ctx.fillStyle = '#f0e8d8'; ctx.beginPath(); ctx.moveTo(232, 88); ctx.lineTo(234, 95); ctx.lineTo(237, 88); ctx.fill();   // a tooth
+    ctx.fillStyle = '#1a1210'; ctx.beginPath(); ctx.arc(247, 84, 2.5, 0, Math.PI * 2); ctx.fill();            // the nose
+    ctx.shadowColor = '#ff2020'; ctx.shadowBlur = 10; ctx.fillStyle = '#ff3a3a'; ctx.beginPath(); ctx.arc(222, 72, 4.2, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
   }) },
   // His nest: rags and paper, and teeth packed in like seeds.
   nest: { size: [46, 16], draw: () => inkSprite(160, 56, (ctx) => {

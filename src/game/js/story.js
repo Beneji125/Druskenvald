@@ -141,6 +141,11 @@ async function nerveBreaks() {
   teleport(c.cx, c.cy, 0);
   game.dread = 4; ui.setDread(4);
   delete game.flags.breaking;
+  // The first time, a word about the gentler setting (once per game).
+  if (!game.flags.toldGentle && !easyMode()) {
+    game.flags.toldGentle = true;
+    setTimeout(() => ui.log('If the house is too much: “Gentler encounters” in the pause menu (Escape, or ☰) slows its hauntings and halves the Dread they cost.', 'note'), 1800);
+  }
   saveGame();
 }
 
@@ -149,9 +154,9 @@ function giveMemento(id) {
   const m = MEMENTOS.find(x => x.id === id);
   ui.log(`Memento found: ${m.name}. (${game.mementos.size} of 6)`, 'gain');
   sound.pluck(NOTE.E * 2, 0, 1.4, 0.12); sound.pluck(NOTE.A * 2, 0.15, 1.6, 0.1);
-  if (game.mementos.has('cup') && game.mementos.has('key') && !game.flags.toldNext) {
+  if (['cup', 'key', 'gem'].every(k => game.mementos.has(k)) && !game.flags.toldNext) {
     game.flags.toldNext = true;
-    setTimeout(() => ui.log('Two mementos are yours. The rest are deeper in the house: the gallery, the kitchen and the floor above open in a later chapter.', 'note'), 2500);
+    setTimeout(() => ui.log('Every memento on this floor is yours. The other three are on the floors above: the foyer stairs lead up.', 'note'), 2500);
   }
   saveGame();
 }
@@ -771,11 +776,6 @@ function showPatrini() {
   requestAnimationFrame(tick);
 }
 
-// ─── Teasers for rooms the next chapter opens up ──────────────────────
-
-
-
-
 // ─── The hallway: the Crooked Man ─────────────────────────────────────
 
 function crookedMan() {
@@ -821,7 +821,7 @@ function currentGoals() {
   if (game.oil < 0.2) goals.push('Your lantern is nearly dry. Oil turns up in old lamps, and on the conservatory’s potting bench.');
   if (!f.seanceDone) goals.push('The spirit board on the parlour table: somebody in this house wants to talk.');
   if (!f.petuniaGone) {
-    if (!know('lockwoods')) goals.push('A woman in grey sits under the tree in the conservatory. Find out who she was.');
+    if (!know('lockwoods')) goals.push('A pale woman in mourning sits under the tree in the conservatory. Find out who she was.');
     else if (!has('tea') && !f.petuniaTea) goals.push('Petunia wants her tea: bergamot from her tree, water from the kitchen pump, heated on the parlour fire.');
     else goals.push('Bring Petunia her tea, and speak to her of her children.');
   }
